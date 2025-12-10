@@ -23,6 +23,38 @@ The `net-public` repository is organized as a **monorepo using Yarn workspaces**
 - Easy extensibility for future additions
 - Publishing to npm as scoped packages (`@net-protocol/*`)
 
+## API Design Principles
+
+### Object Parameters Over Multiple Arguments
+
+**Principle:** All functions should accept a single JSON object parameter rather than multiple comma-separated arguments.
+
+**Rationale:**
+
+- ✅ **Self-documenting** - Parameter names are explicit at call sites
+- ✅ **Extensible** - Easy to add new optional parameters without breaking changes
+- ✅ **Readable** - Clear what each value represents
+- ✅ **Optional parameters** - Easier to handle optional vs required parameters
+- ✅ **Consistent** - Uniform API pattern across all packages
+
+**Examples:**
+
+❌ **Avoid:**
+
+```typescript
+getStorage(key, operatorAddress, chainId);
+getNetMessage(chainId, messageIndex, appAddress, topic);
+```
+
+✅ **Preferred:**
+
+```typescript
+getStorage({ key, operatorAddress, chainId });
+getNetMessage({ chainId, messageIndex, appAddress, topic });
+```
+
+This principle applies to all SDK packages and their exported functions.
+
 ## Repository Structure
 
 ```
@@ -55,6 +87,313 @@ net-public/
 ├── .gitignore
 └── README.md                    # Main README
 ```
+
+## Chain Configuration Abstraction
+
+All SDK packages use a clean chain abstraction that supports multiple EVM chains with custom RPC URLs.
+
+### Chain Configuration Module
+
+**Location:** `packages/net-core/src/chainConfig.ts` (or shared across packages)
+
+**Design:**
+
+- Internal object mapping chain ID to chain configuration (not exposed)
+- Helper functions to get chain attributes (name, RPC URLs, etc.)
+- Helper function to get `PublicClient` for a chain
+- Support for custom RPC URLs
+
+**Structure:**
+
+```typescript
+// Internal chain configuration (not exported)
+const CHAIN_CONFIG: Record<number, ChainConfig> = {
+  8453: {
+    name: "Base",
+    rpcUrls: ["https://mainnet.base.org"],
+    // ... other chain-specific config
+  },
+  // ... other chains
+};
+
+// Public API - helper functions only
+export function getChainName(params: { chainId: number }): string | undefined;
+export function getChainRpcUrls(params: {
+  chainId: number;
+  rpcUrl?: string | string[];
+}): string[];
+export function getPublicClient(params: {
+  chainId: number;
+  rpcUrl?: string | string[];
+}): PublicClient;
+```
+
+**Key Features:**
+
+- ✅ Clean abstraction - no need to pass Chain objects around
+- ✅ Custom RPC URLs - override default RPCs per call
+- ✅ Type-safe - chain IDs are validated
+- ✅ Extensible - easy to add new chains
+- ✅ Internal config - implementation details hidden
+
+**Usage Example:**
+
+```typescript
+import { getPublicClient } from "@net-protocol/core";
+
+// Use default RPC
+const client = getPublicClient({ chainId: 8453 });
+
+// Use custom RPC
+const client = getPublicClient({
+  chainId: 8453,
+  rpcUrl: "https://custom-rpc.example.com",
+});
+
+// Use multiple RPCs for fallback
+const client = getPublicClient({
+  chainId: 8453,
+  rpcUrl: ["https://primary-rpc.com", "https://fallback-rpc.com"],
+});
+```
+
+**React Provider Pattern:**
+
+For React applications, use `NetProvider` to configure RPC URLs at the top level:
+
+```typescript
+import { NetProvider } from "@net-protocol/core";
+
+function App() {
+  return (
+    <NetProvider
+      overrides={{
+        rpcUrls: {
+          8453: ["https://custom-base-rpc.com", "https://fallback-rpc.com"],
+          1: ["https://custom-mainnet-rpc.com"],
+        },
+      }}
+    >
+      {/* Your app */}
+    </NetProvider>
+  );
+}
+```
+
+**How NetProvider Works:**
+
+- **Sets wagmi config** - Configures wagmi chains with custom RPCs for hooks
+- **Sets global override map** - Updates global override map for utilities
+- **Unified source** - Both hooks and utilities read from the same config
+- **Multiple RPCs** - Supports fallback RPCs via array of URLs
+
+**Non-React Top-Level Configuration:**
+
+For non-React usage (Node.js, API routes, server-side), set overrides globally before creating clients:
+
+```typescript
+import {
+  setChainRpcOverrides,
+  NetClient,
+  StorageClient,
+} from "@net-protocol/core";
+
+// Set overrides once at application startup
+setChainRpcOverrides({
+  8453: ["https://custom-base-rpc.com", "https://fallback-rpc.com"],
+  1: ["https://custom-mainnet-rpc.com"],
+});
+
+// All clients created after this will use the overrides
+const netClient = new NetClient({ chainId: 8453 });
+const storageClient = new StorageClient({ chainId: 8453 });
+
+// Or pass overrides directly to client constructor (scoped to that client)
+const netClientWithOverrides = new NetClient({
+  chainId: 8453,
+  overrides: { rpcUrls: ["https://client-specific-rpc.com"] },
+});
+```
+
+**Override Priority (Non-React):**
+
+1. **Per-client override** - `new NetClient({ chainId, rpcOverrides })` (highest priority, scoped to that client)
+2. **Global override** - `setChainRpcOverrides()` (affects all clients created after)
+3. **Environment variable** - `NET_RPC_8453=custom-url` (future)
+4. **Default** - From `CHAIN_CONFIG` (lowest priority)
+
+**Implementation Details:**
+
+**Chain Configuration Object:**
+
+```typescript
+// Internal - not exported
+interface ChainConfig {
+  name: string;
+  rpcUrls: string[];
+  nativeCurrency?: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  blockExplorer?: {
+    name: string;
+    url: string;
+  };
+  // ... other chain-specific attributes
+}
+
+const CHAIN_CONFIG: Record<number, ChainConfig> = {
+  8453: {
+    name: "Base",
+    rpcUrls: ["https://mainnet.base.org"],
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    blockExplorer: { name: "BaseScan", url: "https://basescan.org" },
+  },
+  // ... other chains
+};
+```
+
+**Helper Functions:**
+
+```typescript
+// Get chain name
+export function getChainName(params: { chainId: number }): string | undefined {
+  return CHAIN_CONFIG[params.chainId]?.name;
+}
+
+// Get RPC URLs (checks global override, then per-call override, then defaults)
+export function getChainRpcUrls(params: {
+  chainId: number;
+  rpcUrl?: string | string[];
+}): string[] {
+  // Per-call override takes precedence
+  if (params.rpcUrl) {
+    return Array.isArray(params.rpcUrl) ? params.rpcUrl : [params.rpcUrl];
+  }
+
+  // Check global override map (set by NetProvider or setChainRpcOverride)
+  const globalOverride = getGlobalRpcOverride(params.chainId);
+  if (globalOverride) {
+    return globalOverride;
+  }
+
+  // Fall back to defaults
+  return CHAIN_CONFIG[params.chainId]?.rpcUrls || [];
+}
+
+// Get PublicClient for a chain
+export function getPublicClient(params: {
+  chainId: number;
+  rpcUrl?: string | string[];
+}): PublicClient {
+  const config = CHAIN_CONFIG[params.chainId];
+  if (!config) {
+    throw new Error(`Unsupported chain ID: ${params.chainId}`);
+  }
+
+  const rpcUrls = getChainRpcUrls({
+    chainId: params.chainId,
+    rpcUrl: params.rpcUrl,
+  });
+
+  return createPublicClient({
+    chain: defineChain({
+      id: params.chainId,
+      name: config.name,
+      nativeCurrency: config.nativeCurrency,
+      rpcUrls: {
+        default: { http: rpcUrls },
+        public: { http: rpcUrls },
+      },
+      blockExplorers: config.blockExplorer
+        ? {
+            default: config.blockExplorer,
+          }
+        : undefined,
+    }),
+    transport: http(),
+    batch: { multicall: true },
+  });
+}
+
+// Global override management (used by NetProvider)
+let globalRpcOverrides: Record<number, string[]> = {};
+
+export function setChainRpcOverrides(overrides: {
+  [chainId: number]: string[];
+}) {
+  globalRpcOverrides = { ...globalRpcOverrides, ...overrides };
+}
+
+function getGlobalRpcOverride(chainId: number): string[] | undefined {
+  return globalRpcOverrides[chainId];
+}
+```
+
+**Benefits Over Current Approach:**
+
+1. **Simpler API** - Just pass chain ID, not Chain objects
+2. **Custom RPC Support** - Easy to override RPC URLs
+3. **Centralized Config** - All chain info in one place
+4. **Type Safety** - Chain IDs validated at runtime
+5. **No External Dependencies** - Doesn't require importing from `viem/chains`
+6. **Consistent** - Same abstraction across all SDK packages
+
+**Integration with SDK Packages:**
+
+All SDK client classes use this abstraction:
+
+```typescript
+// In StorageClient
+import { getPublicClient } from "@net-protocol/core";
+
+export class StorageClient {
+  constructor(params: {
+    chainId: number;
+    rpcUrl?: string | string[]; // Per-call RPC override (one-time use)
+    overrides?: { rpcUrls: string[] }; // Client-scoped RPC URLs for this chain
+  }) {
+    // Client-scoped overrides take precedence over global overrides
+    if (params.overrides?.rpcUrls) {
+      setChainRpcOverrides({ [params.chainId]: params.overrides.rpcUrls });
+    }
+
+    this.client = getPublicClient({
+      chainId: params.chainId,
+      rpcUrl: params.rpcUrl, // Per-call override (highest priority)
+    });
+    this.chainId = params.chainId;
+  }
+}
+```
+
+**Usage Examples:**
+
+```typescript
+// Option 1: Use global overrides (set once at app startup)
+setChainRpcOverrides({ 8453: ["https://custom-rpc.com"] });
+const client = new StorageClient({ chainId: 8453 });
+
+// Option 2: Client-scoped overrides (only affects this client)
+const client = new StorageClient({
+  chainId: 8453,
+  overrides: { rpcUrls: ["https://client-specific-rpc.com"] },
+});
+
+// Option 3: Per-call override (highest priority, one-time use)
+const client = new StorageClient({
+  chainId: 8453,
+  rpcUrl: "https://one-time-rpc.com",
+});
+```
+
+**RPC URL Priority:**
+
+1. **Per-call override** - `getPublicClient({ chainId: 8453, rpcUrl: 'custom' })` (highest priority)
+2. **Global override** - Set via `NetProvider` or `setChainRpcOverrides()`
+3. **Environment variable** - `NET_RPC_8453=custom-url` (future)
+4. **Default** - From `CHAIN_CONFIG` (lowest priority)
 
 ## Dual API Design: Hooks and Utility Functions
 
@@ -104,6 +443,7 @@ function MyComponent() {
   const { messages, isLoading, error } = useNetMessages({
     chainId: 8453,
     filter: { appAddress: "0x..." },
+    enabled: true, // optional
   });
   return <div>{/* render */}</div>;
 }
@@ -113,15 +453,14 @@ function MyComponent() {
 
 ```typescript
 import { NetClient } from "@net-protocol/core";
-import { createPublicClient, http } from "viem";
 
-const client = createPublicClient({
-  chain: base,
-  transport: http(),
+const netClient = new NetClient({
+  chainId: 8453,
+  rpcUrl: "https://custom-rpc.com", // optional
 });
 
-const netClient = new NetClient(client, 8453);
 const messages = await netClient.getMessages({
+  chainId: 8453,
   filter: { appAddress: "0x..." },
 });
 ```

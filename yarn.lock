@@ -819,7 +819,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@net-protocol/core@workspace:packages/net-core":
+"@net-protocol/core@workspace:*, @net-protocol/core@workspace:packages/net-core":
   version: 0.0.0-use.local
   resolution: "@net-protocol/core@workspace:packages/net-core"
   dependencies:
@@ -828,6 +828,30 @@ __metadata:
     "@vitest/ui": "npm:^1.0.0"
     tsup: "npm:^8.0.0"
     typescript: "npm:^5.0.0"
+    viem: "npm:^2.31.4"
+    vitest: "npm:^1.0.0"
+    wagmi: "npm:^2.15.0"
+  peerDependencies:
+    react: ^18.0.0
+    wagmi: ^2.15.0
+  languageName: unknown
+  linkType: soft
+
+"@net-protocol/storage@workspace:packages/net-storage":
+  version: 0.0.0-use.local
+  resolution: "@net-protocol/storage@workspace:packages/net-storage"
+  dependencies:
+    "@net-protocol/core": "workspace:*"
+    "@tanstack/react-query": "npm:^5.0.0"
+    "@types/node": "npm:^20.0.0"
+    "@types/pako": "npm:^2.0.3"
+    "@types/react": "npm:^18.0.0"
+    "@vitest/ui": "npm:^1.0.0"
+    pako: "npm:^2.1.0"
+    react: "npm:^18.0.0"
+    tsup: "npm:^8.0.0"
+    typescript: "npm:^5.0.0"
+    use-async-effect: "npm:^2.2.7"
     viem: "npm:^2.31.4"
     vitest: "npm:^1.0.0"
     wagmi: "npm:^2.15.0"
@@ -2037,6 +2061,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.90.12":
+  version: 5.90.12
+  resolution: "@tanstack/query-core@npm:5.90.12"
+  checksum: 60d5dd23d7801118d6ef84a3d76e798aaf6eb851ee5227629a1dc798fa01ac9560580553413208fcc8a003fb12a89e83d6dd1f38ebc3bd9b6e8838cfaaa45fef
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.0.0":
+  version: 5.90.12
+  resolution: "@tanstack/react-query@npm:5.90.12"
+  dependencies:
+    "@tanstack/query-core": "npm:5.90.12"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: da01ec2819d301e4be89731e82d3f091fa4f1ab2745be324e5166f9df77e2aaf1c362b0fa61aab226bb01634873f1a00562f7d7f405867fe23bdd47fe4d00fda
+  languageName: node
+  linkType: hard
+
 "@types/connect@npm:^3.4.33":
   version: 3.4.38
   resolution: "@types/connect@npm:3.4.38"
@@ -2098,6 +2140,13 @@ __metadata:
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 68e7d92dd2b7bddff9dffabb9c740e655906ceac428dcf070915cdcae720579e4d72261c55ed7eccbfa907a75cbb1ff3a9148ea49878a07a72d5dd6c9e06d9d7
+  languageName: node
+  linkType: hard
+
+"@types/pako@npm:^2.0.3":
+  version: 2.0.4
+  resolution: "@types/pako@npm:2.0.4"
+  checksum: 5765bf8bc7e77ee141c454118f03e544b8f6cb51eb257d82dc5830feeab8cd00818af3a1eabefdfbe8dd3ae9916ed5403937bf1031a0ee51deea27fdf4dccdfb
   languageName: node
   linkType: hard
 
@@ -4535,6 +4584,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"js-tokens@npm:^3.0.0 || ^4.0.0":
+  version: 4.0.0
+  resolution: "js-tokens@npm:4.0.0"
+  checksum: e248708d377aa058eacf2037b07ded847790e6de892bbad3dac0abba2e759cb9f121b00099a65195616badcb6eca8d14d975cb3e89eb1cfda644756402c8aeed
+  languageName: node
+  linkType: hard
+
 "js-tokens@npm:^9.0.1":
   version: 9.0.1
   resolution: "js-tokens@npm:9.0.1"
@@ -4660,6 +4716,17 @@ __metadata:
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+  languageName: node
+  linkType: hard
+
+"loose-envify@npm:^1.1.0":
+  version: 1.4.0
+  resolution: "loose-envify@npm:1.4.0"
+  dependencies:
+    js-tokens: "npm:^3.0.0 || ^4.0.0"
+  bin:
+    loose-envify: cli.js
+  checksum: 655d110220983c1a4b9c0c679a2e8016d4b67f6e9c7b5435ff5979ecdb20d0813f4dec0a08674fcbdd4846a3f07edbb50a36811fd37930b94aaa0d9daceb017e
   languageName: node
   linkType: hard
 
@@ -5246,6 +5313,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pako@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "pako@npm:2.1.0"
+  checksum: 8e8646581410654b50eb22a5dfd71159cae98145bd5086c9a7a816ec0370b5f72b4648d08674624b3870a521e6a3daffd6c2f7bc00fdefc7063c9d8232ff5116
+  languageName: node
+  linkType: hard
+
 "path-exists@npm:^4.0.0":
   version: 4.0.0
   resolution: "path-exists@npm:4.0.0"
@@ -5626,6 +5700,15 @@ __metadata:
   version: 18.3.1
   resolution: "react-is@npm:18.3.1"
   checksum: f2f1e60010c683479e74c63f96b09fb41603527cd131a9959e2aee1e5a8b0caf270b365e5ca77d4a6b18aae659b60a86150bb3979073528877029b35aecd2072
+  languageName: node
+  linkType: hard
+
+"react@npm:^18.0.0":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
+  dependencies:
+    loose-envify: "npm:^1.1.0"
+  checksum: 283e8c5efcf37802c9d1ce767f302dd569dd97a70d9bb8c7be79a789b9902451e0d16334b05d73299b20f048cbc3c7d288bbbde10b701fa194e2089c237dbea3
   languageName: node
   linkType: hard
 
@@ -6543,6 +6626,15 @@ __metadata:
     uploadthing:
       optional: true
   checksum: 46d920a79790a6d22273d5972d220a0b26fce7d8b40b5c563c1f71bec12ae7b0b403b59001773b061fa5a099de3ff5e7fd6b2a65198e89a21a5dbfd9225a217f
+  languageName: node
+  linkType: hard
+
+"use-async-effect@npm:^2.2.7":
+  version: 2.2.7
+  resolution: "use-async-effect@npm:2.2.7"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 1eaddd01a3d5d0174a0720d5727fe16064f7690fe6104602c282d8d98b8e7cfca90d9c42aa8e0c621be046f7e39ee1a235368a43c2e26a58b8f605749ce7efac
   languageName: node
   linkType: hard
 

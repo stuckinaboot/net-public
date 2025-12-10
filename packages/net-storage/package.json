@@ -1,0 +1,71 @@
+{
+  "name": "@net-protocol/storage",
+  "version": "1.0.0",
+  "description": "Net Storage SDK for key-value storage on the Net protocol",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@net-protocol/core": "workspace:*",
+    "pako": "^2.1.0",
+    "use-async-effect": "^2.2.7",
+    "viem": "^2.31.4"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/pako": "^2.0.3",
+    "@types/react": "^18.0.0",
+    "@vitest/ui": "^1.0.0",
+    "react": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "wagmi": "^2.15.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "wagmi": "^2.15.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/<org>/net-public.git",
+    "directory": "packages/net-storage"
+  },
+  "keywords": [
+    "net",
+    "protocol",
+    "blockchain",
+    "ethereum",
+    "storage",
+    "chunked-storage",
+    "xml-storage"
+  ],
+  "license": "MIT"
+}

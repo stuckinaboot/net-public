@@ -1,0 +1,19 @@
+{
+  "name": "net-public",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "yarn workspaces foreach -pt run build",
+    "build:all": "yarn build",
+    "clean": "yarn workspaces foreach run clean",
+    "typecheck": "yarn workspaces foreach run typecheck",
+    "test": "yarn workspaces foreach run test"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "yarn@4.0.0"
+}

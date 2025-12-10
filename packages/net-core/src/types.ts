@@ -1,0 +1,47 @@
+// Message types
+export type NetMessage = {
+  app: `0x${string}`;
+  sender: `0x${string}`;
+  timestamp: bigint;
+  data: `0x${string}`;
+  text: string;
+  topic: string;
+};
+
+// Filter for querying messages
+export type NetMessageFilter = {
+  appAddress: `0x${string}`;
+  topic?: string;
+  maker?: `0x${string}`; // user address
+};
+
+// Options for reading messages
+export type GetNetMessagesOptions = {
+  chainId: number;
+  filter?: NetMessageFilter;
+  startIndex?: number;
+  endIndex?: number;
+  rpcUrl?: string | string[];
+};
+
+// Options for message count
+export type GetNetMessageCountOptions = {
+  chainId: number;
+  filter?: NetMessageFilter;
+  rpcUrl?: string | string[];
+};
+
+// Extended options for hooks (includes React-specific options)
+export type UseNetMessagesOptions = GetNetMessagesOptions & {
+  enabled?: boolean;
+};
+
+export type UseNetMessageCountOptions = GetNetMessageCountOptions & {
+  refetchInterval?: number;
+  enabled?: boolean;
+};
+
+export type UseNetMessagesBatchAsyncOptions = UseNetMessagesOptions & {
+  batchCount?: number;
+};
+

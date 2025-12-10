@@ -22,7 +22,10 @@
     "build:watch": "tsup --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "viem": "^2.31.4"
@@ -30,8 +33,10 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
+    "@vitest/ui": "^1.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
     "wagmi": "^2.15.0"
   },
   "peerDependencies": {

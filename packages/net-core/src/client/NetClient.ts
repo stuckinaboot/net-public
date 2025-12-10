@@ -1,10 +1,6 @@
 import { PublicClient } from "viem";
 import { readContract } from "viem/actions";
-import {
-  getPublicClient,
-  getNetContract,
-  setChainRpcOverrides,
-} from "../chainConfig";
+import { getPublicClient, getNetContract } from "../chainConfig";
 import {
   getNetMessagesReadConfig,
   getNetMessageCountReadConfig,
@@ -19,19 +15,10 @@ export class NetClient {
   private client: PublicClient;
   private chainId: number;
 
-  constructor(params: {
-    chainId: number;
-    rpcUrl?: string | string[];
-    overrides?: { rpcUrls: string[] };
-  }) {
-    // Handle client-scoped overrides
-    if (params.overrides?.rpcUrls) {
-      setChainRpcOverrides({ [params.chainId]: params.overrides.rpcUrls });
-    }
-
+  constructor(params: { chainId: number; overrides?: { rpcUrls: string[] } }) {
     this.client = getPublicClient({
       chainId: params.chainId,
-      rpcUrl: params.rpcUrl,
+      rpcUrl: params.overrides?.rpcUrls,
     });
     this.chainId = params.chainId;
   }

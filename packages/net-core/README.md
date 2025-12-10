@@ -15,7 +15,11 @@ yarn add @net-protocol/core wagmi viem react
 ### React Hooks
 
 ```typescript
-import { useNetMessages, useNetMessageCount, NetProvider } from "@net-protocol/core";
+import {
+  useNetMessages,
+  useNetMessageCount,
+  NetProvider,
+} from "@net-protocol/core";
 
 function App() {
   return (
@@ -38,34 +42,44 @@ function MyComponent() {
     filter: { appAddress: "0x..." },
   });
 
-  return <div>Messages: {messages.length}, Total: {count}</div>;
+  return (
+    <div>
+      Messages: {messages.length}, Total: {count}
+    </div>
+  );
 }
 ```
 
 ### Non-React Utilities
 
 ```typescript
-import { NetClient, getNetMessages, getNetMessageCount } from "@net-protocol/core";
+import { NetClient } from "@net-protocol/core";
 
-// Using NetClient class
+// Create a NetClient instance
 const client = new NetClient({
   chainId: 8453,
-  overrides: { rpcUrls: ["https://custom-rpc.com"] },
+  overrides: { rpcUrls: ["https://custom-rpc.com"] }, // Optional RPC URL override
 });
 
+// Get messages
 const messages = await client.getMessages({
-  filter: { appAddress: "0x..." },
-  startIndex: 0,
-  endIndex: 10,
-});
-
-// Using standalone functions
-const messages = await getNetMessages({
   chainId: 8453,
   filter: { appAddress: "0x..." },
   startIndex: 0,
   endIndex: 10,
-  rpcUrl: "https://custom-rpc.com", // Optional per-call override
+});
+
+// Get message count
+const count = await client.getMessageCount({
+  chainId: 8453,
+  filter: { appAddress: "0x..." },
+});
+
+// Get message by index
+const message = await client.getMessageAtIndex({
+  messageIndex: 0,
+  appAddress: "0x...", // Optional
+  topic: "topic", // Optional
 });
 ```
 
@@ -90,4 +104,3 @@ See the [API documentation](./docs/api-reference.md) for complete API details.
 ## License
 
 MIT
-

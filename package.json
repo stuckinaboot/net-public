@@ -10,7 +10,8 @@
     "build:all": "yarn build",
     "clean": "yarn workspaces foreach run clean",
     "typecheck": "yarn workspaces foreach run typecheck",
-    "test": "yarn workspaces foreach run test"
+    "test": "yarn workspaces foreach run test",
+    "test:all": "yarn test"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

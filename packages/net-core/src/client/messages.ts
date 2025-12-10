@@ -1,6 +1,5 @@
-import { getNetContract, getPublicClient } from "../chainConfig";
-import { GetNetMessagesOptions, GetNetMessageCountOptions, NetMessage } from "../types";
-import { readContract } from "viem/actions";
+import { getNetContract } from "../chainConfig";
+import { GetNetMessagesOptions, GetNetMessageCountOptions } from "../types";
 
 // Build contract read args for message queries
 export function getNetMessagesReadConfig(params: GetNetMessagesOptions) {
@@ -78,78 +77,4 @@ export function getNetMessageCountReadConfig(params: GetNetMessageCountOptions) 
   };
 }
 
-// Standalone utility functions
-
-/**
- * Get Net messages (standalone function, doesn't require NetClient instance)
- */
-export async function getNetMessages(params: GetNetMessagesOptions): Promise<NetMessage[]> {
-  const client = getPublicClient({
-    chainId: params.chainId,
-    rpcUrl: params.rpcUrl,
-  });
-
-  const config = getNetMessagesReadConfig(params);
-  const messages = await readContract(client, config);
-  return messages as NetMessage[];
-}
-
-/**
- * Get Net message count (standalone function, doesn't require NetClient instance)
- */
-export async function getNetMessageCount(params: GetNetMessageCountOptions): Promise<number> {
-  const client = getPublicClient({
-    chainId: params.chainId,
-    rpcUrl: params.rpcUrl,
-  });
-
-  const config = getNetMessageCountReadConfig(params);
-  const count = await readContract(client, config);
-  return Number(count);
-}
-
-/**
- * Get a single Net message by index
- */
-export async function getNetMessageAtIndex(params: {
-  chainId: number;
-  messageIndex: number;
-  appAddress?: `0x${string}`;
-  topic?: string;
-  rpcUrl?: string | string[];
-}): Promise<NetMessage | null> {
-  const client = getPublicClient({
-    chainId: params.chainId,
-    rpcUrl: params.rpcUrl,
-  });
-
-  const netContract = getNetContract(params.chainId);
-  const msgIdxBigInt = BigInt(params.messageIndex);
-
-  let functionName: string;
-  let args: any[];
-
-  if (params.appAddress && params.topic) {
-    functionName = "getMessageForAppTopic";
-    args = [msgIdxBigInt, params.appAddress, params.topic];
-  } else if (params.appAddress) {
-    functionName = "getMessageForApp";
-    args = [msgIdxBigInt, params.appAddress];
-  } else {
-    functionName = "getMessage";
-    args = [msgIdxBigInt];
-  }
-
-  try {
-    const message = await readContract(client, {
-      abi: netContract.abi,
-      address: netContract.address,
-      functionName,
-      args,
-    });
-    return message as NetMessage;
-  } catch {
-    return null;
-  }
-}
 

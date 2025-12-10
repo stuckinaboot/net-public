@@ -918,6 +918,133 @@ Could add automated publishing later using GitHub Actions triggered by version t
 
 **Note:** Hardhat is not used - Foundry is the chosen tooling.
 
+## Testing
+
+### Integration Tests
+
+The SDK packages include integration tests that verify functionality against live blockchain data. These tests use **Vitest** as the test framework and run against Base mainnet (chainId: 8453).
+
+### Test Configuration
+
+- **Framework:** Vitest
+- **Test Chain:** Base mainnet (chainId: 8453)
+- **Execution:** Sequential (single process) to avoid RPC rate limits
+- **Timeout:** 30 seconds per test (to accommodate RPC calls)
+
+### Dynamic Data Considerations
+
+**Important:** Message counts and blockchain data are **dynamic** and can change over time as new messages are sent to the Net protocol. Tests are designed to handle this:
+
+**Best Practices:**
+
+1. **Use Range Checks, Not Exact Counts:**
+
+   - ✅ `expect(count).toBeGreaterThanOrEqual(0)` - Allows counts to grow
+   - ✅ `expect(count2).toBeGreaterThanOrEqual(count1)` - Allows increases between queries
+   - ❌ Avoid: `expect(count).toBe(42)` - Exact counts will break as new messages arrive
+
+2. **Check Counts Before Querying:**
+
+   - Always check message counts before querying ranges
+   - Use actual counts to determine valid ranges: `endIndex: Math.min(count, 10)`
+   - This prevents `InvalidStartIndex` and `InvalidEndIndex` contract errors
+
+3. **Handle Empty Results Gracefully:**
+
+   - Skip tests when counts are 0 (no messages exist yet)
+   - Use conditional assertions: `if (count === 0) { expect(count).toBe(0); return; }`
+
+4. **Compare Simultaneous Queries:**
+
+   - When comparing two queries (e.g., NetClient vs standalone function), they should match because they're executed at the same time
+   - `expect(clientCount).toBe(standaloneCount)` is safe for simultaneous queries
+
+5. **Account for Race Conditions:**
+
+   - There's a small window between checking a count and using it in a query
+   - If a new message arrives between the count check and query, the contract will revert with `InvalidEndIndex`
+   - Tests use dynamic ranges to minimize this risk: `endIndex: Math.min(count, maxRange)`
+
+6. **Rate Limiting:**
+   - Tests include 500ms delays between RPC calls to avoid rate limits (configurable via `RPC_DELAY_MS`)
+   - Use the `delay()` helper from `test-utils.ts` with default `RPC_DELAY_MS` constant
+   - Use `withRetry()` helper to automatically retry RPC calls on 429 rate limit errors
+   - Consider adding `beforeAll()` hooks with initial delays for test suites that make many RPC calls
+
+**Example Test Pattern:**
+
+```typescript
+it("should filter by appAddress", async () => {
+  const appAddress = BASE_TEST_ADDRESSES.BAZAAR_CONTRACT;
+
+  // First check if there are messages for this app
+  const count = await getNetMessageCount({
+    chainId: BASE_CHAIN_ID,
+    filter: { appAddress },
+  });
+
+  await delay(); // Rate limit protection
+
+  if (count === 0) {
+    // Skip test if no messages exist
+    expect(count).toBe(0);
+    return;
+  }
+
+  // Use actual count to determine valid range
+  const messages = await getNetMessages({
+    chainId: BASE_CHAIN_ID,
+    filter: { appAddress },
+    startIndex: 0,
+    endIndex: Math.min(count, 10), // Dynamic range
+  });
+
+  expect(Array.isArray(messages)).toBe(true);
+  expect(messages.length).toBeLessThanOrEqual(Math.min(count, 10)); // Flexible assertion
+
+  await delay();
+});
+```
+
+### Contract Validation
+
+The Net contract enforces strict validation on range queries:
+
+- **`InvalidRange()`** - Reverted when `startIdx >= endIdx`
+- **`InvalidStartIndex()`** - Reverted when `startIdx + 1 > querySetLength`
+- **`InvalidEndIndex()`** - Reverted when `endIdx > querySetLength`
+
+Tests must account for these validations and expect reverts for invalid ranges rather than empty arrays.
+
+### Test Utilities
+
+Test utilities are located in `packages/net-core/src/__tests__/test-utils.ts`:
+
+- `BASE_CHAIN_ID` - Base chain ID constant (8453)
+- `BASE_TEST_ADDRESSES` - Known contract addresses for testing
+- `RPC_DELAY_MS` - Delay constant (500ms) for rate limiting
+- `delay(ms?)` - Helper function for delays (defaults to `RPC_DELAY_MS`)
+- `retryWithBackoff()` - Helper for retrying with exponential backoff (handles 429 errors)
+- `withRetry()` - Wrapper for RPC calls that automatically retries on rate limit errors
+
+**Example with retry:**
+
+```typescript
+import { withRetry } from "./test-utils";
+
+it("should handle rate limits gracefully", async () => {
+  const messages = await withRetry(() =>
+    getNetMessages({
+      chainId: BASE_CHAIN_ID,
+      startIndex: 0,
+      endIndex: 10,
+    })
+  );
+
+  expect(Array.isArray(messages)).toBe(true);
+});
+```
+
 ## Extending the Repository
 
 To add a new package:

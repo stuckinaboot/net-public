@@ -7,13 +7,6 @@ export { NetProvider } from "./hooks/NetProvider";
 // Utility classes
 export { NetClient } from "./client/NetClient";
 
-// Utility functions
-export {
-  getNetMessages,
-  getNetMessageCount,
-  getNetMessageAtIndex,
-} from "./client/messages";
-
 // Chain configuration
 export {
   getPublicClient,

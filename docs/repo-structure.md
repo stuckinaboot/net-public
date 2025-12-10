@@ -56,6 +56,76 @@ net-public/
 └── README.md                    # Main README
 ```
 
+## Dual API Design: Hooks and Utility Functions
+
+All SDK packages provide **both React hooks and utility functions** to support different use cases:
+
+### React Hooks
+
+- For React/Next.js applications
+- Use `useReadContract` from wagmi
+- Return `{ data, isLoading, error }` pattern
+- Require `wagmi` as peer dependency
+
+### Utility Functions/Classes
+
+- For non-React usage (Node.js, API routes, server-side)
+- Use `readContract` from `viem/actions` directly
+- Accept `PublicClient` as parameter
+- Return promises with data directly
+- No React dependency
+
+### Package Structure Pattern
+
+Each package follows this structure:
+
+```
+packages/net-core/
+├── src/
+│   ├── index.ts              # Main exports (both hooks and utilities)
+│   ├── hooks/                # React hooks
+│   │   ├── useNetMessages.ts
+│   │   └── index.ts
+│   ├── client/              # Utility classes/functions
+│   │   ├── NetClient.ts
+│   │   └── index.ts
+│   ├── types.ts             # Shared types
+│   └── constants.ts         # Contract addresses/ABIs
+```
+
+### Usage Examples
+
+**React Hook:**
+
+```typescript
+import { useNetMessages } from "@net-protocol/core";
+
+function MyComponent() {
+  const { messages, isLoading, error } = useNetMessages({
+    chainId: 8453,
+    filter: { appAddress: "0x..." },
+  });
+  return <div>{/* render */}</div>;
+}
+```
+
+**Utility Function:**
+
+```typescript
+import { NetClient } from "@net-protocol/core";
+import { createPublicClient, http } from "viem";
+
+const client = createPublicClient({
+  chain: base,
+  transport: http(),
+});
+
+const netClient = new NetClient(client, 8453);
+const messages = await netClient.getMessages({
+  filter: { appAddress: "0x..." },
+});
+```
+
 ## Packages
 
 ### @net-protocol/core
@@ -65,13 +135,23 @@ net-public/
 Core Net protocol SDK for interacting with Net smart contracts. Provides the foundation for all other SDK packages.
 
 **Key Exports:**
-- `NetClient` - Main client for Net protocol interactions
+
+**React Hooks:**
+
+- `useNetMessages` - Hook for reading Net messages
+- `useNetMessageCount` - Hook for message counts
+
+**Utility Functions:**
+
+- `NetClient` - Main client class for Net protocol interactions
+- `getNetMessageAtIndex` - Get message by index
 - Message types and utilities
 - Contract addresses and ABIs
 
 **Dependencies:**
-- `viem` - Ethereum library
-- `wagmi` (peer dependency) - React hooks for Ethereum
+
+- `viem` - Ethereum library (required)
+- `wagmi` (peer dependency) - React hooks for Ethereum (required for hooks only)
 
 ### @net-protocol/storage
 
@@ -80,16 +160,27 @@ Core Net protocol SDK for interacting with Net smart contracts. Provides the fou
 Net Storage SDK for key-value storage on the Net protocol. Supports regular storage, chunked storage, and XML storage patterns.
 
 **Key Exports:**
-- `StorageClient` - Storage operations client
-- Chunked storage utilities
-- XML storage utilities
-- Storage utility functions
+
+**React Hooks:**
+
+- `useStorage` - Hook for reading storage values
+- `useStorageForOperator` - Hook for all storage by operator
+- `useBulkStorage` - Hook for bulk storage reads
+- `useStorageTotalWrites` - Hook for version count
+
+**Utility Functions:**
+
+- `StorageClient` - Storage operations client class
+- `readStorageDataRaw` - Read storage without XML resolution
+- `readChunkedStorage` - Read chunked storage with decompression
+- Storage utility functions (key generation, etc.)
 
 **Dependencies:**
+
 - `@net-protocol/core` - Core SDK (workspace dependency)
-- `viem` - Ethereum library
+- `viem` - Ethereum library (required)
 - `pako` - Compression library
-- `wagmi` (peer dependency)
+- `wagmi` (peer dependency) - Required for hooks only
 
 ### @net-protocol/score
 
@@ -98,14 +189,25 @@ Net Storage SDK for key-value storage on the Net protocol. Supports regular stor
 Net Score/Upvote SDK for the onchain scoring system. Provides utilities for upvoting and score management.
 
 **Key Exports:**
-- `ScoreClient` - Score operations client
-- Upvote utilities
+
+**React Hooks:**
+
+- `useUpvotes` - Hook for reading upvotes
+- `useScore` - Hook for reading scores
+- `useUpvotesBatch` - Hook for batch upvote reads
+
+**Utility Functions:**
+
+- `ScoreClient` - Score operations client class
+- `getUpvotes` - Get upvotes for a key
+- `getScore` - Get score for a key
 - Score key utilities
 
 **Dependencies:**
+
 - `@net-protocol/core` - Core SDK (workspace dependency)
-- `viem` - Ethereum library
-- `wagmi` (peer dependency)
+- `viem` - Ethereum library (required)
+- `wagmi` (peer dependency) - Required for hooks only
 
 ## Yarn Workspaces
 
@@ -114,6 +216,7 @@ The repository uses Yarn workspaces for dependency management. Key features:
 ### Workspace Configuration
 
 **Root `package.json`:**
+
 ```json
 {
   "private": true,
@@ -139,26 +242,31 @@ This creates a symlink during development and resolves to the published version 
 ### Common Commands
 
 **Install dependencies:**
+
 ```bash
 yarn install
 ```
 
 **Build all packages:**
+
 ```bash
 yarn build
 ```
 
 **Build specific package:**
+
 ```bash
 yarn workspace @net-protocol/core build
 ```
 
 **Add dependency to package:**
+
 ```bash
 yarn workspace @net-protocol/storage add viem
 ```
 
 **Run script in all workspaces:**
+
 ```bash
 yarn workspaces run test
 ```
@@ -183,22 +291,53 @@ yarn workspaces run test
 
 ## Source Code Extraction
 
-The SDK packages are extracted from the main Net app (`website/` directory):
+The SDK packages are extracted from the main Net app (`website/` directory). Both **React hooks** and **utility functions** are extracted:
 
 ### net-core
+
+**Hooks:**
+
+- `useNetMessages` from `website/src/components/hooks/net/useNetMessages.ts`
+- `useNetMessageCount` from `website/src/components/hooks/net/useNetMessageCount.ts`
+- `getNetMessagesReadConfig` from `website/src/components/hooks/net/getNetMessagesReadConfig.ts`
+
+**Utilities:**
+
+- `getNetMessageAtIndex` from `website/src/components/core/utils.ts`
 - Net contract interactions from `website/src/components/core/net-apps/`
 - Message types from `website/src/components/core/types.ts`
 - Contract addresses/ABIs from `website/src/app/constants.ts`
 
 ### net-storage
+
+**Hooks:**
+
+- `useStorage` from `website/src/components/hooks/net/useStorage.ts`
+- `useStorageForOperator` from `website/src/components/hooks/net/useStorage.ts`
+- `useBulkStorage` from `website/src/components/hooks/net/useStorage.ts`
+- `useXmlStorage` from `website/src/components/hooks/net/useXmlStorage.ts`
+
+**Utilities:**
+
+- `readStorageDataRaw` from `website/src/app/api/[chainId]/storage/utils.ts`
+- `readChunkedStorage` from `website/src/app/api/[chainId]/storage/utils.ts`
 - Storage utilities from `website/src/components/core/net-apps/storage/utils.ts`
 - Chunked storage from `website/src/components/core/net-apps/chunked-storage/utils.ts`
 - XML storage from `website/src/components/core/net-apps/xml-storage/`
-- React hooks refactored to class methods
 
 ### net-score
+
+**Hooks:**
+
+- `useUpvotes` from `website/src/components/hooks/net/useUpvotesBatch.ts`
+- `useUpvotesWithLegacy` from `website/src/components/hooks/net/useUpvotesWithLegacy.ts`
+- Upvote hooks from `website/src/components/core/net-apps/upvote/hooks/`
+
+**Utilities:**
+
 - Upvote utilities from `website/src/components/core/net-apps/upvote/utils/`
 - Score key utilities from `website/src/components/core/net-apps/upvote/utils/scoreKeyUtils.ts`
+- Score contract interactions from `website/src/components/core/net-apps/upvote/`
 
 ## Contracts
 
@@ -229,6 +368,7 @@ Examples use `workspace:*` dependencies during development and published version
 **Rationale:**
 
 **TypeScript Compiler:**
+
 - ✅ Simpler setup - no additional build tooling required
 - ✅ Faster builds - direct compilation without bundling overhead
 - ✅ Better tree-shaking - consuming applications can tree-shake unused code
@@ -238,6 +378,7 @@ Examples use `workspace:*` dependencies during development and published version
 - ⚠️ No code minification (can be done by consuming apps if needed)
 
 **Alternative: Bundler (esbuild/rollup):**
+
 - ✅ Smaller output files (minified)
 - ✅ Can bundle dependencies (but increases package size)
 - ✅ More complex build configuration
@@ -246,6 +387,7 @@ Examples use `workspace:*` dependencies during development and published version
 - ⚠️ Harder to debug (bundled code)
 
 **Output Structure:**
+
 - `dist/index.js` - CommonJS build
 - `dist/index.esm.js` - ES Module build (for net-core)
 - `dist/index.d.ts` - TypeScript declarations
@@ -272,21 +414,25 @@ Each package is versioned independently using semantic versioning:
 If we wanted synchronized versions, all packages would share the same version number:
 
 **How it would work:**
+
 - All packages bump to the same version (e.g., `1.2.0`) simultaneously
 - Root `package.json` could track a single version
 - Use tools like `lerna` or `changesets` to manage synchronized releases
 - All packages released together, even if only one changed
 
 **Pros:**
+
 - Easier to understand which versions work together
 - Simpler for consumers (all packages at same version)
 
 **Cons:**
+
 - Unnecessary version bumps when only one package changes
 - Less flexibility for independent releases
 - More complex release process
 
 **Why Independent Versioning:**
+
 - More flexible - packages can evolve independently
 - Consumers can mix and match versions as needed
 - Aligns with semantic versioning best practices
@@ -303,6 +449,7 @@ When a package has a breaking change that affects dependent packages:
 **Process:**
 
 1. **Update `net-storage` dependency:**
+
    ```json
    {
      "dependencies": {
@@ -314,10 +461,12 @@ When a package has a breaking change that affects dependent packages:
 2. **Update `net-storage` code** to use new `net-core` API
 
 3. **Version `net-storage` appropriately:**
+
    - If `net-storage` API unchanged: Patch version (e.g., `1.0.1`)
    - If `net-storage` API changed: Major version (e.g., `2.0.0`)
 
 4. **Update peer dependency ranges** in `net-storage`:
+
    ```json
    {
      "peerDependencies": {
@@ -333,6 +482,7 @@ When a package has a breaking change that affects dependent packages:
    - Then: `@net-protocol/storage@2.0.0` (or `1.0.1`)
 
 **Best Practices:**
+
 - Always test dependent packages when core packages have breaking changes
 - Use peer dependencies to enforce compatible versions
 - Document minimum required versions in README
@@ -354,6 +504,7 @@ After publishing packages to npm, the main Net app (`website/`) can use them:
 ```
 
 Migration involves:
+
 1. Installing packages
 2. Replacing local imports with package imports
 3. Removing old utility files
@@ -364,6 +515,7 @@ Migration involves:
 **Decision:** Generate API docs from TypeScript using TypeDoc
 
 **Rationale:**
+
 - ✅ Auto-generated from source code - always in sync
 - ✅ Type-safe documentation - reflects actual types
 - ✅ Less maintenance - no manual updates needed
@@ -372,11 +524,13 @@ Migration involves:
 - ✅ Can include JSDoc comments for additional context
 
 **Documentation Structure:**
+
 - `docs/getting-started.md` - Installation and quick start (manual)
 - `docs/api-reference/` - Auto-generated API docs from TypeDoc
 - `docs/guides/` - Usage guides and examples (manual)
 
 **TypeDoc Configuration:**
+
 - Generate docs for each package
 - Include all exported types and functions
 - Link between packages
@@ -387,6 +541,7 @@ Migration involves:
 **Decision:** Manual publishing to npm
 
 **Rationale:**
+
 - ✅ More control over when packages are published
 - ✅ Allows for manual review before publishing
 - ✅ Simpler setup - no complex CI/CD configuration needed
@@ -394,6 +549,7 @@ Migration involves:
 - ⚠️ Requires manual version bumping and publishing
 
 **Publishing Process:**
+
 1. Update version in package `package.json`
 2. Build packages: `yarn build:all`
 3. Run tests: `yarn test` (if tests exist)
@@ -408,6 +564,7 @@ Could add automated publishing later using GitHub Actions triggered by version t
 **Decision:** Use Foundry for contract compilation
 
 **Rationale:**
+
 - ✅ Fast compilation and testing
 - ✅ Built-in testing framework
 - ✅ Gas optimization tools
@@ -415,6 +572,7 @@ Could add automated publishing later using GitHub Actions triggered by version t
 - ✅ Used in main Net protocol repository
 
 **Setup:**
+
 - `contracts/foundry.toml` - Foundry configuration
 - Contracts organized by feature in subdirectories
 - Can compile and test contracts independently
@@ -435,4 +593,3 @@ To add a new package:
 ## Questions or Issues
 
 For questions about the repository structure or to propose changes, please open an issue or discussion in the repository.
-

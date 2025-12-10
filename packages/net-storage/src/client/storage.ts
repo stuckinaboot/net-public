@@ -10,6 +10,7 @@ export interface GetStorageOptions {
   chainId: number;
   key: string;
   operator: string;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 export interface GetStorageValueAtIndexOptions {
@@ -17,32 +18,36 @@ export interface GetStorageValueAtIndexOptions {
   key: string;
   operator: string;
   index: number;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 export interface GetStorageTotalWritesOptions {
   chainId: number;
   key: string;
   operator: string;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 export interface GetStorageBulkGetOptions {
   chainId: number;
-  keys: Array<{ key: string; operator: string }>;
+  keys: Array<{ key: string; operator: string; keyFormat?: "raw" | "bytes32" }>;
   safe?: boolean;
+  keyFormat?: "raw" | "bytes32"; // Optional format override for all keys (if individual keys don't specify)
 }
 
 export interface GetStorageRouterOptions {
   chainId: number;
   key: string;
   operator: string;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 /**
  * Build contract read config for Storage.get()
  */
 export function getStorageReadConfig(params: GetStorageOptions) {
-  const { chainId, key, operator } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
   return {
     abi: STORAGE_CONTRACT.abi,
@@ -59,8 +64,8 @@ export function getStorageReadConfig(params: GetStorageOptions) {
 export function getStorageValueAtIndexReadConfig(
   params: GetStorageValueAtIndexOptions
 ) {
-  const { chainId, key, operator, index } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, index, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
   return {
     abi: STORAGE_CONTRACT.abi,
@@ -77,8 +82,8 @@ export function getStorageValueAtIndexReadConfig(
 export function getStorageTotalWritesReadConfig(
   params: GetStorageTotalWritesOptions
 ) {
-  const { chainId, key, operator } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
   return {
     abi: STORAGE_CONTRACT.abi,
@@ -93,12 +98,12 @@ export function getStorageTotalWritesReadConfig(
  * Build contract read config for Storage.bulkGet()
  */
 export function getStorageBulkGetReadConfig(params: GetStorageBulkGetOptions) {
-  const { chainId, keys, safe = false } = params;
+  const { chainId, keys, safe = false, keyFormat } = params;
   const contract = safe ? SAFE_STORAGE_READER_CONTRACT : STORAGE_CONTRACT;
 
-  // Convert keys to bytes32 format
+  // Convert keys to bytes32 format (use individual keyFormat or fallback to global keyFormat)
   const bulkKeys = keys.map((k) => ({
-    key: getStorageKeyBytes(k.key) as `0x${string}`,
+    key: getStorageKeyBytes(k.key, k.keyFormat ?? keyFormat) as `0x${string}`,
     operator: k.operator as `0x${string}`,
   }));
 
@@ -115,8 +120,8 @@ export function getStorageBulkGetReadConfig(params: GetStorageBulkGetOptions) {
  * Build contract read config for StorageRouter.get()
  */
 export function getStorageRouterReadConfig(params: GetStorageRouterOptions) {
-  const { chainId, key, operator } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
   return {
     abi: STORAGE_ROUTER_CONTRACT.abi,
@@ -126,4 +131,3 @@ export function getStorageRouterReadConfig(params: GetStorageRouterOptions) {
     chainId,
   };
 }
-

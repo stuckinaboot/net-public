@@ -6,6 +6,7 @@ export interface GetChunkedStorageMetadataOptions {
   key: string;
   operator: string;
   index?: number;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 export interface GetChunkedStorageChunksOptions {
@@ -15,12 +16,14 @@ export interface GetChunkedStorageChunksOptions {
   start: number;
   end: number;
   index?: number;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 export interface GetChunkedStorageTotalWritesOptions {
   chainId: number;
   key: string;
   operator: string;
+  keyFormat?: "raw" | "bytes32"; // Optional format override
 }
 
 /**
@@ -29,10 +32,11 @@ export interface GetChunkedStorageTotalWritesOptions {
 export function getChunkedStorageMetadataReadConfig(
   params: GetChunkedStorageMetadataOptions
 ) {
-  const { chainId, key, operator, index } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, index, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
-  const functionName = index !== undefined ? "getMetadataAtIndex" : "getMetadata";
+  const functionName =
+    index !== undefined ? "getMetadataAtIndex" : "getMetadata";
   const args =
     index !== undefined
       ? [storageKeyBytes, operator, index]
@@ -53,8 +57,8 @@ export function getChunkedStorageMetadataReadConfig(
 export function getChunkedStorageChunksReadConfig(
   params: GetChunkedStorageChunksOptions
 ) {
-  const { chainId, key, operator, start, end, index } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, start, end, index, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
   const functionName = index !== undefined ? "getChunksAtIndex" : "getChunks";
   const args =
@@ -77,8 +81,8 @@ export function getChunkedStorageChunksReadConfig(
 export function getChunkedStorageTotalWritesReadConfig(
   params: GetChunkedStorageTotalWritesOptions
 ) {
-  const { chainId, key, operator } = params;
-  const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+  const { chainId, key, operator, keyFormat } = params;
+  const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
   return {
     abi: CHUNKED_STORAGE_READER_CONTRACT.abi,
@@ -88,4 +92,3 @@ export function getChunkedStorageTotalWritesReadConfig(
     chainId,
   };
 }
-

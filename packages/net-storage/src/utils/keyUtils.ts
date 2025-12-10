@@ -98,9 +98,27 @@ export function formatStorageKeyForDisplay(storageKey: string): {
  * Get storage key as bytes32 format
  * Supports direct hex bytes32 input or converts string to bytes32
  * For strings longer than 32 bytes, hashes them
+ *
+ * @param input - The storage key (raw string or bytes32 hex)
+ * @param keyFormat - Optional format override: "raw" to always convert, "bytes32" to use as-is, undefined for auto-detect
  */
-export function getStorageKeyBytes(input: string): string {
-  // Direct hex bytes32 support: if already in correct format, use directly
+export function getStorageKeyBytes(
+  input: string,
+  keyFormat?: "raw" | "bytes32"
+): string {
+  // Explicit format override: bytes32 - use as-is
+  if (keyFormat === "bytes32") {
+    return input.toLowerCase();
+  }
+
+  // Explicit format override: raw - always convert
+  if (keyFormat === "raw") {
+    return input.length > 32
+      ? keccak256HashString(input.toLowerCase())
+      : toBytes32(input.toLowerCase());
+  }
+
+  // Auto-detect: if already in correct format, use directly
   if (
     input.startsWith("0x") &&
     input.length === 66 && // 0x + 64 hex chars = bytes32
@@ -109,7 +127,7 @@ export function getStorageKeyBytes(input: string): string {
     return input.toLowerCase();
   }
 
-  // Existing logic
+  // Auto-detect: convert string to bytes32
   return input.length > 32
     ? keccak256HashString(input.toLowerCase())
     : toBytes32(input.toLowerCase());

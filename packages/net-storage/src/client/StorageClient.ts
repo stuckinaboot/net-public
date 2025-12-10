@@ -21,7 +21,11 @@ import {
 } from "./xmlStorage";
 import { parseNetReferences, containsXmlReferences } from "../utils/xmlUtils";
 import { getStorageKeyBytes } from "../utils/keyUtils";
-import { STORAGE_CONTRACT, CHUNKED_STORAGE_READER_CONTRACT, STORAGE_ROUTER_CONTRACT } from "../constants";
+import {
+  STORAGE_CONTRACT,
+  CHUNKED_STORAGE_READER_CONTRACT,
+  STORAGE_ROUTER_CONTRACT,
+} from "../constants";
 import type {
   StorageData,
   BulkStorageKey,
@@ -47,11 +51,13 @@ export class StorageClient {
   async get(params: {
     key: string;
     operator: string;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<StorageData | null> {
     const config = getStorageReadConfig({
       chainId: this.chainId,
       key: params.key,
       operator: params.operator,
+      keyFormat: params.keyFormat,
     });
 
     try {
@@ -69,12 +75,14 @@ export class StorageClient {
     key: string;
     operator: string;
     index: number;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<StorageData | null> {
     const config = getStorageValueAtIndexReadConfig({
       chainId: this.chainId,
       key: params.key,
       operator: params.operator,
       index: params.index,
+      keyFormat: params.keyFormat,
     });
 
     try {
@@ -92,15 +100,15 @@ export class StorageClient {
   async getTotalWrites(params: {
     key: string;
     operator: string;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<number> {
-    const storageKeyBytes = getStorageKeyBytes(params.key) as `0x${string}`;
-
     // Try ChunkedStorageReader first
     try {
       const config = getChunkedStorageTotalWritesReadConfig({
         chainId: this.chainId,
         key: params.key,
         operator: params.operator,
+        keyFormat: params.keyFormat,
       });
       const count = await readContract(this.client, config);
       return Number(count);
@@ -111,6 +119,7 @@ export class StorageClient {
           chainId: this.chainId,
           key: params.key,
           operator: params.operator,
+          keyFormat: params.keyFormat,
         });
         const count = await readContract(this.client, config);
         return Number(count);
@@ -126,11 +135,13 @@ export class StorageClient {
   async bulkGet(params: {
     keys: BulkStorageKey[];
     safe?: boolean;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<BulkStorageResult[]> {
     const config = getStorageBulkGetReadConfig({
       chainId: this.chainId,
       keys: params.keys,
       safe: params.safe,
+      keyFormat: params.keyFormat,
     });
 
     try {
@@ -151,6 +162,7 @@ export class StorageClient {
   async getViaRouter(params: {
     key: string;
     operator: string;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<{
     isChunkedStorage: boolean;
     text: string;
@@ -160,6 +172,7 @@ export class StorageClient {
       chainId: this.chainId,
       key: params.key,
       operator: params.operator,
+      keyFormat: params.keyFormat,
     });
 
     try {
@@ -172,10 +185,7 @@ export class StorageClient {
 
       // If chunked, decode chunk count and return assembled data
       if (isChunkedStorage) {
-        const [chunkCount] = decodeAbiParameters(
-          [{ type: "uint8" }],
-          data
-        );
+        const [chunkCount] = decodeAbiParameters([{ type: "uint8" }], data);
         if (chunkCount === 0) {
           return { isChunkedStorage: true, text, data: "" };
         }
@@ -186,6 +196,7 @@ export class StorageClient {
           operator: params.operator,
           start: 0,
           end: Number(chunkCount),
+          keyFormat: params.keyFormat,
         });
 
         const assembled = assembleChunks(chunks);
@@ -214,12 +225,14 @@ export class StorageClient {
     key: string;
     operator: string;
     index?: number;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<{ chunkCount: number; originalText: string } | null> {
     const config = getChunkedStorageMetadataReadConfig({
       chainId: this.chainId,
       key: params.key,
       operator: params.operator,
       index: params.index,
+      keyFormat: params.keyFormat,
     });
 
     try {
@@ -240,6 +253,7 @@ export class StorageClient {
     start: number;
     end: number;
     index?: number;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<string[]> {
     const config = getChunkedStorageChunksReadConfig({
       chainId: this.chainId,
@@ -248,6 +262,7 @@ export class StorageClient {
       start: params.start,
       end: params.end,
       index: params.index,
+      keyFormat: params.keyFormat,
     });
 
     try {
@@ -318,8 +333,12 @@ export class StorageClient {
   async getForOperatorAndKey(params: {
     operator: string;
     key: string;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<StorageData | null> {
-    const storageKeyBytes = getStorageKeyBytes(params.key) as `0x${string}`;
+    const storageKeyBytes = getStorageKeyBytes(
+      params.key,
+      params.keyFormat
+    ) as `0x${string}`;
 
     try {
       const result = await readContract(this.client, {
@@ -341,6 +360,7 @@ export class StorageClient {
     key: string;
     operator: string;
     index?: number;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<{ text: string; data: string; isXml: boolean }> {
     // Get data via router (latest) or direct (historical)
     let text: string;
@@ -353,6 +373,7 @@ export class StorageClient {
         key: params.key,
         operator: params.operator,
         index: params.index,
+        keyFormat: params.keyFormat,
       });
 
       if (chunkedMeta && chunkedMeta.chunkCount > 0) {
@@ -364,6 +385,7 @@ export class StorageClient {
           start: 0,
           end: chunkedMeta.chunkCount,
           index: params.index,
+          keyFormat: params.keyFormat,
         });
         const assembled = assembleChunks(chunks);
         data = assembled || "";
@@ -373,6 +395,7 @@ export class StorageClient {
           key: params.key,
           operator: params.operator,
           index: params.index,
+          keyFormat: params.keyFormat,
         });
         if (!result) {
           throw new Error("StoredDataNotFound");
@@ -386,6 +409,7 @@ export class StorageClient {
       const result = await this.getViaRouter({
         key: params.key,
         operator: params.operator,
+        keyFormat: params.keyFormat,
       });
       if (!result) {
         throw new Error("StoredDataNotFound");
@@ -418,11 +442,13 @@ export class StorageClient {
     key: string;
     operator: string;
     index?: number;
+    keyFormat?: "raw" | "bytes32";
   }): Promise<{ text: string; data: string }> {
     const metadata = await this.getChunkedMetadata({
       key: params.key,
       operator: params.operator,
       index: params.index,
+      keyFormat: params.keyFormat,
     });
 
     if (!metadata) {
@@ -439,6 +465,7 @@ export class StorageClient {
       start: 0,
       end: metadata.chunkCount,
       index: params.index,
+      keyFormat: params.keyFormat,
     });
 
     const assembled = assembleChunks(chunks);
@@ -448,4 +475,3 @@ export class StorageClient {
     };
   }
 }
-

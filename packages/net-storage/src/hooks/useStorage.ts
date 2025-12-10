@@ -16,6 +16,7 @@ export function useStorage({
   operatorAddress,
   enabled = true,
   index,
+  keyFormat,
 }: UseStorageOptions) {
   // For latest version (index undefined), use existing simple flow
   const isLatestVersion = index === undefined;
@@ -29,7 +30,10 @@ export function useStorage({
     abi: STORAGE_CONTRACT.abi,
     address: STORAGE_CONTRACT.address,
     functionName: "get",
-    args: key && operatorAddress ? [getStorageKeyBytes(key) as `0x${string}`, operatorAddress] : undefined,
+    args:
+      key && operatorAddress
+        ? [getStorageKeyBytes(key, keyFormat) as `0x${string}`, operatorAddress]
+        : undefined,
     chainId,
     query: {
       enabled: enabled && !!operatorAddress && !!key && isLatestVersion,
@@ -59,7 +63,10 @@ export function useStorage({
           throw new Error(`Chain not found for chainId: ${chainId}`);
         }
 
-        const storageKeyBytes = getStorageKeyBytes(key) as `0x${string}`;
+        const storageKeyBytes = getStorageKeyBytes(
+          key,
+          keyFormat
+        ) as `0x${string}`;
 
         // Step 1: Try ChunkedStorageReader.getMetadataAtIndex first
         try {
@@ -186,8 +193,11 @@ export function useStorageForOperatorAndKey({
   chainId,
   key,
   operatorAddress,
+  keyFormat,
 }: UseStorageOptions) {
-  const storageKeyBytes = key ? getStorageKeyBytes(key) as `0x${string}` : undefined;
+  const storageKeyBytes = key
+    ? (getStorageKeyBytes(key, keyFormat) as `0x${string}`)
+    : undefined;
   const readContractArgs = {
     abi: STORAGE_CONTRACT.abi,
     address: STORAGE_CONTRACT.address,
@@ -212,16 +222,18 @@ export function useBulkStorage({
   chainId,
   keys,
   safe = false,
+  keyFormat,
 }: {
   chainId: number;
   keys: BulkStorageKey[];
   safe?: boolean;
+  keyFormat?: "raw" | "bytes32";
 }) {
   const contract = safe ? SAFE_STORAGE_READER_CONTRACT : STORAGE_CONTRACT;
 
   // Convert keys to bytes32 format
   const bulkKeys = keys.map((k) => ({
-    key: getStorageKeyBytes(k.key) as `0x${string}`,
+    key: getStorageKeyBytes(k.key, keyFormat) as `0x${string}`,
     operator: k.operator as `0x${string}`,
   }));
 
@@ -251,13 +263,17 @@ export function useStorageTotalWrites({
   key,
   operatorAddress,
   enabled = true,
+  keyFormat,
 }: {
   chainId: number;
   key?: string;
   operatorAddress?: string;
   enabled?: boolean;
+  keyFormat?: "raw" | "bytes32";
 }) {
-  const storageKeyBytes = key ? getStorageKeyBytes(key) as `0x${string}` : undefined;
+  const storageKeyBytes = key
+    ? (getStorageKeyBytes(key, keyFormat) as `0x${string}`)
+    : undefined;
 
   // Try ChunkedStorageReader first
   const {
@@ -268,7 +284,10 @@ export function useStorageTotalWrites({
     abi: CHUNKED_STORAGE_READER_CONTRACT.abi,
     address: CHUNKED_STORAGE_READER_CONTRACT.address,
     functionName: "getTotalWrites",
-    args: storageKeyBytes && operatorAddress ? [storageKeyBytes, operatorAddress] : undefined,
+    args:
+      storageKeyBytes && operatorAddress
+        ? [storageKeyBytes, operatorAddress]
+        : undefined,
     chainId,
     query: {
       enabled: enabled && !!key && !!operatorAddress,
@@ -284,7 +303,10 @@ export function useStorageTotalWrites({
     abi: STORAGE_CONTRACT.abi,
     address: STORAGE_CONTRACT.address,
     functionName: "getTotalWrites",
-    args: storageKeyBytes && operatorAddress ? [storageKeyBytes, operatorAddress] : undefined,
+    args:
+      storageKeyBytes && operatorAddress
+        ? [storageKeyBytes, operatorAddress]
+        : undefined,
     chainId,
     query: {
       enabled:
@@ -312,4 +334,3 @@ export function useStorageTotalWrites({
         : undefined,
   };
 }
-

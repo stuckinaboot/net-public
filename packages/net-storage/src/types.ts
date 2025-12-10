@@ -9,6 +9,7 @@ export type StorageData = [string, string];
 export type BulkStorageKey = {
   key: string;
   operator: string;
+  keyFormat?: "raw" | "bytes32"; // Optional format override for this specific key
 };
 
 /**
@@ -28,6 +29,7 @@ export type UseStorageOptions = {
   operatorAddress?: string;
   enabled?: boolean;
   index?: number; // Historical version index (0-based). undefined = latest version
+  keyFormat?: "raw" | "bytes32"; // Optional format override: "raw" to always convert, "bytes32" to use as-is, undefined for auto-detect
 };
 
 /**
@@ -68,6 +70,7 @@ export type UseXmlStorageOptions = {
   enabled?: boolean;
   content?: string; // Preview mode: when provided, no blockchain fetch
   index?: number; // Historical version index (0-based). undefined = latest version
+  keyFormat?: "raw" | "bytes32"; // Optional format override: "raw" to always convert, "bytes32" to use as-is, undefined for auto-detect
 };
 
 /**
@@ -79,4 +82,3 @@ export type UseCanvasFromRouterOptions = {
   operatorAddress: string;
   enabled?: boolean;
 };
-

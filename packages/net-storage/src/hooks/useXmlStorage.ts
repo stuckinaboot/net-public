@@ -2,14 +2,8 @@ import { useMemo, useState } from "react";
 import useAsyncEffect from "use-async-effect";
 import { hexToString } from "viem";
 import { useStorage } from "./useStorage";
-import {
-  parseNetReferences,
-  containsXmlReferences,
-} from "../utils/xmlUtils";
-import {
-  resolveXmlRecursive,
-  MAX_XML_DEPTH,
-} from "../client/xmlStorage";
+import { parseNetReferences, containsXmlReferences } from "../utils/xmlUtils";
+import { resolveXmlRecursive, MAX_XML_DEPTH } from "../client/xmlStorage";
 import { getPublicClient } from "@net-protocol/core";
 import type { UseXmlStorageOptions } from "../types";
 
@@ -21,6 +15,7 @@ export function useXmlStorage({
   enabled = true,
   content,
   index,
+  keyFormat,
 }: UseXmlStorageOptions) {
   // Determine mode: preview (raw content) vs blockchain (fetch from storage)
   const isPreviewMode = !!content;
@@ -36,6 +31,7 @@ export function useXmlStorage({
     operatorAddress,
     enabled: enabled && !isPreviewMode,
     index, // Pass index to useStorage for historical versions
+    keyFormat, // Pass keyFormat through
   });
 
   // 2. Get metadata string from either preview content or blockchain data
@@ -153,4 +149,3 @@ export function useXmlStorage({
     isXml,
   };
 }
-

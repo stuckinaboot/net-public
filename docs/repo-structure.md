@@ -1,0 +1,438 @@
+# Net Public Repository Structure
+
+This document outlines the structure and organization of the `net-public` repository, which contains TypeScript SDK modules, example code, smart contracts, and documentation for the Net Protocol ecosystem.
+
+## Chosen Approach: Approach 1 - Monorepo with Yarn Workspaces
+
+After evaluating multiple structural approaches, we have chosen **Approach 1: Monorepo with Yarn Workspaces**. This approach provides:
+
+- Industry-standard monorepo pattern
+- Independent versioning of each SDK package
+- Efficient dependency management through hoisting
+- Seamless local development with workspace linking
+- Easy extensibility for future additions
+- Publishing to npm as scoped packages (`@net-protocol/*`)
+
+## Overview
+
+The `net-public` repository is organized as a **monorepo using Yarn workspaces** to manage multiple npm packages. This structure enables:
+
+- Independent versioning of each SDK package
+- Efficient dependency management through hoisting
+- Seamless local development with workspace linking
+- Easy extensibility for future additions
+- Publishing to npm as scoped packages (`@net-protocol/*`)
+
+## Repository Structure
+
+```
+net-public/
+├── packages/                    # Publishable npm packages
+│   ├── net-core/                # Core Net protocol SDK
+│   ├── net-storage/             # Storage SDK
+│   ├── net-score/               # Score/Upvote SDK
+│   └── net-types/               # Shared TypeScript types
+│
+├── contracts/                   # Smart contracts
+│   ├── storage/                 # Storage contracts
+│   ├── upvote/                  # Upvote/Score contracts
+│   └── examples/                # Example contracts
+│
+├── examples/                    # Example applications
+│   ├── storage-example/         # Example using net-storage
+│   ├── upvote-example/          # Example using net-score
+│   └── full-app-example/        # Complete example app
+│
+├── docs/                        # Documentation
+│   ├── repo-structure.md        # This file
+│   ├── getting-started.md       # Getting started guide
+│   ├── api-reference/           # API documentation
+│   └── guides/                  # Usage guides
+│
+├── package.json                 # Root workspace config
+├── yarn.lock                    # Single lockfile for all packages
+├── tsconfig.json                # Base TypeScript config
+├── .gitignore
+└── README.md                    # Main README
+```
+
+## Packages
+
+### @net-protocol/core
+
+**Location:** `packages/net-core/`
+
+Core Net protocol SDK for interacting with Net smart contracts. Provides the foundation for all other SDK packages.
+
+**Key Exports:**
+- `NetClient` - Main client for Net protocol interactions
+- Message types and utilities
+- Contract addresses and ABIs
+
+**Dependencies:**
+- `viem` - Ethereum library
+- `wagmi` (peer dependency) - React hooks for Ethereum
+
+### @net-protocol/storage
+
+**Location:** `packages/net-storage/`
+
+Net Storage SDK for key-value storage on the Net protocol. Supports regular storage, chunked storage, and XML storage patterns.
+
+**Key Exports:**
+- `StorageClient` - Storage operations client
+- Chunked storage utilities
+- XML storage utilities
+- Storage utility functions
+
+**Dependencies:**
+- `@net-protocol/core` - Core SDK (workspace dependency)
+- `viem` - Ethereum library
+- `pako` - Compression library
+- `wagmi` (peer dependency)
+
+### @net-protocol/score
+
+**Location:** `packages/net-score/`
+
+Net Score/Upvote SDK for the onchain scoring system. Provides utilities for upvoting and score management.
+
+**Key Exports:**
+- `ScoreClient` - Score operations client
+- Upvote utilities
+- Score key utilities
+
+**Dependencies:**
+- `@net-protocol/core` - Core SDK (workspace dependency)
+- `viem` - Ethereum library
+- `wagmi` (peer dependency)
+
+## Yarn Workspaces
+
+The repository uses Yarn workspaces for dependency management. Key features:
+
+### Workspace Configuration
+
+**Root `package.json`:**
+```json
+{
+  "private": true,
+  "workspaces": ["packages/*"],
+  "packageManager": "yarn@1.22.22"
+}
+```
+
+### Workspace Protocol
+
+Packages reference each other using the `workspace:*` protocol:
+
+```json
+{
+  "dependencies": {
+    "@net-protocol/core": "workspace:*"
+  }
+}
+```
+
+This creates a symlink during development and resolves to the published version when packages are published to npm.
+
+### Common Commands
+
+**Install dependencies:**
+```bash
+yarn install
+```
+
+**Build all packages:**
+```bash
+yarn build
+```
+
+**Build specific package:**
+```bash
+yarn workspace @net-protocol/core build
+```
+
+**Add dependency to package:**
+```bash
+yarn workspace @net-protocol/storage add viem
+```
+
+**Run script in all workspaces:**
+```bash
+yarn workspaces run test
+```
+
+## Development Workflow
+
+### Local Development
+
+1. Make changes to source files in `packages/*/src/`
+2. Build the package: `yarn workspace @net-protocol/core build`
+3. Changes are immediately available via `workspace:*` links
+4. Test in dependent packages or examples
+5. Run type checking: `yarn typecheck`
+
+### Publishing
+
+1. Update version in package `package.json`
+2. Build all packages: `yarn build:all`
+3. Run tests: `yarn test` (if tests exist)
+4. Publish: `yarn workspace @net-protocol/core publish --access public`
+5. Update main Net app to use new version
+
+## Source Code Extraction
+
+The SDK packages are extracted from the main Net app (`website/` directory):
+
+### net-core
+- Net contract interactions from `website/src/components/core/net-apps/`
+- Message types from `website/src/components/core/types.ts`
+- Contract addresses/ABIs from `website/src/app/constants.ts`
+
+### net-storage
+- Storage utilities from `website/src/components/core/net-apps/storage/utils.ts`
+- Chunked storage from `website/src/components/core/net-apps/chunked-storage/utils.ts`
+- XML storage from `website/src/components/core/net-apps/xml-storage/`
+- React hooks refactored to class methods
+
+### net-score
+- Upvote utilities from `website/src/components/core/net-apps/upvote/utils/`
+- Score key utilities from `website/src/components/core/net-apps/upvote/utils/scoreKeyUtils.ts`
+
+## Contracts
+
+Smart contracts are organized by feature:
+
+- `contracts/storage/` - Storage contracts (Storage.sol, ChunkedStorage.sol, StorageRouter.sol)
+- `contracts/upvote/` - Score and Upvote contracts (Score.sol, UpvoteApp.sol)
+- `contracts/examples/` - Example contracts demonstrating Net usage
+
+Contracts are copied from `protocol/src/apps/` in the main Net repository.
+
+## Examples
+
+Example applications demonstrate SDK usage:
+
+- `examples/storage-example/` - Basic storage operations
+- `examples/upvote-example/` - Upvote integration
+- `examples/full-app-example/` - Complete application using all SDKs
+
+Examples use `workspace:*` dependencies during development and published versions in production.
+
+## Build System
+
+### TypeScript Compiler (Chosen Approach)
+
+**Decision:** Use TypeScript compiler directly (no bundler)
+
+**Rationale:**
+
+**TypeScript Compiler:**
+- ✅ Simpler setup - no additional build tooling required
+- ✅ Faster builds - direct compilation without bundling overhead
+- ✅ Better tree-shaking - consuming applications can tree-shake unused code
+- ✅ TypeScript handles type checking and declaration generation natively
+- ✅ Smaller package size - no bundled runtime code
+- ✅ Better debugging - source maps point to original TypeScript files
+- ⚠️ No code minification (can be done by consuming apps if needed)
+
+**Alternative: Bundler (esbuild/rollup):**
+- ✅ Smaller output files (minified)
+- ✅ Can bundle dependencies (but increases package size)
+- ✅ More complex build configuration
+- ⚠️ Additional tooling and dependencies
+- ⚠️ Slower builds due to bundling step
+- ⚠️ Harder to debug (bundled code)
+
+**Output Structure:**
+- `dist/index.js` - CommonJS build
+- `dist/index.esm.js` - ES Module build (for net-core)
+- `dist/index.d.ts` - TypeScript declarations
+- `dist/*.d.ts.map` - Declaration source maps
+
+### TypeScript Configuration
+
+- Base `tsconfig.json` at root with shared compiler options
+- Each package extends base config
+- TypeScript project references for cross-package type checking
+
+## Versioning Strategy
+
+**Decision:** Independent versioning per package
+
+Each package is versioned independently using semantic versioning:
+
+- **Major** - Breaking changes
+- **Minor** - New features (backward compatible)
+- **Patch** - Bug fixes
+
+### Synchronized Versioning (Alternative)
+
+If we wanted synchronized versions, all packages would share the same version number:
+
+**How it would work:**
+- All packages bump to the same version (e.g., `1.2.0`) simultaneously
+- Root `package.json` could track a single version
+- Use tools like `lerna` or `changesets` to manage synchronized releases
+- All packages released together, even if only one changed
+
+**Pros:**
+- Easier to understand which versions work together
+- Simpler for consumers (all packages at same version)
+
+**Cons:**
+- Unnecessary version bumps when only one package changes
+- Less flexibility for independent releases
+- More complex release process
+
+**Why Independent Versioning:**
+- More flexible - packages can evolve independently
+- Consumers can mix and match versions as needed
+- Aligns with semantic versioning best practices
+- Better for gradual adoption
+
+## Handling Breaking Changes in Dependencies
+
+When a package has a breaking change that affects dependent packages:
+
+### Example: `net-core` v2.0.0 breaks `net-storage`
+
+**Scenario:** `net-core` releases v2.0.0 with breaking API changes. `net-storage` depends on `net-core`.
+
+**Process:**
+
+1. **Update `net-storage` dependency:**
+   ```json
+   {
+     "dependencies": {
+       "@net-protocol/core": "^2.0.0"
+     }
+   }
+   ```
+
+2. **Update `net-storage` code** to use new `net-core` API
+
+3. **Version `net-storage` appropriately:**
+   - If `net-storage` API unchanged: Patch version (e.g., `1.0.1`)
+   - If `net-storage` API changed: Major version (e.g., `2.0.0`)
+
+4. **Update peer dependency ranges** in `net-storage`:
+   ```json
+   {
+     "peerDependencies": {
+       "@net-protocol/core": "^2.0.0"
+     }
+   }
+   ```
+
+5. **Document breaking changes** in CHANGELOG.md
+
+6. **Publish in order:**
+   - First: `@net-protocol/core@2.0.0`
+   - Then: `@net-protocol/storage@2.0.0` (or `1.0.1`)
+
+**Best Practices:**
+- Always test dependent packages when core packages have breaking changes
+- Use peer dependencies to enforce compatible versions
+- Document minimum required versions in README
+- Provide migration guides for major version upgrades
+- Consider deprecation periods for breaking changes
+
+## Integration with Main Net App
+
+After publishing packages to npm, the main Net app (`website/`) can use them:
+
+```json
+{
+  "dependencies": {
+    "@net-protocol/core": "^1.0.0",
+    "@net-protocol/storage": "^1.0.0",
+    "@net-protocol/score": "^1.0.0"
+  }
+}
+```
+
+Migration involves:
+1. Installing packages
+2. Replacing local imports with package imports
+3. Removing old utility files
+4. Testing integration
+
+## Documentation
+
+**Decision:** Generate API docs from TypeScript using TypeDoc
+
+**Rationale:**
+- ✅ Auto-generated from source code - always in sync
+- ✅ Type-safe documentation - reflects actual types
+- ✅ Less maintenance - no manual updates needed
+- ✅ Rich type information - shows interfaces, types, generics
+- ✅ Cross-references between packages
+- ✅ Can include JSDoc comments for additional context
+
+**Documentation Structure:**
+- `docs/getting-started.md` - Installation and quick start (manual)
+- `docs/api-reference/` - Auto-generated API docs from TypeDoc
+- `docs/guides/` - Usage guides and examples (manual)
+
+**TypeDoc Configuration:**
+- Generate docs for each package
+- Include all exported types and functions
+- Link between packages
+- Output to `docs/api-reference/`
+
+## CI/CD
+
+**Decision:** Manual publishing to npm
+
+**Rationale:**
+- ✅ More control over when packages are published
+- ✅ Allows for manual review before publishing
+- ✅ Simpler setup - no complex CI/CD configuration needed
+- ✅ Can coordinate multi-package releases manually
+- ⚠️ Requires manual version bumping and publishing
+
+**Publishing Process:**
+1. Update version in package `package.json`
+2. Build packages: `yarn build:all`
+3. Run tests: `yarn test` (if tests exist)
+4. Manual review of changes
+5. Publish: `yarn workspace @net-protocol/core publish --access public`
+
+**Future Consideration:**
+Could add automated publishing later using GitHub Actions triggered by version tags or manual workflow dispatch.
+
+## Contract Compilation
+
+**Decision:** Use Foundry for contract compilation
+
+**Rationale:**
+- ✅ Fast compilation and testing
+- ✅ Built-in testing framework
+- ✅ Gas optimization tools
+- ✅ Active development and community
+- ✅ Used in main Net protocol repository
+
+**Setup:**
+- `contracts/foundry.toml` - Foundry configuration
+- Contracts organized by feature in subdirectories
+- Can compile and test contracts independently
+
+**Note:** Hardhat is not used - Foundry is the chosen tooling.
+
+## Extending the Repository
+
+To add a new package:
+
+1. Create directory: `packages/new-package/`
+2. Add `package.json` with `@net-protocol/new-package` name
+3. Add to workspace (automatically detected via `packages/*`)
+4. Configure TypeScript: extend root `tsconfig.json`
+5. Add build scripts
+6. Update root `package.json` scripts if needed
+
+## Questions or Issues
+
+For questions about the repository structure or to propose changes, please open an issue or discussion in the repository.
+

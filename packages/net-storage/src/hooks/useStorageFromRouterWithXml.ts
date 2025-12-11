@@ -1,28 +1,28 @@
 import { useMemo, useState } from "react";
 import useAsyncEffect from "use-async-effect";
 import { stringToHex, hexToString } from "viem";
-import { useCanvasFromRouter } from "./useCanvasFromRouter";
+import { useStorageFromRouter } from "./useStorageFromRouter";
 import { containsXmlReferences } from "../utils/xmlUtils";
 import {
   resolveXmlRecursive,
   MAX_XML_DEPTH,
 } from "../client/xmlStorage";
 import { getPublicClient } from "@net-protocol/core";
-import type { UseCanvasFromRouterOptions, StorageData } from "../types";
+import type { UseStorageFromRouterOptions, StorageData } from "../types";
 
 /**
- * Generic hook to fetch canvas content from StorageRouter with XML support
+ * Generic hook to fetch storage content from StorageRouter with XML support
  * Handles regular storage, chunked storage, and XML storage seamlessly
- * Works for any canvas type (profile, token, etc.)
+ * Works for any storage key (not just canvases)
  */
-export function useCanvasFromRouterWithXml({
+export function useStorageFromRouterWithXml({
   chainId,
   storageKey,
   operatorAddress,
   enabled = true,
-}: UseCanvasFromRouterOptions) {
+}: UseStorageFromRouterOptions) {
   // Step 1: Get base data from StorageRouter (handles ChunkedStorage)
-  const routerData = useCanvasFromRouter({
+  const routerData = useStorageFromRouter({
     chainId,
     storageKey,
     operatorAddress,
@@ -71,7 +71,7 @@ export function useCanvasFromRouterWithXml({
       setResolvedContent(resolved);
     } catch (error) {
       console.error(
-        "[useCanvasFromRouterWithXml] XML resolution error:",
+        "[useStorageFromRouterWithXml] XML resolution error:",
         error
       );
       setChunksError(error as Error);

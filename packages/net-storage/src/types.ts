@@ -74,9 +74,9 @@ export type UseXmlStorageOptions = {
 };
 
 /**
- * Options for useCanvasFromRouter hook
+ * Options for useStorageFromRouter hook
  */
-export type UseCanvasFromRouterOptions = {
+export type UseStorageFromRouterOptions = {
   chainId: number;
   storageKey: `0x${string}`;
   operatorAddress: string;

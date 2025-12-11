@@ -23,7 +23,7 @@ yarn add @net-protocol/storage
 ### React Hooks
 
 ```typescript
-import { useStorage, useXmlStorage, useCanvasFromRouter } from "@net-protocol/storage";
+import { useStorage, useXmlStorage, useStorageFromRouter } from "@net-protocol/storage";
 
 // Basic storage read
 function MyComponent() {
@@ -51,9 +51,9 @@ function XmlComponent() {
   return <div>{data}</div>;
 }
 
-// Canvas from router (handles chunked storage)
-function CanvasComponent() {
-  const { data, isLoading } = useCanvasFromRouter({
+// Storage from router (handles chunked storage)
+function StorageComponent() {
+  const { data, isLoading } = useStorageFromRouter({
     chainId: 8453,
     storageKey: "0x...",
     operatorAddress: "0x...",
@@ -137,8 +137,8 @@ const result = processDataForStorage(data, operatorAddress);
 - `useBulkStorage` - Bulk read storage values
 - `useStorageTotalWrites` - Get total number of versions
 - `useXmlStorage` - Read XML storage with recursive resolution
-- `useCanvasFromRouter` - Read from StorageRouter (handles chunked storage)
-- `useCanvasFromRouterWithXml` - Same as above with XML resolution
+- `useStorageFromRouter` - Read from StorageRouter (handles chunked storage)
+- `useStorageFromRouterWithXml` - Same as above with XML resolution
 
 ### StorageClient Methods
 

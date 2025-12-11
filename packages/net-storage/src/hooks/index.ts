@@ -4,6 +4,6 @@ export { useStorageForOperatorAndKey } from "./useStorage";
 export { useBulkStorage } from "./useStorage";
 export { useStorageTotalWrites } from "./useStorage";
 export { useXmlStorage } from "./useXmlStorage";
-export { useCanvasFromRouter } from "./useCanvasFromRouter";
-export { useCanvasFromRouterWithXml } from "./useCanvasFromRouterWithXml";
+export { useStorageFromRouter } from "./useStorageFromRouter";
+export { useStorageFromRouterWithXml } from "./useStorageFromRouterWithXml";
 

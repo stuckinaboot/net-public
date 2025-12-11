@@ -6,21 +6,21 @@ import { CHUNKED_STORAGE_CONTRACT } from "../constants";
 import { getPublicClient } from "@net-protocol/core";
 import { readContract } from "viem/actions";
 import { assembleChunks } from "../utils/chunkUtils";
-import type { UseCanvasFromRouterOptions, StorageData } from "../types";
+import type { UseStorageFromRouterOptions, StorageData } from "../types";
 
 const BATCH_SIZE = 2;
 
 /**
- * Generic hook to fetch canvas content from StorageRouter
+ * Generic hook to fetch storage content from StorageRouter
  * Handles both regular storage and chunked storage seamlessly
- * Works for any canvas type (profile, token, etc.)
+ * Works for any storage key (not just canvases)
  */
-export function useCanvasFromRouter({
+export function useStorageFromRouter({
   chainId,
   storageKey,
   operatorAddress,
   enabled = true,
-}: UseCanvasFromRouterOptions) {
+}: UseStorageFromRouterOptions) {
   const [assembledData, setAssembledData] = useState<StorageData | undefined>();
   const [isChunkLoading, setIsChunkLoading] = useState(false);
   const [chunkError, setChunkError] = useState<Error | undefined>();

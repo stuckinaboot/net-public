@@ -1,0 +1,17 @@
+[
+  {
+    "type": "function",
+    "name": "get",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "isChunkedStorage", "type": "bool", "internalType": "bool" },
+      { "name": "text", "type": "string", "internalType": "string" },
+      { "name": "data", "type": "bytes", "internalType": "bytes" }
+    ],
+    "stateMutability": "view"
+  },
+  { "type": "error", "name": "StoredDataNotFound", "inputs": [] }
+]

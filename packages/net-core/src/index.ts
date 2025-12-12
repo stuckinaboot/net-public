@@ -16,6 +16,9 @@ export {
   getNetContract,
 } from "./chainConfig";
 
+// Utilities
+export { keccak256HashString, toBytes32 } from "./utils/crypto";
+
 // Types
 export type {
   NetMessage,

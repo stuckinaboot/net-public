@@ -6,7 +6,6 @@ export { useBulkStorage } from "./hooks/useStorage";
 export { useStorageTotalWrites } from "./hooks/useStorage";
 export { useXmlStorage } from "./hooks/useXmlStorage";
 export { useStorageFromRouter } from "./hooks/useStorageFromRouter";
-export { useStorageFromRouterWithXml } from "./hooks/useStorageFromRouterWithXml";
 
 // Client
 export { StorageClient } from "./client/StorageClient";
@@ -26,7 +25,6 @@ export type {
   XmlReference,
   ChunkedMetadata,
   UseXmlStorageOptions,
-  UseStorageFromRouterOptions,
 } from "./types";
 
 // Constants

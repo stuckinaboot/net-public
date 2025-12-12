@@ -5,5 +5,4 @@ export { useBulkStorage } from "./useStorage";
 export { useStorageTotalWrites } from "./useStorage";
 export { useXmlStorage } from "./useXmlStorage";
 export { useStorageFromRouter } from "./useStorageFromRouter";
-export { useStorageFromRouterWithXml } from "./useStorageFromRouterWithXml";
 

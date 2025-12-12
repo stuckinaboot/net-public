@@ -15,12 +15,6 @@ export function chunkDataForStorage(data: string): string[] {
     // Convert to hex first, then compress
     const dataHex = stringToHex(data);
     const compressedBytes = pako.gzip(dataHex);
-    console.log("[chunkDataForStorage] Compression stats:", {
-      originalSize: data.length,
-      hexSize: dataHex.length,
-      compressedSize: compressedBytes.length,
-      ratio: ((compressedBytes.length / dataHex.length) * 100).toFixed(1) + "%",
-    });
 
     // Convert compressed bytes to hex
     const dataBytes = "0x" + Buffer.from(compressedBytes).toString("hex");
@@ -90,20 +84,15 @@ export function assembleChunks(chunks: string[]): string | undefined {
     try {
       // Try to decompress
       const decompressed = pako.ungzip(bytes);
-      console.log("[assembleChunks] Decompression stats:", {
-        compressedSize: bytes.length,
-        decompressedSize: decompressed.length,
-        ratio: ((decompressed.length / bytes.length) * 100).toFixed(1) + "%",
-      });
 
-      // Convert decompressed bytes back to hex string
-      const result = hexToString(
-        ("0x" + Buffer.from(decompressed).toString("hex")) as `0x${string}`
-      );
+      // Decompressed bytes are UTF-8 bytes of the hex string (because chunkDataForStorage compressed the hex string)
+      // Convert bytes to UTF-8 string (which is the hex string)
+      const hexString = Buffer.from(decompressed).toString("utf8");
+      // Convert hex string to plain string
+      const result = hexToString(hexString as `0x${string}`);
       return result;
     } catch (error) {
       // If decompression fails, assume it's uncompressed data
-      console.log("[assembleChunks] Decompression failed, returning undefined");
       return undefined;
     }
   } catch (error) {

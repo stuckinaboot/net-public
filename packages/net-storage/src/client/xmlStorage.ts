@@ -163,9 +163,8 @@ async function fetchFromChunkedStorage(
   })) as string[];
 
   const assembledResult = assembleChunks(chunks);
-  const content = assembledResult
-    ? hexToString(assembledResult as `0x${string}`)
-    : "";
+  // assembleChunks returns plain string (converted via hexToString internally)
+  const content = assembledResult || "";
 
   return content;
 }
@@ -334,8 +333,8 @@ export async function fetchXmlChunksFromChunkedStorage(
       if (assembledResult === undefined) {
         xmlChunks.push("");
       } else {
-        const xmlChunk = hexToString(assembledResult as `0x${string}`);
-        xmlChunks.push(xmlChunk);
+        // assembleChunks returns plain string (converted via hexToString internally)
+        xmlChunks.push(assembledResult);
       }
     } catch (error) {
       console.error(

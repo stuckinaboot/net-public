@@ -65,10 +65,9 @@ describe("chunkUtils", () => {
       const assembled = assembleChunks(chunks);
 
       expect(assembled).toBeDefined();
-      // assembleChunks returns hex string, need to convert with hexToString
+      // assembleChunks returns plain string (converted via hexToString internally)
       if (assembled) {
-        const result = hexToString(assembled as `0x${string}`);
-        expect(result).toBe(originalData);
+        expect(assembled).toBe(originalData);
       }
     });
 
@@ -82,8 +81,8 @@ describe("chunkUtils", () => {
       const chunks = chunkDataForStorage(data);
       const assembled = assembleChunks(chunks);
       if (assembled) {
-        const result = hexToString(assembled as `0x${string}`);
-        expect(result).toBe(data);
+        // assembleChunks returns plain string (converted via hexToString internally)
+        expect(assembled).toBe(data);
       } else {
         expect(assembled).toBeDefined();
       }
@@ -95,10 +94,9 @@ describe("chunkUtils", () => {
       expect(chunks.length).toBeGreaterThanOrEqual(1);
 
       const assembled = assembleChunks(chunks);
-      // assembleChunks returns hex string, need to convert with hexToString
+      // assembleChunks returns plain string (converted via hexToString internally)
       if (assembled !== undefined) {
-        const result = hexToString(assembled as `0x${string}`);
-        expect(result).toBe(largeData);
+        expect(assembled).toBe(largeData);
       } else {
         // If decompression fails, that's also a valid outcome
         expect(assembled).toBeUndefined();

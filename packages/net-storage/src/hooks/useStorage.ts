@@ -1,14 +1,16 @@
 import { useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
 import { STORAGE_CONTRACT, SAFE_STORAGE_READER_CONTRACT } from "../constants";
-import { CHUNKED_STORAGE_READER_CONTRACT } from "../constants";
+import { CHUNKED_STORAGE_READER_CONTRACT, STORAGE_ROUTER_CONTRACT, CHUNKED_STORAGE_CONTRACT } from "../constants";
 import { getNetContract } from "@net-protocol/core";
 import { assembleChunks } from "../utils/chunkUtils";
 import { getPublicClient } from "@net-protocol/core";
 import { readContract } from "viem/actions";
-import { hexToString, stringToHex } from "viem";
+import { hexToString, stringToHex, decodeAbiParameters } from "viem";
 import { getStorageKeyBytes } from "../utils/keyUtils";
 import type { UseStorageOptions, BulkStorageKey, StorageData } from "../types";
+
+const BATCH_SIZE = 2;
 
 export function useStorage({
   chainId,
@@ -17,11 +19,128 @@ export function useStorage({
   enabled = true,
   index,
   keyFormat,
+  useRouter = false,
+  outputFormat = "hex",
 }: UseStorageOptions) {
   // For latest version (index undefined), use existing simple flow
   const isLatestVersion = index === undefined;
+  const shouldUseRouter = useRouter === true && isLatestVersion;
+  const outputAsString = outputFormat === "string";
+  const storageKeyBytes = key ? getStorageKeyBytes(key, keyFormat) : undefined;
 
-  // Latest version: use Storage.get() directly
+  // Helper function to convert data based on outputFormat
+  const formatData = (text: string, dataHex: `0x${string}`): StorageData => {
+    if (outputAsString) {
+      return [text, hexToString(dataHex)];
+    }
+    return [text, dataHex];
+  };
+
+  // Router path (latest only, automatic detection)
+  const [routerData, setRouterData] = useState<StorageData | undefined>();
+  const [routerChunkLoading, setRouterChunkLoading] = useState(false);
+  const [routerChunkError, setRouterChunkError] = useState<Error | undefined>();
+
+  const routerHook = useReadContract({
+    abi: STORAGE_ROUTER_CONTRACT.abi,
+    address: STORAGE_ROUTER_CONTRACT.address,
+    functionName: "get",
+    args: storageKeyBytes && operatorAddress 
+      ? [storageKeyBytes, operatorAddress] 
+      : undefined,
+    chainId,
+    query: {
+      enabled: shouldUseRouter && enabled && !!key && !!operatorAddress,
+    },
+  });
+
+  // useEffect to process router result
+  useEffect(() => {
+    async function processRouterResult() {
+      if (!routerHook.data || routerHook.isLoading || routerHook.error) {
+        return;
+      }
+
+      const [isChunkedStorage, text, data] = routerHook.data as [
+        boolean,
+        string,
+        `0x${string}`
+      ];
+
+      // Handle non-chunked data (early return)
+      if (!isChunkedStorage) {
+        // Regular storage - data is already hex, apply outputFormat
+        const formatted = formatData(text, data);
+        setRouterData(formatted);
+        return;
+      }
+
+      // Handle chunked data
+      setRouterChunkLoading(true);
+      setRouterChunkError(undefined);
+
+      try {
+        // Decode chunk count from the data
+        const [chunkCount] = decodeAbiParameters([{ type: "uint8" }], data);
+
+        if (chunkCount === 0) {
+          setRouterData(undefined);
+          return;
+        }
+
+        // Fetch chunks in batches
+        const client = getPublicClient({ chainId });
+        if (!client) {
+          throw new Error(`Chain not found for chainId: ${chainId}`);
+        }
+
+        const allChunks: string[] = [];
+        for (let start = 0; start < Number(chunkCount); start += BATCH_SIZE) {
+          const end = Math.min(start + BATCH_SIZE, Number(chunkCount));
+          const batch = (await readContract(client, {
+            abi: CHUNKED_STORAGE_CONTRACT.abi,
+            address: CHUNKED_STORAGE_CONTRACT.address,
+            functionName: "getChunks",
+            args: [storageKeyBytes!, operatorAddress, start, end],
+          })) as string[];
+          allChunks.push(...batch);
+        }
+
+        // Assemble chunks
+        const assembledString = assembleChunks(allChunks);
+
+        // assembleChunks returns plain string (converted via hexToString internally) - handle based on outputFormat
+        if (assembledString === undefined) {
+          setRouterData(undefined);
+        } else {
+          if (outputAsString) {
+            // assembleChunks already returns plain string
+            setRouterData([text, assembledString]);
+          } else {
+            // Convert plain string to hex for hex output format
+            const hexData = stringToHex(assembledString) as `0x${string}`;
+            setRouterData([text, hexData]);
+          }
+        }
+      } catch (error) {
+        setRouterChunkError(error as Error);
+      } finally {
+        setRouterChunkLoading(false);
+      }
+    }
+
+    processRouterResult();
+  }, [
+    routerHook.data,
+    routerHook.isLoading,
+    routerHook.error,
+    operatorAddress,
+    chainId,
+    storageKeyBytes,
+    outputAsString,
+  ]);
+
+  // Latest version: use Storage.get() directly (when router is disabled)
   const {
     data: latestData,
     isLoading: latestLoading,
@@ -36,7 +155,7 @@ export function useStorage({
         : undefined,
     chainId,
     query: {
-      enabled: enabled && !!operatorAddress && !!key && isLatestVersion,
+      enabled: !shouldUseRouter && enabled && !!operatorAddress && !!key && isLatestVersion,
     },
   });
 
@@ -90,19 +209,15 @@ export function useStorage({
 
             const assembledData = assembleChunks(chunks);
             if (assembledData !== undefined) {
-              // Convert assembled string to hex for consistency with latest version format
-              const hexData = stringToHex(assembledData);
-              setHistoricalData([text, hexData]);
+              // assembleChunks returns plain string - convert to hex first, then apply outputFormat
+              const hexData = stringToHex(assembledData) as `0x${string}`;
+              setHistoricalData(formatData(text, hexData));
               setHistoricalLoading(false);
               return;
             }
           }
         } catch (chunkedError) {
           // Chunked storage failed, continue to regular storage
-          console.log(
-            "[useStorage] Chunked storage not found at index, trying regular storage:",
-            chunkedError
-          );
         }
 
         // Step 2: Try regular Storage.getValueAtIndex
@@ -114,8 +229,8 @@ export function useStorage({
         });
 
         const [text, data] = result as [string, `0x${string}`];
-        // Keep data as hex for consistency with latest version format
-        setHistoricalData([text, data]);
+        // Apply outputFormat to historical data
+        setHistoricalData(formatData(text, data));
       } catch (error) {
         console.error(
           "[useStorage] Failed to fetch historical version:",
@@ -128,22 +243,36 @@ export function useStorage({
     }
 
     fetchHistoricalVersion();
-  }, [chainId, key, operatorAddress, index, enabled, isLatestVersion]);
+  }, [chainId, key, operatorAddress, index, enabled, isLatestVersion, outputAsString]);
+
 
   // Return appropriate data based on version type
-  if (isLatestVersion) {
-    return {
-      data: latestData as StorageData | undefined,
-      isLoading: latestLoading,
-      error: latestError as Error | undefined,
-    };
-  } else {
+  if (!isLatestVersion) {
     return {
       data: historicalData,
       isLoading: historicalLoading,
       error: historicalError,
     };
   }
+
+  if (shouldUseRouter) {
+    return {
+      data: routerData,
+      isLoading: routerHook.isLoading || routerChunkLoading,
+      error: routerHook.error || routerChunkError,
+    };
+  }
+
+  // Apply outputFormat to direct storage data
+  const formattedDirectData = latestData 
+    ? formatData((latestData as StorageData)[0], (latestData as StorageData)[1] as `0x${string}`)
+    : undefined;
+
+  return {
+    data: formattedDirectData,
+    isLoading: latestLoading,
+    error: latestError as Error | undefined,
+  };
 }
 
 export function useStorageForOperator({

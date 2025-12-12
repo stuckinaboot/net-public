@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useReadContract } from "wagmi";
-import { decodeAbiParameters } from "viem";
+import { decodeAbiParameters, stringToHex } from "viem";
 import { STORAGE_ROUTER_CONTRACT } from "../constants";
 import { CHUNKED_STORAGE_CONTRACT } from "../constants";
 import { getPublicClient } from "@net-protocol/core";
@@ -90,7 +90,9 @@ export function useStorageFromRouter({
         if (assembledString === undefined) {
           setAssembledData(undefined);
         } else {
-          setAssembledData([text, assembledString]);
+          // assembleChunks returns plain string, convert to hex for StorageData format
+          const hexData = stringToHex(assembledString) as `0x${string}`;
+          setAssembledData([text, hexData]);
         }
       } catch (error) {
         setChunkError(error as Error);

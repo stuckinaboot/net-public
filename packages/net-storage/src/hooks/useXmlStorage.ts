@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import useAsyncEffect from "use-async-effect";
-import { hexToString } from "viem";
+import { hexToString, stringToHex } from "viem";
 import { useStorage } from "./useStorage";
 import { parseNetReferences, containsXmlReferences } from "../utils/xmlUtils";
 import { resolveXmlRecursive, MAX_XML_DEPTH } from "../client/xmlStorage";
 import { getPublicClient } from "@net-protocol/core";
-import type { UseXmlStorageOptions } from "../types";
+import type { UseXmlStorageOptions, StorageData } from "../types";
 
 export function useXmlStorage({
   chainId,
@@ -16,9 +16,14 @@ export function useXmlStorage({
   content,
   index,
   keyFormat,
+  useRouter,
+  returnFormat = "object",
+  outputFormat = "hex",
 }: UseXmlStorageOptions) {
   // Determine mode: preview (raw content) vs blockchain (fetch from storage)
   const isPreviewMode = !!content;
+  const returnAsTuple = returnFormat === "tuple";
+  const outputAsString = outputFormat === "string";
 
   // 1. Fetch metadata using existing useStorage hook (only in blockchain mode)
   const {
@@ -32,6 +37,8 @@ export function useXmlStorage({
     enabled: enabled && !isPreviewMode,
     index, // Pass index to useStorage for historical versions
     keyFormat, // Pass keyFormat through
+    useRouter, // Pass useRouter through to enable router path
+    outputFormat: "string", // Always get plain string from useStorage, then convert based on our outputFormat
   });
 
   // 2. Get metadata string from either preview content or blockchain data
@@ -39,7 +46,8 @@ export function useXmlStorage({
     if (skipXmlParsing) return "";
     if (isPreviewMode) return content || "";
     if (!metadata?.[1]) return "";
-    return hexToString(metadata[1] as `0x${string}`);
+    // metadata[1] is already a plain string because useStorage is called with outputFormat: "string"
+    return metadata[1] as string;
   }, [skipXmlParsing, isPreviewMode, content, metadata]);
 
   // 3. Parse XML references from metadata string
@@ -124,12 +132,96 @@ export function useXmlStorage({
     assembledDataLength: assembledData?.length,
   });
 
+  // Handle tuple format return
+  if (returnAsTuple) {
+    // Early return if XML parsing is skipped
+    if (skipXmlParsing) {
+      if (isPreviewMode) {
+        // Preview mode: content is plain string
+        const contentValue = content || "";
+        return {
+          data: contentValue
+            ? outputAsString
+              ? ([metadata?.[0] || "", contentValue] as StorageData)
+              : ([
+                  metadata?.[0] || "",
+                  stringToHex(contentValue) as `0x${string}`,
+                ] as StorageData)
+            : undefined,
+          isLoading: metadataLoading,
+          error: metadataError,
+        };
+      } else {
+        // Non-preview mode: metadata[1] is plain string from useStorage (since we pass outputFormat: "string")
+        const dataValue = metadata?.[1] as string | undefined;
+        return {
+          data: dataValue
+            ? outputAsString
+              ? ([metadata?.[0] || "", dataValue] as StorageData)
+              : ([
+                  metadata?.[0] || "",
+                  stringToHex(dataValue) as `0x${string}`,
+                ] as StorageData)
+            : undefined,
+          isLoading: metadataLoading,
+          error: metadataError,
+        };
+      }
+    }
+
+    // XML storage with tuple format
+    if (isXml) {
+      if (!assembledData) {
+        // Loading or empty - return undefined (matches previous behavior)
+        return {
+          data: undefined,
+          isLoading: metadataLoading || chunksLoading,
+          error: metadataError || chunksError,
+        };
+      }
+
+      // XML: resolved string → convert based on outputFormat
+      const hexData = stringToHex(assembledData) as `0x${string}`;
+      return {
+        data: outputAsString
+          ? ([metadata?.[0] || "", assembledData] as StorageData)
+          : ([metadata?.[0] || "", hexData] as StorageData),
+        isLoading: metadataLoading || chunksLoading,
+        error: metadataError || chunksError,
+      };
+    } else {
+      // Non-XML: metadata[1] is plain string from useStorage (since we pass outputFormat: "string") → convert based on outputFormat
+      if (!metadata) {
+        return {
+          data: undefined,
+          isLoading: metadataLoading,
+          error: metadataError,
+        };
+      }
+      // metadata[1] is now a plain string (not hex) because we pass outputFormat: "string" to useStorage
+      const dataValue = metadata[1] as string | undefined;
+      const returnValue = dataValue
+        ? outputAsString
+          ? ([metadata[0], dataValue] as StorageData)
+          : ([
+              metadata[0],
+              stringToHex(dataValue) as `0x${string}`,
+            ] as StorageData)
+        : undefined;
+
+      return {
+        data: returnValue,
+        isLoading: metadataLoading,
+        error: metadataError,
+      };
+    }
+  }
+
+  // Default object format (existing behavior)
   // Early return if XML parsing is skipped
   if (skipXmlParsing) {
     return {
-      data: isPreviewMode
-        ? content || ""
-        : hexToString((metadata?.[1] || "") as `0x${string}`),
+      data: isPreviewMode ? content || "" : ((metadata?.[1] || "") as string), // metadata[1] is already a plain string
       filename: metadata?.[0] || "",
       isLoading: metadataLoading,
       error: metadataError,
@@ -142,7 +234,7 @@ export function useXmlStorage({
       ? assembledData
       : isPreviewMode
       ? content || ""
-      : hexToString((metadata?.[1] || "") as `0x${string}`),
+      : ((metadata?.[1] || "") as string), // metadata[1] is already a plain string
     filename: metadata?.[0] || "",
     isLoading: metadataLoading || (isXml && chunksLoading),
     error: metadataError || chunksError,

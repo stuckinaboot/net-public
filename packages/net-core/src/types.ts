@@ -45,3 +45,14 @@ export type UseNetMessagesBatchAsyncOptions = UseNetMessagesOptions & {
   batchCount?: number;
 };
 
+// Transaction writing types
+import type { Abi } from "viem";
+
+export type WriteTransactionConfig = {
+  to: `0x${string}`;           // Contract address
+  functionName: string;         // Contract function name
+  args: unknown[];             // Function arguments
+  value?: bigint;               // Optional ETH value to send
+  abi: Abi;                    // Contract ABI (from viem)
+};
+

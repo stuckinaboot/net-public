@@ -7,6 +7,7 @@ import {
   delay,
   withRetry,
 } from "./test-utils";
+import { STORAGE_CONTRACT, CHUNKED_STORAGE_CONTRACT } from "../constants";
 import type { StorageData } from "../types";
 
 describe("StorageClient", () => {
@@ -604,6 +605,71 @@ describe("StorageClient", () => {
       }
 
       await delay();
+    });
+  });
+
+  describe("preparePut", () => {
+    it("should use client's chainId", () => {
+      const client = new StorageClient({
+        chainId: BASE_CHAIN_ID,
+        overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
+      });
+      const config = client.preparePut({
+        key: "test-key",
+        text: "",
+        value: "test-value",
+      });
+
+      expect(config.to).toBe(STORAGE_CONTRACT.address);
+      expect(config.functionName).toBe("put");
+    });
+  });
+
+  describe("prepareChunkedPut", () => {
+    it("should use client's chainId", () => {
+      const client = new StorageClient({
+        chainId: BASE_CHAIN_ID,
+        overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
+      });
+      const config = client.prepareChunkedPut({
+        key: "test-key",
+        text: "",
+        chunks: ["0x1234"],
+      });
+
+      expect(config.to).toBe(CHUNKED_STORAGE_CONTRACT.address);
+      expect(config.functionName).toBe("put");
+    });
+  });
+
+  describe("prepareBulkPut", () => {
+    it("should use client's chainId", () => {
+      const client = new StorageClient({
+        chainId: BASE_CHAIN_ID,
+        overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
+      });
+      const config = client.prepareBulkPut({
+        entries: [{ key: "key1", text: "", value: "value1" }],
+      });
+
+      expect(config.to).toBe(STORAGE_CONTRACT.address);
+      expect(config.functionName).toBe("bulkPut");
+    });
+  });
+
+  describe("prepareXmlStorage", () => {
+    it("should use client's chainId", () => {
+      const client = new StorageClient({
+        chainId: BASE_CHAIN_ID,
+        overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
+      });
+      const result = client.prepareXmlStorage({
+        data: "<html>test</html>",
+        operatorAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+      });
+
+      expect(result.transactionConfigs.length).toBeGreaterThan(0);
+      expect(result.topLevelHash).toBeDefined();
     });
   });
 });

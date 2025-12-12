@@ -6,6 +6,7 @@ import {
   BASE_TEST_RPC_URL,
   delay,
 } from "./test-utils";
+import { NET_CONTRACT_ADDRESS } from "../constants";
 import type { NetMessage } from "../types";
 
 describe("NetClient", () => {
@@ -311,6 +312,40 @@ describe("NetClient", () => {
       expect(message).toBeNull();
 
       await delay();
+    });
+  });
+
+  describe("prepareSendMessage", () => {
+    it("should use client's chainId", () => {
+      const client = new NetClient({
+        chainId: BASE_CHAIN_ID,
+        overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
+      });
+      const config = client.prepareSendMessage({
+        text: "Hello",
+        topic: "test",
+      });
+
+      expect(config.to).toBe(NET_CONTRACT_ADDRESS);
+      expect(config.functionName).toBe("sendMessage");
+    });
+  });
+
+  describe("prepareSendMessageViaApp", () => {
+    it("should use client's chainId", () => {
+      const client = new NetClient({
+        chainId: BASE_CHAIN_ID,
+        overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
+      });
+      const config = client.prepareSendMessageViaApp({
+        sender: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+        text: "Hello",
+        topic: "test",
+        appAddress: "0x1234567890123456789012345678901234567890",
+      });
+
+      expect(config.to).toBe(NET_CONTRACT_ADDRESS);
+      expect(config.functionName).toBe("sendMessageViaApp");
     });
   });
 });

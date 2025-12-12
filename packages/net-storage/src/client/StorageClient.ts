@@ -31,7 +31,14 @@ import type {
   BulkStorageKey,
   BulkStorageResult,
   StorageClientOptions,
+  WriteTransactionConfig,
 } from "../types";
+import {
+  prepareStoragePut,
+  prepareChunkedStoragePut,
+  prepareBulkStoragePut,
+  prepareXmlStorage,
+} from "./storageWriting";
 
 export class StorageClient {
   private client: PublicClient;
@@ -473,5 +480,73 @@ export class StorageClient {
       text: metadata.originalText,
       data: assembled || "",
     };
+  }
+
+  /**
+   * Prepare transaction config for storing a single value
+   */
+  preparePut(params: {
+    key: string | `0x${string}`;
+    text: string;
+    value: string | `0x${string}`;
+    keyFormat?: "raw" | "bytes32";
+  }): WriteTransactionConfig {
+    return prepareStoragePut({
+      ...params,
+      chainId: this.chainId,
+    });
+  }
+
+  /**
+   * Prepare transaction config for storing in ChunkedStorage
+   */
+  prepareChunkedPut(params: {
+    key: string | `0x${string}`;
+    text: string;
+    chunks: string[];
+    keyFormat?: "raw" | "bytes32";
+  }): WriteTransactionConfig {
+    return prepareChunkedStoragePut({
+      ...params,
+      chainId: this.chainId,
+    });
+  }
+
+  /**
+   * Prepare transaction config for bulk storage
+   */
+  prepareBulkPut(params: {
+    entries: Array<{
+      key: string | `0x${string}`;
+      text: string;
+      value: string | `0x${string}`;
+    }>;
+    keyFormat?: "raw" | "bytes32";
+  }): WriteTransactionConfig {
+    return prepareBulkStoragePut({
+      ...params,
+      chainId: this.chainId,
+    });
+  }
+
+  /**
+   * Prepare transaction configs for XML storage
+   */
+  prepareXmlStorage(params: {
+    data: string;
+    operatorAddress: `0x${string}`;
+    storageKey?: string | `0x${string}`;
+    filename?: string;
+    useChunkedStorageBackend?: boolean;
+    keyFormat?: "raw" | "bytes32";
+  }): {
+    transactionConfigs: WriteTransactionConfig[];
+    topLevelHash: string;
+    metadata: string;
+  } {
+    return prepareXmlStorage({
+      ...params,
+      chainId: this.chainId,
+    });
   }
 }

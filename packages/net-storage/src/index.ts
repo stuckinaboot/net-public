@@ -16,6 +16,9 @@ export { chunkDataForStorage, assembleChunks, shouldSuggestXmlStorage, getChunkC
 export { parseNetReferences, containsXmlReferences, detectStorageType, resolveOperator, getReferenceKey } from "./utils/xmlUtils";
 export { processDataForStorage, chunkData, generateXmlMetadata, generateXmlMetadataWithSource, validateDataSize, computeTopLevelHash } from "./utils/writingUtils";
 
+// Writing functions
+export { prepareStoragePut, prepareChunkedStoragePut, prepareBulkStoragePut, prepareXmlStorage, prepareXmlChunksForChunkedStorage } from "./client/storageWriting";
+
 // Types
 export type {
   UseStorageOptions,
@@ -25,6 +28,7 @@ export type {
   XmlReference,
   ChunkedMetadata,
   UseXmlStorageOptions,
+  WriteTransactionConfig,
 } from "./types";
 
 // Constants

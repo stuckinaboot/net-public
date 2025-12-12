@@ -9,7 +9,12 @@ import {
   GetNetMessagesOptions,
   GetNetMessageCountOptions,
   NetMessage,
+  WriteTransactionConfig,
 } from "../types";
+import {
+  prepareSendMessage,
+  prepareSendMessageViaApp,
+} from "./messageWriting";
 
 export class NetClient {
   private client: PublicClient;
@@ -111,5 +116,35 @@ export class NetClient {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Prepare transaction config for sending a direct Net message
+   */
+  prepareSendMessage(params: {
+    text: string;
+    topic: string;
+    data?: `0x${string}` | string;
+  }): WriteTransactionConfig {
+    return prepareSendMessage({
+      ...params,
+      chainId: this.chainId,
+    });
+  }
+
+  /**
+   * Prepare transaction config for sending a message via an app
+   */
+  prepareSendMessageViaApp(params: {
+    sender: `0x${string}`;
+    text: string;
+    topic: string;
+    data?: `0x${string}` | string;
+    appAddress: `0x${string}`;
+  }): WriteTransactionConfig {
+    return prepareSendMessageViaApp({
+      ...params,
+      chainId: this.chainId,
+    });
   }
 }

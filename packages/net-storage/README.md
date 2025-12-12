@@ -40,6 +40,35 @@ function MyComponent() {
   return <div>{text}</div>;
 }
 
+// Storage with output format options
+function StorageWithFormat() {
+  // Get data as plain string (default is hex)
+  const { data: stringData } = useStorage({
+    chainId: 8453,
+    key: "my-key",
+    operatorAddress: "0x...",
+    outputFormat: "string", // Returns plain string instead of hex
+  });
+
+  // Use StorageRouter for automatic detection (latest version only)
+  const { data: routerData } = useStorage({
+    chainId: 8453,
+    key: "my-key",
+    operatorAddress: "0x...",
+    useRouter: true, // Automatically detects regular vs chunked storage
+    outputFormat: "string",
+  });
+
+  // Get historical version
+  const { data: historicalData } = useStorage({
+    chainId: 8453,
+    key: "my-key",
+    operatorAddress: "0x...",
+    index: 0, // 0-based index for historical versions
+    outputFormat: "string",
+  });
+}
+
 // XML storage with recursive resolution
 function XmlComponent() {
   const { data, isLoading, isXml } = useXmlStorage({
@@ -49,6 +78,36 @@ function XmlComponent() {
   });
 
   return <div>{data}</div>;
+}
+
+// XML storage with format options
+function XmlWithFormats() {
+  // Return as tuple format with hex output
+  const { data: tupleData } = useXmlStorage({
+    chainId: 8453,
+    key: "my-xml-key",
+    operatorAddress: "0x...",
+    returnFormat: "tuple", // Returns [text, data] tuple
+    outputFormat: "hex", // Data is hex string (default)
+    useRouter: true, // Use StorageRouter for automatic detection
+  });
+
+  // Return as tuple format with string output
+  const { data: tupleStringData } = useXmlStorage({
+    chainId: 8453,
+    key: "my-xml-key",
+    operatorAddress: "0x...",
+    returnFormat: "tuple",
+    outputFormat: "string", // Data is plain string
+  });
+
+  // Return as object format (default)
+  const { data: objectData, filename, isXml } = useXmlStorage({
+    chainId: 8453,
+    key: "my-xml-key",
+    operatorAddress: "0x...",
+    returnFormat: "object", // Returns { data, filename, isLoading, error, isXml }
+  });
 }
 
 // Storage from router (handles chunked storage)
@@ -138,7 +197,6 @@ const result = processDataForStorage(data, operatorAddress);
 - `useStorageTotalWrites` - Get total number of versions
 - `useXmlStorage` - Read XML storage with recursive resolution
 - `useStorageFromRouter` - Read from StorageRouter (handles chunked storage)
-- `useStorageFromRouterWithXml` - Same as above with XML resolution
 
 ### StorageClient Methods
 

@@ -30,8 +30,6 @@ export async function fetchChunksSequential(
   operatorAddress: string,
   client: PublicClient
 ): Promise<string[]> {
-  console.log("Fetching chunks sequentially:", references);
-
   const chunks: string[] = [];
 
   for (let i = 0; i < references.length; i++) {
@@ -39,9 +37,6 @@ export async function fetchChunksSequential(
     const hash = reference.hash;
     const operator = resolveOperator(reference, operatorAddress);
     try {
-      console.log(
-        `Fetching chunk ${i + 1}/${references.length}: ${hash} from operator ${operator}`
-      );
       const result = await readContract(client, {
         address: STORAGE_CONTRACT.address,
         abi: STORAGE_CONTRACT.abi,
@@ -49,7 +44,6 @@ export async function fetchChunksSequential(
         args: [hash, operator],
       });
       const chunkData = hexToString((result as any)[1] || "");
-      console.log(`Chunk ${i + 1} data length: ${chunkData.length}`);
       chunks.push(chunkData);
     } catch (error) {
       console.error(
@@ -60,7 +54,6 @@ export async function fetchChunksSequential(
     }
   }
 
-  console.log("Sequential chunk results:", chunks);
   return chunks;
 }
 
@@ -72,8 +65,6 @@ export function assembleXmlData(
   chunks: string[],
   references: XmlReference[]
 ): string {
-  console.log("Assembling data:", { metadata, chunks, references });
-
   let result = metadata;
 
   references.forEach((ref, index) => {
@@ -89,7 +80,6 @@ export function assembleXmlData(
     }
   });
 
-  console.log("Assembled data length:", result.length);
   return result;
 }
 
@@ -242,11 +232,6 @@ export async function fetchXmlChunksFromChunkedStorage(
   operatorAddress: string,
   client: PublicClient
 ): Promise<string[]> {
-  console.log("[ChunkedStorage->XML] Fetching XML chunks:", {
-    referenceCount: references.length,
-    references: references,
-  });
-
   const xmlChunks: string[] = [];
 
   // Fetch each XML chunk from ChunkedStorageReader
@@ -255,33 +240,12 @@ export async function fetchXmlChunksFromChunkedStorage(
     const chunkedHash = reference.hash;
 
     try {
-      console.log(
-        `[ChunkedStorage->XML] Fetching XML chunk ${i + 1}/${references.length}:`,
-        {
-          chunkedHash,
-          operatorAddress,
-          historicalIndex: reference.index,
-        }
-      );
-
       // Always use ChunkedStorageReader - it has all ChunkedStorage functions plus historical ones
       const contract = CHUNKED_STORAGE_READER_CONTRACT;
       const functionName =
         reference.index !== undefined ? "getMetadataAtIndex" : "getMetadata";
       const chunksFunctionName =
         reference.index !== undefined ? "getChunksAtIndex" : "getChunks";
-
-      console.log(
-        `[ChunkedStorage->XML] Using ChunkedStorageReader for XML chunk ${i + 1}:`,
-        {
-          chunkedHash,
-          operatorAddress,
-          historicalIndex: reference.index,
-          contractAddress: contract.address,
-          functionName,
-          chunksFunctionName,
-        }
-      );
 
       // 1. Get metadata (latest or historical)
       const metadata = await readContract(client, {
@@ -344,12 +308,6 @@ export async function fetchXmlChunksFromChunkedStorage(
       xmlChunks.push(""); // Push empty for failed chunks
     }
   }
-
-  console.log("[ChunkedStorage->XML] Completed fetching all XML chunks:", {
-    totalChunks: xmlChunks.length,
-    successfulChunks: xmlChunks.filter((chunk) => chunk.length > 0).length,
-    failedChunks: xmlChunks.filter((chunk) => chunk.length === 0).length,
-  });
 
   return xmlChunks;
 }

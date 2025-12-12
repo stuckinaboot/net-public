@@ -78,12 +78,6 @@ export function useXmlStorage({
     setChunksLoading(true);
     setChunksError(undefined);
 
-    console.log("[useXmlStorage] Starting recursive XML resolution:", {
-      maxDepth: MAX_XML_DEPTH,
-      operatorAddress,
-      chainId,
-    });
-
     try {
       const client = getPublicClient({ chainId });
       if (!client) {
@@ -122,15 +116,6 @@ export function useXmlStorage({
     if (skipXmlParsing || !metadataString) return false;
     return containsXmlReferences(metadataString);
   }, [metadataString, skipXmlParsing]);
-
-  console.log("XML Storage Reading:", {
-    key,
-    operatorAddress,
-    isXml,
-    references: references.length,
-    chunks: chunks.length,
-    assembledDataLength: assembledData?.length,
-  });
 
   // Handle tuple format return
   if (returnAsTuple) {

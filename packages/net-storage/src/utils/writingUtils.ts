@@ -97,11 +97,8 @@ export function processDataForStorage(
   valid: boolean;
   error?: string;
 } {
-  console.log("Input data length:", data.length);
-
   // 1. Chunk the data
   const chunks = chunkData(data);
-  console.log("Generated chunks:", chunks);
 
   // 2. Validate size
   const validation = validateDataSize(chunks);
@@ -118,15 +115,12 @@ export function processDataForStorage(
 
   // 3. Generate chunk hashes
   const chunkHashes = chunks.map((chunk) => keccak256HashString(chunk));
-  console.log("Chunk hashes:", chunkHashes);
 
   // 4. Generate XML metadata
   const xmlMetadata = generateXmlMetadata(chunkHashes, 0, operatorAddress);
-  console.log("XML metadata:", xmlMetadata);
 
   // 5. Use provided storage key or compute top-level hash
   const topLevelHash = storageKey || computeTopLevelHash(chunkHashes);
-  console.log("Top-level hash:", topLevelHash);
 
   return {
     chunks,

@@ -299,12 +299,6 @@ export function useStorageForOperator({
     chainId,
   }) as { data: any[] | undefined; isLoading: boolean };
 
-  console.log("[useStorageForOperator] Contract calls:", {
-    totalCount: totalCountNumber,
-    messages,
-    messagesLength: messages?.length,
-  });
-
   return {
     data:
       messages?.map((msg: any) => [

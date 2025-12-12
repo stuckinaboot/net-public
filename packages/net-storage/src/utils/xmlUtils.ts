@@ -1,4 +1,4 @@
-import { keccak256HashString } from "./keyUtils";
+import { keccak256HashString } from "@net-protocol/core";
 
 /**
  * XML reference type for chunk metadata

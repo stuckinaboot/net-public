@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { toBytes32, keccak256HashString } from "@net-protocol/core";
 import {
-  toBytes32,
-  keccak256HashString,
   getStorageKeyBytes,
   formatStorageKeyForDisplay,
   encodeStorageKeyForUrl,

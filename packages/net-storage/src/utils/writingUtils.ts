@@ -1,4 +1,4 @@
-import { keccak256HashString } from "./keyUtils";
+import { keccak256HashString } from "@net-protocol/core";
 
 // Constants from ChunkedStorage.sol
 const MAX_CHUNKS = 255;

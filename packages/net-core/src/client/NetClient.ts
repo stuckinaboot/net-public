@@ -11,10 +11,7 @@ import {
   NetMessage,
   WriteTransactionConfig,
 } from "../types";
-import {
-  prepareSendMessage,
-  prepareSendMessageViaApp,
-} from "./messageWriting";
+import { normalizeDataOrEmpty } from "../utils/dataUtils";
 
 export class NetClient {
   private client: PublicClient;
@@ -119,21 +116,49 @@ export class NetClient {
   }
 
   /**
-   * Prepare transaction config for sending a direct Net message
+   * Validate message parameters
+   */
+  private validateMessageParams(params: {
+    text: string;
+    data?: string | `0x${string}`;
+  }) {
+    const hasText = params.text.length > 0;
+    const hasData =
+      params.data !== undefined &&
+      (typeof params.data === "string"
+        ? params.data.length > 0
+        : params.data !== "0x");
+
+    if (!hasText && !hasData) {
+      throw new Error("Message must have non-empty text or data");
+    }
+  }
+
+  /**
+   * Prepare transaction config for sending a direct Net message (user sends directly, not via app).
    */
   prepareSendMessage(params: {
     text: string;
     topic: string;
     data?: `0x${string}` | string;
   }): WriteTransactionConfig {
-    return prepareSendMessage({
-      ...params,
-      chainId: this.chainId,
-    });
+    this.validateMessageParams({ text: params.text, data: params.data });
+
+    const netContract = getNetContract(this.chainId);
+    const data = normalizeDataOrEmpty(params.data);
+
+    return {
+      to: netContract.address,
+      functionName: "sendMessage",
+      args: [params.text, params.topic, data],
+      abi: netContract.abi,
+    };
   }
 
   /**
-   * Prepare transaction config for sending a message via an app
+   * Prepare transaction config for sending a message via an app contract.
+   *
+   * Note: This transaction should be called FROM the app contract, not directly from a user wallet.
    */
   prepareSendMessageViaApp(params: {
     sender: `0x${string}`;
@@ -142,9 +167,16 @@ export class NetClient {
     data?: `0x${string}` | string;
     appAddress: `0x${string}`;
   }): WriteTransactionConfig {
-    return prepareSendMessageViaApp({
-      ...params,
-      chainId: this.chainId,
-    });
+    this.validateMessageParams({ text: params.text, data: params.data });
+
+    const netContract = getNetContract(this.chainId);
+    const data = normalizeDataOrEmpty(params.data);
+
+    return {
+      to: netContract.address,
+      functionName: "sendMessageViaApp",
+      args: [params.sender, params.text, params.topic, data],
+      abi: netContract.abi,
+    };
   }
 }

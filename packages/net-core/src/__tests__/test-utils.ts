@@ -3,6 +3,8 @@
  * Focuses on Base chain (chainId: 8453) for testing
  */
 
+import type { Abi } from "viem";
+
 export const BASE_CHAIN_ID = 8453;
 
 /**
@@ -115,4 +117,27 @@ export async function withRetry<T>(
     options?.maxRetries ?? 3,
     options?.initialDelay ?? 2000
   );
+}
+
+/**
+ * Type guard to check if an ABI item is a function
+ */
+export function isAbiFunction(
+  item: Abi[number]
+): item is Extract<Abi[number], { type: "function" }> {
+  return item.type === "function";
+}
+
+/**
+ * Helper to find and type-check an ABI function by name
+ * Returns undefined if function is not found or is not a function type
+ */
+export function findAbiFunction(
+  abi: Abi,
+  functionName: string
+): Extract<Abi[number], { type: "function" }> | undefined {
+  const item = abi.find(
+    (item) => item.type === "function" && item.name === functionName
+  );
+  return item && isAbiFunction(item) ? item : undefined;
 }

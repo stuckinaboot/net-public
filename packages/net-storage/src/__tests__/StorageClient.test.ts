@@ -6,6 +6,8 @@ import {
   BASE_TEST_ADDRESSES,
   delay,
   withRetry,
+  findAbiFunction,
+  type BulkPutEntry,
 } from "./test-utils";
 import { STORAGE_CONTRACT, CHUNKED_STORAGE_CONTRACT } from "../constants";
 import type { StorageData } from "../types";
@@ -609,66 +611,314 @@ describe("StorageClient", () => {
   });
 
   describe("preparePut", () => {
-    it("should use client's chainId", () => {
-      const client = new StorageClient({
+    const createClient = () =>
+      new StorageClient({
         chainId: BASE_CHAIN_ID,
         overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
       });
+
+    it("should return correct transaction config structure", () => {
+      const client = createClient();
       const config = client.preparePut({
-        key: "test-key",
+        key: "my-key",
         text: "",
-        value: "test-value",
+        value: "Hello, storage!",
       });
+
+      expect(config).toHaveProperty("to");
+      expect(config).toHaveProperty("functionName");
+      expect(config).toHaveProperty("args");
+      expect(config).toHaveProperty("abi");
 
       expect(config.to).toBe(STORAGE_CONTRACT.address);
       expect(config.functionName).toBe("put");
+      expect(Array.isArray(config.args)).toBe(true);
+      expect(config.args.length).toBe(3); // key, text, value
+    });
+
+    it("should convert string key to bytes32", () => {
+      const client = createClient();
+      const config = client.preparePut({
+        key: "my-key",
+        text: "",
+        value: "value",
+      });
+
+      expect(config.args[0]).toMatch(/^0x[a-fA-F0-9]{64}$/); // 32 bytes = 64 hex chars
+    });
+
+    it("should use hex bytes32 key as-is when keyFormat is bytes32", () => {
+      const client = createClient();
+      const hexKey = "0x" + "a".repeat(64);
+      const config = client.preparePut({
+        key: hexKey,
+        text: "",
+        value: "value",
+        keyFormat: "bytes32",
+      });
+
+      expect(config.args[0]).toBe(hexKey.toLowerCase());
+    });
+
+    it("should hash long keys", () => {
+      const client = createClient();
+      const longKey = "a".repeat(100);
+      const config = client.preparePut({
+        key: longKey,
+        text: "",
+        value: "value",
+      });
+
+      // Long keys should be hashed to bytes32
+      expect(config.args[0]).toMatch(/^0x[a-fA-F0-9]{64}$/);
+      expect(config.args[0]).not.toBe(longKey);
+    });
+
+    it("should convert value to hex", () => {
+      const client = createClient();
+      const config = client.preparePut({
+        key: "key",
+        text: "",
+        value: "test",
+      });
+
+      expect(config.args[2]).toBe("0x74657374"); // "test" as hex
+    });
+
+    it("should handle empty value", () => {
+      const client = createClient();
+      const config = client.preparePut({
+        key: "key",
+        text: "",
+        value: "",
+      });
+
+      expect(config.args[2]).toBe("0x");
+    });
+
+    it("should reject empty storage key", () => {
+      const client = createClient();
+      expect(() => {
+        client.preparePut({
+          key: "",
+          text: "",
+          value: "value",
+        });
+      }).toThrow("Storage key cannot be empty");
+    });
+
+    it("should use correct function name", () => {
+      const client = createClient();
+      const config = client.preparePut({
+        key: "key",
+        text: "",
+        value: "value",
+      });
+
+      expect(config.functionName).toBe("put");
+
+      // Verify function exists in ABI
+      const putFunction = findAbiFunction(config.abi, "put");
+      expect(putFunction).toBeDefined();
+      expect(putFunction!.inputs.length).toBe(3); // key, text, value
     });
   });
 
   describe("prepareChunkedPut", () => {
-    it("should use client's chainId", () => {
-      const client = new StorageClient({
+    const createClient = () =>
+      new StorageClient({
         chainId: BASE_CHAIN_ID,
         overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
       });
+
+    it("should return correct transaction config structure", () => {
+      const client = createClient();
       const config = client.prepareChunkedPut({
-        key: "test-key",
+        key: "large-file",
         text: "",
-        chunks: ["0x1234"],
+        chunks: ["0x1f8b08", "0x1f8b09"],
       });
 
       expect(config.to).toBe(CHUNKED_STORAGE_CONTRACT.address);
       expect(config.functionName).toBe("put");
+      expect(Array.isArray(config.args)).toBe(true);
+      expect(config.args.length).toBe(3); // key, text, chunks
+      expect(Array.isArray(config.args[2])).toBe(true); // chunks is array
+    });
+
+    it("should reject empty chunks array", () => {
+      const client = createClient();
+      expect(() => {
+        client.prepareChunkedPut({
+          key: "key",
+          text: "",
+          chunks: [],
+        });
+      }).toThrow("Chunks array cannot be empty");
+    });
+
+    it("should reject too many chunks (>255)", () => {
+      const client = createClient();
+      const chunks = Array(256).fill("0x1234");
+      expect(() => {
+        client.prepareChunkedPut({
+          key: "key",
+          text: "",
+          chunks,
+        });
+      }).toThrow("Too many chunks");
+    });
+
+    it("should validate chunks are hex strings", () => {
+      const client = createClient();
+      expect(() => {
+        client.prepareChunkedPut({
+          key: "key",
+          text: "",
+          chunks: ["not-hex"],
+        });
+      }).toThrow("Invalid chunk format");
+    });
+
+    it("should use correct function name", () => {
+      const client = createClient();
+      const config = client.prepareChunkedPut({
+        key: "key",
+        text: "",
+        chunks: ["0x1234"],
+      });
+
+      expect(config.functionName).toBe("put");
+
+      // Verify function exists in ABI
+      const putFunction = findAbiFunction(config.abi, "put");
+      expect(putFunction).toBeDefined();
+      expect(putFunction!.inputs.length).toBe(3); // key, text, chunks
+      expect(putFunction!.inputs[2].type).toBe("bytes[]"); // chunks is bytes[]
     });
   });
 
   describe("prepareBulkPut", () => {
-    it("should use client's chainId", () => {
-      const client = new StorageClient({
+    const createClient = () =>
+      new StorageClient({
         chainId: BASE_CHAIN_ID,
         overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
       });
+
+    it("should return correct transaction config structure", () => {
+      const client = createClient();
       const config = client.prepareBulkPut({
-        entries: [{ key: "key1", text: "", value: "value1" }],
+        entries: [
+          { key: "key1", text: "", value: "value1" },
+          { key: "key2", text: "", value: "value2" },
+        ],
       });
 
       expect(config.to).toBe(STORAGE_CONTRACT.address);
       expect(config.functionName).toBe("bulkPut");
+      expect(Array.isArray(config.args)).toBe(true);
+      expect(config.args.length).toBe(1); // entries array
+      expect(Array.isArray(config.args[0])).toBe(true);
+      const entries = config.args[0] as BulkPutEntry[];
+      expect(entries.length).toBe(2);
+    });
+
+    it("should reject empty entries array", () => {
+      const client = createClient();
+      expect(() => {
+        client.prepareBulkPut({
+          entries: [],
+        });
+      }).toThrow("Entries array cannot be empty");
+    });
+
+    it("should convert all entries correctly", () => {
+      const client = createClient();
+      const config = client.prepareBulkPut({
+        entries: [
+          { key: "key1", text: "text1", value: "value1" },
+          { key: "key2", text: "text2", value: "value2" },
+        ],
+      });
+
+      const entries = config.args[0] as BulkPutEntry[];
+      expect(entries[0].key).toMatch(/^0x[a-fA-F0-9]{64}$/);
+      expect(entries[0].text).toBe("text1");
+      expect(entries[0].value).toBe("0x76616c756531"); // "value1" as hex
+      expect(entries[1].key).toMatch(/^0x[a-fA-F0-9]{64}$/);
+      expect(entries[1].text).toBe("text2");
+      expect(entries[1].value).toBe("0x76616c756532"); // "value2" as hex
+    });
+
+    it("should use correct function name", () => {
+      const client = createClient();
+      const config = client.prepareBulkPut({
+        entries: [{ key: "key1", text: "", value: "value1" }],
+      });
+
+      expect(config.functionName).toBe("bulkPut");
+
+      // Verify function exists in ABI
+      const bulkPutFunction = findAbiFunction(config.abi, "bulkPut");
+      expect(bulkPutFunction).toBeDefined();
     });
   });
 
   describe("prepareXmlStorage", () => {
-    it("should use client's chainId", () => {
-      const client = new StorageClient({
+    const createClient = () =>
+      new StorageClient({
         chainId: BASE_CHAIN_ID,
         overrides: { rpcUrls: [BASE_TEST_RPC_URL] },
       });
+
+    it("should return multiple transaction configs", () => {
+      const client = createClient();
       const result = client.prepareXmlStorage({
         data: "<html>test</html>",
         operatorAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
       });
 
-      expect(result.transactionConfigs.length).toBeGreaterThan(0);
+      expect(result.transactionConfigs.length).toBeGreaterThan(1);
+      expect(result.topLevelHash).toBeDefined();
+      expect(result.metadata).toBeDefined();
+    });
+
+    it("should have metadata transaction first", () => {
+      const client = createClient();
+      const result = client.prepareXmlStorage({
+        data: "<html>test</html>",
+        operatorAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+      });
+
+      const metadataConfig = result.transactionConfigs[0];
+      expect(metadataConfig.functionName).toBe("put");
+      expect(metadataConfig.to).toBe(STORAGE_CONTRACT.address);
+    });
+
+    it("should use ChunkedStorage backend by default", () => {
+      const client = createClient();
+      const result = client.prepareXmlStorage({
+        data: "<html>test</html>",
+        operatorAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+      });
+
+      // After metadata, should have ChunkedStorage transactions
+      if (result.transactionConfigs.length > 1) {
+        const chunkConfig = result.transactionConfigs[1];
+        expect(chunkConfig.to).toBe(CHUNKED_STORAGE_CONTRACT.address);
+        expect(chunkConfig.functionName).toBe("put");
+      }
+    });
+
+    it("should handle large data", () => {
+      const client = createClient();
+      const largeData = "a".repeat(100000);
+      const result = client.prepareXmlStorage({
+        data: largeData,
+        operatorAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+      });
+
+      expect(result.transactionConfigs.length).toBeGreaterThan(1);
       expect(result.topLevelHash).toBeDefined();
     });
   });

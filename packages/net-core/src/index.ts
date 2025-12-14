@@ -20,9 +20,6 @@ export {
 export { keccak256HashString, toBytes32 } from "./utils/crypto";
 export { normalizeData, normalizeDataOrEmpty } from "./utils/dataUtils";
 
-// Writing functions
-export { prepareSendMessage, prepareSendMessageViaApp } from "./client/messageWriting";
-
 // Types
 export type {
   NetMessage,

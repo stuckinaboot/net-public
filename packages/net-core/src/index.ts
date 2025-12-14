@@ -24,6 +24,8 @@ export { normalizeData, normalizeDataOrEmpty } from "./utils/dataUtils";
 export type {
   NetMessage,
   NetMessageFilter,
+  NetClientMessagesOptions,
+  NetClientMessageCountOptions,
   GetNetMessagesOptions,
   GetNetMessageCountOptions,
   UseNetMessagesOptions,

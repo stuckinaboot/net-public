@@ -39,6 +39,15 @@ import { keccak256HashString } from "@net-protocol/core";
 import { processDataForStorage, generateXmlMetadata } from "../utils/writingUtils";
 import { chunkDataForStorage } from "../utils/chunkUtils";
 
+/**
+ * StorageClient - Client for interacting with Net protocol storage
+ * 
+ * **Pattern for client methods:**
+ * - Client methods never require `chainId` in their parameters
+ * - All methods use `this.chainId` internally (set during construction)
+ * - Config builders receive `chainId` as a separate required parameter
+ * - This ensures consistency: the client's `chainId` is the single source of truth
+ */
 export class StorageClient {
   private client: PublicClient;
   private chainId: number;

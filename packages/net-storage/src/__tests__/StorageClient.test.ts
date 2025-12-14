@@ -7,6 +7,7 @@ import {
   delay,
   withRetry,
   findAbiFunction,
+  isBulkPutEntries,
   type BulkPutEntry,
 } from "./test-utils";
 import { STORAGE_CONTRACT, CHUNKED_STORAGE_CONTRACT } from "../constants";
@@ -819,7 +820,7 @@ describe("StorageClient", () => {
       expect(Array.isArray(config.args)).toBe(true);
       expect(config.args.length).toBe(1); // entries array
       expect(Array.isArray(config.args[0])).toBe(true);
-      const entries = config.args[0] as BulkPutEntry[];
+      const entries = isBulkPutEntries(config.args[0]) ? config.args[0] : [];
       expect(entries.length).toBe(2);
     });
 
@@ -841,7 +842,8 @@ describe("StorageClient", () => {
         ],
       });
 
-      const entries = config.args[0] as BulkPutEntry[];
+      const entries = isBulkPutEntries(config.args[0]) ? config.args[0] : [];
+      expect(entries.length).toBeGreaterThan(0);
       expect(entries[0].key).toMatch(/^0x[a-fA-F0-9]{64}$/);
       expect(entries[0].text).toBe("text1");
       expect(entries[0].value).toBe("0x76616c756531"); // "value1" as hex

@@ -6,46 +6,54 @@ import {
 import { getStorageKeyBytes } from "../utils/keyUtils";
 import type { Abi } from "viem";
 
-export interface GetStorageOptions {
+// Internal config builder types (chainId required separately)
+export interface GetStorageReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
 
-export interface GetStorageValueAtIndexOptions {
+export interface GetStorageValueAtIndexReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
   index: number;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
 
-export interface GetStorageTotalWritesOptions {
+export interface GetStorageTotalWritesReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
 
-export interface GetStorageBulkGetOptions {
+export interface GetStorageBulkGetReadConfigParams {
   chainId: number;
   keys: Array<{ key: string; operator: string; keyFormat?: "raw" | "bytes32" }>;
   safe?: boolean;
-  keyFormat?: "raw" | "bytes32"; // Optional format override for all keys (if individual keys don't specify)
+  keyFormat?: "raw" | "bytes32";
 }
 
-export interface GetStorageRouterOptions {
+export interface GetStorageRouterReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
+
+// Legacy types for backward compatibility (deprecated, use ReadConfigParams types)
+export interface GetStorageOptions extends GetStorageReadConfigParams {}
+export interface GetStorageValueAtIndexOptions extends GetStorageValueAtIndexReadConfigParams {}
+export interface GetStorageTotalWritesOptions extends GetStorageTotalWritesReadConfigParams {}
+export interface GetStorageBulkGetOptions extends GetStorageBulkGetReadConfigParams {}
+export interface GetStorageRouterOptions extends GetStorageRouterReadConfigParams {}
 
 /**
  * Build contract read config for Storage.get()
  */
-export function getStorageReadConfig(params: GetStorageOptions) {
+export function getStorageReadConfig(params: GetStorageReadConfigParams) {
   const { chainId, key, operator, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 
@@ -62,7 +70,7 @@ export function getStorageReadConfig(params: GetStorageOptions) {
  * Build contract read config for Storage.getValueAtIndex()
  */
 export function getStorageValueAtIndexReadConfig(
-  params: GetStorageValueAtIndexOptions
+  params: GetStorageValueAtIndexReadConfigParams
 ) {
   const { chainId, key, operator, index, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
@@ -80,7 +88,7 @@ export function getStorageValueAtIndexReadConfig(
  * Build contract read config for Storage.getTotalWrites()
  */
 export function getStorageTotalWritesReadConfig(
-  params: GetStorageTotalWritesOptions
+  params: GetStorageTotalWritesReadConfigParams
 ) {
   const { chainId, key, operator, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
@@ -97,7 +105,7 @@ export function getStorageTotalWritesReadConfig(
 /**
  * Build contract read config for Storage.bulkGet()
  */
-export function getStorageBulkGetReadConfig(params: GetStorageBulkGetOptions) {
+export function getStorageBulkGetReadConfig(params: GetStorageBulkGetReadConfigParams) {
   const { chainId, keys, safe = false, keyFormat } = params;
   const contract = safe ? SAFE_STORAGE_READER_CONTRACT : STORAGE_CONTRACT;
 
@@ -119,7 +127,7 @@ export function getStorageBulkGetReadConfig(params: GetStorageBulkGetOptions) {
 /**
  * Build contract read config for StorageRouter.get()
  */
-export function getStorageRouterReadConfig(params: GetStorageRouterOptions) {
+export function getStorageRouterReadConfig(params: GetStorageRouterReadConfigParams) {
   const { chainId, key, operator, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
 

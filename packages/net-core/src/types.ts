@@ -15,7 +15,18 @@ export type NetMessageFilter = {
   maker?: `0x${string}`; // user address
 };
 
-// Options for reading messages
+// Client method options (no chainId, no rpcUrl - uses client's chainId)
+export type NetClientMessagesOptions = {
+  filter?: NetMessageFilter;
+  startIndex?: number;
+  endIndex?: number;
+};
+
+export type NetClientMessageCountOptions = {
+  filter?: NetMessageFilter;
+};
+
+// Options for reading messages (hooks still need chainId)
 export type GetNetMessagesOptions = {
   chainId: number;
   filter?: NetMessageFilter;
@@ -24,7 +35,7 @@ export type GetNetMessagesOptions = {
   rpcUrl?: string | string[];
 };
 
-// Options for message count
+// Options for message count (hooks still need chainId)
 export type GetNetMessageCountOptions = {
   chainId: number;
   filter?: NetMessageFilter;

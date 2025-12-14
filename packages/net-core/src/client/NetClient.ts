@@ -6,13 +6,22 @@ import {
   getNetMessageCountReadConfig,
 } from "./messages";
 import {
-  GetNetMessagesOptions,
-  GetNetMessageCountOptions,
+  NetClientMessagesOptions,
+  NetClientMessageCountOptions,
   NetMessage,
   WriteTransactionConfig,
 } from "../types";
 import { normalizeDataOrEmpty } from "../utils/dataUtils";
 
+/**
+ * NetClient - Client for interacting with Net protocol messages
+ * 
+ * **Pattern for client methods:**
+ * - Client methods never require `chainId` in their parameters
+ * - All methods use `this.chainId` internally (set during construction)
+ * - Config builders receive `chainId` as a separate required parameter
+ * - This ensures consistency: the client's `chainId` is the single source of truth
+ */
 export class NetClient {
   private client: PublicClient;
   private chainId: number;
@@ -25,7 +34,7 @@ export class NetClient {
     this.chainId = params.chainId;
   }
 
-  async getMessages(params: GetNetMessagesOptions): Promise<NetMessage[]> {
+  async getMessages(params: NetClientMessagesOptions): Promise<NetMessage[]> {
     const config = getNetMessagesReadConfig({
       ...params,
       chainId: this.chainId,
@@ -35,7 +44,7 @@ export class NetClient {
     return messages as NetMessage[];
   }
 
-  async getMessageCount(params: GetNetMessageCountOptions): Promise<number> {
+  async getMessageCount(params: NetClientMessageCountOptions): Promise<number> {
     const config = getNetMessageCountReadConfig({
       ...params,
       chainId: this.chainId,
@@ -46,7 +55,7 @@ export class NetClient {
   }
 
   async getMessagesBatch(
-    params: GetNetMessagesOptions & {
+    params: NetClientMessagesOptions & {
       batchCount?: number;
     }
   ): Promise<NetMessage[]> {

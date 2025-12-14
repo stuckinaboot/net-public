@@ -1,8 +1,19 @@
 import { getNetContract } from "../chainConfig";
 import { GetNetMessagesOptions, GetNetMessageCountOptions } from "../types";
 
+// Internal config builder params (chainId required separately)
+type GetNetMessagesReadConfigParams = {
+  chainId: number;
+  filter?: GetNetMessagesOptions["filter"];
+  startIndex?: number;
+  endIndex?: number;
+};
+
 // Build contract read args for message queries
-export function getNetMessagesReadConfig(params: GetNetMessagesOptions) {
+// Accepts GetNetMessagesOptions for backward compatibility with hooks
+export function getNetMessagesReadConfig(
+  params: GetNetMessagesOptions | GetNetMessagesReadConfigParams
+) {
   const { chainId, filter, startIndex = 0, endIndex } = params;
   const netContract = getNetContract(chainId);
 
@@ -39,8 +50,17 @@ export function getNetMessagesReadConfig(params: GetNetMessagesOptions) {
   };
 }
 
+// Internal config builder params (chainId required separately)
+type GetNetMessageCountReadConfigParams = {
+  chainId: number;
+  filter?: GetNetMessageCountOptions["filter"];
+};
+
 // Build contract read args for message count
-export function getNetMessageCountReadConfig(params: GetNetMessageCountOptions) {
+// Accepts GetNetMessageCountOptions for backward compatibility with hooks
+export function getNetMessageCountReadConfig(
+  params: GetNetMessageCountOptions | GetNetMessageCountReadConfigParams
+) {
   const { chainId, filter } = params;
   const netContract = getNetContract(chainId);
 

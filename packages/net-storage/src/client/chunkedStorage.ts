@@ -1,36 +1,42 @@
 import { CHUNKED_STORAGE_READER_CONTRACT } from "../constants";
 import { getStorageKeyBytes } from "../utils/keyUtils";
 
-export interface GetChunkedStorageMetadataOptions {
+// Internal config builder types (chainId required separately)
+export interface GetChunkedStorageMetadataReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
   index?: number;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
 
-export interface GetChunkedStorageChunksOptions {
+export interface GetChunkedStorageChunksReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
   start: number;
   end: number;
   index?: number;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
 
-export interface GetChunkedStorageTotalWritesOptions {
+export interface GetChunkedStorageTotalWritesReadConfigParams {
   chainId: number;
   key: string;
   operator: string;
-  keyFormat?: "raw" | "bytes32"; // Optional format override
+  keyFormat?: "raw" | "bytes32";
 }
+
+// Legacy types for backward compatibility (deprecated, use ReadConfigParams types)
+export interface GetChunkedStorageMetadataOptions extends GetChunkedStorageMetadataReadConfigParams {}
+export interface GetChunkedStorageChunksOptions extends GetChunkedStorageChunksReadConfigParams {}
+export interface GetChunkedStorageTotalWritesOptions extends GetChunkedStorageTotalWritesReadConfigParams {}
 
 /**
  * Build contract read config for ChunkedStorageReader.getMetadata() or getMetadataAtIndex()
  */
 export function getChunkedStorageMetadataReadConfig(
-  params: GetChunkedStorageMetadataOptions
+  params: GetChunkedStorageMetadataReadConfigParams
 ) {
   const { chainId, key, operator, index, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
@@ -55,7 +61,7 @@ export function getChunkedStorageMetadataReadConfig(
  * Build contract read config for ChunkedStorageReader.getChunks() or getChunksAtIndex()
  */
 export function getChunkedStorageChunksReadConfig(
-  params: GetChunkedStorageChunksOptions
+  params: GetChunkedStorageChunksReadConfigParams
 ) {
   const { chainId, key, operator, start, end, index, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;
@@ -79,7 +85,7 @@ export function getChunkedStorageChunksReadConfig(
  * Build contract read config for ChunkedStorageReader.getTotalWrites()
  */
 export function getChunkedStorageTotalWritesReadConfig(
-  params: GetChunkedStorageTotalWritesOptions
+  params: GetChunkedStorageTotalWritesReadConfigParams
 ) {
   const { chainId, key, operator, keyFormat } = params;
   const storageKeyBytes = getStorageKeyBytes(key, keyFormat) as `0x${string}`;

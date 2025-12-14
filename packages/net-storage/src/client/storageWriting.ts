@@ -1,10 +1,10 @@
 import { normalizeDataOrEmpty } from "@net-protocol/core";
 import { keccak256HashString } from "@net-protocol/core";
+import type { WriteTransactionConfig } from "@net-protocol/core";
 import { STORAGE_CONTRACT, CHUNKED_STORAGE_CONTRACT } from "../constants";
 import { getStorageKeyBytes } from "../utils/keyUtils";
 import { processDataForStorage, generateXmlMetadata } from "../utils/writingUtils";
 import { chunkDataForStorage } from "../utils/chunkUtils";
-import type { WriteTransactionConfig } from "../types";
 
 /**
  * Validate storage parameters

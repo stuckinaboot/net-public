@@ -28,7 +28,6 @@ export type {
   XmlReference,
   ChunkedMetadata,
   UseXmlStorageOptions,
-  WriteTransactionConfig,
 } from "./types";
 
 // Constants

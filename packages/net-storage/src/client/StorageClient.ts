@@ -31,8 +31,8 @@ import type {
   BulkStorageKey,
   BulkStorageResult,
   StorageClientOptions,
-  WriteTransactionConfig,
 } from "../types";
+import type { WriteTransactionConfig } from "@net-protocol/core";
 import {
   prepareStoragePut,
   prepareChunkedStoragePut,

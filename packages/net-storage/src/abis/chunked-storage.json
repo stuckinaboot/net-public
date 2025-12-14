@@ -1,0 +1,92 @@
+[
+  {
+    "type": "function",
+    "name": "get",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "string", "internalType": "string" },
+      { "name": "", "type": "bytes", "internalType": "bytes" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getChunk",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" },
+      { "name": "chunkIndex", "type": "uint8", "internalType": "uint8" }
+    ],
+    "outputs": [
+      { "name": "chunkData", "type": "bytes", "internalType": "bytes" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getChunks",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" },
+      { "name": "startIndex", "type": "uint8", "internalType": "uint8" },
+      { "name": "endIndex", "type": "uint8", "internalType": "uint8" }
+    ],
+    "outputs": [
+      { "name": "chunks", "type": "bytes[]", "internalType": "bytes[]" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMetadata",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "chunkCount", "type": "uint8", "internalType": "uint8" },
+      { "name": "originalText", "type": "string", "internalType": "string" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "put",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "text", "type": "string", "internalType": "string" },
+      { "name": "chunks", "type": "bytes[]", "internalType": "bytes[]" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ChunkedStoragePut",
+    "inputs": [
+      {
+        "name": "originalKey",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "hashedKey",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  { "type": "error", "name": "DataTooLarge", "inputs": [] }
+]

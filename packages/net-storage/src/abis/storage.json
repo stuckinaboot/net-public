@@ -1,0 +1,165 @@
+[
+  {
+    "type": "function",
+    "name": "bulkGet",
+    "inputs": [
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "internalType": "struct Storage.BulkGetParams[]",
+        "components": [
+          { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+          { "name": "operator", "type": "address", "internalType": "address" }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "results",
+        "type": "tuple[]",
+        "internalType": "struct Storage.BulkGetResult[]",
+        "components": [
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "value", "type": "bytes", "internalType": "bytes" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "bulkGetTotalWrites",
+    "inputs": [
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "internalType": "struct Storage.BulkGetParams[]",
+        "components": [
+          { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+          { "name": "operator", "type": "address", "internalType": "address" }
+        ]
+      }
+    ],
+    "outputs": [
+      { "name": "results", "type": "uint256[]", "internalType": "uint256[]" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "bulkGetValueAtIndex",
+    "inputs": [
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "internalType": "struct Storage.BulkGetValueAtIndexParams[]",
+        "components": [
+          { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+          {
+            "name": "operator",
+            "type": "address",
+            "internalType": "address"
+          },
+          { "name": "idx", "type": "uint256", "internalType": "uint256" }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "results",
+        "type": "tuple[]",
+        "internalType": "struct Storage.BulkGetResult[]",
+        "components": [
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "value", "type": "bytes", "internalType": "bytes" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "bulkPut",
+    "inputs": [
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "internalType": "struct Storage.BulkPutParams[]",
+        "components": [
+          { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "value", "type": "bytes", "internalType": "bytes" }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "get",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "string", "internalType": "string" },
+      { "name": "", "type": "bytes", "internalType": "bytes" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalWrites",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getValueAtIndex",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "operator", "type": "address", "internalType": "address" },
+      { "name": "idx", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "", "type": "string", "internalType": "string" },
+      { "name": "", "type": "bytes", "internalType": "bytes" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "put",
+    "inputs": [
+      { "name": "key", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "text", "type": "string", "internalType": "string" },
+      { "name": "value", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Stored",
+    "inputs": [
+      {
+        "name": "key",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  }
+]

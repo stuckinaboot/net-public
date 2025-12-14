@@ -1,0 +1,576 @@
+[
+  {
+    "type": "function",
+    "name": "decodeMessage",
+    "inputs": [
+      { "name": "encodedMessage", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "decodeMessageAtIndex",
+    "inputs": [{ "name": "idx", "type": "uint256", "internalType": "uint256" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessage",
+    "inputs": [{ "name": "idx", "type": "uint256", "internalType": "uint256" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageForApp",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageForAppTopic",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageForAppUser",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageForAppUserTopic",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct INet.Message",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageIdxForApp",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageIdxForAppTopic",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageIdxForAppUser",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessageIdxForAppUserTopic",
+    "inputs": [
+      { "name": "idx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessagesInRange",
+    "inputs": [
+      { "name": "startIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIdx", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct INet.Message[]",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessagesInRangeForApp",
+    "inputs": [
+      { "name": "startIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct INet.Message[]",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessagesInRangeForAppTopic",
+    "inputs": [
+      { "name": "startIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct INet.Message[]",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessagesInRangeForAppUser",
+    "inputs": [
+      { "name": "startIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct INet.Message[]",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessagesInRangeForAppUserTopic",
+    "inputs": [
+      { "name": "startIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct INet.Message[]",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMessagesInRangeForHash",
+    "inputs": [
+      { "name": "startIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIdx", "type": "uint256", "internalType": "uint256" },
+      { "name": "hashVal", "type": "bytes32", "internalType": "bytes32" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct INet.Message[]",
+        "components": [
+          { "name": "app", "type": "address", "internalType": "address" },
+          { "name": "sender", "type": "address", "internalType": "address" },
+          {
+            "name": "timestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "text", "type": "string", "internalType": "string" },
+          { "name": "topic", "type": "string", "internalType": "string" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalMessagesCount",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalMessagesForAppCount",
+    "inputs": [{ "name": "app", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalMessagesForAppTopicCount",
+    "inputs": [
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalMessagesForAppUserCount",
+    "inputs": [
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalMessagesForAppUserTopicCount",
+    "inputs": [
+      { "name": "app", "type": "address", "internalType": "address" },
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "topic", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalMessagesForHashCount",
+    "inputs": [
+      { "name": "hashVal", "type": "bytes32", "internalType": "bytes32" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hashToMessageIndexes",
+    "inputs": [
+      { "name": "hashVal", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "messageIndexes",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "messagePointers",
+    "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "sendMessage",
+    "inputs": [
+      { "name": "text", "type": "string", "internalType": "string" },
+      { "name": "topic", "type": "string", "internalType": "string" },
+      { "name": "data", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "sendMessageViaApp",
+    "inputs": [
+      { "name": "sender", "type": "address", "internalType": "address" },
+      { "name": "text", "type": "string", "internalType": "string" },
+      { "name": "topic", "type": "string", "internalType": "string" },
+      { "name": "data", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "MessageSent",
+    "inputs": [
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "topic",
+        "type": "string",
+        "indexed": true,
+        "internalType": "string"
+      },
+      {
+        "name": "messageIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MessageSentViaApp",
+    "inputs": [
+      {
+        "name": "app",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "topic",
+        "type": "string",
+        "indexed": true,
+        "internalType": "string"
+      },
+      {
+        "name": "messageIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  { "type": "error", "name": "InvalidEndIndex", "inputs": [] },
+  { "type": "error", "name": "InvalidRange", "inputs": [] },
+  { "type": "error", "name": "InvalidStartIndex", "inputs": [] },
+  { "type": "error", "name": "MsgEmpty", "inputs": [] }
+]

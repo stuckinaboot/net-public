@@ -28,7 +28,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@net-protocol/core": "file:../net-core",
+    "@net-protocol/core": "workspace:*",
     "pako": "^2.1.0",
     "use-async-effect": "^2.2.7",
     "viem": "^2.31.4"

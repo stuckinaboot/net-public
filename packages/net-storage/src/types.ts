@@ -1,7 +1,10 @@
 /**
- * Storage data tuple: [text, data]
+ * Storage data object: { text, value }
  */
-export type StorageData = [string, string];
+export type StorageData = {
+  text: string;
+  value: string;
+};
 
 /**
  * Bulk storage key for batch operations
@@ -74,8 +77,7 @@ export type UseXmlStorageOptions = {
   index?: number; // Historical version index (0-based). undefined = latest version
   keyFormat?: "raw" | "bytes32"; // Optional format override: "raw" to always convert, "bytes32" to use as-is, undefined for auto-detect
   useRouter?: boolean; // Use StorageRouter for automatic detection (latest only)
-  returnFormat?: "object" | "tuple"; // Return structure: "object" (default) or "tuple"
-  outputFormat?: "hex" | "string"; // Data format: "hex" (default) or "string" - only applies when returnFormat: "tuple"
+  outputFormat?: "hex" | "string"; // Data format: "hex" (default) or "string"
 };
 
 /**

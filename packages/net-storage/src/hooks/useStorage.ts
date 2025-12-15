@@ -1,7 +1,11 @@
 import { useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
 import { STORAGE_CONTRACT, SAFE_STORAGE_READER_CONTRACT } from "../constants";
-import { CHUNKED_STORAGE_READER_CONTRACT, STORAGE_ROUTER_CONTRACT, CHUNKED_STORAGE_CONTRACT } from "../constants";
+import {
+  CHUNKED_STORAGE_READER_CONTRACT,
+  STORAGE_ROUTER_CONTRACT,
+  CHUNKED_STORAGE_CONTRACT,
+} from "../constants";
 import { getNetContract } from "@net-protocol/core";
 import { assembleChunks } from "../utils/chunkUtils";
 import { getPublicClient } from "@net-protocol/core";
@@ -30,10 +34,10 @@ export function useStorage({
 
   // Helper function to convert data based on outputFormat
   const formatData = (text: string, dataHex: `0x${string}`): StorageData => {
-    if (outputAsString) {
-      return [text, hexToString(dataHex)];
-    }
-    return [text, dataHex];
+    return {
+      text,
+      value: outputAsString ? hexToString(dataHex) : dataHex,
+    };
   };
 
   // Router path (latest only, automatic detection)
@@ -45,9 +49,10 @@ export function useStorage({
     abi: STORAGE_ROUTER_CONTRACT.abi,
     address: STORAGE_ROUTER_CONTRACT.address,
     functionName: "get",
-    args: storageKeyBytes && operatorAddress 
-      ? [storageKeyBytes, operatorAddress] 
-      : undefined,
+    args:
+      storageKeyBytes && operatorAddress
+        ? [storageKeyBytes, operatorAddress]
+        : undefined,
     chainId,
     query: {
       enabled: shouldUseRouter && enabled && !!key && !!operatorAddress,
@@ -69,6 +74,11 @@ export function useStorage({
 
       // Handle non-chunked data (early return)
       if (!isChunkedStorage) {
+        // Guard: ensure data exists before formatting
+        if (!data || typeof data !== "string") {
+          setRouterData(undefined);
+          return;
+        }
         // Regular storage - data is already hex, apply outputFormat
         const formatted = formatData(text, data);
         setRouterData(formatted);
@@ -115,11 +125,11 @@ export function useStorage({
         } else {
           if (outputAsString) {
             // assembleChunks already returns plain string
-            setRouterData([text, assembledString]);
+            setRouterData({ text, value: assembledString });
           } else {
             // Convert plain string to hex for hex output format
             const hexData = stringToHex(assembledString) as `0x${string}`;
-            setRouterData([text, hexData]);
+            setRouterData({ text, value: hexData });
           }
         }
       } catch (error) {
@@ -155,7 +165,12 @@ export function useStorage({
         : undefined,
     chainId,
     query: {
-      enabled: !shouldUseRouter && enabled && !!operatorAddress && !!key && isLatestVersion,
+      enabled:
+        !shouldUseRouter &&
+        enabled &&
+        !!operatorAddress &&
+        !!key &&
+        isLatestVersion,
     },
   });
 
@@ -229,6 +244,12 @@ export function useStorage({
         });
 
         const [text, data] = result as [string, `0x${string}`];
+        // Guard: ensure data exists before formatting
+        if (!data || typeof data !== "string") {
+          setHistoricalData(undefined);
+          setHistoricalLoading(false);
+          return;
+        }
         // Apply outputFormat to historical data
         setHistoricalData(formatData(text, data));
       } catch (error) {
@@ -243,8 +264,15 @@ export function useStorage({
     }
 
     fetchHistoricalVersion();
-  }, [chainId, key, operatorAddress, index, enabled, isLatestVersion, outputAsString]);
-
+  }, [
+    chainId,
+    key,
+    operatorAddress,
+    index,
+    enabled,
+    isLatestVersion,
+    outputAsString,
+  ]);
 
   // Return appropriate data based on version type
   if (!isLatestVersion) {
@@ -264,8 +292,17 @@ export function useStorage({
   }
 
   // Apply outputFormat to direct storage data
-  const formattedDirectData = latestData 
-    ? formatData((latestData as StorageData)[0], (latestData as StorageData)[1] as `0x${string}`)
+  // latestData is a tuple [string, string] from the contract, not a StorageData object
+  const formattedDirectData = latestData
+    ? (() => {
+        const result = latestData as [string, `0x${string}`];
+        const [text, valueHex] = result;
+        // Guard: ensure valueHex exists before formatting
+        if (!valueHex || typeof valueHex !== "string") {
+          return undefined;
+        }
+        return formatData(text, valueHex);
+      })()
     : undefined;
 
   return {
@@ -317,10 +354,12 @@ export function useStorageForOperatorAndKey({
   key,
   operatorAddress,
   keyFormat,
+  outputFormat = "hex",
 }: UseStorageOptions) {
   const storageKeyBytes = key
     ? (getStorageKeyBytes(key, keyFormat) as `0x${string}`)
     : undefined;
+  const outputAsString = outputFormat === "string";
   const readContractArgs = {
     abi: STORAGE_CONTRACT.abi,
     address: STORAGE_CONTRACT.address,
@@ -335,7 +374,15 @@ export function useStorageForOperatorAndKey({
   const { data, isLoading, error } = useReadContract(readContractArgs);
 
   return {
-    data: data as StorageData | undefined,
+    data: data
+      ? (() => {
+          const [text, valueHex] = data as [string, `0x${string}`];
+          return {
+            text,
+            value: outputAsString ? hexToString(valueHex) : valueHex,
+          };
+        })()
+      : undefined,
     isLoading,
     error: error as Error | undefined,
   };

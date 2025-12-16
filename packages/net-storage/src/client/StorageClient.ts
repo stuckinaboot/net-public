@@ -36,12 +36,15 @@ import type {
 import type { WriteTransactionConfig } from "@net-protocol/core";
 import { normalizeDataOrEmpty } from "@net-protocol/core";
 import { keccak256HashString } from "@net-protocol/core";
-import { processDataForStorage, generateXmlMetadata } from "../utils/writingUtils";
+import {
+  processDataForStorage,
+  generateXmlMetadata,
+} from "../utils/writingUtils";
 import { chunkDataForStorage } from "../utils/chunkUtils";
 
 /**
  * StorageClient - Client for interacting with Net protocol storage
- * 
+ *
  * **Pattern for client methods:**
  * - Client methods never require `chainId` in their parameters
  * - All methods use `this.chainId` internally (set during construction)
@@ -76,8 +79,12 @@ export class StorageClient {
     });
 
     try {
-      const result = await readContract(this.client, config);
-      return result as StorageData;
+      const result = (await readContract(this.client, config)) as [
+        string,
+        string
+      ];
+      const [text, value] = result;
+      return { text, value };
     } catch {
       return null;
     }
@@ -101,8 +108,12 @@ export class StorageClient {
     });
 
     try {
-      const result = await readContract(this.client, config);
-      return result as StorageData;
+      const result = (await readContract(this.client, config)) as [
+        string,
+        string
+      ];
+      const [text, value] = result;
+      return { text, value };
     } catch {
       return null;
     }
@@ -356,13 +367,14 @@ export class StorageClient {
     ) as `0x${string}`;
 
     try {
-      const result = await readContract(this.client, {
+      const result = (await readContract(this.client, {
         abi: STORAGE_CONTRACT.abi,
         address: STORAGE_CONTRACT.address,
         functionName: "getForOperatorAndKey",
         args: [params.operator, storageKeyBytes],
-      });
-      return result as StorageData;
+      })) as [string, string];
+      const [text, value] = result;
+      return { text, value };
     } catch {
       return null;
     }
@@ -416,8 +428,9 @@ export class StorageClient {
           throw new Error("StoredDataNotFound");
         }
         isChunkedStorage = false;
-        [text, data] = result;
-        data = hexToString(data as `0x${string}`);
+        const resultObj = result as StorageData;
+        text = resultObj.text;
+        data = hexToString(resultObj.value as `0x${string}`);
       }
     } else {
       // Latest: use router
@@ -497,16 +510,21 @@ export class StorageClient {
     key: string | `0x${string}`;
     chunks?: string[];
   }) {
-    if (!params.key || (typeof params.key === "string" && params.key.length === 0)) {
+    if (
+      !params.key ||
+      (typeof params.key === "string" && params.key.length === 0)
+    ) {
       throw new Error("Storage key cannot be empty");
     }
-    
+
     if (params.chunks && params.chunks.length === 0) {
       throw new Error("Chunks array cannot be empty");
     }
-    
+
     if (params.chunks && params.chunks.length > 255) {
-      throw new Error(`Too many chunks: ${params.chunks.length} exceeds maximum of 255`);
+      throw new Error(
+        `Too many chunks: ${params.chunks.length} exceeds maximum of 255`
+      );
     }
   }
 
@@ -532,7 +550,9 @@ export class StorageClient {
 
       // Generate storage key for this XML chunk's ChunkedStorage entry
       // This will be the key used in XML metadata to reference this XML chunk
-      const chunkedHash = keccak256HashString(xmlChunk + params.operatorAddress);
+      const chunkedHash = keccak256HashString(
+        xmlChunk + params.operatorAddress
+      );
       chunkedStorageHashes.push(chunkedHash);
 
       // Create ChunkedStorage transaction config
@@ -571,7 +591,10 @@ export class StorageClient {
   }): WriteTransactionConfig {
     this.validateStorageParams({ key: params.key });
 
-    const keyBytes32 = getStorageKeyBytes(params.key, params.keyFormat) as `0x${string}`;
+    const keyBytes32 = getStorageKeyBytes(
+      params.key,
+      params.keyFormat
+    ) as `0x${string}`;
     const valueHex = normalizeDataOrEmpty(params.value);
 
     return {
@@ -593,7 +616,10 @@ export class StorageClient {
   }): WriteTransactionConfig {
     this.validateStorageParams({ key: params.key, chunks: params.chunks });
 
-    const keyBytes32 = getStorageKeyBytes(params.key, params.keyFormat) as `0x${string}`;
+    const keyBytes32 = getStorageKeyBytes(
+      params.key,
+      params.keyFormat
+    ) as `0x${string}`;
 
     // Validate chunks are hex strings
     for (const chunk of params.chunks) {
@@ -628,7 +654,10 @@ export class StorageClient {
     // Convert all entries
     const bulkEntries = params.entries.map((entry) => {
       this.validateStorageParams({ key: entry.key });
-      const keyBytes32 = getStorageKeyBytes(entry.key, params.keyFormat) as `0x${string}`;
+      const keyBytes32 = getStorageKeyBytes(
+        entry.key,
+        params.keyFormat
+      ) as `0x${string}`;
       const valueHex = normalizeDataOrEmpty(entry.value);
 
       return {
@@ -692,7 +721,10 @@ export class StorageClient {
 
       // Combine transactions: metadata first, then chunk transactions
       return {
-        transactionConfigs: [metadataConfig, ...chunkedResult.transactionConfigs],
+        transactionConfigs: [
+          metadataConfig,
+          ...chunkedResult.transactionConfigs,
+        ],
         topLevelHash: result.topLevelHash,
         metadata: chunkedResult.xmlMetadata,
       };

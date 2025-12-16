@@ -48,6 +48,9 @@ Thumbs.db
 *.temp
 .cache/
 
+# Temporary files from prepack (package.json backups)
+package.json.orig
+
 # TypeScript
 *.tsbuildinfo
 

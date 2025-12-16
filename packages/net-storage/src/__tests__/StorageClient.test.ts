@@ -52,12 +52,11 @@ describe("StorageClient", () => {
         })
       );
 
-      // Result should be either null or a valid tuple
+      // Result should be either null or a valid object
       if (result !== null) {
-        expect(Array.isArray(result)).toBe(true);
-        expect(result.length).toBe(2);
-        expect(typeof result[0]).toBe("string"); // text
-        expect(typeof result[1]).toBe("string"); // data
+        expect(typeof result).toBe("object");
+        expect(typeof result.text).toBe("string");
+        expect(typeof result.value).toBe("string");
       }
 
       await delay();
@@ -110,10 +109,9 @@ describe("StorageClient", () => {
         );
 
         if (result !== null) {
-          expect(Array.isArray(result)).toBe(true);
-          expect(result.length).toBe(2);
-          expect(typeof result[0]).toBe("string");
-          expect(typeof result[1]).toBe("string");
+          expect(typeof result).toBe("object");
+          expect(typeof result.text).toBe("string");
+          expect(typeof result.value).toBe("string");
         }
       }
 
@@ -463,8 +461,9 @@ describe("StorageClient", () => {
       );
 
       if (result !== null) {
-        expect(Array.isArray(result)).toBe(true);
-        expect(result.length).toBe(2);
+        expect(typeof result).toBe("object");
+        expect(typeof result.text).toBe("string");
+        expect(typeof result.value).toBe("string");
       }
 
       await delay();

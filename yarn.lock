@@ -37,8 +37,8 @@ __metadata:
   linkType: hard
 
 "@coinbase/cdp-sdk@npm:^1.0.0":
-  version: 1.40.0
-  resolution: "@coinbase/cdp-sdk@npm:1.40.0"
+  version: 1.40.1
+  resolution: "@coinbase/cdp-sdk@npm:1.40.1"
   dependencies:
     "@solana-program/system": "npm:^0.8.0"
     "@solana-program/token": "npm:^0.6.0"
@@ -52,7 +52,7 @@ __metadata:
     uncrypto: "npm:^0.1.3"
     viem: "npm:^2.21.26"
     zod: "npm:^3.24.4"
-  checksum: 69781b1fad1bc6fd0fae02bb0f4660fb9ec906bb408ff743571aab298d1e7e03dc0bcb8e4ba1296d20437e7850f64b34a47876881362a30ef00e1b900a5519e2
+  checksum: 94c8d844ba2b489c1c1bc8a27715c950d83504b1470afc68c0acc2ea0d76ecd8eb4125da19f2d54906b42d513e103fc1d224622ff3e33435244f57018470c66c
   languageName: node
   linkType: hard
 
@@ -819,7 +819,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@net-protocol/core@workspace:*, @net-protocol/core@workspace:packages/net-core":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage":
+  version: 1.0.0
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=e9b4a3&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
+  dependencies:
+    viem: "npm:^2.31.4"
+  peerDependencies:
+    react: ^18.0.0
+    wagmi: ^2.15.0
+  checksum: cab959da2c3b7576fd1f1dbd2ce3fe152bee5fd5207080021f1d708bd44f3bf3d0cd2cd525dc721017558ca48489ff82ab873dc5c5602d8d2577f4313392775c
+  languageName: node
+  linkType: hard
+
+"@net-protocol/core@workspace:packages/net-core":
   version: 0.0.0-use.local
   resolution: "@net-protocol/core@workspace:packages/net-core"
   dependencies:
@@ -841,7 +853,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@net-protocol/storage@workspace:packages/net-storage"
   dependencies:
-    "@net-protocol/core": "workspace:*"
+    "@net-protocol/core": "file:../net-core"
     "@tanstack/react-query": "npm:^5.0.0"
     "@types/node": "npm:^20.0.0"
     "@types/pako": "npm:^2.0.3"
@@ -2119,11 +2131,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 24.10.2
-  resolution: "@types/node@npm:24.10.2"
+  version: 25.0.2
+  resolution: "@types/node@npm:25.0.2"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 560c894e1a9bf7468718ceca8cd520361fd0d3fcc0b020c2f028fc722b28b5b56aecd16736a9b753d52a14837c066cf23480a8582ead59adc63a7e4333bc976c
+  checksum: 12c4044bf2e46ba3d313ddf6256ee3c88e336a62d129fe788eeab8ff2631b3df51eb31ade4cdc04552fbe51e285f0663c49b60c78acd31da2b9f2c86a84347e3
   languageName: node
   linkType: hard
 
@@ -2135,11 +2147,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:^20.0.0":
-  version: 20.19.26
-  resolution: "@types/node@npm:20.19.26"
+  version: 20.19.27
+  resolution: "@types/node@npm:20.19.27"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 68e7d92dd2b7bddff9dffabb9c740e655906ceac428dcf070915cdcae720579e4d72261c55ed7eccbfa907a75cbb1ff3a9148ea49878a07a72d5dd6c9e06d9d7
+  checksum: 7599c24d80465c1aa6e29b53581fc20ad8862ff33e6eef31d05c1c706868476ee57319c89b802ea972dd4d64ce86d18020aa5344f851fb59b730ea509a63300f
   languageName: node
   linkType: hard
 
@@ -4277,9 +4289,9 @@ __metadata:
   linkType: hard
 
 "hono@npm:^4.10.3":
-  version: 4.10.8
-  resolution: "hono@npm:4.10.8"
-  checksum: 4b8d9f9f982a16e0bd7aeb0c068df5017ceb1ea8d34530c7d362d8afc5c5abda8961e8484a4424cc43428454f92fb67df6849391ebe676bea486bbb3ba9ee11b
+  version: 4.11.1
+  resolution: "hono@npm:4.11.1"
+  checksum: d45041872a8b017422edff21ee98eb52e9bb45cc1c7175e3119ff16badbfe6d15fc0fb5ec3ec280b60a1e13e5c696e5494b2a2284f4a6b801dd4d59363a28f51
   languageName: node
   linkType: hard
 
@@ -6745,8 +6757,8 @@ __metadata:
   linkType: hard
 
 "viem@npm:>=2.29.0, viem@npm:^2.1.1, viem@npm:^2.21.26, viem@npm:^2.27.2, viem@npm:^2.31.4, viem@npm:^2.31.7":
-  version: 2.41.2
-  resolution: "viem@npm:2.41.2"
+  version: 2.42.1
+  resolution: "viem@npm:2.42.1"
   dependencies:
     "@noble/curves": "npm:1.9.1"
     "@noble/hashes": "npm:1.8.0"
@@ -6761,7 +6773,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 9fb3fff84addaa073ea83dfa701ae8e3a4aa2bf90c27b34adb5f1e877450db0ba341a0a80dd7cd3422a4f80d27d1921ce6ad877ad5ec7f40d34310701634da54
+  checksum: eb3c5c90c772bc1d78fdb46bf689ed73912cb913a782dddf6551a277ce4dab5c1d5c0cf3dac1c4abf9e20bc0c1bec4cc3c2a510c1237a60527a1a6dc34fa9689
   languageName: node
   linkType: hard
 

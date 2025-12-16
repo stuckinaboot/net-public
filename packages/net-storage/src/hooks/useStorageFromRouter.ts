@@ -56,7 +56,7 @@ export function useStorageFromRouter({
 
       // Handle non-chunked data (early return)
       if (!isChunkedStorage) {
-        setAssembledData([text, data]);
+        setAssembledData({ text, value: data });
         return;
       }
 
@@ -66,10 +66,7 @@ export function useStorageFromRouter({
 
       try {
         // Decode chunk count from the data
-        const [chunkCount] = decodeAbiParameters(
-          [{ type: "uint8" }],
-          data
-        );
+        const [chunkCount] = decodeAbiParameters([{ type: "uint8" }], data);
 
         if (chunkCount === 0) {
           setAssembledData(undefined);
@@ -92,7 +89,7 @@ export function useStorageFromRouter({
         } else {
           // assembleChunks returns plain string, convert to hex for StorageData format
           const hexData = stringToHex(assembledString) as `0x${string}`;
-          setAssembledData([text, hexData]);
+          setAssembledData({ text, value: hexData });
         }
       } catch (error) {
         setChunkError(error as Error);
@@ -148,4 +145,3 @@ async function fetchChunksInBatches(
   }
   return allChunks;
 }
-

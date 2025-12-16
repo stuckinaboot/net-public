@@ -43,7 +43,16 @@ function MyComponent() {
     operatorAddress: "0x...",
   });
 
-  return <div>Messages: {messages.length}</div>;
+  return (
+    <div>
+      <div>Messages: {messages.length}</div>
+      {data && (
+        <div>
+          Storage: {data.text} - {data.value}
+        </div>
+      )}
+    </div>
+  );
 }
 ```
 

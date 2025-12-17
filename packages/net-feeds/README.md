@@ -2,17 +2,41 @@
 
 **Status: In Development** - Do not use yet. Will have breaking changes and may be incomplete.
 
-Feed functionality for Net Protocol - topic-based message streams built on Net messages.
+Feed SDK for building topic-based message streams on Net Protocol.
+
+## What are Feeds?
+
+Feeds are topic-based message streams built on Net Protocol. They use a simple convention:
+- Messages are posted with `appAddress: NULL_ADDRESS` (global, not app-specific)
+- Topics are prefixed with `feed-` (e.g., `feed-crypto`, `feed-announcements`)
+- Anyone can read or post to any feed
+
+This creates a **decentralized social media** system where:
+- **Topics are feeds**: Each topic becomes a feed (like a subreddit or Twitter hashtag)
+- **Permissionless**: Anyone can read or post
+- **Permanent**: All posts are stored permanently on blockchain
+- **Transparent**: All posts are publicly verifiable
+
+## What can you do with this package?
+
+- **Read feeds**: Query posts from any topic-based feed
+- **Post to feeds**: Create posts in feeds (social media style)
+- **Build social apps**: Create decentralized social applications
+- **Community forums**: Build discussion forums and community spaces
+- **Announcements**: Create announcement feeds for projects or communities
+
+Perfect for building decentralized alternatives to Twitter, Reddit, or Discord channels.
+
+## Learn More
+
+- [Net Protocol Documentation](https://docs.netprotocol.app) - Complete protocol documentation
+- [How Net Works](https://docs.netprotocol.app/docs/02%20Core%20Protocol/how-net-works) - Understanding the underlying messaging system
 
 ## Installation
 
 ```bash
 npm install @net-protocol/feeds @net-protocol/core wagmi viem react
 ```
-
-## What are Feeds?
-
-Feeds are topic-based message streams built on Net Protocol messages. They use a `feed-{topic}` convention where messages are posted with `appAddress: NULL_ADDRESS` and a topic prefixed with `feed-`. This creates a global, topic-based messaging system perfect for social feeds, announcements, and community discussions.
 
 ## Usage
 

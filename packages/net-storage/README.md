@@ -1,5 +1,7 @@
 # @net-protocol/storage
 
+**Status: Alpha** - Usable but may have breaking changes over time. Suitable for early adopters and testing.
+
 Net Storage SDK for key-value storage on the Net protocol. Supports regular storage, chunked storage, and XML storage patterns.
 
 ## Installation

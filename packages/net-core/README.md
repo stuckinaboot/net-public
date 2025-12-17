@@ -1,5 +1,7 @@
 # @net-protocol/core
 
+**Status: Alpha** - Usable but may have breaking changes over time. Suitable for early adopters and testing.
+
 Core Net protocol SDK for interacting with Net smart contracts. Provides both React hooks and non-React utility functions for reading Net messages and message counts.
 
 ## Installation

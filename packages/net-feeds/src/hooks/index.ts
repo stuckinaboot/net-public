@@ -1,0 +1,2 @@
+export { useFeedPosts } from "./useFeedPosts";
+

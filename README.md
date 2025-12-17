@@ -2,19 +2,28 @@
 
 Public TypeScript SDK packages for the Net Protocol. Provides React hooks and client classes for interacting with Net smart contracts and storage systems.
 
+## Package Status
+
+| Package                                                   | Status             | Description                                    |
+| --------------------------------------------------------- | ------------------ | ---------------------------------------------- |
+| [@net-protocol/core](./packages/net-core/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
+
 ## Packages
 
 - **[@net-protocol/core](./packages/net-core/README.md)** - Core Net protocol SDK for reading messages and message counts
 - **[@net-protocol/storage](./packages/net-storage/README.md)** - Storage SDK for key-value storage, chunked storage, and XML storage patterns
+- **[@net-protocol/feeds](./packages/net-feeds/README.md)** - Feed SDK for topic-based message streams and social feeds
 
 ## Quick Start
 
 ### Installation
 
 ```bash
-npm install @net-protocol/core @net-protocol/storage wagmi viem react
+npm install @net-protocol/core @net-protocol/storage @net-protocol/feeds wagmi viem react
 # or
-yarn add @net-protocol/core @net-protocol/storage wagmi viem react
+yarn add @net-protocol/core @net-protocol/storage @net-protocol/feeds wagmi viem react
 ```
 
 ### React Hooks Example
@@ -84,6 +93,7 @@ For detailed usage, API reference, and examples, see the individual package docu
 
 - [@net-protocol/core documentation](./packages/net-core/README.md)
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
+- [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
 
 ## Repository Structure
 

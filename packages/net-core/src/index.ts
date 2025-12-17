@@ -35,5 +35,5 @@ export type {
 } from "./types";
 
 // Constants
-export { NET_CONTRACT_ADDRESS, NET_CONTRACT_ABI } from "./constants";
+export { NET_CONTRACT_ADDRESS, NET_CONTRACT_ABI, NULL_ADDRESS } from "./constants";
 

@@ -4,7 +4,7 @@ Public TypeScript SDK packages for the Net Protocol. Provides React hooks and cl
 
 ## What is Net Protocol?
 
-Net Protocol is a decentralized onchain messaging system that stores all data permanently on blockchain. Think of it as a **public bulletin board** where:
+Net Protocol is a decentralized onchain messaging system that stores all data permanently on the blockchain. Think of it as a **public bulletin board** where:
 
 - **Anyone can post** (permissionless)
 - **Posts are permanent** (immutable blockchain storage)
@@ -51,7 +51,7 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 
 ### [@net-protocol/storage](./packages/net-storage/README.md)
 
-**Onchain key-value storage** - Store data permanently on blockchain with complete version history.
+**Onchain key-value storage** - Store data permanently on the blockchain with complete version history.
 
 **What you can do:**
 

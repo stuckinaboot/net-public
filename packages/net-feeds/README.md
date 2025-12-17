@@ -7,14 +7,16 @@ Feed SDK for building topic-based message streams on Net Protocol.
 ## What are Feeds?
 
 Feeds are topic-based message streams built on Net Protocol. They use a simple convention:
+
 - Messages are posted with `appAddress: NULL_ADDRESS` (global, not app-specific)
 - Topics are prefixed with `feed-` (e.g., `feed-crypto`, `feed-announcements`)
 - Anyone can read or post to any feed
 
 This creates a **decentralized social media** system where:
+
 - **Topics are feeds**: Each topic becomes a feed (like a subreddit or Twitter hashtag)
 - **Permissionless**: Anyone can read or post
-- **Permanent**: All posts are stored permanently on blockchain
+- **Permanent**: All posts are stored permanently on the blockchain
 - **Transparent**: All posts are publicly verifiable
 
 ## What can you do with this package?
@@ -105,12 +107,14 @@ const config = client.preparePostToFeed({
 React hook for fetching feed posts.
 
 **Parameters:**
+
 - `chainId` (number, required) - Chain ID to query
 - `topic` (string, required) - Topic name (auto-prefixed with "feed-" if not already present)
 - `maxMessages` (number, optional) - Maximum number of messages to fetch (default: 50)
 - `enabled` (boolean, optional) - Whether the query is enabled (default: true)
 
 **Returns:**
+
 - `posts` (NetMessage[]) - Array of feed posts
 - `totalCount` (number) - Total number of posts in the feed
 - `isLoading` (boolean) - Loading state
@@ -130,16 +134,19 @@ new FeedClient({ chainId: number, overrides?: { rpcUrls: string[] } })
 #### Methods
 
 **`getFeedPosts(params)`**
+
 - Gets feed posts for a topic
 - Parameters: `{ topic: string, maxPosts?: number }`
 - Returns: `Promise<NetMessage[]>`
 
 **`getFeedPostCount(topic)`**
+
 - Gets the total count of posts in a feed
 - Parameters: `topic: string`
 - Returns: `Promise<number>`
 
 **`preparePostToFeed(params)`**
+
 - Prepares a transaction configuration for posting to a feed (does not submit)
 - Parameters: `{ topic: string, text: string, data?: string }`
 - Returns: `WriteTransactionConfig`
@@ -155,6 +162,7 @@ Topics are automatically normalized with the following rules:
 - **Whitespace trimmed**: Leading/trailing whitespace is removed
 
 Examples:
+
 - `normalizeFeedTopic("crypto")` → `"feed-crypto"`
 - `normalizeFeedTopic("CRYPTO")` → `"feed-crypto"`
 - `normalizeFeedTopic("feed-crypto")` → `"feed-crypto"` (idempotent)
@@ -253,6 +261,7 @@ function PostButton() {
 If you're migrating from the Net repo's `useTopicFeed` hook:
 
 **Before:**
+
 ```tsx
 import { useTopicFeed } from "@/components/hooks/net/useTopicFeed";
 const { posts, totalCount, isLoading } = useTopicFeed({
@@ -263,6 +272,7 @@ const { posts, totalCount, isLoading } = useTopicFeed({
 ```
 
 **After:**
+
 ```tsx
 import { useFeedPosts } from "@net-protocol/feeds";
 const { posts, totalCount, isLoading } = useFeedPosts({
@@ -273,4 +283,3 @@ const { posts, totalCount, isLoading } = useFeedPosts({
 ```
 
 The API is fully compatible - same parameter names, same return shape, same defaults.
-

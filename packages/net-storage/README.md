@@ -2,7 +2,53 @@
 
 **Status: Alpha** - Usable but may have breaking changes over time. Suitable for early adopters and testing.
 
-Net Storage SDK for key-value storage on the Net protocol. Supports regular storage, chunked storage, and XML storage patterns.
+Net Storage SDK for permanent onchain key-value storage built on Net Protocol.
+
+## What is Net Storage?
+
+Net Storage provides permanent, versioned key-value storage on the blockchain. Every write creates a new version, preserving complete history. Unlike traditional databases, Storage data is:
+
+- **Immutable**: Once stored, data cannot be modified
+- **Versioned**: Complete history of all changes preserved
+- **Transparent**: All data is publicly verifiable
+- **Decentralized**: No central servers or databases
+
+## Storage Types
+
+Net Storage supports three storage patterns for different file sizes:
+
+### Regular Storage
+
+**Best for**: Small data (< 20KB)  
+**How it works**: Stores data directly as Net messages  
+**Use cases**: User settings, configuration, small metadata
+
+### Chunked Storage
+
+**Best for**: Medium files (20KB-80KB)  
+**How it works**: Compresses data (gzip) and splits into 20KB chunks  
+**Use cases**: Images, documents, medium-sized data
+
+### XML Storage
+
+**Best for**: Large files (multi-MB)  
+**How it works**: Splits large files into 80KB pieces, stores each using ChunkedStorage, maintains references as XML metadata  
+**Use cases**: Videos, large images, datasets, any large file
+
+## What can you do with this package?
+
+- **Store data permanently**: Write key-value pairs that persist forever on the blockchain
+- **Access version history**: Read any historical version of stored data
+- **Store files of any size**: From small settings to multi-MB files
+- **Build storage apps**: Create applications that need permanent, verifiable data storage
+
+This package provides both React hooks (for UI) and client classes (for non-React code).
+
+## Learn More
+
+- [Net Storage Documentation](https://docs.netprotocol.app/docs/apps/storage/01-overview) - Complete storage documentation
+- [Storage Developer Guide](https://docs.netprotocol.app/docs/apps/storage/03-developer-guide) - Technical implementation details
+- [Net Protocol Documentation](https://docs.netprotocol.app) - Core protocol documentation
 
 ## Installation
 
@@ -25,7 +71,11 @@ yarn add @net-protocol/storage
 ### React Hooks
 
 ```typescript
-import { useStorage, useXmlStorage, useStorageFromRouter } from "@net-protocol/storage";
+import {
+  useStorage,
+  useXmlStorage,
+  useStorageFromRouter,
+} from "@net-protocol/storage";
 
 // Basic storage read
 function MyComponent() {
@@ -37,7 +87,7 @@ function MyComponent() {
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-  
+
   const [text, data] = data || [];
   return <div>{text}</div>;
 }
@@ -104,7 +154,11 @@ function XmlWithFormats() {
   });
 
   // Return as object format (default)
-  const { data: objectData, filename, isXml } = useXmlStorage({
+  const {
+    data: objectData,
+    filename,
+    isXml,
+  } = useXmlStorage({
     chainId: 8453,
     key: "my-xml-key",
     operatorAddress: "0x...",
@@ -182,7 +236,7 @@ const chunks = chunkDataForStorage("large data string");
 const assembled = assembleChunks(chunks);
 
 // Parse XML references
-const references = parseNetReferences("<net k=\"hash\" v=\"0.0.1\" />");
+const references = parseNetReferences('<net k="hash" v="0.0.1" />');
 
 // Process data for XML storage
 const result = processDataForStorage(data, operatorAddress);
@@ -231,4 +285,3 @@ Hierarchical storage using XML references. Supports recursive resolution and ope
 ## License
 
 MIT
-

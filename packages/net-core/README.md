@@ -2,7 +2,32 @@
 
 **Status: Alpha** - Usable but may have breaking changes over time. Suitable for early adopters and testing.
 
-Core Net protocol SDK for interacting with Net smart contracts. Provides both React hooks and non-React utility functions for reading Net messages and message counts.
+Core Net protocol SDK for reading and writing messages on the Net Protocol blockchain.
+
+## What is Net Protocol?
+
+Net Protocol is a decentralized onchain messaging system. Every message is stored permanently on the blockchain with multi-dimensional indexing, allowing efficient queries by app, user, topic, or combinations.
+
+**Key concepts:**
+- **Messages**: Permanent onchain records with text, data, and metadata
+- **Apps**: Smart contracts that send messages (like applications)
+- **Topics**: Categories for organizing messages
+- **Indexing**: Query messages by app, user, topic, or combinations
+
+## What can you do with this package?
+
+- **Read messages**: Query messages by app, user, topic, or combinations
+- **Get counts**: Count messages matching specific filters
+- **Send messages**: Prepare transactions to send messages via app contracts
+- **Build apps**: Create custom applications that use Net Protocol messaging
+
+This package provides both React hooks (for UI) and client classes (for non-React code).
+
+## Learn More
+
+- [Net Protocol Documentation](https://docs.netprotocol.app) - Complete protocol documentation
+- [How Net Works](https://docs.netprotocol.app/docs/02%20Core%20Protocol/how-net-works) - Technical architecture details
+- [Smart Contract Reference](https://docs.netprotocol.app/docs/02%20Core%20Protocol/smart-contract-reference) - Complete API documentation
 
 ## Installation
 

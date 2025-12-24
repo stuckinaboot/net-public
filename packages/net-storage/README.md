@@ -224,6 +224,9 @@ import {
   assembleChunks,
   parseNetReferences,
   processDataForStorage,
+  fileToDataUri,
+  detectFileTypeFromBase64,
+  base64ToDataUri,
 } from "@net-protocol/storage";
 
 // Generate storage key bytes
@@ -240,6 +243,32 @@ const references = parseNetReferences('<net k="hash" v="0.0.1" />');
 
 // Process data for XML storage
 const result = processDataForStorage(data, operatorAddress);
+```
+
+### File Utilities
+
+```typescript
+import {
+  fileToDataUri,
+  detectFileTypeFromBase64,
+  base64ToDataUri,
+} from "@net-protocol/storage";
+
+// Convert File/Blob to data URI (browser-only)
+// Note: fileToDataUri requires browser APIs (FileReader) and should only be used in browser environments
+const file = event.target.files[0];
+const dataUri = await fileToDataUri(file);
+// Returns: "data:application/pdf;base64,JVBERi0xLjQK..."
+
+// Detect file type from raw base64 data (works in both browser and Node.js)
+const base64Data = "JVBERi0xLjQK..."; // Raw base64 without prefix
+const mimeType = detectFileTypeFromBase64(base64Data);
+// Returns: "application/pdf"
+
+// Convert raw base64 to data URI with automatic type detection (works in both browser and Node.js)
+const dataUri = base64ToDataUri(base64Data);
+// Returns: "data:application/pdf;base64,JVBERi0xLjQK..."
+// Falls back to "application/octet-stream" if type cannot be detected
 ```
 
 ## API Reference

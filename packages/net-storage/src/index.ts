@@ -15,6 +15,7 @@ export { getStorageKeyBytes, formatStorageKeyForDisplay, encodeStorageKeyForUrl,
 export { chunkDataForStorage, assembleChunks, shouldSuggestXmlStorage, getChunkCount } from "./utils/chunkUtils";
 export { parseNetReferences, containsXmlReferences, detectStorageType, resolveOperator, getReferenceKey } from "./utils/xmlUtils";
 export { processDataForStorage, chunkData, generateXmlMetadata, generateXmlMetadataWithSource, validateDataSize, computeTopLevelHash } from "./utils/writingUtils";
+export { fileToDataUri, detectFileTypeFromBase64, base64ToDataUri } from "./utils/fileUtils";
 
 // Types
 export type {

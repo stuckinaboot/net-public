@@ -69,7 +69,7 @@ examples/basic-app/
 - `useStorageForOperator` - List all storage for a wallet
 - `useStorage` with `useRouter: true` - Read storage with auto-detection
 - `getStorageKeyBytes` - Convert string keys to bytes32
-- `getValueArgForStorage` - Convert values to hex format
+- `stringToHex` (from `viem`) - Convert values to hex format
 - `formatStorageKeyForDisplay` - Display keys in readable format
 
 ### 3. Wallet Integration

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { stringToHex } from "viem";
 import { STORAGE_CONTRACT } from "@net-protocol/storage";
-import { getStorageKeyBytes, getValueArgForStorage } from "@net-protocol/storage";
+import { getStorageKeyBytes } from "@net-protocol/storage";
 
 interface UploadFormProps {
   onSuccess?: () => void;
@@ -32,7 +33,7 @@ export function UploadForm({ onSuccess }: UploadFormProps) {
     try {
       // Convert inputs to proper format for Storage contract
       const storageKey = getStorageKeyBytes(keyInput); // Converts string to bytes32
-      const storageValue = getValueArgForStorage(valueInput); // Converts string to hex
+      const storageValue = stringToHex(valueInput); // Converts string to hex
 
       writeContract({
         address: STORAGE_CONTRACT.address,

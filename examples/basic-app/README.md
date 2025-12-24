@@ -60,6 +60,47 @@ This app shows you how to:
    
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+## Important: Next.js Webpack Configuration
+
+**⚠️ Required Configuration**
+
+When using `@net-protocol/core` with Next.js, you **must** configure webpack to ensure `wagmi`, `react`, and `react-dom` resolve to single instances. This prevents React Context issues where hooks from `@net-protocol/core` can't access the WagmiProvider context.
+
+This configuration is already set up in [`next.config.js`](next.config.js) via webpack aliases:
+
+```javascript
+webpack: (config, { isServer }) => {
+  // ... other config ...
+  
+  // Ensure wagmi and React resolve to single instances
+  const path = require('path');
+  const appNodeModules = path.join(__dirname, 'node_modules');
+  
+  const wagmiPath = require.resolve('wagmi', { paths: [appNodeModules] });
+  const reactPath = require.resolve('react', { paths: [appNodeModules] });
+  const reactDomPath = require.resolve('react-dom', { paths: [appNodeModules] });
+  
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    'wagmi$': wagmiPath,      // Single wagmi instance
+    'react$': reactPath,      // Single React instance
+    'react-dom$': reactDomPath, // Single React DOM instance
+  };
+  
+  return config;
+}
+```
+
+**Why is this needed?**
+
+When Next.js transpiles `@net-protocol/core` (via `transpilePackages`), webpack can create separate module instances for `wagmi` and React. Since React Context requires the same React instance, hooks in `@net-protocol/core` that use `wagmi` hooks won't be able to access the WagmiProvider context from your app's `wagmi` instance.
+
+The `$` anchor ensures only exact module imports are aliased (not subpaths like `wagmi/chains`).
+
+**If you're building your own app:**
+
+Copy the webpack configuration from [`next.config.js`](next.config.js) to ensure proper module resolution.
+
 ## Project Structure
 
 ```
@@ -205,7 +246,8 @@ writeContract({
 [`src/components/storage/UploadForm.tsx`](src/components/storage/UploadForm.tsx)
 
 ```typescript
-import { STORAGE_CONTRACT, getStorageKeyBytes, getValueArgForStorage } from "@net-protocol/storage";
+import { STORAGE_CONTRACT, getStorageKeyBytes } from "@net-protocol/storage";
+import { stringToHex } from "viem";
 
 writeContract({
   address: STORAGE_CONTRACT.address,
@@ -214,7 +256,7 @@ writeContract({
   args: [
     getStorageKeyBytes(keyInput),       // bytes32 key
     keyInput,                           // string text (description)
-    getValueArgForStorage(valueInput)   // bytes value (hex)
+    stringToHex(valueInput)             // bytes value (hex)
   ]
 });
 ```
@@ -280,6 +322,12 @@ Once you understand this example, try:
 - Make sure you have a Web3 wallet installed
 - Check that you're on a supported network
 - Try refreshing the page
+
+### "WagmiProviderNotFoundError: useConfig must be used within WagmiProvider"
+- **This means the webpack aliases aren't configured correctly**
+- Ensure `next.config.js` includes the webpack alias configuration (see "Important: Next.js Webpack Configuration" above)
+- Restart your dev server after modifying `next.config.js`
+- Verify that `wagmi`, `react`, and `react-dom` are aliased to single instances
 
 ## License
 

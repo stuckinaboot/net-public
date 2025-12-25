@@ -912,25 +912,25 @@ __metadata:
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds":
   version: 0.1.3
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=87566d&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=c266ab&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
     react: ^18.0.0
     wagmi: ^2.15.0
-  checksum: edc5dd610c474d68a6b496871c0a273213edcd45d33070116a6cd673d25b2edaf1d657becee1923cde4238eef8ec43f272ccb739c5ae61820046f98d7f3914f6
+  checksum: 4aa39d8bb36ec7add385dfc946dc56728339d3b9109451b2f677827da920e19063cd6f0259bcf09b42318df19149d809db5f99257e30b357b514e0d50baddc09
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage":
   version: 0.1.3
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=87566d&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=c266ab&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
     react: ^18.0.0
     wagmi: ^2.15.0
-  checksum: edc5dd610c474d68a6b496871c0a273213edcd45d33070116a6cd673d25b2edaf1d657becee1923cde4238eef8ec43f272ccb739c5ae61820046f98d7f3914f6
+  checksum: 4aa39d8bb36ec7add385dfc946dc56728339d3b9109451b2f677827da920e19063cd6f0259bcf09b42318df19149d809db5f99257e30b357b514e0d50baddc09
   languageName: node
   linkType: hard
 

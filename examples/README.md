@@ -9,6 +9,7 @@ This directory contains example applications demonstrating how to build with Net
 A complete example application showing the fundamentals of building on Net Protocol.
 
 **Features:**
+
 - 💬 **Chat**: Topic-based messaging stored on-chain
 - 💾 **Storage**: Permanent key-value storage
 - 👛 **Wallet Integration**: RainbowKit + wagmi
@@ -38,6 +39,7 @@ A complete example application showing the fundamentals of building on Net Proto
 ## Prerequisites
 
 All examples require:
+
 - Node.js 18+
 - A Web3 wallet (MetaMask, Coinbase Wallet, etc.)
 - Some ETH on the target network for gas fees
@@ -45,6 +47,7 @@ All examples require:
 ## Contributing
 
 Have an example you'd like to add? We welcome contributions! Examples should:
+
 - Demonstrate specific Net Protocol features
 - Include comprehensive documentation
 - Follow clean code principles
@@ -56,10 +59,3 @@ Have an example you'd like to add? We welcome contributions! Examples should:
 - [Net Protocol Website](https://netprotocol.app)
 - [@net-protocol/core Package](../packages/net-core/)
 - [@net-protocol/storage Package](../packages/net-storage/)
-
-## Support
-
-- 📖 [Documentation](https://docs.netprotocol.app)
-- 💬 [Discord Community](https://discord.gg/netprotocol)
-- 🐦 [Twitter](https://twitter.com/netprotocol)
-

@@ -911,26 +911,26 @@ __metadata:
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds":
-  version: 0.1.3
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=2b865e&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
+  version: 0.1.4
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=3cb41b&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
     react: ^18.0.0
     wagmi: ^2.15.0
-  checksum: df4c9e97fb002901de0161b0cf810ea1a8cbb8f23d28914a8188feabf8ca83efb8096326907863f3ad6929623f149e4fe6987cd1e38dc4545bd2098602a21dba
+  checksum: 51ac0f88092d672b4f92ea7348dfcc5f2a27b1964c757bad005cbecb13ef9a4d30d9e2ec4d24ae588f48b45b36f036958311f700e3df8d5cab6806b05471b8e3
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage":
-  version: 0.1.3
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=2b865e&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
+  version: 0.1.4
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=3cb41b&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
     react: ^18.0.0
     wagmi: ^2.15.0
-  checksum: df4c9e97fb002901de0161b0cf810ea1a8cbb8f23d28914a8188feabf8ca83efb8096326907863f3ad6929623f149e4fe6987cd1e38dc4545bd2098602a21dba
+  checksum: 51ac0f88092d672b4f92ea7348dfcc5f2a27b1964c757bad005cbecb13ef9a4d30d9e2ec4d24ae588f48b45b36f036958311f700e3df8d5cab6806b05471b8e3
   languageName: node
   linkType: hard
 
@@ -2385,6 +2385,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/fs-extra@npm:^11.0.4":
+  version: 11.0.4
+  resolution: "@types/fs-extra@npm:11.0.4"
+  dependencies:
+    "@types/jsonfile": "npm:*"
+    "@types/node": "npm:*"
+  checksum: 9e34f9b24ea464f3c0b18c3f8a82aefc36dc524cc720fc2b886e5465abc66486ff4e439ea3fb2c0acebf91f6d3f74e514f9983b1f02d4243706bdbb7511796ad
+  languageName: node
+  linkType: hard
+
+"@types/jsonfile@npm:*":
+  version: 6.1.4
+  resolution: "@types/jsonfile@npm:6.1.4"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: b12d068b021e4078f6ac4441353965769be87acf15326173e2aea9f3bf8ead41bd0ad29421df5bbeb0123ec3fc02eb0a734481d52903704a1454a1845896b9eb
+  languageName: node
+  linkType: hard
+
 "@types/lodash@npm:^4.17.20":
   version: 4.17.21
   resolution: "@types/lodash@npm:4.17.21"
@@ -3588,7 +3607,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:5.6.2, chalk@npm:^5.4.1":
+"chalk@npm:5.6.2, chalk@npm:^5.3.0, chalk@npm:^5.4.1":
   version: 5.6.2
   resolution: "chalk@npm:5.6.2"
   checksum: 99a4b0f0e7991796b1e7e3f52dceb9137cae2a9dfc8fc0784a550dc4c558e15ab32ed70b14b21b52beb2679b4892b41a0aa44249bcb996f01e125d58477c6976
@@ -3717,6 +3736,13 @@ __metadata:
   version: 14.0.0
   resolution: "commander@npm:14.0.0"
   checksum: 73c4babfa558077868d84522b11ef56834165d472b9e86a634cd4c3ae7fc72d59af6377d8878e06bd570fe8f3161eced3cbe383c38f7093272bb65bd242b595b
+  languageName: node
+  linkType: hard
+
+"commander@npm:^12.1.0":
+  version: 12.1.0
+  resolution: "commander@npm:12.1.0"
+  checksum: 6e1996680c083b3b897bfc1cfe1c58dfbcd9842fd43e1aaf8a795fbc237f65efcc860a3ef457b318e73f29a4f4a28f6403c3d653d021d960e4632dd45bde54a9
   languageName: node
   linkType: hard
 
@@ -4782,6 +4808,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fs-extra@npm:^11.2.0":
+  version: 11.3.3
+  resolution: "fs-extra@npm:11.3.3"
+  dependencies:
+    graceful-fs: "npm:^4.2.0"
+    jsonfile: "npm:^6.0.1"
+    universalify: "npm:^2.0.0"
+  checksum: 984924ff4104e3e9f351b658a864bf3b354b2c90429f57aec0acd12d92c4e6b762cbacacdffb4e745b280adce882e1f980c485d9f02c453f769ab4e7fc646ce3
+  languageName: node
+  linkType: hard
+
 "fs-minipass@npm:^3.0.0":
   version: 3.0.3
   resolution: "fs-minipass@npm:3.0.3"
@@ -4926,7 +4963,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.2.11, graceful-fs@npm:^4.2.6":
+"graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.11, graceful-fs@npm:^4.2.6":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
@@ -5543,6 +5580,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonfile@npm:^6.0.1":
+  version: 6.2.0
+  resolution: "jsonfile@npm:6.2.0"
+  dependencies:
+    graceful-fs: "npm:^4.1.6"
+    universalify: "npm:^2.0.0"
+  dependenciesMeta:
+    graceful-fs:
+      optional: true
+  checksum: 7f4f43b08d1869ded8a6822213d13ae3b99d651151d77efd1557ced0889c466296a7d9684e397bd126acf5eb2cfcb605808c3e681d0fdccd2fe5a04b47e76c0d
+  languageName: node
+  linkType: hard
+
 "keccak@npm:^3.0.3":
   version: 3.0.4
   resolution: "keccak@npm:3.0.4"
@@ -5962,6 +6012,25 @@ __metadata:
   checksum: 4c559dd52669ea48e1914f9d634227c561221dd54734070791f999c52ed0ff36e437b2e07d5c1f6e32909fc625fe46491c16e4a8f0572567d4dd15c3a4fda04b
   languageName: node
   linkType: hard
+
+"net-cli-storage-upload@workspace:examples/cli-storage-upload":
+  version: 0.0.0-use.local
+  resolution: "net-cli-storage-upload@workspace:examples/cli-storage-upload"
+  dependencies:
+    "@net-protocol/core": "npm:*"
+    "@net-protocol/storage": "npm:*"
+    "@types/fs-extra": "npm:^11.0.4"
+    "@types/node": "npm:^20.17.6"
+    chalk: "npm:^5.3.0"
+    commander: "npm:^12.1.0"
+    fs-extra: "npm:^11.2.0"
+    typescript: "npm:^5.6.3"
+    viem: "npm:^2.21.45"
+    vitest: "npm:^1.0.0"
+  bin:
+    net-storage-upload: ./dist/index.js
+  languageName: unknown
+  linkType: soft
 
 "net-protocol-example-app@workspace:examples/basic-app":
   version: 0.0.0-use.local
@@ -8138,6 +8207,13 @@ __metadata:
   version: 0.2.0
   resolution: "universalify@npm:0.2.0"
   checksum: cedbe4d4ca3967edf24c0800cfc161c5a15e240dac28e3ce575c689abc11f2c81ccc6532c8752af3b40f9120fb5e454abecd359e164f4f6aa44c29cd37e194fe
+  languageName: node
+  linkType: hard
+
+"universalify@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "universalify@npm:2.0.1"
+  checksum: 73e8ee3809041ca8b818efb141801a1004e3fc0002727f1531f4de613ea281b494a40909596dae4a042a4fb6cd385af5d4db2e137b1362e0e91384b828effd3a
   languageName: node
   linkType: hard
 

@@ -2567,25 +2567,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/fs-extra@npm:^11.0.4":
-  version: 11.0.4
-  resolution: "@types/fs-extra@npm:11.0.4"
-  dependencies:
-    "@types/jsonfile": "npm:*"
-    "@types/node": "npm:*"
-  checksum: 9e34f9b24ea464f3c0b18c3f8a82aefc36dc524cc720fc2b886e5465abc66486ff4e439ea3fb2c0acebf91f6d3f74e514f9983b1f02d4243706bdbb7511796ad
-  languageName: node
-  linkType: hard
-
-"@types/jsonfile@npm:*":
-  version: 6.1.4
-  resolution: "@types/jsonfile@npm:6.1.4"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: b12d068b021e4078f6ac4441353965769be87acf15326173e2aea9f3bf8ead41bd0ad29421df5bbeb0123ec3fc02eb0a734481d52903704a1454a1845896b9eb
-  languageName: node
-  linkType: hard
-
 "@types/lodash@npm:^4.17.20":
   version: 4.17.21
   resolution: "@types/lodash@npm:4.17.21"
@@ -5086,17 +5067,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^11.2.0":
-  version: 11.3.3
-  resolution: "fs-extra@npm:11.3.3"
-  dependencies:
-    graceful-fs: "npm:^4.2.0"
-    jsonfile: "npm:^6.0.1"
-    universalify: "npm:^2.0.0"
-  checksum: 984924ff4104e3e9f351b658a864bf3b354b2c90429f57aec0acd12d92c4e6b762cbacacdffb4e745b280adce882e1f980c485d9f02c453f769ab4e7fc646ce3
-  languageName: node
-  linkType: hard
-
 "fs-minipass@npm:^3.0.0":
   version: 3.0.3
   resolution: "fs-minipass@npm:3.0.3"
@@ -5250,7 +5220,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.11, graceful-fs@npm:^4.2.6":
+"graceful-fs@npm:^4.2.11, graceful-fs@npm:^4.2.6":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
@@ -5867,19 +5837,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonfile@npm:^6.0.1":
-  version: 6.2.0
-  resolution: "jsonfile@npm:6.2.0"
-  dependencies:
-    graceful-fs: "npm:^4.1.6"
-    universalify: "npm:^2.0.0"
-  dependenciesMeta:
-    graceful-fs:
-      optional: true
-  checksum: 7f4f43b08d1869ded8a6822213d13ae3b99d651151d77efd1557ced0889c466296a7d9684e397bd126acf5eb2cfcb605808c3e681d0fdccd2fe5a04b47e76c0d
-  languageName: node
-  linkType: hard
-
 "keccak@npm:^3.0.3":
   version: 3.0.4
   resolution: "keccak@npm:3.0.4"
@@ -6300,24 +6257,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"net-cli-storage-upload@workspace:examples/cli-storage-upload":
+"net-cli@workspace:examples/cli":
   version: 0.0.0-use.local
-  resolution: "net-cli-storage-upload@workspace:examples/cli-storage-upload"
+  resolution: "net-cli@workspace:examples/cli"
   dependencies:
     "@net-protocol/core": "npm:*"
     "@net-protocol/storage": "npm:*"
-    "@types/fs-extra": "npm:^11.0.4"
     "@types/node": "npm:^20.17.6"
     chalk: "npm:^5.3.0"
     commander: "npm:^12.1.0"
     dotenv: "npm:^17.2.3"
-    fs-extra: "npm:^11.2.0"
     tsx: "npm:^4.21.0"
     typescript: "npm:^5.6.3"
     viem: "npm:^2.21.45"
     vitest: "npm:^1.0.0"
   bin:
-    net-storage-upload: ./src/index.ts
+    net-cli: ./src/cli/index.ts
   languageName: unknown
   linkType: soft
 
@@ -8519,13 +8474,6 @@ __metadata:
   version: 0.2.0
   resolution: "universalify@npm:0.2.0"
   checksum: cedbe4d4ca3967edf24c0800cfc161c5a15e240dac28e3ce575c689abc11f2c81ccc6532c8752af3b40f9120fb5e454abecd359e164f4f6aa44c29cd37e194fe
-  languageName: node
-  linkType: hard
-
-"universalify@npm:^2.0.0":
-  version: 2.0.1
-  resolution: "universalify@npm:2.0.1"
-  checksum: 73e8ee3809041ca8b818efb141801a1004e3fc0002727f1531f4de613ea281b494a40909596dae4a042a4fb6cd385af5d4db2e137b1362e0e91384b828effd3a
   languageName: node
   linkType: hard
 

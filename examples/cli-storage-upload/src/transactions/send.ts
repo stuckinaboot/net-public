@@ -56,7 +56,7 @@ export function createWalletClientFromPrivateKey(
 
   return {
     walletClient,
-    publicClient: publicClient as PublicClient,
+    publicClient,
     operatorAddress: account.address,
   };
 }
@@ -76,6 +76,7 @@ export async function sendTransactionsWithIdempotency(
   let skipped = 0;
   let failed = 0;
   let finalHash: string | undefined;
+  const errorMessages: string[] = [];
 
   for (let i = 0; i < transactions.length; i++) {
     const tx = transactions[i];
@@ -123,11 +124,10 @@ export async function sendTransactionsWithIdempotency(
       sent++;
       finalHash = hash;
     } catch (error) {
-      console.error(
-        `✗ Transaction ${i + 1} failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      const errorMsg =
+        error instanceof Error ? error.message : String(error);
+      console.error(`✗ Transaction ${i + 1} failed: ${errorMsg}`);
+      errorMessages.push(errorMsg);
       failed++;
       // Continue with remaining transactions (don't fail entire upload)
     }
@@ -140,6 +140,7 @@ export async function sendTransactionsWithIdempotency(
     transactionsSkipped: skipped,
     transactionsFailed: failed,
     finalHash,
+    error: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
   };
 }
 

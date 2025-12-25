@@ -6,12 +6,12 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "net-storage-upload": "./src/index.ts"
+    "net-storage-upload": "./src/cli/index.ts"
   },
   "scripts": {
     "build": "tsc",
-    "start": "yarn tsx src/index.ts",
-    "dev": "yarn tsx watch src/index.ts",
+    "start": "yarn tsx src/cli/index.ts",
+    "dev": "yarn tsx watch src/cli/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -23,11 +23,9 @@
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "dotenv": "^17.2.3",
-    "fs-extra": "^11.2.0",
     "viem": "^2.21.45"
   },
   "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.17.6",
     "tsx": "^4.21.0",
     "typescript": "^5.6.3",

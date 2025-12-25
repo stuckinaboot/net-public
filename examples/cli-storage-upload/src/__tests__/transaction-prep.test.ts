@@ -3,7 +3,7 @@ import { StorageClient } from "@net-protocol/storage";
 import {
   prepareNormalStorageTransaction,
   prepareXmlStorageTransactions,
-} from "../transaction-prep";
+} from "../transactions/prep";
 import {
   TEST_STORAGE_KEY,
   TEST_CONTENT_SMALL,

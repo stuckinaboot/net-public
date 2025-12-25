@@ -1,6 +1,6 @@
 import { WriteTransactionConfig } from "@net-protocol/core";
 import { StorageClient, getStorageKeyBytes } from "@net-protocol/storage";
-import type { TransactionWithId } from "./types";
+import type { TransactionWithId } from "../types";
 
 /**
  * Prepare normal storage transaction with ID
@@ -79,3 +79,4 @@ export function prepareXmlStorageTransactions(
 
   return transactions;
 }
+

@@ -1,18 +1,12 @@
-import { createWalletClient, http, WalletClient, defineChain } from "viem";
+import { createWalletClient, http, WalletClient, defineChain, PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import {
   getPublicClient,
   getChainRpcUrls,
-  PublicClient,
 } from "@net-protocol/core";
 import { StorageClient } from "@net-protocol/storage";
-import {
-  checkNormalStorageExists,
-  checkChunkedStorageExists,
-  checkXmlMetadataExists,
-} from "./storage-check";
-import { hexToString } from "viem";
-import type { TransactionWithId, UploadResult } from "./types";
+import { checkTransactionExists } from "../utils";
+import type { TransactionWithId, UploadResult } from "../types";
 
 /**
  * Create wallet client from private key
@@ -33,24 +27,36 @@ export function createWalletClientFromPrivateKey(
   const rpcUrls = getChainRpcUrls({ chainId, rpcUrl });
 
   // Create wallet client with the same chain configuration
+  const chain = publicClient.chain
+    ? defineChain({
+        id: chainId,
+        name: publicClient.chain.name,
+        nativeCurrency: publicClient.chain.nativeCurrency,
+        rpcUrls: {
+          default: { http: rpcUrls },
+          public: { http: rpcUrls },
+        },
+        blockExplorers: publicClient.chain.blockExplorers,
+      })
+    : defineChain({
+        id: chainId,
+        name: `Chain ${chainId}`,
+        nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+        rpcUrls: {
+          default: { http: rpcUrls },
+          public: { http: rpcUrls },
+        },
+      });
+
   const walletClient = createWalletClient({
     account,
-    chain: defineChain({
-      id: chainId,
-      name: publicClient.chain.name,
-      nativeCurrency: publicClient.chain.nativeCurrency,
-      rpcUrls: {
-        default: { http: rpcUrls },
-        public: { http: rpcUrls },
-      },
-      blockExplorers: publicClient.chain.blockExplorers,
-    }),
+    chain,
     transport: http(),
   });
 
   return {
     walletClient,
-    publicClient,
+    publicClient: publicClient as PublicClient,
     operatorAddress: account.address,
   };
 }
@@ -77,39 +83,11 @@ export async function sendTransactionsWithIdempotency(
     try {
       // Check if this transaction's data already exists (idempotency)
       // Always compare content, not just check existence
-      let exists = false;
-      if (tx.type === "normal") {
-        // Extract expected content from transaction args
-        const expectedValueHex = tx.transaction.args[2] as string;
-        const expectedContent = hexToString(expectedValueHex as `0x${string}`);
-        const check = await checkNormalStorageExists(
-          storageClient,
-          tx.id,
-          operatorAddress,
-          expectedContent
-        );
-        exists = check.exists && check.matches === true;
-      } else if (tx.type === "chunked") {
-        // ChunkedStorage: hash existence = content match (deterministic hash)
-        exists = await checkChunkedStorageExists(
-          storageClient,
-          tx.id,
-          operatorAddress
-        );
-      } else if (tx.type === "metadata") {
-        // XML metadata: extract and compare content
-        const expectedMetadataHex = tx.transaction.args[2] as string;
-        const expectedMetadata = hexToString(
-          expectedMetadataHex as `0x${string}`
-        );
-        const check = await checkXmlMetadataExists(
-          storageClient,
-          tx.id,
-          operatorAddress,
-          expectedMetadata
-        );
-        exists = check.exists && check.matches === true;
-      }
+      const exists = await checkTransactionExists(
+        storageClient,
+        tx,
+        operatorAddress
+      );
 
       if (exists) {
         console.log(
@@ -125,7 +103,14 @@ export async function sendTransactionsWithIdempotency(
       console.log(
         `📤 Sending transaction ${i + 1}/${transactions.length}: ${tx.id}`
       );
-      const hash = await walletClient.writeContract(tx.transaction);
+      const hash = await walletClient.writeContract({
+        address: tx.transaction.to as `0x${string}`,
+        abi: tx.transaction.abi,
+        functionName: tx.transaction.functionName as string,
+        args: tx.transaction.args as readonly unknown[],
+        value: tx.transaction.value,
+        chain: undefined,
+      });
 
       // Wait for confirmation
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -157,3 +142,4 @@ export async function sendTransactionsWithIdempotency(
     finalHash,
   };
 }
+

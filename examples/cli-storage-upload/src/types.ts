@@ -29,6 +29,7 @@ export interface UploadResult {
   finalHash?: string;
   error?: string;
   operatorAddress?: string; // Operator address (from private key)
+  storageType?: "normal" | "xml"; // Storage type used
 }
 
 /**

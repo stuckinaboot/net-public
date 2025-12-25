@@ -3,7 +3,7 @@ import { StorageClient } from "@net-protocol/storage";
 import {
   filterExistingTransactions,
   filterXmlStorageTransactions,
-} from "../transaction-filter";
+} from "../transactions/filter";
 import {
   createMockStorageClient,
   createMockStorageData,

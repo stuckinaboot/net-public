@@ -4,16 +4,16 @@ import { StorageClient } from "@net-protocol/storage";
 import {
   prepareNormalStorageTransaction,
   prepareXmlStorageTransactions,
-} from "./transaction-prep";
+} from "../transactions/prep";
 import {
   filterExistingTransactions,
   filterXmlStorageTransactions,
-} from "./transaction-filter";
+} from "../transactions/filter";
 import {
   createWalletClientFromPrivateKey,
   sendTransactionsWithIdempotency,
-} from "./transaction-send";
-import type { UploadOptions, UploadResult } from "./types";
+} from "../transactions/send";
+import type { UploadOptions, UploadResult, TransactionWithId } from "../types";
 
 /**
  * Main upload function - orchestrates the entire upload process
@@ -40,9 +40,10 @@ export async function uploadFile(
 
   // 4. Determine storage type
   const useXmlStorage = shouldSuggestXmlStorage(fileContent);
+  const storageType: "normal" | "xml" = useXmlStorage ? "xml" : "normal";
 
   // 5. Prepare transactions
-  let transactions: import("./types").TransactionWithId[];
+  let transactions: TransactionWithId[];
   let chunkedHashes: string[] | undefined;
 
   if (useXmlStorage) {
@@ -69,7 +70,7 @@ export async function uploadFile(
   }
 
   // 6. Filter existing transactions (idempotency)
-  let transactionsToSend: import("./types").TransactionWithId[];
+  let transactionsToSend: TransactionWithId[];
   let skippedCount = 0;
 
   if (useXmlStorage && chunkedHashes) {
@@ -101,6 +102,7 @@ export async function uploadFile(
       transactionsSkipped: skippedCount,
       transactionsFailed: 0,
       operatorAddress,
+      storageType,
     };
   }
 
@@ -116,8 +118,10 @@ export async function uploadFile(
   // Add skipped count from filtering step
   result.transactionsSkipped += skippedCount;
 
-  // Add operator address to result
+  // Add operator address and storage type to result
   result.operatorAddress = operatorAddress;
+  result.storageType = storageType;
 
   return result;
 }
+

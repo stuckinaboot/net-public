@@ -1,12 +1,12 @@
 import { StorageClient } from "@net-protocol/storage";
-import { hexToString } from "viem";
 import {
   checkNormalStorageExists,
   checkChunkedStorageExists,
   checkXmlChunksExist,
   checkXmlMetadataExists,
-} from "./storage-check";
-import type { TransactionWithId } from "./types";
+} from "../storage/check";
+import { extractContentFromTransaction } from "../utils";
+import type { TransactionWithId } from "../types";
 
 /**
  * Filter transactions to only those that need to be sent
@@ -40,8 +40,7 @@ export async function filterExistingTransactions(
         exists = check.exists && check.matches === true;
       } else {
         // Extract content from transaction args if not provided
-        const storedValueHex = tx.transaction.args[2] as string;
-        const storedContent = hexToString(storedValueHex as `0x${string}`);
+        const storedContent = extractContentFromTransaction(tx);
         const check = await checkNormalStorageExists(
           storageClient,
           tx.id,
@@ -60,10 +59,7 @@ export async function filterExistingTransactions(
     } else if (tx.type === "metadata") {
       // XML metadata: check if exists
       // Extract expected metadata from transaction args (it's hex-encoded)
-      const expectedMetadataHex = tx.transaction.args[2] as string;
-      const expectedMetadata = hexToString(
-        expectedMetadataHex as `0x${string}`
-      );
+      const expectedMetadata = extractContentFromTransaction(tx);
       const check = await checkXmlMetadataExists(
         storageClient,
         tx.id,
@@ -126,10 +122,7 @@ export async function filterXmlStorageTransactions(
     );
     if (allChunksExist) {
       // Verify metadata matches
-      const expectedMetadataHex = metadataTx.transaction.args[2] as string;
-      const expectedMetadata = hexToString(
-        expectedMetadataHex as `0x${string}`
-      );
+      const expectedMetadata = extractContentFromTransaction(metadataTx);
       const check = await checkXmlMetadataExists(
         storageClient,
         metadataTx.id,
@@ -148,3 +141,4 @@ export async function filterXmlStorageTransactions(
 
   return { toSend, skipped };
 }
+

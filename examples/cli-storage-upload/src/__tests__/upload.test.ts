@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "fs";
-import { uploadFile } from "../upload";
+import { uploadFile } from "../core/upload";
 import { StorageClient } from "@net-protocol/storage";
 import {
   createMockWalletClient,
@@ -74,7 +74,7 @@ describe("upload", () => {
         publicClient: mockPublicClient,
         operatorAddress: TEST_OPERATOR,
       });
-      vi.doMock("../transaction-send", () => ({
+      vi.doMock("../transactions/send", () => ({
         createWalletClientFromPrivateKey: mockCreateWallet,
         sendTransactionsWithIdempotency: vi.fn().mockResolvedValue({
           success: true,

@@ -5,7 +5,7 @@ import {
   checkChunkedStorageExists,
   checkXmlChunksExist,
   checkXmlMetadataExists,
-} from "../storage-check";
+} from "../storage/check";
 import {
   createMockStorageClient,
   createMockStorageData,

@@ -1,6 +1,6 @@
 import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
-import type { StorageCheckResult } from "./types";
+import type { StorageCheckResult } from "../types";
 
 /**
  * Check if normal storage data exists and matches content
@@ -98,3 +98,4 @@ export async function checkXmlMetadataExists(
 
   return { exists: true, matches };
 }
+

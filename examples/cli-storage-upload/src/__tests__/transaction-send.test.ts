@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createWalletClientFromPrivateKey,
   sendTransactionsWithIdempotency,
-} from "../transaction-send";
+} from "../transactions/send";
 import { StorageClient } from "@net-protocol/storage";
 import {
   createMockWalletClient,

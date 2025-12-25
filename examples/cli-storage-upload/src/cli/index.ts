@@ -2,10 +2,10 @@
 
 import "dotenv/config";
 import { Command } from "commander";
-import { uploadFile } from "./upload";
-import type { UploadOptions } from "./types";
+import { uploadFile } from "../core/upload";
+import type { UploadOptions } from "../types";
 import chalk from "chalk";
-import { encodeStorageKeyForUrl } from "@net-protocol/storage";
+import { generateStorageUrl } from "../utils";
 
 const program = new Command();
 
@@ -96,11 +96,11 @@ program
       const result = await uploadFile(uploadOptions);
 
       // Generate storage URL
-      const storageUrl =
-        result.operatorAddress &&
-        `https://storedon.net/net/${chainId}/storage/load/${
-          result.operatorAddress
-        }/${encodeStorageKeyForUrl(options.key)}`;
+      const storageUrl = generateStorageUrl(
+        result.operatorAddress,
+        chainId,
+        options.key
+      );
 
       if (result.skipped && result.transactionsSent === 0) {
         console.log(
@@ -121,7 +121,7 @@ program
             `✓ File uploaded successfully!\n  Storage Key: ${
               options.key
             }\n  Storage Type: ${
-              result.transactionsSkipped > 0 ? "XML" : "Normal"
+              result.storageType === "xml" ? "XML" : "Normal"
             }\n  Transactions Sent: ${
               result.transactionsSent
             }\n  Transactions Skipped: ${
@@ -159,3 +159,4 @@ program
   });
 
 program.parse();
+

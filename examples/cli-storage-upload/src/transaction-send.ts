@@ -119,7 +119,9 @@ export async function sendTransactionsWithIdempotency(
       // Wait for confirmation
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       console.log(
-        `✓ Transaction ${i + 1} confirmed in block ${receipt.blockNumber}`
+        `✓ Transaction ${i + 1} confirmed in block ${
+          receipt.blockNumber
+        } (hash: ${hash})`
       );
 
       sent++;

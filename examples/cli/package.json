@@ -5,9 +5,7 @@
   "private": true,
   "type": "module",
   "main": "dist/index.js",
-  "bin": {
-    "net-cli": "./src/cli/index.ts"
-  },
+  "bin": "./src/cli/index.ts",
   "scripts": {
     "build": "tsc",
     "start": "yarn tsx src/cli/index.ts",

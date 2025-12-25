@@ -5,7 +5,7 @@ import {
   checkChunkedStorageExists,
   checkXmlChunksExist,
   checkXmlMetadataExists,
-} from "../commands/storage/storage/check";
+} from "../../../../commands/storage/storage/check";
 import {
   createMockStorageClient,
   createMockStorageData,
@@ -14,7 +14,7 @@ import {
   TEST_CONTENT_SMALL,
   TEST_OPERATOR,
   TEST_STORAGE_KEY_BYTES,
-} from "./test-utils";
+} from "../test-utils";
 import { stringToHex } from "viem";
 
 describe("storage-check", () => {

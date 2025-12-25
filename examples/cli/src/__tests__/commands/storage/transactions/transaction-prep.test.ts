@@ -3,7 +3,7 @@ import { StorageClient } from "@net-protocol/storage";
 import {
   prepareNormalStorageTransaction,
   prepareXmlStorageTransactions,
-} from "../commands/storage/transactions/prep";
+} from "../../../../commands/storage/transactions/prep";
 import {
   TEST_STORAGE_KEY,
   TEST_CONTENT_SMALL,
@@ -11,7 +11,7 @@ import {
   TEST_OPERATOR,
   TEST_CHAIN_ID,
   TEST_RPC_URL,
-} from "./test-utils";
+} from "../test-utils";
 import {
   STORAGE_CONTRACT,
   CHUNKED_STORAGE_CONTRACT,

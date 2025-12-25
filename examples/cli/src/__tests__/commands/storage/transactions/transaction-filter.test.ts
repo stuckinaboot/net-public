@@ -3,7 +3,7 @@ import { StorageClient } from "@net-protocol/storage";
 import {
   filterExistingTransactions,
   filterXmlStorageTransactions,
-} from "../commands/storage/transactions/filter";
+} from "../../../../commands/storage/transactions/filter";
 import {
   createMockStorageClient,
   createMockStorageData,
@@ -12,8 +12,8 @@ import {
   TEST_CONTENT_SMALL,
   TEST_OPERATOR,
   TEST_STORAGE_KEY_BYTES,
-} from "./test-utils";
-import type { TransactionWithId } from "../commands/storage/types";
+} from "../test-utils";
+import type { TransactionWithId } from "../../../../commands/storage/types";
 import {
   STORAGE_CONTRACT,
   CHUNKED_STORAGE_CONTRACT,

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createWalletClientFromPrivateKey,
   sendTransactionsWithIdempotency,
-} from "../commands/storage/transactions/send";
+} from "../../../../commands/storage/transactions/send";
 import { StorageClient } from "@net-protocol/storage";
 import {
   createMockWalletClient,
@@ -15,8 +15,8 @@ import {
   TEST_OPERATOR,
   TEST_STORAGE_KEY_BYTES,
   TEST_CONTENT_SMALL,
-} from "./test-utils";
-import type { TransactionWithId } from "../commands/storage/types";
+} from "../test-utils";
+import type { TransactionWithId } from "../../../../commands/storage/types";
 import {
   STORAGE_CONTRACT,
   CHUNKED_STORAGE_CONTRACT,

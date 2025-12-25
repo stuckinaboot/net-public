@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "fs";
-import { uploadFile } from "../commands/storage/core/upload";
+import { uploadFile } from "../../../../commands/storage/core/upload";
 import { StorageClient } from "@net-protocol/storage";
 import {
   createMockWalletClient,
@@ -15,8 +15,8 @@ import {
   TEST_CONTENT_LARGE,
   TEST_OPERATOR,
   TEST_RPC_URL,
-} from "./test-utils";
-import type { UploadOptions } from "../commands/storage/types";
+} from "../test-utils";
+import type { UploadOptions } from "../../../../commands/storage/types";
 import { shouldSuggestXmlStorage } from "@net-protocol/storage";
 import { stringToHex } from "viem";
 
@@ -74,7 +74,7 @@ describe("upload", () => {
         publicClient: mockPublicClient,
         operatorAddress: TEST_OPERATOR,
       });
-      vi.doMock("../commands/storage/transactions/send", () => ({
+      vi.doMock("../../../../commands/storage/transactions/send", () => ({
         createWalletClientFromPrivateKey: mockCreateWallet,
         sendTransactionsWithIdempotency: vi.fn().mockResolvedValue({
           success: true,

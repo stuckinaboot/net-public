@@ -1,0 +1,4 @@
+Hello, Net Storage!
+This is a small test file for normal storage.
+It's less than 20KB, so it will use normal storage.
+

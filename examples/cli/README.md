@@ -175,7 +175,7 @@ To add a new command:
 import { Command } from "commander";
 import { parseCommonOptions } from "../../cli/shared";
 
-export function registerMyCommandCommand(program: Command): void {
+export function registerMyCommand(program: Command): void {
   program
     .command("mycommand")
     .description("Description of my command")
@@ -186,16 +186,16 @@ export function registerMyCommandCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
       });
-      
+
       // Command logic here
     });
 }
 
 // src/cli/index.ts
-import { registerMyCommandCommand } from "../commands/mycommand";
+import { registerMyCommand } from "../commands/mycommand";
 
 // ... existing code ...
-registerMyCommandCommand(program);
+registerMyCommand(program);
 ```
 
 ### Shared Options

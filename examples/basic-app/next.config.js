@@ -2,7 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   // Transpile packages that use ESM or have CSS imports
-  // NOTE: @net-protocol/core removed - testing if transpilation is needed
   transpilePackages: ["@rainbow-me/rainbowkit"],
   experimental: {
     esmExternals: "loose",

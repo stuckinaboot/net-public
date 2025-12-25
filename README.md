@@ -151,6 +151,15 @@ For detailed usage, API reference, and examples, see the individual package docu
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
 - [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
 
+## Examples
+
+Working examples demonstrating how to build with Net Protocol:
+
+- **[Basic App](./examples/basic-app/)** - A Next.js React application showing chat messaging and storage features with wallet integration
+- **[CLI](./examples/cli/)** - A command-line tool for interacting with Net Protocol, supporting storage operations and more
+
+See the [examples directory](./examples/) for more details and setup instructions.
+
 ## Repository Structure
 
 This is a monorepo managed with Yarn workspaces. Each package is independently versioned and can be used standalone.

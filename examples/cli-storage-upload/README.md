@@ -28,8 +28,8 @@ net-storage-upload \
 - `--key` (required): Storage key (filename/identifier)
 - `--text` (required): Text description/filename
 - `--private-key` (optional): Private key (0x-prefixed hex, 66 characters). Can also be set via `NET_PRIVATE_KEY` or `PRIVATE_KEY` environment variable
-- `--chain-id` (required): Chain ID (8453 for Base, 1 for Ethereum, etc.)
-- `--rpc-url` (optional): Custom RPC URL
+- `--chain-id` (optional): Chain ID (8453 for Base, 1 for Ethereum, etc.). Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
 
 ### Examples
 
@@ -44,15 +44,58 @@ net-storage-upload \
   --chain-id 8453
 ```
 
-**Using environment variable (recommended):**
+**Using environment variables (recommended):**
 
 ```bash
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+export NET_CHAIN_ID=8453
 net-storage-upload \
   --file ./example.txt \
   --key "my-file" \
-  --text "Example file" \
-  --chain-id 8453
+  --text "Example file"
+```
+
+**Using .env file (easiest for local development):**
+
+1. Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` with your values:
+
+```env
+NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+NET_CHAIN_ID=8453
+NET_RPC_URL=https://base-mainnet.public.blastapi.io  # optional
+```
+
+3. Run the command (dotenv loads automatically):
+
+```bash
+net-storage-upload \
+  --file ./example.txt \
+  --key "my-file" \
+  --text "Example file"
+```
+
+**Using test files:**
+
+```bash
+# Upload small test file (normal storage)
+export NET_PRIVATE_KEY=0x...
+export NET_CHAIN_ID=8453
+net-storage-upload \
+  --file ./test-files/small.txt \
+  --key "test-small" \
+  --text "Small test file"
+
+# Upload large test file (XML storage)
+net-storage-upload \
+  --file ./test-files/large.txt \
+  --key "test-large" \
+  --text "Large test file"
 ```
 
 ## Storage Types

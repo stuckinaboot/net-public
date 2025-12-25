@@ -28,6 +28,7 @@ export interface UploadResult {
   transactionsFailed: number;
   finalHash?: string;
   error?: string;
+  operatorAddress?: string; // Operator address (from private key)
 }
 
 /**

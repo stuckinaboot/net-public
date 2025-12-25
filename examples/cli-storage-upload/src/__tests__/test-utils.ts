@@ -32,7 +32,7 @@ export function createMockReceipt(
     from: TEST_OPERATOR,
     gasUsed: BigInt(21000),
     logs: [],
-    logsBloom: "0x" + "0".repeat(512),
+    logsBloom: ("0x" + "0".repeat(512)) as `0x${string}`,
     status: "success",
     to: ("0x" + "d".repeat(40)) as `0x${string}`,
     transactionHash: MOCK_TX_HASH,

@@ -100,6 +100,7 @@ export async function uploadFile(
       transactionsSent: 0,
       transactionsSkipped: skippedCount,
       transactionsFailed: 0,
+      operatorAddress,
     };
   }
 
@@ -114,6 +115,9 @@ export async function uploadFile(
 
   // Add skipped count from filtering step
   result.transactionsSkipped += skippedCount;
+
+  // Add operator address to result
+  result.operatorAddress = operatorAddress;
 
   return result;
 }

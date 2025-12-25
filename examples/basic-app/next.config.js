@@ -11,9 +11,6 @@ const nextConfig = {
     // Fallbacks for Node.js modules that don't exist in browser
     config.resolve.fallback = { fs: false, net: false, tls: false };
 
-    // NOTE: Testing Option 1 - Removed webpack aliases after removing wagmi from devDependencies
-    // If wagmi is only in peerDependencies, webpack should resolve it from app's node_modules
-
     // Exclude problematic packages from server bundle
     if (isServer) {
       config.externals.push("pino-pretty", "lokijs", "encoding");

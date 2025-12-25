@@ -2,7 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   // Transpile packages that use ESM or have CSS imports
-  transpilePackages: ["@rainbow-me/rainbowkit", "@net-protocol/core"],
+  // NOTE: @net-protocol/core removed - testing if transpilation is needed
+  transpilePackages: ["@rainbow-me/rainbowkit"],
   experimental: {
     esmExternals: "loose",
   },
@@ -11,24 +12,27 @@ const nextConfig = {
     config.resolve.fallback = { fs: false, net: false, tls: false };
 
     // Ensure wagmi and React resolve to single instances to prevent React context issues
-    // This is critical: if @net-protocol/core imports wagmi/React and gets different instances,
-    // React context won't work across the boundary
-    const path = require('path');
-    
+    // This is still needed even without transpilation - webpack module resolution requires it
+    // When @net-protocol/core imports wagmi/react, webpack can resolve to different instances
+    // even without transpilation, so aliases ensure single instances
+    const path = require("path");
+
     // Get the app's node_modules path
-    const appNodeModules = path.join(__dirname, 'node_modules');
-    
+    const appNodeModules = path.join(__dirname, "node_modules");
+
     // Resolve wagmi and React from the app's node_modules
-    const wagmiPath = require.resolve('wagmi', { paths: [appNodeModules] });
-    const reactPath = require.resolve('react', { paths: [appNodeModules] });
-    const reactDomPath = require.resolve('react-dom', { paths: [appNodeModules] });
-    
+    const wagmiPath = require.resolve("wagmi", { paths: [appNodeModules] });
+    const reactPath = require.resolve("react", { paths: [appNodeModules] });
+    const reactDomPath = require.resolve("react-dom", {
+      paths: [appNodeModules],
+    });
+
     config.resolve.alias = {
       ...config.resolve.alias,
       // Alias wagmi, React, and react-dom to ensure single instances
-      'wagmi$': wagmiPath,
-      'react$': reactPath,
-      'react-dom$': reactDomPath,
+      wagmi$: wagmiPath,
+      react$: reactPath,
+      "react-dom$": reactDomPath,
     };
 
     // Exclude problematic packages from server bundle

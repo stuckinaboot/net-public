@@ -19,7 +19,7 @@ Net Storage supports three storage patterns for different file sizes:
 
 ### Regular Storage
 
-**Best for**: Small data (< 20KB)  
+**Best for**: Small data (≤ 20KB)  
 **How it works**: Stores data directly as Net messages  
 **Use cases**: User settings, configuration, small metadata
 
@@ -27,12 +27,13 @@ Net Storage supports three storage patterns for different file sizes:
 
 **Best for**: Medium files (20KB-80KB)  
 **How it works**: Compresses data (gzip) and splits into 20KB chunks  
-**Use cases**: Images, documents, medium-sized data
+**Use cases**: Images, documents, medium-sized data  
+**Note**: ChunkedStorage is typically used internally by XML Storage. For direct usage, see `StorageClient.prepareChunkedPut()`.
 
 ### XML Storage
 
-**Best for**: Large files (multi-MB)  
-**How it works**: Splits large files into 80KB pieces, stores each using ChunkedStorage, maintains references as XML metadata  
+**Best for**: Large files (> 20KB) or files containing XML references  
+**How it works**: Splits large files into 80KB pieces, stores each using ChunkedStorage (compressed and chunked into 20KB pieces), maintains references as XML metadata  
 **Use cases**: Videos, large images, datasets, any large file
 
 ## What can you do with this package?

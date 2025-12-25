@@ -22,7 +22,7 @@ net-cli <command> [options]
 
 #### Storage Command
 
-Upload files to Net Storage using either normal storage (for small files < 20KB) or XML storage (for large files).
+Upload files to Net Storage using either normal storage (for files ≤ 20KB) or XML storage (for files > 20KB or containing XML references).
 
 ```bash
 net-cli storage \
@@ -74,7 +74,7 @@ net-cli storage --file ./example.txt --key "my-file" --text "Example file"
 
 ### Normal Storage
 
-For files smaller than 20KB, the tool uses normal storage:
+For files up to 20KB, the tool uses normal storage:
 
 - Stores data directly in `Storage.sol`
 - Single transaction

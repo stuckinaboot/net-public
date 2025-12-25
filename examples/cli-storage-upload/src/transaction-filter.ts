@@ -29,7 +29,7 @@ export async function filterExistingTransactions(
     let exists = false;
 
     if (tx.type === "normal") {
-      // Normal storage: check if exists and matches content
+      // Normal storage: always check if exists AND matches content
       if (expectedContent) {
         const check = await checkNormalStorageExists(
           storageClient,
@@ -39,14 +39,16 @@ export async function filterExistingTransactions(
         );
         exists = check.exists && check.matches === true;
       } else {
-        // Just check existence
+        // Extract content from transaction args if not provided
+        const storedValueHex = tx.transaction.args[2] as string;
+        const storedContent = hexToString(storedValueHex as `0x${string}`);
         const check = await checkNormalStorageExists(
           storageClient,
           tx.id,
           operatorAddress,
-          ""
+          storedContent
         );
-        exists = check.exists;
+        exists = check.exists && check.matches === true;
       }
     } else if (tx.type === "chunked") {
       // ChunkedStorage: check if metadata exists

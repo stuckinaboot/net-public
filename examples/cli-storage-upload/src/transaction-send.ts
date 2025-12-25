@@ -9,7 +9,9 @@ import { StorageClient } from "@net-protocol/storage";
 import {
   checkNormalStorageExists,
   checkChunkedStorageExists,
+  checkXmlMetadataExists,
 } from "./storage-check";
+import { hexToString } from "viem";
 import type { TransactionWithId, UploadResult } from "./types";
 
 /**
@@ -74,30 +76,39 @@ export async function sendTransactionsWithIdempotency(
 
     try {
       // Check if this transaction's data already exists (idempotency)
+      // Always compare content, not just check existence
       let exists = false;
       if (tx.type === "normal") {
+        // Extract expected content from transaction args
+        const expectedValueHex = tx.transaction.args[2] as string;
+        const expectedContent = hexToString(expectedValueHex as `0x${string}`);
         const check = await checkNormalStorageExists(
           storageClient,
           tx.id,
           operatorAddress,
-          "" // Content comparison handled in filter step
+          expectedContent
         );
-        exists = check.exists;
+        exists = check.exists && check.matches === true;
       } else if (tx.type === "chunked") {
+        // ChunkedStorage: hash existence = content match (deterministic hash)
         exists = await checkChunkedStorageExists(
           storageClient,
           tx.id,
           operatorAddress
         );
       } else if (tx.type === "metadata") {
-        // For metadata, check if it exists (content comparison handled in filter)
-        const check = await checkNormalStorageExists(
+        // XML metadata: extract and compare content
+        const expectedMetadataHex = tx.transaction.args[2] as string;
+        const expectedMetadata = hexToString(
+          expectedMetadataHex as `0x${string}`
+        );
+        const check = await checkXmlMetadataExists(
           storageClient,
           tx.id,
           operatorAddress,
-          ""
+          expectedMetadata
         );
-        exists = check.exists;
+        exists = check.exists && check.matches === true;
       }
 
       if (exists) {

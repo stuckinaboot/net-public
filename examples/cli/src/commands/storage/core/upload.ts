@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
-import { shouldSuggestXmlStorage } from "@net-protocol/storage";
+import { shouldSuggestXmlStorage, getStorageKeyBytes } from "@net-protocol/storage";
 import { StorageClient } from "@net-protocol/storage";
+import { stringToHex } from "viem";
 import {
   prepareNormalStorageTransaction,
   prepareXmlStorageTransactions,
@@ -13,7 +14,7 @@ import {
   createWalletClientFromPrivateKey,
   sendTransactionsWithIdempotency,
 } from "../transactions/send";
-import type { UploadOptions, UploadResult, TransactionWithId } from "../types";
+import type { UploadOptions, UploadResult, TransactionWithId, NormalStorageArgs } from "../types";
 
 /**
  * Main upload function - orchestrates the entire upload process
@@ -32,11 +33,11 @@ export async function uploadFile(
 
   // 3. Create wallet client
   const { walletClient, publicClient, operatorAddress } =
-    createWalletClientFromPrivateKey(
-      options.privateKey,
-      options.chainId,
-      options.rpcUrl
-    );
+    createWalletClientFromPrivateKey({
+      privateKey: options.privateKey,
+      chainId: options.chainId,
+      rpcUrl: options.rpcUrl,
+    });
 
   // 4. Determine storage type
   const useXmlStorage = shouldSuggestXmlStorage(fileContent);
@@ -47,24 +48,31 @@ export async function uploadFile(
   let chunkedHashes: string[] | undefined;
 
   if (useXmlStorage) {
-    transactions = prepareXmlStorageTransactions(
+    transactions = prepareXmlStorageTransactions({
       storageClient,
-      options.storageKey,
-      options.text,
-      fileContent,
-      operatorAddress
-    );
+      storageKey: options.storageKey,
+      text: options.text,
+      content: fileContent,
+      operatorAddress,
+    });
     // Extract chunked hashes for efficient checking
     chunkedHashes = transactions
       .filter((tx) => tx.type === "chunked")
       .map((tx) => tx.id);
   } else {
+    // Build typed args JSON object
+    const storageKeyBytes = getStorageKeyBytes(options.storageKey) as `0x${string}`;
+    const typedArgs: NormalStorageArgs = {
+      key: storageKeyBytes,
+      text: options.text,
+      value: stringToHex(fileContent),
+    };
+    
     transactions = [
       prepareNormalStorageTransaction(
         storageClient,
-        options.storageKey,
-        options.text,
-        fileContent
+        typedArgs,
+        options.storageKey // Pass original string key for preparePut
       ),
     ];
   }
@@ -74,21 +82,21 @@ export async function uploadFile(
   let skippedCount = 0;
 
   if (useXmlStorage && chunkedHashes) {
-    const filtered = await filterXmlStorageTransactions(
+    const filtered = await filterXmlStorageTransactions({
       storageClient,
       transactions,
       operatorAddress,
-      chunkedHashes
-    );
+      chunkedHashes,
+    });
     transactionsToSend = filtered.toSend;
     skippedCount = filtered.skipped.length;
   } else {
-    const filtered = await filterExistingTransactions(
+    const filtered = await filterExistingTransactions({
       storageClient,
       transactions,
       operatorAddress,
-      fileContent
-    );
+      expectedContent: fileContent,
+    });
     transactionsToSend = filtered.toSend;
     skippedCount = filtered.skipped.length;
   }
@@ -107,13 +115,13 @@ export async function uploadFile(
   }
 
   // 8. Send transactions
-  const result = await sendTransactionsWithIdempotency(
+  const result = await sendTransactionsWithIdempotency({
     storageClient,
     walletClient,
     publicClient,
-    transactionsToSend,
-    operatorAddress
-  );
+    transactions: transactionsToSend,
+    operatorAddress,
+  });
 
   // Add skipped count from filtering step
   result.transactionsSkipped += skippedCount;

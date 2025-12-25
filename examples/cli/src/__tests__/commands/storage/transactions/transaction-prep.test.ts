@@ -11,6 +11,8 @@ import {
   TEST_OPERATOR,
   TEST_CHAIN_ID,
   TEST_RPC_URL,
+  TEST_STORAGE_KEY_BYTES,
+  createNormalStorageArgs,
 } from "../test-utils";
 import {
   STORAGE_CONTRACT,
@@ -31,11 +33,15 @@ describe("transaction-prep", () => {
 
   describe("prepareNormalStorageTransaction", () => {
     it("should use StorageClient.preparePut()", () => {
+      const typedArgs = createNormalStorageArgs({
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_SMALL,
+      });
       const result = prepareNormalStorageTransaction(
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_SMALL
+        typedArgs,
+        TEST_STORAGE_KEY
       );
 
       expect(result.type).toBe("normal");
@@ -45,11 +51,15 @@ describe("transaction-prep", () => {
     });
 
     it("should return transaction with correct ID", () => {
+      const typedArgs = createNormalStorageArgs({
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_SMALL,
+      });
       const result = prepareNormalStorageTransaction(
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_SMALL
+        typedArgs,
+        TEST_STORAGE_KEY
       );
 
       const expectedId = getStorageKeyBytes(TEST_STORAGE_KEY) as `0x${string}`;
@@ -58,25 +68,37 @@ describe("transaction-prep", () => {
     });
 
     it("should pass correct parameters to preparePut", () => {
+      const typedArgs = createNormalStorageArgs({
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_SMALL,
+      });
       const result = prepareNormalStorageTransaction(
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_SMALL
+        typedArgs,
+        TEST_STORAGE_KEY
       );
 
       expect(result.transaction.args).toBeDefined();
       expect(result.transaction.args.length).toBeGreaterThan(0);
-      // First arg should be the storage key
-      expect(result.transaction.args[0]).toBeDefined();
+      // Check typed args instead
+      expect(result.typedArgs).toBeDefined();
+      expect(result.typedArgs.type).toBe("normal");
+      if (result.typedArgs.type === "normal") {
+        expect(result.typedArgs.args.key).toBeDefined();
+      }
     });
 
     it("should return transaction with correct structure", () => {
+      const typedArgs = createNormalStorageArgs({
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_SMALL,
+      });
       const result = prepareNormalStorageTransaction(
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_SMALL
+        typedArgs,
+        TEST_STORAGE_KEY
       );
 
       expect(result.transaction).toHaveProperty("to");
@@ -89,13 +111,13 @@ describe("transaction-prep", () => {
 
   describe("prepareXmlStorageTransactions", () => {
     it("should return metadata transaction first", () => {
-      const result = prepareXmlStorageTransactions(
+      const result = prepareXmlStorageTransactions({
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_LARGE,
-        TEST_OPERATOR
-      );
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_LARGE,
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.length).toBeGreaterThan(1);
       expect(result[0].type).toBe("metadata");
@@ -104,13 +126,13 @@ describe("transaction-prep", () => {
     });
 
     it("should return chunk transactions after metadata", () => {
-      const result = prepareXmlStorageTransactions(
+      const result = prepareXmlStorageTransactions({
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_LARGE,
-        TEST_OPERATOR
-      );
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_LARGE,
+        operatorAddress: TEST_OPERATOR,
+      });
 
       for (let i = 1; i < result.length; i++) {
         expect(result[i].type).toBe("chunked");
@@ -120,29 +142,32 @@ describe("transaction-prep", () => {
     });
 
     it("should extract chunkedStorage hash IDs correctly", () => {
-      const result = prepareXmlStorageTransactions(
+      const result = prepareXmlStorageTransactions({
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_LARGE,
-        TEST_OPERATOR
-      );
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_LARGE,
+        operatorAddress: TEST_OPERATOR,
+      });
 
       const chunkTxs = result.filter((tx) => tx.type === "chunked");
       chunkTxs.forEach((tx) => {
         expect(tx.id).toMatch(/^0x[0-9a-f]{64}$/);
-        expect(tx.transaction.args[0]).toBe(tx.id); // First arg should be the hash
+        expect(tx.typedArgs.type).toBe("chunked");
+        if (tx.typedArgs.type === "chunked") {
+          expect(tx.typedArgs.args.hash).toBe(tx.id); // Hash should match ID
+        }
       });
     });
 
     it("should use storageKeyBytes for metadata transaction ID", () => {
-      const result = prepareXmlStorageTransactions(
+      const result = prepareXmlStorageTransactions({
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_LARGE,
-        TEST_OPERATOR
-      );
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_LARGE,
+        operatorAddress: TEST_OPERATOR,
+      });
 
       const expectedId = getStorageKeyBytes(TEST_STORAGE_KEY) as `0x${string}`;
       expect(result[0].id).toBe(expectedId);
@@ -150,13 +175,13 @@ describe("transaction-prep", () => {
     });
 
     it("should return transactions with correct structure", () => {
-      const result = prepareXmlStorageTransactions(
+      const result = prepareXmlStorageTransactions({
         storageClient,
-        TEST_STORAGE_KEY,
-        "test.txt",
-        TEST_CONTENT_LARGE,
-        TEST_OPERATOR
-      );
+        storageKey: TEST_STORAGE_KEY,
+        text: "test.txt",
+        content: TEST_CONTENT_LARGE,
+        operatorAddress: TEST_OPERATOR,
+      });
 
       result.forEach((tx) => {
         expect(tx.transaction).toHaveProperty("to");
@@ -170,13 +195,13 @@ describe("transaction-prep", () => {
 
     it("should handle different storage keys correctly", () => {
       const differentKey = "different-key";
-      const result = prepareXmlStorageTransactions(
+      const result = prepareXmlStorageTransactions({
         storageClient,
-        differentKey,
-        "test.txt",
-        TEST_CONTENT_LARGE,
-        TEST_OPERATOR
-      );
+        storageKey: differentKey,
+        text: "test.txt",
+        content: TEST_CONTENT_LARGE,
+        operatorAddress: TEST_OPERATOR,
+      });
 
       const expectedId = getStorageKeyBytes(differentKey) as `0x${string}`;
       expect(result[0].id).toBe(expectedId);

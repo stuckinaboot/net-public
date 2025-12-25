@@ -1,30 +1,43 @@
 import { WriteTransactionConfig } from "@net-protocol/core";
 import { StorageClient, getStorageKeyBytes } from "@net-protocol/storage";
-import type { TransactionWithId } from "../types";
+import { hexToString } from "viem";
+import type {
+  TransactionWithId,
+  NormalStorageArgs,
+  PrepareXmlStorageTransactionsParams,
+} from "../types";
+import { extractTypedArgsFromTransaction, typedArgsToArray } from "../utils";
 
 /**
  * Prepare normal storage transaction with ID
  * Uses StorageClient.preparePut() from net-public
+ * Accepts typed JSON args object instead of individual parameters
  */
 export function prepareNormalStorageTransaction(
   storageClient: StorageClient,
-  storageKey: string,
-  text: string,
-  content: string
+  args: NormalStorageArgs,
+  originalStorageKey: string // Original string key needed for preparePut
 ): TransactionWithId {
-  const storageKeyBytes = getStorageKeyBytes(storageKey) as `0x${string}`;
-
   // Use StorageClient.preparePut() from net-public
+  // preparePut needs the original string key, not bytes32
+  const content = hexToString(args.value);
+  
   const transaction = storageClient.preparePut({
-    key: storageKey,
-    text,
+    key: originalStorageKey,
+    text: args.text,
     value: content,
   });
 
+  const typedArgs = {
+    type: "normal" as const,
+    args,
+  };
+
   return {
-    id: storageKeyBytes,
+    id: args.key,
     type: "normal",
     transaction,
+    typedArgs,
   };
 }
 
@@ -32,14 +45,12 @@ export function prepareNormalStorageTransaction(
  * Prepare XML storage transactions with IDs
  * Returns array: [metadata transaction, ...chunk transactions]
  * Uses StorageClient.prepareXmlStorage() from net-public
+ * Accepts JSON object as parameter
  */
 export function prepareXmlStorageTransactions(
-  storageClient: StorageClient,
-  storageKey: string,
-  text: string,
-  content: string,
-  operatorAddress: string
+  params: PrepareXmlStorageTransactionsParams
 ): TransactionWithId[] {
+  const { storageClient, storageKey, text, content, operatorAddress } = params;
   const storageKeyBytes = getStorageKeyBytes(storageKey) as `0x${string}`;
 
   // Use StorageClient.prepareXmlStorage() from net-public
@@ -59,20 +70,28 @@ export function prepareXmlStorageTransactions(
     (tx, index) => {
       if (index === 0) {
         // First transaction is metadata - use our storageKeyBytes for ID
+        const typedArgs = extractTypedArgsFromTransaction(tx, "metadata");
         return {
           id: storageKeyBytes,
           type: "metadata",
           transaction: tx,
+          typedArgs,
         };
       } else {
         // Rest are ChunkedStorage transactions
-        // Extract the key from transaction args (first arg is the chunkedHash)
-        const chunkedHash = tx.args[0] as string;
-        return {
-          id: chunkedHash,
-          type: "chunked",
-          transaction: tx,
-        };
+        // Extract typed args and get hash from typed args
+        const typedArgs = extractTypedArgsFromTransaction(tx, "chunked");
+        if (typedArgs.type === "chunked") {
+          const chunkedHash = typedArgs.args.hash;
+          return {
+            id: chunkedHash,
+            type: "chunked",
+            transaction: tx,
+            typedArgs,
+          };
+        }
+        // This should never happen, but TypeScript needs it
+        throw new Error("Invalid chunked transaction");
       }
     }
   );

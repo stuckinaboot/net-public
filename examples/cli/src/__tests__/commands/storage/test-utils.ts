@@ -1,8 +1,17 @@
 import { vi, type MockedFunction } from "vitest";
+import { stringToHex } from "viem";
+import { getStorageKeyBytes } from "@net-protocol/storage";
 import type { WalletClient, PublicClient, TransactionReceipt } from "viem";
 import type { StorageClient } from "@net-protocol/storage";
 import type { StorageData, ChunkedMetadata } from "@net-protocol/storage";
-import type { TransactionWithId, UploadResult } from "../commands/storage/types";
+import type {
+  TransactionWithId,
+  UploadResult,
+  StorageTransactionArgs,
+  NormalStorageArgs,
+  ChunkedStorageArgs,
+  MetadataStorageArgs,
+} from "../../../commands/storage/types";
 
 // Test constants
 export const TEST_CHAIN_ID = 8453;
@@ -90,31 +99,93 @@ export function createMockStorageClient(): MockStorageClient {
   };
 }
 
-// Helper to create mock storage data
+// Helper to create mock storage data - accepts JSON object
 export function createMockStorageData(
-  text: string,
-  value: string
+  args: { text: string; value: string }
 ): StorageData {
   return {
-    text,
-    value: value.startsWith("0x")
-      ? value
-      : (("0x" + Buffer.from(value).toString("hex")) as `0x${string}`),
+    text: args.text,
+    value: args.value.startsWith("0x")
+      ? args.value
+      : (("0x" + Buffer.from(args.value).toString("hex")) as `0x${string}`),
   };
 }
 
-// Helper to create mock chunked metadata
+// Helper to create mock chunked metadata - accepts JSON object
 export function createMockChunkedMetadata(
-  chunkCount: number,
-  originalText: string = ""
+  args: { chunkCount: number; originalText?: string }
 ): ChunkedMetadata {
   return {
-    chunkCount,
-    originalText,
+    chunkCount: args.chunkCount,
+    originalText: args.originalText || "",
   };
 }
 
 // Helper to create test file content
 export function createTestFile(content: string): string {
   return content;
+}
+
+// Helper to create NormalStorageArgs (typed JSON object for function parameters)
+// This creates the typed JSON args object that functions accept as input
+// Accepts JSON object as parameter
+export function createNormalStorageArgs(
+  args: { storageKey: string; text: string; content: string }
+): NormalStorageArgs {
+  const storageKeyBytes = getStorageKeyBytes(args.storageKey) as `0x${string}`;
+  return {
+    key: storageKeyBytes,
+    text: args.text,
+    value: args.content.startsWith("0x") ? (args.content as `0x${string}`) : stringToHex(args.content),
+  };
+}
+
+// Helper to create typed args for normal storage (wrapped in StorageTransactionArgs)
+export function createNormalStorageTypedArgs(
+  key: `0x${string}`,
+  text: string,
+  value: string
+): StorageTransactionArgs {
+  return {
+    type: "normal",
+    args: {
+      key,
+      text,
+      value: value.startsWith("0x") ? (value as `0x${string}`) : stringToHex(value),
+    },
+  };
+}
+
+// Helper to create typed args for chunked storage
+// Each chunked storage transaction represents a single chunk identified by its hash.
+// The chunks array is always empty [] because each transaction stores one chunk, not multiple.
+export function createChunkedStorageTypedArgs(
+  hash: `0x${string}`,
+  text: string = "",
+  chunks: `0x${string}`[] = []
+): StorageTransactionArgs {
+  return {
+    type: "chunked",
+    args: {
+      hash,      // ChunkedStorage hash that identifies this specific chunk
+      text,      // Empty string "" for chunk transactions
+      chunks,    // Empty array [] - each transaction represents one chunk, not a list
+    },
+  };
+}
+
+// Helper to create typed args for metadata storage
+export function createMetadataStorageTypedArgs(
+  key: `0x${string}`,
+  text: string,
+  value: string
+): StorageTransactionArgs {
+  return {
+    type: "metadata",
+    args: {
+      key,
+      text,
+      value: value.startsWith("0x") ? (value as `0x${string}`) : stringToHex(value),
+    },
+  };
 }

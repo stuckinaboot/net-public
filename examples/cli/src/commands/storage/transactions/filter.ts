@@ -1,27 +1,31 @@
 import { StorageClient } from "@net-protocol/storage";
+import { hexToString } from "viem";
 import {
   checkNormalStorageExists,
   checkChunkedStorageExists,
   checkXmlChunksExist,
   checkXmlMetadataExists,
 } from "../storage/check";
-import { extractContentFromTransaction } from "../utils";
-import type { TransactionWithId } from "../types";
+import type {
+  TransactionWithId,
+  FilterExistingTransactionsParams,
+  FilterXmlStorageTransactionsParams,
+} from "../types";
 
 /**
  * Filter transactions to only those that need to be sent
  * Checks existence for each transaction and filters out already-stored ones
  * Pure function - uses StorageClient, no side effects
+ * Accepts JSON object as parameter
  */
 export async function filterExistingTransactions(
-  storageClient: StorageClient,
-  transactions: TransactionWithId[],
-  operatorAddress: string,
-  expectedContent?: string // For normal storage content comparison
+  params: FilterExistingTransactionsParams
 ): Promise<{
   toSend: TransactionWithId[];
   skipped: TransactionWithId[];
 }> {
+  const { storageClient, transactions, operatorAddress, expectedContent } =
+    params;
   const toSend: TransactionWithId[] = [];
   const skipped: TransactionWithId[] = [];
 
@@ -31,42 +35,46 @@ export async function filterExistingTransactions(
     if (tx.type === "normal") {
       // Normal storage: always check if exists AND matches content
       if (expectedContent) {
-        const check = await checkNormalStorageExists(
+        const check = await checkNormalStorageExists({
           storageClient,
-          tx.id,
+          storageKey: tx.id,
           operatorAddress,
-          expectedContent
-        );
+          expectedContent,
+        });
         exists = check.exists && check.matches === true;
       } else {
-        // Extract content from transaction args if not provided
-        const storedContent = extractContentFromTransaction(tx);
-        const check = await checkNormalStorageExists(
-          storageClient,
-          tx.id,
-          operatorAddress,
-          storedContent
-        );
-        exists = check.exists && check.matches === true;
+        // Extract content from typed args if not provided
+        if (tx.typedArgs.type === "normal") {
+          const storedContent = hexToString(tx.typedArgs.args.value);
+          const check = await checkNormalStorageExists({
+            storageClient,
+            storageKey: tx.id,
+            operatorAddress,
+            expectedContent: storedContent,
+          });
+          exists = check.exists && check.matches === true;
+        }
       }
     } else if (tx.type === "chunked") {
       // ChunkedStorage: check if metadata exists
-      exists = await checkChunkedStorageExists(
+      exists = await checkChunkedStorageExists({
         storageClient,
-        tx.id,
-        operatorAddress
-      );
+        chunkedHash: tx.id,
+        operatorAddress,
+      });
     } else if (tx.type === "metadata") {
       // XML metadata: check if exists
-      // Extract expected metadata from transaction args (it's hex-encoded)
-      const expectedMetadata = extractContentFromTransaction(tx);
-      const check = await checkXmlMetadataExists(
-        storageClient,
-        tx.id,
-        operatorAddress,
-        expectedMetadata
-      );
-      exists = check.exists && check.matches === true;
+      // Extract expected metadata from typed args (it's hex-encoded)
+      if (tx.typedArgs.type === "metadata") {
+        const expectedMetadata = hexToString(tx.typedArgs.args.value);
+        const check = await checkXmlMetadataExists({
+          storageClient,
+          storageKey: tx.id,
+          operatorAddress,
+          expectedMetadata,
+        });
+        exists = check.exists && check.matches === true;
+      }
     }
 
     if (exists) {
@@ -82,16 +90,16 @@ export async function filterExistingTransactions(
 /**
  * Filter XML storage transactions more efficiently
  * Checks all chunks in parallel, then filters
+ * Accepts JSON object as parameter
  */
 export async function filterXmlStorageTransactions(
-  storageClient: StorageClient,
-  transactions: TransactionWithId[],
-  operatorAddress: string,
-  chunkedHashes: string[]
+  params: FilterXmlStorageTransactionsParams
 ): Promise<{
   toSend: TransactionWithId[];
   skipped: TransactionWithId[];
 }> {
+  const { storageClient, transactions, operatorAddress, chunkedHashes } =
+    params;
   // Separate metadata and chunk transactions
   const metadataTx = transactions.find((tx) => tx.type === "metadata");
   const chunkTxs = transactions.filter((tx) => tx.type === "chunked");
@@ -100,11 +108,11 @@ export async function filterXmlStorageTransactions(
   const skipped: TransactionWithId[] = [];
 
   // Check which chunks exist (parallel check)
-  const existingChunks = await checkXmlChunksExist(
+  const existingChunks = await checkXmlChunksExist({
     storageClient,
     chunkedHashes,
-    operatorAddress
-  );
+    operatorAddress,
+  });
 
   // Filter chunk transactions
   for (const tx of chunkTxs) {
@@ -122,17 +130,19 @@ export async function filterXmlStorageTransactions(
     );
     if (allChunksExist) {
       // Verify metadata matches
-      const expectedMetadata = extractContentFromTransaction(metadataTx);
-      const check = await checkXmlMetadataExists(
-        storageClient,
-        metadataTx.id,
-        operatorAddress,
-        expectedMetadata
-      );
-      if (check.exists && check.matches) {
-        skipped.push(metadataTx);
-      } else {
-        toSend.unshift(metadataTx); // Metadata first
+      if (metadataTx.typedArgs.type === "metadata") {
+        const expectedMetadata = hexToString(metadataTx.typedArgs.args.value);
+        const check = await checkXmlMetadataExists({
+          storageClient,
+          storageKey: metadataTx.id,
+          operatorAddress,
+          expectedMetadata,
+        });
+        if (check.exists && check.matches) {
+          skipped.push(metadataTx);
+        } else {
+          toSend.unshift(metadataTx); // Metadata first
+        }
       }
     } else {
       toSend.unshift(metadataTx); // Metadata first
@@ -141,4 +151,3 @@ export async function filterXmlStorageTransactions(
 
   return { toSend, skipped };
 }
-

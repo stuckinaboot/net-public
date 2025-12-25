@@ -9,6 +9,9 @@ import {
   createMockPublicClient,
   createMockStorageClient,
   createMockReceipt,
+  createNormalStorageTypedArgs,
+  createChunkedStorageTypedArgs,
+  createMetadataStorageTypedArgs,
   MOCK_TX_HASH,
   TEST_CHAIN_ID,
   TEST_PRIVATE_KEY,
@@ -43,10 +46,10 @@ describe("transaction-send", () => {
 
   describe("createWalletClientFromPrivateKey", () => {
     it("should create wallet and public clients", () => {
-      const result = createWalletClientFromPrivateKey(
-        TEST_PRIVATE_KEY,
-        TEST_CHAIN_ID
-      );
+      const result = createWalletClientFromPrivateKey({
+        privateKey: TEST_PRIVATE_KEY,
+        chainId: TEST_CHAIN_ID,
+      });
 
       expect(result.walletClient).toBeDefined();
       expect(result.publicClient).toBeDefined();
@@ -56,21 +59,21 @@ describe("transaction-send", () => {
 
     it("should use custom RPC URL when provided", () => {
       const customRpc = "https://custom-rpc.com";
-      const result = createWalletClientFromPrivateKey(
-        TEST_PRIVATE_KEY,
-        TEST_CHAIN_ID,
-        customRpc
-      );
+      const result = createWalletClientFromPrivateKey({
+        privateKey: TEST_PRIVATE_KEY,
+        chainId: TEST_CHAIN_ID,
+        rpcUrl: customRpc,
+      });
 
       expect(result.publicClient).toBeDefined();
       expect(result.walletClient).toBeDefined();
     });
 
     it("should return correct operator address", () => {
-      const result = createWalletClientFromPrivateKey(
-        TEST_PRIVATE_KEY,
-        TEST_CHAIN_ID
-      );
+      const result = createWalletClientFromPrivateKey({
+        privateKey: TEST_PRIVATE_KEY,
+        chainId: TEST_CHAIN_ID,
+      });
 
       // The address should be derived from the private key
       expect(result.operatorAddress).toBeDefined();
@@ -80,6 +83,16 @@ describe("transaction-send", () => {
 
   describe("sendTransactionsWithIdempotency", () => {
     it("should send transactions sequentially", async () => {
+      const typedArgs1 = createNormalStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test1",
+        "content1"
+      );
+      const typedArgs2 = createNormalStorageTypedArgs(
+        "0x" + "b".repeat(64) as `0x${string}`,
+        "test2",
+        "content2"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -90,6 +103,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test1", stringToHex("content1")],
           },
+          typedArgs: typedArgs1,
         },
         {
           id: "0x" + "b".repeat(64),
@@ -100,6 +114,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: ["0x" + "b".repeat(64), "test2", stringToHex("content2")],
           },
+          typedArgs: typedArgs2,
         },
       ];
 
@@ -111,13 +126,13 @@ describe("transaction-send", () => {
         createMockReceipt()
       );
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.transactionsSent).toBe(2);
       expect(result.transactionsSkipped).toBe(0);
@@ -130,6 +145,16 @@ describe("transaction-send", () => {
     });
 
     it("should skip transactions that already exist", async () => {
+      const typedArgs1 = createNormalStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test1",
+        "content1"
+      );
+      const typedArgs2 = createNormalStorageTypedArgs(
+        "0x" + "b".repeat(64) as `0x${string}`,
+        "test2",
+        "content2"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -140,6 +165,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test1", stringToHex("content1")],
           },
+          typedArgs: typedArgs1,
         },
         {
           id: "0x" + "b".repeat(64),
@@ -150,6 +176,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: ["0x" + "b".repeat(64), "test2", stringToHex("content2")],
           },
+          typedArgs: typedArgs2,
         },
       ];
 
@@ -166,13 +193,13 @@ describe("transaction-send", () => {
         createMockReceipt()
       );
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.transactionsSent).toBe(1);
       expect(result.transactionsSkipped).toBe(1);
@@ -180,6 +207,16 @@ describe("transaction-send", () => {
     });
 
     it("should handle transaction failures gracefully", async () => {
+      const typedArgs1 = createNormalStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test1",
+        "content1"
+      );
+      const typedArgs2 = createNormalStorageTypedArgs(
+        "0x" + "b".repeat(64) as `0x${string}`,
+        "test2",
+        "content2"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -190,6 +227,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test1", stringToHex("content1")],
           },
+          typedArgs: typedArgs1,
         },
         {
           id: "0x" + "b".repeat(64),
@@ -200,6 +238,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: ["0x" + "b".repeat(64), "test2", stringToHex("content2")],
           },
+          typedArgs: typedArgs2,
         },
       ];
 
@@ -212,13 +251,13 @@ describe("transaction-send", () => {
         createMockReceipt()
       );
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.transactionsSent).toBe(1);
       expect(result.transactionsFailed).toBe(1);
@@ -227,6 +266,11 @@ describe("transaction-send", () => {
     });
 
     it("should return final hash from last successful transaction", async () => {
+      const typedArgs = createNormalStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test1",
+        "content1"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -237,6 +281,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test1", stringToHex("content1")],
           },
+          typedArgs,
         },
       ];
 
@@ -246,19 +291,20 @@ describe("transaction-send", () => {
         createMockReceipt()
       );
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.finalHash).toBe(MOCK_TX_HASH);
     });
 
     it("should skip chunked storage that exists", async () => {
-      const chunkedHash = "0x" + "a".repeat(64);
+      const chunkedHash = "0x" + "a".repeat(64) as `0x${string}`;
+      const typedArgs = createChunkedStorageTypedArgs(chunkedHash);
       const transactions: TransactionWithId[] = [
         {
           id: chunkedHash,
@@ -269,6 +315,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [chunkedHash, "", []],
           },
+          typedArgs,
         },
       ];
 
@@ -277,13 +324,13 @@ describe("transaction-send", () => {
         originalText: "",
       });
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.transactionsSent).toBe(0);
       expect(result.transactionsSkipped).toBe(1);
@@ -291,6 +338,11 @@ describe("transaction-send", () => {
     });
 
     it("should handle all transactions skipped scenario", async () => {
+      const typedArgs = createNormalStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test1",
+        "content1"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -301,6 +353,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test1", stringToHex("content1")],
           },
+          typedArgs,
         },
       ];
 
@@ -309,13 +362,13 @@ describe("transaction-send", () => {
         value: stringToHex("content1") as `0x${string}`,
       });
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.transactionsSent).toBe(0);
       expect(result.transactionsSkipped).toBe(1);
@@ -324,6 +377,16 @@ describe("transaction-send", () => {
     });
 
     it("should wait for confirmation after each transaction", async () => {
+      const typedArgs1 = createNormalStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test1",
+        "content1"
+      );
+      const typedArgs2 = createNormalStorageTypedArgs(
+        "0x" + "b".repeat(64) as `0x${string}`,
+        "test2",
+        "content2"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -334,6 +397,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test1", stringToHex("content1")],
           },
+          typedArgs: typedArgs1,
         },
         {
           id: "0x" + "b".repeat(64),
@@ -344,6 +408,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: ["0x" + "b".repeat(64), "test2", stringToHex("content2")],
           },
+          typedArgs: typedArgs2,
         },
       ];
 
@@ -353,13 +418,13 @@ describe("transaction-send", () => {
         createMockReceipt()
       );
 
-      await sendTransactionsWithIdempotency(
+      await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       // Should wait for confirmation after each transaction
       expect(mockPublicClient.waitForTransactionReceipt).toHaveBeenCalledTimes(
@@ -374,6 +439,11 @@ describe("transaction-send", () => {
     });
 
     it("should handle metadata transaction idempotency", async () => {
+      const typedArgs = createMetadataStorageTypedArgs(
+        TEST_STORAGE_KEY_BYTES,
+        "test.txt",
+        "<net />"
+      );
       const transactions: TransactionWithId[] = [
         {
           id: TEST_STORAGE_KEY_BYTES,
@@ -384,6 +454,7 @@ describe("transaction-send", () => {
             functionName: "put",
             args: [TEST_STORAGE_KEY_BYTES, "test.txt", stringToHex("<net />")],
           },
+          typedArgs,
         },
       ];
 
@@ -393,13 +464,13 @@ describe("transaction-send", () => {
         value: stringToHex("<net />") as `0x${string}`,
       });
 
-      const result = await sendTransactionsWithIdempotency(
+      const result = await sendTransactionsWithIdempotency({
         storageClient,
-        mockWalletClient as any,
-        mockPublicClient as any,
+        walletClient: mockWalletClient as any,
+        publicClient: mockPublicClient as any,
         transactions,
-        TEST_OPERATOR
-      );
+        operatorAddress: TEST_OPERATOR,
+      });
 
       expect(result.transactionsSent).toBe(0);
       expect(result.transactionsSkipped).toBe(1);

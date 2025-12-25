@@ -1,22 +1,72 @@
 import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
 import { encodeStorageKeyForUrl } from "@net-protocol/storage";
+import { WriteTransactionConfig } from "@net-protocol/core";
 import {
   checkNormalStorageExists,
   checkChunkedStorageExists,
   checkXmlMetadataExists,
 } from "./storage/check";
-import type { TransactionWithId } from "./types";
+import type {
+  TransactionWithId,
+  StorageTransactionArgs,
+  CheckTransactionExistsParams,
+} from "./types";
 
 /**
- * Extract content string from transaction args
- * Helper to eliminate duplication of hexToString(tx.transaction.args[2]) pattern
+ * Convert typed args to array (for viem compatibility)
+ */
+export function typedArgsToArray(
+  args: StorageTransactionArgs
+): readonly unknown[] {
+  if (args.type === "normal" || args.type === "metadata") {
+    return [args.args.key, args.args.text, args.args.value];
+  } else {
+    return [args.args.hash, args.args.text, args.args.chunks];
+  }
+}
+
+/**
+ * Extract typed args from WriteTransactionConfig
+ */
+export function extractTypedArgsFromTransaction(
+  tx: WriteTransactionConfig,
+  type: "normal" | "chunked" | "metadata"
+): StorageTransactionArgs {
+  if (type === "normal" || type === "metadata") {
+    return {
+      type,
+      args: {
+        key: tx.args[0] as `0x${string}`,
+        text: tx.args[1] as string,
+        value: tx.args[2] as `0x${string}`,
+      },
+    };
+  } else {
+    return {
+      type: "chunked",
+      args: {
+        hash: tx.args[0] as `0x${string}`,
+        text: tx.args[1] as string,
+        chunks: tx.args[2] as `0x${string}`[],
+      },
+    };
+  }
+}
+
+/**
+ * Extract content string from transaction typed args
+ * Helper to eliminate duplication of hexToString pattern
  */
 export function extractContentFromTransaction(
   tx: TransactionWithId
 ): string {
-  const hex = tx.transaction.args[2] as string;
-  return hexToString(hex as `0x${string}`);
+  if (tx.typedArgs.type === "normal" || tx.typedArgs.type === "metadata") {
+    return hexToString(tx.typedArgs.args.value);
+  } else {
+    // For chunked transactions, return empty string (no content to extract)
+    return "";
+  }
 }
 
 /**
@@ -37,39 +87,43 @@ export function generateStorageUrl(
 /**
  * Check if a transaction's data already exists (idempotency check)
  * Consolidates existence check logic used in both filtering and sending
+ * Accepts JSON object as parameter
  */
 export async function checkTransactionExists(
-  storageClient: StorageClient,
-  tx: TransactionWithId,
-  operatorAddress: string
+  params: CheckTransactionExistsParams
 ): Promise<boolean> {
+  const { storageClient, tx, operatorAddress } = params;
   if (tx.type === "normal") {
-    // Extract expected content from transaction args
-    const expectedContent = extractContentFromTransaction(tx);
-    const check = await checkNormalStorageExists(
-      storageClient,
-      tx.id,
-      operatorAddress,
-      expectedContent
-    );
-    return check.exists && check.matches === true;
+    // Extract expected content from typed args
+    if (tx.typedArgs.type === "normal") {
+      const expectedContent = hexToString(tx.typedArgs.args.value);
+      const check = await checkNormalStorageExists({
+        storageClient,
+        storageKey: tx.id,
+        operatorAddress,
+        expectedContent,
+      });
+      return check.exists && check.matches === true;
+    }
   } else if (tx.type === "chunked") {
     // ChunkedStorage: hash existence = content match (deterministic hash)
-    return await checkChunkedStorageExists(
+    return await checkChunkedStorageExists({
       storageClient,
-      tx.id,
-      operatorAddress
-    );
+      chunkedHash: tx.id,
+      operatorAddress,
+    });
   } else if (tx.type === "metadata") {
     // XML metadata: extract and compare content
-    const expectedMetadata = extractContentFromTransaction(tx);
-    const check = await checkXmlMetadataExists(
-      storageClient,
-      tx.id,
-      operatorAddress,
-      expectedMetadata
-    );
-    return check.exists && check.matches === true;
+    if (tx.typedArgs.type === "metadata") {
+      const expectedMetadata = hexToString(tx.typedArgs.args.value);
+      const check = await checkXmlMetadataExists({
+        storageClient,
+        storageKey: tx.id,
+        operatorAddress,
+        expectedMetadata,
+      });
+      return check.exists && check.matches === true;
+    }
   }
   return false;
 }

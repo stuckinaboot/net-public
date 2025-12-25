@@ -5,21 +5,26 @@ import {
   getChainRpcUrls,
 } from "@net-protocol/core";
 import { StorageClient } from "@net-protocol/storage";
-import { checkTransactionExists } from "../utils";
-import type { TransactionWithId, UploadResult } from "../types";
+import { checkTransactionExists, typedArgsToArray } from "../utils";
+import type {
+  TransactionWithId,
+  UploadResult,
+  CreateWalletClientParams,
+  SendTransactionsParams,
+} from "../types";
 
 /**
  * Create wallet client from private key
+ * Accepts JSON object as parameter
  */
 export function createWalletClientFromPrivateKey(
-  privateKey: `0x${string}`,
-  chainId: number,
-  rpcUrl?: string
+  params: CreateWalletClientParams
 ): {
   walletClient: WalletClient;
   publicClient: PublicClient;
   operatorAddress: `0x${string}`;
 } {
+  const { privateKey, chainId, rpcUrl } = params;
   const account = privateKeyToAccount(privateKey);
   const publicClient = getPublicClient({ chainId, rpcUrl });
 
@@ -64,14 +69,12 @@ export function createWalletClientFromPrivateKey(
 /**
  * Send transactions sequentially with idempotency checks
  * Checks existence before each transaction (handles partial retries)
+ * Accepts JSON object as parameter
  */
 export async function sendTransactionsWithIdempotency(
-  storageClient: StorageClient,
-  walletClient: WalletClient,
-  publicClient: PublicClient,
-  transactions: TransactionWithId[],
-  operatorAddress: string
+  params: SendTransactionsParams
 ): Promise<UploadResult> {
+  const { storageClient, walletClient, publicClient, transactions, operatorAddress } = params;
   let sent = 0;
   let skipped = 0;
   let failed = 0;
@@ -84,11 +87,11 @@ export async function sendTransactionsWithIdempotency(
     try {
       // Check if this transaction's data already exists (idempotency)
       // Always compare content, not just check existence
-      const exists = await checkTransactionExists(
+      const exists = await checkTransactionExists({
         storageClient,
         tx,
-        operatorAddress
-      );
+        operatorAddress,
+      });
 
       if (exists) {
         console.log(
@@ -104,11 +107,13 @@ export async function sendTransactionsWithIdempotency(
       console.log(
         `📤 Sending transaction ${i + 1}/${transactions.length}: ${tx.id}`
       );
+      // Convert typed args to array for viem compatibility
+      const args = typedArgsToArray(tx.typedArgs);
       const hash = await walletClient.writeContract({
         address: tx.transaction.to as `0x${string}`,
         abi: tx.transaction.abi,
         functionName: tx.transaction.functionName as string,
-        args: tx.transaction.args as readonly unknown[],
+        args,
         value: tx.transaction.value,
         chain: undefined,
       });

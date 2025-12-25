@@ -1,17 +1,22 @@
 import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
-import type { StorageCheckResult } from "../types";
+import type {
+  StorageCheckResult,
+  CheckNormalStorageExistsParams,
+  CheckChunkedStorageExistsParams,
+  CheckXmlChunksExistParams,
+  CheckXmlMetadataExistsParams,
+} from "../types";
 
 /**
  * Check if normal storage data exists and matches content
  * Pure function - uses StorageClient, no side effects
+ * Accepts JSON object as parameter
  */
 export async function checkNormalStorageExists(
-  storageClient: StorageClient,
-  storageKey: string,
-  operatorAddress: string,
-  expectedContent: string
+  params: CheckNormalStorageExistsParams
 ): Promise<StorageCheckResult> {
+  const { storageClient, storageKey, operatorAddress, expectedContent } = params;
   const existing = await storageClient.get({
     key: storageKey,
     operator: operatorAddress,
@@ -31,12 +36,12 @@ export async function checkNormalStorageExists(
 /**
  * Check if ChunkedStorage data exists
  * Pure function - uses StorageClient
+ * Accepts JSON object as parameter
  */
 export async function checkChunkedStorageExists(
-  storageClient: StorageClient,
-  chunkedHash: string,
-  operatorAddress: string
+  params: CheckChunkedStorageExistsParams
 ): Promise<boolean> {
+  const { storageClient, chunkedHash, operatorAddress } = params;
   const meta = await storageClient.getChunkedMetadata({
     key: chunkedHash,
     operator: operatorAddress,
@@ -49,22 +54,22 @@ export async function checkChunkedStorageExists(
  * Check which XML chunks already exist in ChunkedStorage
  * Returns Set of chunkedStorage hashes that exist
  * Pure function - uses StorageClient
+ * Accepts JSON object as parameter
  */
 export async function checkXmlChunksExist(
-  storageClient: StorageClient,
-  chunkedHashes: string[],
-  operatorAddress: string
+  params: CheckXmlChunksExistParams
 ): Promise<Set<string>> {
+  const { storageClient, chunkedHashes, operatorAddress } = params;
   const existing = new Set<string>();
 
   // Check each chunk in parallel for efficiency
   await Promise.all(
     chunkedHashes.map(async (hash) => {
-      const exists = await checkChunkedStorageExists(
+      const exists = await checkChunkedStorageExists({
         storageClient,
-        hash,
-        operatorAddress
-      );
+        chunkedHash: hash,
+        operatorAddress,
+      });
       if (exists) {
         existing.add(hash);
       }
@@ -77,13 +82,12 @@ export async function checkXmlChunksExist(
 /**
  * Check if XML metadata exists and matches expected metadata
  * Pure function - uses StorageClient
+ * Accepts JSON object as parameter
  */
 export async function checkXmlMetadataExists(
-  storageClient: StorageClient,
-  storageKey: string,
-  operatorAddress: string,
-  expectedMetadata: string
+  params: CheckXmlMetadataExistsParams
 ): Promise<StorageCheckResult> {
+  const { storageClient, storageKey, operatorAddress, expectedMetadata } = params;
   const existing = await storageClient.get({
     key: storageKey,
     operator: operatorAddress,

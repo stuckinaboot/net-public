@@ -179,3 +179,19 @@ export interface PrepareXmlStorageTransactionsParams {
   content: string;
   operatorAddress: string;
 }
+
+/**
+ * Result of preview operation
+ */
+export interface PreviewResult {
+  storageType: "normal" | "xml";
+  totalChunks: number;
+  alreadyStoredChunks: number;
+  needToStoreChunks: number;
+  metadataNeedsStorage?: boolean; // Only for XML storage
+  operatorAddress: string;
+  storageKey: string;
+  totalTransactions: number; // Total transactions (chunks + metadata if XML)
+  transactionsToSend: number; // Transactions that would be sent
+  transactionsSkipped: number; // Transactions already stored
+}

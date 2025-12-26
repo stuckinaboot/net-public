@@ -22,10 +22,19 @@ net-cli <command> [options]
 
 #### Storage Command
 
+Storage operations for Net Protocol. The `storage` command is a command group with subcommands for different operations.
+
+**Available Subcommands:**
+
+- `storage upload` - Upload files to Net Storage
+- `storage preview` - Preview storage upload without submitting transactions
+
+##### Storage Upload
+
 Upload files to Net Storage using either normal storage (for files ≤ 20KB) or XML storage (for files > 20KB or containing XML references).
 
 ```bash
-net-cli storage \
+net-cli storage upload \
   --file <path> \
   --key <storage-key> \
   --text <description> \
@@ -34,7 +43,7 @@ net-cli storage \
   [--rpc-url <custom-rpc>]
 ```
 
-**Storage Command Arguments:**
+**Storage Upload Arguments:**
 
 - `--file` (required): Path to file to upload
 - `--key` (required): Storage key (filename/identifier)
@@ -47,7 +56,7 @@ net-cli storage \
 
 ```bash
 # Using command-line flags
-net-cli storage \
+net-cli storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -57,7 +66,7 @@ net-cli storage \
 # Using environment variables (recommended)
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 export NET_CHAIN_ID=8453
-net-cli storage \
+net-cli storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file"
@@ -67,7 +76,54 @@ net-cli storage \
 # NET_PRIVATE_KEY=0x...
 # NET_CHAIN_ID=8453
 # NET_RPC_URL=https://base-mainnet.public.blastapi.io  # optional
-net-cli storage --file ./example.txt --key "my-file" --text "Example file"
+net-cli storage upload --file ./example.txt --key "my-file" --text "Example file"
+```
+
+##### Storage Preview
+
+Preview what would be uploaded without actually submitting transactions. Shows statistics about chunks, transactions, and what's already stored.
+
+```bash
+net-cli storage preview \
+  --file <path> \
+  --key <storage-key> \
+  --text <description> \
+  [--private-key <0x...>] \
+  --chain-id <8453|1|...> \
+  [--rpc-url <custom-rpc>]
+```
+
+**Storage Preview Arguments:**
+
+Same as `storage upload` - see above.
+
+**Example:**
+
+```bash
+net-cli storage preview \
+  --file ./example.txt \
+  --key "my-file" \
+  --text "Example file" \
+  --chain-id 8453
+```
+
+**Output:**
+
+```
+📁 Reading file: ./example.txt
+
+📊 Storage Preview:
+  Storage Key: my-file
+  Storage Type: Normal
+  Total Chunks: 1
+  Already Stored: 0
+  Need to Store: 1
+  Total Transactions: 1
+  Transactions to Send: 1
+  Transactions Skipped: 0
+  Operator Address: 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf
+
+⚠ 1 transaction(s) would be sent
 ```
 
 ## Storage Types
@@ -111,11 +167,11 @@ If an upload fails mid-way:
 
 ```bash
 # First upload
-net-cli storage --file example.txt --key "test" --text "Test" --chain-id 8453
+net-cli storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 # Output: ✓ File uploaded successfully!
 
 # Second upload (same file, same key)
-net-cli storage --file example.txt --key "test" --text "Test" --chain-id 8453
+net-cli storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 # Output: ✓ All data already stored - skipping upload
 ```
 
@@ -161,12 +217,37 @@ Each command can have its own internal structure:
 
 ## Extensibility
 
-To add a new command:
+### Adding a New Command
+
+To add a new top-level command:
 
 1. **Create command directory**: `src/commands/{name}/`
 2. **Create command index**: `src/commands/{name}/index.ts` with a `register{Name}Command(program: Command)` function
 3. **Register in main CLI**: Import and call `register{Name}Command(program)` in `src/cli/index.ts`
 4. **Add command-specific code**: Create subdirectories as needed (core/, storage/, transactions/, etc.)
+
+### Adding a Storage Subcommand
+
+To add a new subcommand to the `storage` command group:
+
+1. **Create subcommand**: Use `new Command("subcommand-name")` in `src/commands/storage/index.ts`
+2. **Add options**: Use `.requiredOption()` or `.option()` to define subcommand options
+3. **Add action**: Use `.action()` to define the subcommand behavior
+4. **Register**: Use `storageCommand.addCommand(subcommand)` to register it
+
+**Example:**
+
+```typescript
+// In src/commands/storage/index.ts
+const verifyCommand = new Command("verify")
+  .description("Verify storage integrity")
+  .requiredOption("--key <key>", "Storage key to verify")
+  .action(async (options) => {
+    // Implementation
+  });
+
+storageCommand.addCommand(verifyCommand);
+```
 
 ### Example: Adding a New Command
 
@@ -217,7 +298,7 @@ These are parsed and validated by `parseCommonOptions()` from `cli/shared.ts`.
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 # Run without --private-key flag (it will use the env var)
-net-cli storage \
+net-cli storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -232,8 +313,11 @@ The tool supports both `NET_PRIVATE_KEY` and `PRIVATE_KEY` environment variables
 # Build
 yarn build
 
-# Run storage command
-yarn start storage --file example.txt --key "test" --text "Test" --chain-id 8453
+# Run storage upload command
+yarn start storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
+
+# Run storage preview command
+yarn start storage preview --file example.txt --key "test" --text "Test" --chain-id 8453
 
 # Watch mode
 yarn dev

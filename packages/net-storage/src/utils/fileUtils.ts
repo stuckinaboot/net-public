@@ -126,8 +126,30 @@ export function detectFileTypeFromBase64(base64Data: string): string | undefined
     }
 
     // Check MP3 (ID3 tag or MPEG frame sync)
-    if (base64Data.startsWith("SUQz") || base64Data.startsWith("/9s=")) {
+    // MP3 files can start with:
+    // - ID3v2 tag: "ID3" (base64: "SUQz")
+    // - MPEG frame sync: 0xFF 0xFB, 0xFF 0xF3, 0xFF 0xF2, 0xFF 0xFA, 0xFF 0xF9, etc.
+    if (base64Data.startsWith("SUQz")) {
       return "audio/mpeg";
+    }
+
+    // Check for MPEG frame sync patterns in decoded bytes
+    // MPEG frame sync: first byte is 0xFF, second byte starts with 0xF (0xF0-0xFF)
+    if (base64Data.length >= 4) {
+      try {
+        const decoded = atob(base64Data.substring(0, 4));
+        const bytes = new Uint8Array(decoded.length);
+        for (let i = 0; i < decoded.length; i++) {
+          bytes[i] = decoded.charCodeAt(i);
+        }
+
+        // Check for MPEG frame sync pattern: 0xFF followed by 0xF0-0xFF
+        if (bytes[0] === 0xff && (bytes[1] & 0xf0) === 0xf0) {
+          return "audio/mpeg";
+        }
+      } catch {
+        // If decoding fails, continue to other checks
+      }
     }
 
     // Check MP4 (contains "ftyp" in decoded bytes)

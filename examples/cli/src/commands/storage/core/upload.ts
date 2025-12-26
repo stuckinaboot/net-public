@@ -23,7 +23,24 @@ export async function uploadFile(
   options: UploadOptions
 ): Promise<UploadResult> {
   // 1. Read file
-  const fileContent = readFileSync(options.filePath, "utf-8");
+  // Read file as buffer (binary) first
+  const fileBuffer = readFileSync(options.filePath);
+
+  // Detect if file is binary
+  // Check for null bytes or non-text characters (excluding common whitespace)
+  const isBinary = fileBuffer.some(
+    (byte) => byte === 0 || (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13)
+  );
+
+  // Convert based on file type
+  let fileContent: string;
+  if (isBinary) {
+    // Convert binary file to base64 string (valid UTF-8)
+    fileContent = fileBuffer.toString("base64");
+  } else {
+    // Read as UTF-8 for text files
+    fileContent = fileBuffer.toString("utf-8");
+  }
 
   // 2. Create StorageClient
   const storageClient = new StorageClient({

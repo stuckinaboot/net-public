@@ -65,20 +65,57 @@ export function assembleXmlData(
   chunks: string[],
   references: XmlReference[]
 ): string {
+  // Find all tag positions first to avoid issues with replacements affecting positions
+  const tagPositions: Array<{
+    ref: XmlReference;
+    chunk: string;
+    start: number;
+    end: number;
+    tag: string;
+  }> = [];
+
+  for (let i = 0; i < references.length; i++) {
+    const ref = references[i];
+    const chunkData = chunks[i];
+    if (!chunkData) continue;
+
+    // Build XML tag with all attributes in order: k, v, i, o, s
+    const indexAttr = ref.index !== undefined ? ` i="${ref.index}"` : "";
+    const operatorAttr = ref.operator ? ` o="${ref.operator}"` : "";
+    const sourceAttr = ref.source ? ` s="${ref.source}"` : "";
+    const xmlTag = `<net k="${ref.hash}" v="${ref.version}"${indexAttr}${operatorAttr}${sourceAttr} />`;
+
+    // Find the position of this tag in the metadata
+    const tagIndex = metadata.indexOf(xmlTag);
+    if (tagIndex === -1) {
+      continue;
+    }
+
+    tagPositions.push({
+      ref,
+      chunk: chunkData,
+      start: tagIndex,
+      end: tagIndex + xmlTag.length,
+      tag: xmlTag,
+    });
+  }
+
+  // Sort by position in reverse order (last tag first) so replacements don't affect positions
+  tagPositions.sort((a, b) => b.start - a.start);
+
   let result = metadata;
 
-  references.forEach((ref, index) => {
-    const chunkData = chunks[index];
-    if (chunkData) {
-      // Build XML tag with all attributes in order: k, v, i, o, s
-      const indexAttr = ref.index !== undefined ? ` i="${ref.index}"` : "";
-      const operatorAttr = ref.operator ? ` o="${ref.operator}"` : "";
-      const sourceAttr = ref.source ? ` s="${ref.source}"` : "";
+  // Replace tags from end to beginning
+  for (let i = 0; i < tagPositions.length; i++) {
+    const { ref, chunk, start, end } = tagPositions[i];
 
-      const xmlTag = `<net k="${ref.hash}" v="${ref.version}"${indexAttr}${operatorAttr}${sourceAttr} />`;
-      result = result.replace(xmlTag, chunkData);
+    try {
+      // Replace at specific position to avoid matching multiple occurrences
+      result = result.substring(0, start) + chunk + result.substring(end);
+    } catch (error) {
+      throw error;
     }
-  });
+  }
 
   return result;
 }
@@ -302,7 +339,9 @@ export async function fetchXmlChunksFromChunkedStorage(
       }
     } catch (error) {
       console.error(
-        `[ChunkedStorage->XML] Failed to fetch XML chunk ${i + 1} (${chunkedHash}):`,
+        `[ChunkedStorage->XML] Failed to fetch XML chunk ${
+          i + 1
+        } (${chunkedHash}):`,
         error
       );
       xmlChunks.push(""); // Push empty for failed chunks
@@ -421,4 +460,3 @@ export async function resolveXmlRecursive(
 
   return assembled;
 }
-

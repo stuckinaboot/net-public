@@ -1,5 +1,10 @@
 import { readFileSync } from "fs";
-import { shouldSuggestXmlStorage, getStorageKeyBytes } from "@net-protocol/storage";
+import {
+  shouldSuggestXmlStorage,
+  getStorageKeyBytes,
+  detectFileTypeFromBase64,
+  base64ToDataUri,
+} from "@net-protocol/storage";
 import { StorageClient } from "@net-protocol/storage";
 import { stringToHex } from "viem";
 import {
@@ -14,7 +19,12 @@ import {
   createWalletClientFromPrivateKey,
   sendTransactionsWithIdempotency,
 } from "../transactions/send";
-import type { UploadOptions, UploadResult, TransactionWithId, NormalStorageArgs } from "../types";
+import type {
+  UploadOptions,
+  UploadResult,
+  TransactionWithId,
+  NormalStorageArgs,
+} from "../types";
 
 /**
  * Main upload function - orchestrates the entire upload process
@@ -29,14 +39,26 @@ export async function uploadFile(
   // Detect if file is binary
   // Check for null bytes or non-text characters (excluding common whitespace)
   const isBinary = fileBuffer.some(
-    (byte) => byte === 0 || (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13)
+    (byte) =>
+      byte === 0 || (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13)
   );
 
   // Convert based on file type
   let fileContent: string;
   if (isBinary) {
     // Convert binary file to base64 string (valid UTF-8)
-    fileContent = fileBuffer.toString("base64");
+    const base64String = fileBuffer.toString("base64");
+
+    // Detect file type and add data URI prefix if detected
+    const detectedType = detectFileTypeFromBase64(base64String);
+    if (detectedType) {
+      // Include data URI prefix for better type preservation
+      // Format: "data:audio/mpeg;base64,SUQz..."
+      fileContent = base64ToDataUri(base64String);
+    } else {
+      // Fallback to raw base64 if detection fails
+      fileContent = base64String;
+    }
   } else {
     // Read as UTF-8 for text files
     fileContent = fileBuffer.toString("utf-8");
@@ -78,13 +100,15 @@ export async function uploadFile(
       .map((tx) => tx.id);
   } else {
     // Build typed args JSON object
-    const storageKeyBytes = getStorageKeyBytes(options.storageKey) as `0x${string}`;
+    const storageKeyBytes = getStorageKeyBytes(
+      options.storageKey
+    ) as `0x${string}`;
     const typedArgs: NormalStorageArgs = {
       key: storageKeyBytes,
       text: options.text,
       value: stringToHex(fileContent),
     };
-    
+
     transactions = [
       prepareNormalStorageTransaction(
         storageClient,
@@ -149,4 +173,3 @@ export async function uploadFile(
 
   return result;
 }
-

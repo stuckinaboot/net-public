@@ -65,21 +65,6 @@ export function assembleXmlData(
   chunks: string[],
   references: XmlReference[]
 ): string {
-  console.log("[assembleXmlData] Starting assembly:", {
-    metadataLength: metadata.length,
-    metadataSizeMB: (metadata.length / (1024 * 1024)).toFixed(2),
-    chunksCount: chunks.length,
-    referencesCount: references.length,
-    totalChunksSize: chunks.reduce(
-      (sum, chunk) => sum + (chunk?.length || 0),
-      0
-    ),
-    totalChunksSizeMB: (
-      chunks.reduce((sum, chunk) => sum + (chunk?.length || 0), 0) /
-      (1024 * 1024)
-    ).toFixed(2),
-  });
-
   // Find all tag positions first to avoid issues with replacements affecting positions
   const tagPositions: Array<{
     ref: XmlReference;
@@ -103,10 +88,6 @@ export function assembleXmlData(
     // Find the position of this tag in the metadata
     const tagIndex = metadata.indexOf(xmlTag);
     if (tagIndex === -1) {
-      console.warn(`[assembleXmlData] Tag not found for reference ${i + 1}:`, {
-        hash: ref.hash,
-        tag: xmlTag,
-      });
       continue;
     }
 
@@ -126,57 +107,15 @@ export function assembleXmlData(
 
   // Replace tags from end to beginning
   for (let i = 0; i < tagPositions.length; i++) {
-    const { ref, chunk, start, end, tag } = tagPositions[i];
-    const beforeLength = result.length;
-    const chunkLength = chunk.length;
-    const tagLength = tag.length;
-    const expectedLength = beforeLength - tagLength + chunkLength;
-
-    console.log(
-      `[assembleXmlData] Replacing reference ${i + 1}/${tagPositions.length}:`,
-      {
-        hash: ref.hash,
-        tagLength,
-        chunkLength,
-        chunkSizeMB: (chunkLength / (1024 * 1024)).toFixed(2),
-        resultLengthBefore: beforeLength,
-        resultSizeMBBefore: (beforeLength / (1024 * 1024)).toFixed(2),
-        expectedLength,
-        expectedSizeMB: (expectedLength / (1024 * 1024)).toFixed(2),
-        position: start,
-      }
-    );
+    const { ref, chunk, start, end } = tagPositions[i];
 
     try {
       // Replace at specific position to avoid matching multiple occurrences
       result = result.substring(0, start) + chunk + result.substring(end);
-      const resultLength = result.length;
-
-      console.log(`[assembleXmlData] Replacement ${i + 1} complete:`, {
-        resultLengthAfter: resultLength,
-        resultSizeMBAfter: (resultLength / (1024 * 1024)).toFixed(2),
-        actualLength: resultLength,
-        expectedLength,
-        lengthMatch: resultLength === expectedLength,
-      });
     } catch (error) {
-      console.error(`[assembleXmlData] Error replacing reference ${i + 1}:`, {
-        error,
-        hash: ref.hash,
-        resultLengthBefore: beforeLength,
-        chunkLength,
-        tagLength,
-        expectedLength,
-        position: start,
-      });
       throw error;
     }
   }
-
-  console.log("[assembleXmlData] Assembly complete:", {
-    finalLength: result.length,
-    finalSizeMB: (result.length / (1024 * 1024)).toFixed(2),
-  });
 
   return result;
 }
@@ -271,37 +210,11 @@ async function fetchSingleChunk(
   const effectiveOperator =
     reference.operator || inheritedOperator || defaultOperator;
 
-  console.log("[fetchSingleChunk] Fetching chunk:", {
-    hash: reference.hash,
-    version: reference.version,
-    source: reference.source || "chunked",
-    effectiveOperator,
-    index: reference.index,
-  });
-
-  let chunkContent: string;
-
   if (reference.source === "d") {
-    chunkContent = await fetchFromDirectStorage(
-      reference,
-      effectiveOperator,
-      client
-    );
+    return await fetchFromDirectStorage(reference, effectiveOperator, client);
   } else {
-    chunkContent = await fetchFromChunkedStorage(
-      reference,
-      effectiveOperator,
-      client
-    );
+    return await fetchFromChunkedStorage(reference, effectiveOperator, client);
   }
-
-  console.log("[fetchSingleChunk] Chunk fetched:", {
-    hash: reference.hash,
-    length: chunkContent.length,
-    sizeMB: (chunkContent.length / (1024 * 1024)).toFixed(2),
-  });
-
-  return chunkContent;
 }
 
 /**
@@ -450,29 +363,13 @@ export async function resolveXmlRecursive(
   visited: Set<string> = new Set(),
   inheritedOperator?: string
 ): Promise<string> {
-  const currentDepth = MAX_XML_DEPTH - maxDepth;
-
-  console.log(`[resolveXmlRecursive] Depth ${currentDepth}/${MAX_XML_DEPTH}:`, {
-    contentLength: content.length,
-    contentSizeMB: (content.length / (1024 * 1024)).toFixed(2),
-    maxDepth,
-    visitedCount: visited.size,
-    hasXmlReferences: containsXmlReferences(content),
-  });
-
   // Base case 1: Depth limit reached
   if (maxDepth <= 0) {
-    console.log(
-      `[resolveXmlRecursive] Depth limit reached at depth ${currentDepth}`
-    );
     return content;
   }
 
   // Base case 2: No XML references in content
   if (!containsXmlReferences(content)) {
-    console.log(
-      `[resolveXmlRecursive] No XML references found at depth ${currentDepth}`
-    );
     return content;
   }
 
@@ -480,15 +377,8 @@ export async function resolveXmlRecursive(
   const references = parseNetReferences(content);
 
   if (references.length === 0) {
-    console.log(
-      `[resolveXmlRecursive] No references parsed at depth ${currentDepth}`
-    );
     return content;
   }
-
-  console.log(
-    `[resolveXmlRecursive] Processing ${references.length} references at depth ${currentDepth}`
-  );
 
   // Fetch and recursively resolve chunks in batches to balance speed and rate limits
   const resolvedChunks: string[] = [];
@@ -503,12 +393,6 @@ export async function resolveXmlRecursive(
       references.length
     );
     const batch = references.slice(batchStart, batchEnd);
-
-    console.log(
-      `[resolveXmlRecursive] Processing batch ${batchStart}-${
-        batchEnd - 1
-      } of ${references.length} at depth ${currentDepth}`
-    );
 
     // Process batch in parallel
     const batchResults = await Promise.all(
@@ -546,15 +430,6 @@ export async function resolveXmlRecursive(
             client
           );
 
-          console.log(
-            `[resolveXmlRecursive] Fetched chunk ${index} at depth ${currentDepth}:`,
-            {
-              hash: ref.hash,
-              chunkLength: chunkContent.length,
-              chunkSizeMB: (chunkContent.length / (1024 * 1024)).toFixed(2),
-            }
-          );
-
           // Recursively resolve the chunk's content, passing this reference's operator as inherited
           const resolvedContent = await resolveXmlRecursive(
             chunkContent,
@@ -563,17 +438,6 @@ export async function resolveXmlRecursive(
             maxDepth - 1,
             newVisited,
             effectiveOperator // Pass the effective operator to children
-          );
-
-          console.log(
-            `[resolveXmlRecursive] Resolved chunk ${index} at depth ${currentDepth}:`,
-            {
-              originalLength: chunkContent.length,
-              resolvedLength: resolvedContent.length,
-              resolvedSizeMB: (resolvedContent.length / (1024 * 1024)).toFixed(
-                2
-              ),
-            }
           );
 
           return resolvedContent;
@@ -591,34 +455,8 @@ export async function resolveXmlRecursive(
     resolvedChunks.push(...batchResults);
   }
 
-  console.log(
-    `[resolveXmlRecursive] Assembling data at depth ${currentDepth}:`,
-    {
-      contentLength: content.length,
-      resolvedChunksCount: resolvedChunks.length,
-      totalResolvedChunksSize: resolvedChunks.reduce(
-        (sum, chunk) => sum + chunk.length,
-        0
-      ),
-      totalResolvedChunksSizeMB: (
-        resolvedChunks.reduce((sum, chunk) => sum + chunk.length, 0) /
-        (1024 * 1024)
-      ).toFixed(2),
-      referencesCount: references.length,
-    }
-  );
-
   // Assemble content with resolved chunks
   const assembled = assembleXmlData(content, resolvedChunks, references);
-
-  console.log(
-    `[resolveXmlRecursive] Assembly complete at depth ${currentDepth}:`,
-    {
-      originalLength: content.length,
-      assembledLength: assembled.length,
-      assembledSizeMB: (assembled.length / (1024 * 1024)).toFixed(2),
-    }
-  );
 
   return assembled;
 }

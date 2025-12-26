@@ -82,14 +82,6 @@ export function useXmlStorage({
         throw new Error(`Chain not found for chainId: ${chainId}`);
       }
 
-      console.log("[useXmlStorage] Starting XML resolution:", {
-        metadataStringLength: metadataString.length,
-        referencesCount: references.length,
-        chainId,
-        operatorAddress,
-        maxDepth: MAX_XML_DEPTH,
-      });
-
       // Use recursive resolver for multi-layer XML support
       const resolved = await resolveXmlRecursive(
         metadataString,
@@ -98,12 +90,6 @@ export function useXmlStorage({
         MAX_XML_DEPTH,
         new Set()
       );
-
-      console.log("[useXmlStorage] XML resolution complete:", {
-        originalLength: metadataString.length,
-        resolvedLength: resolved.length,
-        resolvedSizeMB: (resolved.length / (1024 * 1024)).toFixed(2),
-      });
 
       // Store resolved content as a single "chunk"
       setChunks([resolved]);

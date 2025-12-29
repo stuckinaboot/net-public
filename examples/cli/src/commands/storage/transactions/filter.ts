@@ -1,11 +1,17 @@
 import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
+import { WriteTransactionConfig } from "@net-protocol/core";
+import {
+  STORAGE_CONTRACT,
+  CHUNKED_STORAGE_CONTRACT,
+} from "@net-protocol/storage";
 import {
   checkNormalStorageExists,
   checkChunkedStorageExists,
   checkXmlChunksExist,
   checkXmlMetadataExists,
 } from "../storage/check";
+import { extractTypedArgsFromTransaction } from "../utils";
 import type {
   TransactionWithId,
   FilterExistingTransactionsParams,
@@ -90,22 +96,36 @@ export async function filterExistingTransactions(
 /**
  * Filter XML storage transactions more efficiently
  * Checks all chunks in parallel, then filters
+ * Accepts WriteTransactionConfig[] directly and derives chunkedHashes internally
  * Accepts JSON object as parameter
  */
 export async function filterXmlStorageTransactions(
   params: FilterXmlStorageTransactionsParams
 ): Promise<{
-  toSend: TransactionWithId[];
-  skipped: TransactionWithId[];
+  toSend: WriteTransactionConfig[];
+  skipped: WriteTransactionConfig[];
 }> {
-  const { storageClient, transactions, operatorAddress, chunkedHashes } =
-    params;
-  // Separate metadata and chunk transactions
-  const metadataTx = transactions.find((tx) => tx.type === "metadata");
-  const chunkTxs = transactions.filter((tx) => tx.type === "chunked");
+  const { storageClient, transactions, operatorAddress } = params;
 
-  const toSend: TransactionWithId[] = [];
-  const skipped: TransactionWithId[] = [];
+  // Separate metadata and chunk transactions by contract address
+  const metadataTx = transactions.find(
+    (tx) => tx.to.toLowerCase() === STORAGE_CONTRACT.address.toLowerCase()
+  );
+  const chunkTxs = transactions.filter(
+    (tx) => tx.to.toLowerCase() === CHUNKED_STORAGE_CONTRACT.address.toLowerCase()
+  );
+
+  // Derive chunkedHashes internally from WriteTransactionConfig[] args
+  const chunkedHashes: string[] = [];
+  for (const tx of chunkTxs) {
+    const typedArgs = extractTypedArgsFromTransaction(tx, "chunked");
+    if (typedArgs.type === "chunked") {
+      chunkedHashes.push(typedArgs.args.hash); // Content-based hash (keccak256(xmlChunk))
+    }
+  }
+
+  const toSend: WriteTransactionConfig[] = [];
+  const skipped: WriteTransactionConfig[] = [];
 
   // Check which chunks exist (parallel check)
   const existingChunks = await checkXmlChunksExist({
@@ -116,33 +136,43 @@ export async function filterXmlStorageTransactions(
 
   // Filter chunk transactions
   for (const tx of chunkTxs) {
-    if (existingChunks.has(tx.id)) {
-      skipped.push(tx);
-    } else {
-      toSend.push(tx);
+    const typedArgs = extractTypedArgsFromTransaction(tx, "chunked");
+    if (typedArgs.type === "chunked") {
+      const hash = typedArgs.args.hash;
+      if (existingChunks.has(hash)) {
+        skipped.push(tx);
+      } else {
+        toSend.push(tx);
+      }
     }
   }
 
   // Check metadata (if all chunks exist and match, skip metadata too)
   if (metadataTx) {
-    const allChunksExist = chunkedHashes.every((hash) =>
+    const allChunksExist = chunkedHashes.length > 0 && chunkedHashes.every((hash) =>
       existingChunks.has(hash)
     );
     if (allChunksExist) {
       // Verify metadata matches
-      if (metadataTx.typedArgs.type === "metadata") {
-        const expectedMetadata = hexToString(metadataTx.typedArgs.args.value);
-        const check = await checkXmlMetadataExists({
-          storageClient,
-          storageKey: metadataTx.id,
-          operatorAddress,
-          expectedMetadata,
-        });
-        if (check.exists && check.matches) {
-          skipped.push(metadataTx);
-        } else {
-          toSend.unshift(metadataTx); // Metadata first
+      try {
+        const typedArgs = extractTypedArgsFromTransaction(metadataTx, "metadata");
+        if (typedArgs.type === "metadata") {
+          const expectedMetadata = hexToString(typedArgs.args.value);
+          const check = await checkXmlMetadataExists({
+            storageClient,
+            storageKey: typedArgs.args.key,
+            operatorAddress,
+            expectedMetadata,
+          });
+          if (check.exists && check.matches) {
+            skipped.push(metadataTx);
+          } else {
+            toSend.unshift(metadataTx); // Metadata first
+          }
         }
+      } catch {
+        // If we can't extract metadata args, include in toSend
+        toSend.unshift(metadataTx);
       }
     } else {
       toSend.unshift(metadataTx); // Metadata first

@@ -97,9 +97,9 @@ export interface FilterExistingTransactionsParams {
  */
 export interface FilterXmlStorageTransactionsParams {
   storageClient: StorageClient;
-  transactions: TransactionWithId[];
+  transactions: WriteTransactionConfig[];
   operatorAddress: string;
-  chunkedHashes: string[];
+  // chunkedHashes removed - derived internally from transaction args
 }
 
 /**

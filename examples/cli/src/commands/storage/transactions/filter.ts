@@ -140,9 +140,9 @@ export async function filterXmlStorageTransactions(
     if (typedArgs.type === "chunked") {
       const hash = typedArgs.args.hash;
       if (existingChunks.has(hash)) {
-        skipped.push(tx);
-      } else {
-        toSend.push(tx);
+      skipped.push(tx);
+    } else {
+      toSend.push(tx);
       }
     }
   }
@@ -158,17 +158,17 @@ export async function filterXmlStorageTransactions(
         const typedArgs = extractTypedArgsFromTransaction(metadataTx, "metadata");
         if (typedArgs.type === "metadata") {
           const expectedMetadata = hexToString(typedArgs.args.value);
-          const check = await checkXmlMetadataExists({
-            storageClient,
+        const check = await checkXmlMetadataExists({
+          storageClient,
             storageKey: typedArgs.args.key,
-            operatorAddress,
-            expectedMetadata,
-          });
-          if (check.exists && check.matches) {
-            skipped.push(metadataTx);
-          } else {
-            toSend.unshift(metadataTx); // Metadata first
-          }
+          operatorAddress,
+          expectedMetadata,
+        });
+        if (check.exists && check.matches) {
+          skipped.push(metadataTx);
+        } else {
+          toSend.unshift(metadataTx); // Metadata first
+        }
         }
       } catch {
         // If we can't extract metadata args, include in toSend

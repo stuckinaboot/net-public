@@ -50,6 +50,7 @@ export async function fundBackendWallet(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      chainId: params.chainId,
       operatorAddress,
       secretKey,
     }),
@@ -93,6 +94,7 @@ export async function fundBackendWallet(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      chainId: params.chainId,
       paymentTxHash: paymentTxHash as Hash,
       operatorAddress,
       secretKey,

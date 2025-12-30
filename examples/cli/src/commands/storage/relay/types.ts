@@ -67,6 +67,7 @@ export interface RetryConfig {
  */
 export interface FundBackendWalletParams {
   apiUrl: string;
+  chainId: number;
   operatorAddress: Address;
   secretKey: string;
   fetchWithPayment: typeof fetch;
@@ -82,6 +83,7 @@ export interface FundBackendWalletParams {
  */
 export interface SubmitTransactionsViaRelayParams {
   apiUrl: string;
+  chainId: number;
   paymentTxHash: Hash;
   operatorAddress: Address;
   secretKey: string;
@@ -93,6 +95,7 @@ export interface SubmitTransactionsViaRelayParams {
  */
 export interface RetryFailedTransactionsParams {
   apiUrl: string;
+  chainId: number;
   paymentTxHash: Hash;
   operatorAddress: Address;
   secretKey: string;

@@ -131,6 +131,7 @@ export async function retryFailedTransactions(
 ): Promise<RelaySubmitResult> {
   const {
     apiUrl,
+    chainId,
     paymentTxHash,
     operatorAddress,
     secretKey,
@@ -182,6 +183,7 @@ export async function retryFailedTransactions(
     try {
       const retryResult = await submitTransactionsViaRelay({
         apiUrl,
+        chainId,
         paymentTxHash,
         operatorAddress,
         secretKey,

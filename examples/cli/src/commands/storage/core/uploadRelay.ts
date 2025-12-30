@@ -198,6 +198,7 @@ export async function uploadFileWithRelay(
   // 6. Fund backend wallet
   const { paymentTxHash, backendWalletAddress } = await fundBackendWallet({
     apiUrl: options.apiUrl,
+    chainId: options.chainId,
     operatorAddress: userAddress,
     secretKey: options.secretKey,
     fetchWithPayment,
@@ -283,6 +284,7 @@ export async function uploadFileWithRelay(
 
         const submitResult = await submitTransactionsViaRelay({
           apiUrl: options.apiUrl,
+          chainId: options.chainId,
           paymentTxHash, // Same paymentTxHash for all batches
           operatorAddress: userAddress,
           secretKey: options.secretKey,
@@ -300,6 +302,7 @@ export async function uploadFileWithRelay(
           try {
             const retryResult = await retryFailedTransactions({
               apiUrl: options.apiUrl,
+              chainId: options.chainId,
               paymentTxHash,
               operatorAddress: userAddress,
               secretKey: options.secretKey,

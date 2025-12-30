@@ -17,7 +17,7 @@ import type {
 export async function submitTransactionsViaRelay(
   params: SubmitTransactionsViaRelayParams
 ): Promise<RelaySubmitResult> {
-  const { apiUrl, paymentTxHash, operatorAddress, secretKey, transactions } =
+  const { apiUrl, chainId, paymentTxHash, operatorAddress, secretKey, transactions } =
     params;
 
   const response = await fetch(`${apiUrl}/api/relay/submit`, {
@@ -26,6 +26,7 @@ export async function submitTransactionsViaRelay(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      chainId,
       paymentTxHash,
       operatorAddress,
       secretKey,

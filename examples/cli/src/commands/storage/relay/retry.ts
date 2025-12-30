@@ -209,9 +209,6 @@ export async function retryFailedTransactions(
             error: err.error,
           }))
         );
-        // Update counts
-        lastResult.transactionsSent += retryResult.transactionsSent;
-        lastResult.transactionsFailed = retryResult.failedIndexes.length;
       } else {
         lastResult = {
           ...retryResult,

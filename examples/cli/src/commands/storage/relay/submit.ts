@@ -13,9 +13,8 @@ interface SubmitResponse {
   successfulIndexes: number[];
   failedIndexes: number[];
   errors: { index: number; error: string }[];
-  transactionsSent: number;
-  transactionsFailed: number;
   backendWalletAddress: Address;
+  appFeeTransactionHash: Hash;
   error?: string;
 }
 
@@ -73,7 +72,9 @@ export async function submitTransactionsViaRelay(
   const result = (await response.json()) as SubmitResponse | ErrorResponse;
   if (!result.success || "error" in result) {
     throw new Error(
-      `Relay submit failed: ${("error" in result ? result.error : null) || "Unknown error"}`
+      `Relay submit failed: ${
+        ("error" in result ? result.error : null) || "Unknown error"
+      }`
     );
   }
 
@@ -82,9 +83,6 @@ export async function submitTransactionsViaRelay(
     successfulIndexes: result.successfulIndexes || [],
     failedIndexes: result.failedIndexes || [],
     errors: result.errors || [],
-    transactionsSent: result.transactionsSent || 0,
-    transactionsFailed: result.transactionsFailed || 0,
     backendWalletAddress: result.backendWalletAddress as Address,
   };
 }
-

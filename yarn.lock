@@ -6302,7 +6302,7 @@ __metadata:
     dotenv: "npm:^17.2.3"
     tsx: "npm:^4.21.0"
     typescript: "npm:^5.6.3"
-    viem: "npm:^2.21.45"
+    viem: "npm:^2.31.4"
     vitest: "npm:^1.0.0"
   bin:
     net-cli: ./src/cli/index.ts

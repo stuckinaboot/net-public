@@ -47,8 +47,6 @@ export interface RelaySubmitResult {
   successfulIndexes: number[];
   failedIndexes: number[];
   errors: { index: number; error: string }[];
-  transactionsSent: number;
-  transactionsFailed: number;
   backendWalletAddress: Address;
 }
 

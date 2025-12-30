@@ -326,7 +326,7 @@ export async function uploadFileWithRelay(
         });
 
         chunkTransactionHashes.push(...submitResult.transactionHashes);
-        chunksSent += submitResult.transactionsSent;
+        chunksSent += submitResult.successfulIndexes.length;
 
         // 12. Retry failed chunks in this batch if any
         if (submitResult.failedIndexes.length > 0) {
@@ -347,7 +347,7 @@ export async function uploadFileWithRelay(
 
             // Merge retry results
             chunkTransactionHashes.push(...retryResult.transactionHashes);
-            chunksSent += retryResult.transactionsSent;
+            chunksSent += retryResult.successfulIndexes.length;
 
             if (retryResult.failedIndexes.length > 0) {
               errors.push(
@@ -379,7 +379,7 @@ export async function uploadFileWithRelay(
         ) {
           // Get the hashes from this batch
           const batchHashes = chunkTransactionHashes.slice(
-            -submitResult.transactionsSent
+            -submitResult.successfulIndexes.length
           );
           if (batchHashes.length > 0) {
             try {

@@ -87,7 +87,7 @@ function estimateRequestSize(transactions: WriteTransactionConfig[]): number {
  * - Count limit: 100 transactions per batch
  * - Size limit is the constraining factor for large transactions
  */
-function batchTransactions(
+export function batchTransactions(
   transactions: WriteTransactionConfig[]
 ): WriteTransactionConfig[][] {
   const batches: WriteTransactionConfig[][] = [];

@@ -15,6 +15,7 @@ import { checkXmlMetadataExists } from "../storage/check";
 import { extractTypedArgsFromTransaction } from "../utils";
 import { createRelayX402Client } from "../relay/x402Client";
 import { fundBackendWallet } from "../relay/fund";
+import { checkBackendWalletBalance } from "../relay/balance";
 import { submitTransactionsViaRelay } from "../relay/submit";
 import { retryFailedTransactions } from "../relay/retry";
 import { waitForConfirmations } from "../relay/confirmations";
@@ -69,7 +70,7 @@ function estimateTransactionSize(tx: WriteTransactionConfig): number {
  * Estimate the total request size for a batch of transactions
  */
 function estimateRequestSize(transactions: WriteTransactionConfig[]): number {
-  // Base overhead: paymentTxHash (~66 bytes), operatorAddress (~42 bytes),
+  // Base overhead: operatorAddress (~42 bytes),
   // secretKey (~50-200 bytes), JSON structure (~100 bytes)
   const baseOverhead = 300;
   const transactionsSize = transactions.reduce(
@@ -195,15 +196,49 @@ export async function uploadFileWithRelay(
   // 5. Setup x402 client
   const { fetchWithPayment, httpClient } = createRelayX402Client(userAccount);
 
-  // 6. Fund backend wallet
-  const { paymentTxHash, backendWalletAddress } = await fundBackendWallet({
-    apiUrl: options.apiUrl,
-    chainId: options.chainId,
-    operatorAddress: userAddress,
-    secretKey: options.secretKey,
-    fetchWithPayment,
-    httpClient,
-  });
+  // 6. Check backend wallet balance and fund if needed
+  // Check balance first to avoid unnecessary payments
+  let backendWalletAddress: Address | undefined;
+  let shouldFund = true;
+  
+  try {
+    const balanceResult = await checkBackendWalletBalance({
+      apiUrl: options.apiUrl,
+      chainId: options.chainId,
+      operatorAddress: userAddress,
+      secretKey: options.secretKey,
+    });
+    backendWalletAddress = balanceResult.backendWalletAddress;
+    
+    // Only fund if balance is insufficient
+    shouldFund = !balanceResult.sufficientBalance;
+  } catch (error) {
+    // If balance check fails, fall back to funding (for backwards compatibility)
+    // This handles cases where the balance endpoint might not be available
+    shouldFund = true;
+  }
+
+  // Fund backend wallet only if balance is insufficient
+  // This ensures backendWalletAddress is always set
+  if (shouldFund) {
+    const fundResult = await fundBackendWallet({
+      apiUrl: options.apiUrl,
+      chainId: options.chainId,
+      operatorAddress: userAddress,
+      secretKey: options.secretKey,
+      fetchWithPayment,
+      httpClient,
+    });
+    backendWalletAddress = fundResult.backendWalletAddress;
+  }
+  
+  // TypeScript assertion: backendWalletAddress is guaranteed to be set at this point
+  // (either from balance check or fund call)
+  if (!backendWalletAddress) {
+    throw new Error("Failed to determine backend wallet address");
+  }
+  
+  // backendWalletAddress is now guaranteed to be set (either from balance check or fund call)
 
   // 7. Prepare chunks with backendWalletAddress as operator (chunks submitted via relay)
   // Use StorageClient.prepareXmlStorage() to get chunk transactions
@@ -285,7 +320,6 @@ export async function uploadFileWithRelay(
         const submitResult = await submitTransactionsViaRelay({
           apiUrl: options.apiUrl,
           chainId: options.chainId,
-          paymentTxHash, // Same paymentTxHash for all batches
           operatorAddress: userAddress,
           secretKey: options.secretKey,
           transactions: batch,
@@ -303,7 +337,6 @@ export async function uploadFileWithRelay(
             const retryResult = await retryFailedTransactions({
               apiUrl: options.apiUrl,
               chainId: options.chainId,
-              paymentTxHash,
               operatorAddress: userAddress,
               secretKey: options.secretKey,
               failedIndexes: submitResult.failedIndexes,

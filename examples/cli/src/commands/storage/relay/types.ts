@@ -84,7 +84,6 @@ export interface FundBackendWalletParams {
 export interface SubmitTransactionsViaRelayParams {
   apiUrl: string;
   chainId: number;
-  paymentTxHash: Hash;
   operatorAddress: Address;
   secretKey: string;
   transactions: WriteTransactionConfig[];
@@ -96,7 +95,6 @@ export interface SubmitTransactionsViaRelayParams {
 export interface RetryFailedTransactionsParams {
   apiUrl: string;
   chainId: number;
-  paymentTxHash: Hash;
   operatorAddress: Address;
   secretKey: string;
   failedIndexes: number[];

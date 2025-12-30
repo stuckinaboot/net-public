@@ -5,6 +5,29 @@ import type {
 } from "./types";
 
 /**
+ * Response from /api/relay/submit endpoint
+ */
+interface SubmitResponse {
+  success: boolean;
+  transactionHashes: Hash[];
+  successfulIndexes: number[];
+  failedIndexes: number[];
+  errors: { index: number; error: string }[];
+  transactionsSent: number;
+  transactionsFailed: number;
+  backendWalletAddress: Address;
+  error?: string;
+}
+
+/**
+ * Error response from API endpoints
+ */
+interface ErrorResponse {
+  success: false;
+  error: string;
+}
+
+/**
  * Submit transactions via relay service
  *
  * Calls /api/relay/submit with transactions and returns result
@@ -17,8 +40,7 @@ import type {
 export async function submitTransactionsViaRelay(
   params: SubmitTransactionsViaRelayParams
 ): Promise<RelaySubmitResult> {
-  const { apiUrl, chainId, paymentTxHash, operatorAddress, secretKey, transactions } =
-    params;
+  const { apiUrl, chainId, operatorAddress, secretKey, transactions } = params;
 
   const response = await fetch(`${apiUrl}/api/relay/submit`, {
     method: "POST",
@@ -27,7 +49,6 @@ export async function submitTransactionsViaRelay(
     },
     body: JSON.stringify({
       chainId,
-      paymentTxHash,
       operatorAddress,
       secretKey,
       transactions: transactions.map((tx) => ({
@@ -41,7 +62,7 @@ export async function submitTransactionsViaRelay(
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = (await response.json()) as ErrorResponse;
     throw new Error(
       `Relay submit endpoint failed: ${response.status} ${JSON.stringify(
         errorData
@@ -49,10 +70,10 @@ export async function submitTransactionsViaRelay(
     );
   }
 
-  const result = await response.json();
-  if (!result.success) {
+  const result = (await response.json()) as SubmitResponse | ErrorResponse;
+  if (!result.success || "error" in result) {
     throw new Error(
-      `Relay submit failed: ${result.error || "Unknown error"}`
+      `Relay submit failed: ${("error" in result ? result.error : null) || "Unknown error"}`
     );
   }
 

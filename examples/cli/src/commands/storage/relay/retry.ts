@@ -132,7 +132,6 @@ export async function retryFailedTransactions(
   const {
     apiUrl,
     chainId,
-    paymentTxHash,
     operatorAddress,
     secretKey,
     failedIndexes: initialFailedIndexes,
@@ -184,7 +183,6 @@ export async function retryFailedTransactions(
       const retryResult = await submitTransactionsViaRelay({
         apiUrl,
         chainId,
-        paymentTxHash,
         operatorAddress,
         secretKey,
         transactions: failedTransactions,

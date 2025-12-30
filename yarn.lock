@@ -3223,6 +3223,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@x402/core@npm:2.1.0, @x402/core@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@x402/core@npm:2.1.0"
+  dependencies:
+    zod: "npm:^3.24.2"
+  checksum: a4b742259e9505f4ae4f513f19673885474338b1a34fcf060218d2ba30ccdda2bf48c15a8026003c72232258d4029e9ba574a90cf054b35bdf94e942ca610208
+  languageName: node
+  linkType: hard
+
+"@x402/evm@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@x402/evm@npm:2.1.0"
+  dependencies:
+    "@x402/core": "npm:2.1.0"
+    viem: "npm:^2.39.3"
+    zod: "npm:^3.24.2"
+  checksum: df15ab8e08dcff98c38f8c7bbb1155675b5d2401472e5afb9216043d4d26e4bf4992a8d852c4964897a4607bee3accd50dfa78021d82ee8ed17d51e694e6c719
+  languageName: node
+  linkType: hard
+
+"@x402/fetch@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@x402/fetch@npm:2.1.0"
+  dependencies:
+    "@x402/core": "npm:^2.1.0"
+    viem: "npm:^2.39.3"
+    zod: "npm:^3.24.2"
+  checksum: e122b21d1f7f2cce5185296170e19e57ae5dede596843e8718fe1a7529dbc5168ff6df7af351a96432582c112359292447ca60ad161396e65d0b1d750592c0ef
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^4.0.0":
   version: 4.0.0
   resolution: "abbrev@npm:4.0.0"
@@ -6264,6 +6295,8 @@ __metadata:
     "@net-protocol/core": "npm:*"
     "@net-protocol/storage": "npm:*"
     "@types/node": "npm:^20.17.6"
+    "@x402/evm": "npm:^2.1.0"
+    "@x402/fetch": "npm:^2.1.0"
     chalk: "npm:^5.3.0"
     commander: "npm:^12.1.0"
     dotenv: "npm:^17.2.3"
@@ -8743,7 +8776,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.21.45":
+"viem@npm:^2.21.45, viem@npm:^2.39.3":
   version: 2.43.3
   resolution: "viem@npm:2.43.3"
   dependencies:
@@ -9215,7 +9248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.24.4":
+"zod@npm:^3.24.2, zod@npm:^3.24.4":
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: 5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c

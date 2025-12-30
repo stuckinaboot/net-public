@@ -2,9 +2,11 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { parseCommonOptions } from "../../cli/shared";
 import { uploadFile } from "./core/upload";
+import { uploadFileWithRelay } from "./core/uploadRelay";
 import { previewFile } from "./core/preview";
 import { generateStorageUrl } from "./utils";
 import type { UploadOptions } from "./types";
+import type { UploadWithRelayOptions } from "./relay/types";
 
 /**
  * Register the storage command with the commander program
@@ -229,6 +231,134 @@ export function registerStorageCommand(program: Command): void {
       }
     });
 
+  // Upload-relay subcommand (relay upload via x402)
+  const uploadRelayCommand = new Command("upload-relay")
+    .description("Upload files to Net Storage via x402 relay (backend pays gas for chunks)")
+    .requiredOption("--file <path>", "Path to file to upload")
+    .requiredOption("--key <key>", "Storage key (filename/identifier)")
+    .requiredOption("--text <text>", "Text description/filename")
+    .requiredOption(
+      "--api-url <url>",
+      "Backend API URL (e.g., http://localhost:3000)"
+    )
+    .requiredOption(
+      "--secret-key <key>",
+      "Secret key for backend wallet derivation. Can also be set via X402_SECRET_KEY env var"
+    )
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option(
+      "--chain-id <id>",
+      "Chain ID (8453 for Base, 1 for Ethereum, etc.). Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL (can also be set via NET_RPC_URL env var)"
+    )
+    .action(async (options) => {
+      // Parse common options (private-key, chain-id, rpc-url)
+      const commonOptions = parseCommonOptions({
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+      });
+
+      // Parse secret key from options or env
+      const secretKey =
+        options.secretKey || process.env.X402_SECRET_KEY;
+      if (!secretKey) {
+        console.error(
+          chalk.red(
+            "Error: --secret-key is required or set X402_SECRET_KEY environment variable"
+          )
+        );
+        process.exit(1);
+      }
+
+      const uploadRelayOptions: UploadWithRelayOptions = {
+        filePath: options.file,
+        storageKey: options.key,
+        text: options.text,
+        privateKey: commonOptions.privateKey,
+        chainId: commonOptions.chainId,
+        rpcUrl: commonOptions.rpcUrl,
+        apiUrl: options.apiUrl,
+        secretKey,
+      };
+
+      try {
+        console.log(chalk.blue(`📁 Reading file: ${options.file}`));
+        console.log(chalk.blue(`🔗 Using relay API: ${options.apiUrl}`));
+        const result = await uploadFileWithRelay(uploadRelayOptions);
+
+        // Generate storage URL (using user address, not backend wallet)
+        const { privateKeyToAccount } = await import("viem/accounts");
+        const userAccount = privateKeyToAccount(commonOptions.privateKey);
+        const storageUrl = generateStorageUrl(
+          userAccount.address,
+          commonOptions.chainId,
+          options.key
+        );
+
+        if (result.success) {
+          console.log(
+            chalk.green(
+              `✓ File uploaded successfully via relay!\n  Storage Key: ${
+                options.key
+              }\n  Top-Level Hash: ${result.topLevelHash}\n  Chunks Sent: ${
+                result.chunksSent
+              }\n  Chunks Skipped: ${
+                result.chunksSkipped
+              }\n  Metadata Submitted: ${
+                result.metadataSubmitted ? "Yes" : "No (already exists)"
+              }\n  Backend Wallet: ${result.backendWalletAddress}\n  Chunk Transaction Hashes: ${
+                result.chunkTransactionHashes.length > 0
+                  ? result.chunkTransactionHashes.join(", ")
+                  : "None"
+              }${
+                result.metadataTransactionHash
+                  ? `\n  Metadata Transaction Hash: ${result.metadataTransactionHash}`
+                  : ""
+              }${
+                storageUrl ? `\n  Storage URL: ${chalk.cyan(storageUrl)}` : ""
+              }`
+            )
+          );
+          process.exit(0);
+        } else {
+          console.error(
+            chalk.red(
+              `✗ Upload completed with errors\n  Chunks Sent: ${
+                result.chunksSent
+              }\n  Chunks Skipped: ${
+                result.chunksSkipped
+              }\n  Metadata Submitted: ${
+                result.metadataSubmitted ? "Yes" : "No"
+              }\n  Errors: ${
+                result.errors
+                  ? result.errors.map((e) => e.message).join(", ")
+                  : "Unknown error"
+              }`
+            )
+          );
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error(
+          chalk.red(
+            `Upload via relay failed: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          )
+        );
+        process.exit(1);
+      }
+    });
+
   storageCommand.addCommand(uploadCommand);
   storageCommand.addCommand(previewCommand);
+  storageCommand.addCommand(uploadRelayCommand);
 }

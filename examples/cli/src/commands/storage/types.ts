@@ -195,3 +195,14 @@ export interface PreviewResult {
   transactionsToSend: number; // Transactions that would be sent
   transactionsSkipped: number; // Transactions already stored
 }
+
+/**
+ * Re-export relay types for convenience
+ */
+export type {
+  UploadWithRelayOptions,
+  UploadWithRelayResult,
+  RelayFundResult,
+  RelaySubmitResult,
+  RetryConfig,
+} from "./relay/types";

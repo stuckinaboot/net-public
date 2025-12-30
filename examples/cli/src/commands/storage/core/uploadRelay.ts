@@ -190,7 +190,7 @@ export async function uploadFileWithRelay(
   const userWalletClient = createWalletClient({
     account: userAccount,
     chain: publicClient.chain!,
-    transport: http(rpcUrls[0]),
+    transport: http(rpcUrls),
   });
 
   // 5. Setup x402 client

@@ -16,18 +16,10 @@ export function createRelayX402Client(
   account: LocalAccount,
   chainId?: number
 ) {
-  console.log("🔧 Setting up x402 client", {
-    operatorAddress: account.address,
-    chainId: chainId || "unknown",
-    note: "x402 client will determine chain from payment request",
-  });
-
   const client = new x402Client();
   registerExactEvmScheme(client, { signer: account });
   const fetchWithPayment = wrapFetchWithPayment(fetch, client);
   const httpClient = new x402HTTPClient(client);
-
-  console.log("✓ x402 client configured");
 
   return { fetchWithPayment, httpClient };
 }

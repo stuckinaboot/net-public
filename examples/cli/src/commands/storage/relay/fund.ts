@@ -108,12 +108,6 @@ export async function fundBackendWallet(
         secretKey,
       }),
     });
-
-    console.log("📡 Fund request response", {
-      status: fundResponse.status,
-      statusText: fundResponse.statusText,
-      headers: Object.fromEntries(fundResponse.headers.entries()),
-    });
   } catch (error) {
     console.error("❌ Fund request failed", {
       error: error instanceof Error ? error.message : String(error),
@@ -125,29 +119,14 @@ export async function fundBackendWallet(
 
   const fundData = (await fundResponse.json()) as FundResponse | ErrorResponse;
 
-  console.log("📦 Fund response data", {
-    status: fundResponse.status,
-    data: fundData,
-  });
-
   // Handle 402 Payment Required
   if (fundResponse.status === 402) {
-    console.warn("⚠️  Received 402 Payment Required", {
-      chainId,
-      responseData: fundData,
-      note: "This may indicate payment verification failed",
-    });
-
     // Check if payment was actually processed despite 402
     if ("payer" in fundData && fundData.payer) {
-      console.log("✓ Payment appears to have been processed despite 402");
+      // Payment appears to have been processed
     } else if ("success" in fundData && fundData.success) {
-      console.log("✓ Payment appears to have been processed despite 402");
+      // Payment appears to have been processed
     } else {
-      console.error("❌ Payment failed - 402 with no payment data", {
-        chainId,
-        error: fundData,
-      });
       throw new Error(
         `Fund endpoint returned 402 Payment Required: ${JSON.stringify(
           fundData
@@ -155,11 +134,6 @@ export async function fundBackendWallet(
       );
     }
   } else if (!fundResponse.ok) {
-    console.error("❌ Fund endpoint failed", {
-      status: fundResponse.status,
-      chainId,
-      error: fundData,
-    });
     throw new Error(
       `Fund endpoint failed: ${fundResponse.status} ${JSON.stringify(fundData)}`
     );
@@ -167,10 +141,6 @@ export async function fundBackendWallet(
 
   // Extract payment transaction hash from response headers
   const paymentTxHash = extractPaymentTxHash(fundResponse, httpClient);
-  console.log("🔍 Extracted payment transaction hash", {
-    paymentTxHash: paymentTxHash || "not found",
-    chainId,
-  });
 
   if (!paymentTxHash) {
     throw new Error(
@@ -179,18 +149,10 @@ export async function fundBackendWallet(
   }
 
   // Step 2: Wait for payment confirmation
-  console.log("⏳ Waiting for payment confirmation (2s)...");
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // Step 3: Call /api/relay/fund/verify (Verification & Funding)
-  const verifyUrl = `${apiUrl}/api/relay/fund/verify`;
-  console.log("✅ Verifying payment", {
-    url: verifyUrl,
-    chainId,
-    paymentTxHash,
-  });
-
-  const verifyFundResponse = await fetch(verifyUrl, {
+  const verifyFundResponse = await fetch(`${apiUrl}/api/relay/fund/verify`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -205,11 +167,6 @@ export async function fundBackendWallet(
 
   if (!verifyFundResponse.ok) {
     const errorData = (await verifyFundResponse.json()) as ErrorResponse;
-    console.error("❌ Fund verify endpoint failed", {
-      status: verifyFundResponse.status,
-      chainId,
-      error: errorData,
-    });
     throw new Error(
       `Fund verify endpoint failed: ${
         verifyFundResponse.status
@@ -219,9 +176,7 @@ export async function fundBackendWallet(
 
   const verifyData = (await verifyFundResponse.json()) as VerifyFundResponse;
   console.log("✓ Payment verified and backend wallet funded", {
-    chainId,
     backendWalletAddress: verifyData.backendWalletAddress,
-    paymentTxHash,
   });
 
   if (!verifyData.success) {

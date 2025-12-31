@@ -195,13 +195,9 @@ export async function uploadFileWithRelay(
   });
 
   // 5. Setup x402 client
-  console.log("🔧 Creating x402 client for payments", {
-    chainId: options.chainId,
-    operatorAddress: userAddress,
-  });
   const { fetchWithPayment, httpClient } = createRelayX402Client(
     userAccount,
-    options.chainId // Pass chainId for logging
+    options.chainId
   );
 
   // 5.5. Create relay session token (sign once, reuse for all batches)

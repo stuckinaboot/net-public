@@ -19,6 +19,7 @@ import { checkBackendWalletBalance } from "../relay/balance";
 import { submitTransactionsViaRelay } from "../relay/submit";
 import { retryFailedTransactions } from "../relay/retry";
 import { waitForConfirmations } from "../relay/confirmations";
+import { createRelaySession } from "../relay/session";
 import type {
   UploadWithRelayOptions,
   UploadWithRelayResult,
@@ -190,17 +191,37 @@ export async function uploadFileWithRelay(
   const userWalletClient = createWalletClient({
     account: userAccount,
     chain: publicClient.chain!,
-    transport: http(rpcUrls),
+    transport: http(rpcUrls[0]), // Use first RPC URL
   });
 
   // 5. Setup x402 client
-  const { fetchWithPayment, httpClient } = createRelayX402Client(userAccount);
+  console.log("🔧 Creating x402 client for payments", {
+    chainId: options.chainId,
+    operatorAddress: userAddress,
+  });
+  const { fetchWithPayment, httpClient } = createRelayX402Client(
+    userAccount,
+    options.chainId // Pass chainId for logging
+  );
+
+  // 5.5. Create relay session token (sign once, reuse for all batches)
+  // Session token is required for all submit requests
+  const sessionResult = await createRelaySession({
+    apiUrl: options.apiUrl,
+    chainId: options.chainId,
+    operatorAddress: userAddress,
+    secretKey: options.secretKey,
+    account: userAccount,
+    expiresIn: 3600, // 1 hour - should be enough for most uploads
+  });
+  const sessionToken = sessionResult.sessionToken;
+  console.log("✓ Session token created (valid for 1 hour)");
 
   // 6. Check backend wallet balance and fund if needed
   // Check balance first to avoid unnecessary payments
   let backendWalletAddress: Address | undefined;
   let shouldFund = true;
-  
+
   try {
     const balanceResult = await checkBackendWalletBalance({
       apiUrl: options.apiUrl,
@@ -209,7 +230,7 @@ export async function uploadFileWithRelay(
       secretKey: options.secretKey,
     });
     backendWalletAddress = balanceResult.backendWalletAddress;
-    
+
     // Only fund if balance is insufficient
     shouldFund = !balanceResult.sufficientBalance;
   } catch (error) {
@@ -231,13 +252,13 @@ export async function uploadFileWithRelay(
     });
     backendWalletAddress = fundResult.backendWalletAddress;
   }
-  
+
   // TypeScript assertion: backendWalletAddress is guaranteed to be set at this point
   // (either from balance check or fund call)
   if (!backendWalletAddress) {
     throw new Error("Failed to determine backend wallet address");
   }
-  
+
   // backendWalletAddress is now guaranteed to be set (either from balance check or fund call)
 
   // 7. Prepare chunks with backendWalletAddress as operator (chunks submitted via relay)
@@ -323,13 +344,35 @@ export async function uploadFileWithRelay(
           operatorAddress: userAddress,
           secretKey: options.secretKey,
           transactions: batch,
+          sessionToken,
         });
 
         chunkTransactionHashes.push(...submitResult.transactionHashes);
         chunksSent += submitResult.successfulIndexes.length;
 
-        // 12. Retry failed chunks in this batch if any
-        if (submitResult.failedIndexes.length > 0) {
+        // Check if ALL transactions in this batch failed
+        if (submitResult.failedIndexes.length === batch.length) {
+          // All transactions failed - likely due to insufficient funds or network issues
+          // Don't retry (would waste app fees) and stop processing subsequent batches
+          const errorMessage =
+            `Batch ${batchIndex + 1}: All ${
+              batch.length
+            } transactions failed. ` +
+            `Likely due to insufficient backend wallet balance or network issues. ` +
+            `Stopping batch processing to avoid wasting app fees.`;
+
+          console.error(`❌ ${errorMessage}`);
+          errors.push(new Error(errorMessage));
+
+          // Stop processing subsequent batches
+          break;
+        }
+
+        // 12. Retry failed chunks in this batch if any (only if some succeeded - partial failure)
+        if (
+          submitResult.failedIndexes.length > 0 &&
+          submitResult.successfulIndexes.length > 0
+        ) {
           // Map failed indexes to actual transactions from this batch
           const failedTxs = submitResult.failedIndexes.map((idx) => batch[idx]);
 
@@ -343,6 +386,7 @@ export async function uploadFileWithRelay(
               originalTransactions: failedTxs,
               storageClient,
               backendWalletAddress,
+              sessionToken,
             });
 
             // Merge retry results

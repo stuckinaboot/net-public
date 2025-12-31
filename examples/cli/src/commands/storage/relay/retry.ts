@@ -139,6 +139,7 @@ export async function retryFailedTransactions(
     storageClient,
     backendWalletAddress,
     config = {},
+    sessionToken,
   } = params;
 
   const retryConfig: Required<RetryConfig> = {
@@ -186,6 +187,7 @@ export async function retryFailedTransactions(
         operatorAddress,
         secretKey,
         transactions: failedTransactions,
+        sessionToken,
       });
 
       // Merge results

@@ -39,7 +39,14 @@ interface ErrorResponse {
 export async function submitTransactionsViaRelay(
   params: SubmitTransactionsViaRelayParams
 ): Promise<RelaySubmitResult> {
-  const { apiUrl, chainId, operatorAddress, secretKey, transactions } = params;
+  const {
+    apiUrl,
+    chainId,
+    operatorAddress,
+    secretKey,
+    transactions,
+    sessionToken,
+  } = params;
 
   const response = await fetch(`${apiUrl}/api/relay/submit`, {
     method: "POST",
@@ -57,6 +64,7 @@ export async function submitTransactionsViaRelay(
           ? { value: tx.value.toString() }
           : {}),
       })),
+      sessionToken,
     }),
   });
 

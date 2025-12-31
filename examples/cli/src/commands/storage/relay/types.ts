@@ -85,6 +85,7 @@ export interface SubmitTransactionsViaRelayParams {
   operatorAddress: Address;
   secretKey: string;
   transactions: WriteTransactionConfig[];
+  sessionToken: string; // Required: session token for authentication
 }
 
 /**
@@ -100,6 +101,7 @@ export interface RetryFailedTransactionsParams {
   storageClient: StorageClient;
   backendWalletAddress: Address;
   config?: RetryConfig;
+  sessionToken: string; // Required: session token for authentication
 }
 
 /**

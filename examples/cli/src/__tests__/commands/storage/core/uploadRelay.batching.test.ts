@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { batchTransactions } from "../../../../commands/storage/core/uploadRelay";
+import { batchTransactions } from "@net-protocol/relay";
 import { STORAGE_CONTRACT } from "@net-protocol/storage";
 import { stringToHex } from "viem";
 import { toBytes32 } from "@net-protocol/core";

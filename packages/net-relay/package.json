@@ -1,0 +1,63 @@
+{
+  "name": "@net-protocol/relay",
+  "version": "0.1.0",
+  "description": "Net Relay SDK for submitting transactions via x402 payment relay service",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "prepack": "../../scripts/prepack-modify-deps.sh",
+    "prepublishOnly": "yarn build",
+    "postpublish": "../../scripts/postpublish-restore-deps.sh",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@net-protocol/core": "file:../net-core",
+    "@x402/evm": "^2.1.0",
+    "@x402/fetch": "^2.1.0",
+    "viem": "^2.31.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/ui": "^1.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stuckinaboot/net-public.git",
+    "directory": "packages/net-relay"
+  },
+  "keywords": [
+    "net",
+    "protocol",
+    "blockchain",
+    "ethereum",
+    "relay",
+    "x402"
+  ],
+  "license": "MIT"
+}

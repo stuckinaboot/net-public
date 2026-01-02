@@ -1,0 +1,67 @@
+import { waitForTransactionReceipt } from "viem/actions";
+import type { Hash } from "viem";
+import type {
+  WaitForConfirmationsParams,
+  ConfirmationResult,
+} from "./types";
+import { DEFAULT_CONFIRMATIONS, DEFAULT_TIMEOUT } from "./constants";
+
+/**
+ * Wait for transaction confirmations
+ *
+ * Uses waitForTransactionReceipt() from viem/actions to wait for
+ * multiple transactions in parallel. Handles timeouts and tracks progress.
+ *
+ * @param params - Confirmation parameters
+ * @returns Array of transaction receipts
+ * @throws Error if timeout occurs or transaction fails
+ */
+export async function waitForConfirmations(
+  params: WaitForConfirmationsParams
+): Promise<ConfirmationResult[]> {
+  const {
+    publicClient,
+    transactionHashes,
+    confirmations = DEFAULT_CONFIRMATIONS,
+    timeout = DEFAULT_TIMEOUT,
+    onProgress,
+  } = params;
+
+  if (transactionHashes.length === 0) {
+    return [];
+  }
+
+  const results: ConfirmationResult[] = [];
+  let confirmed = 0;
+
+  // Wait for all transactions in parallel
+  const promises = transactionHashes.map(async (hash) => {
+    try {
+      const receipt = await waitForTransactionReceipt(publicClient, {
+        hash,
+        confirmations,
+        timeout,
+      });
+
+      confirmed++;
+      if (onProgress) {
+        onProgress(confirmed, transactionHashes.length);
+      }
+
+      return { hash, receipt };
+    } catch (error) {
+      // Transaction failed or timed out
+      throw new Error(
+        `Transaction ${hash} failed or timed out: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  });
+
+  // Wait for all promises
+  const receipts = await Promise.all(promises);
+
+  return receipts;
+}
+

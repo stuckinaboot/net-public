@@ -6,18 +6,18 @@ import type { WalletClient, PublicClient } from "viem";
  * Normal storage transaction args
  */
 export interface NormalStorageArgs {
-  key: `0x${string}`;      // bytes32 storage key
-  text: string;             // filename/description  
-  value: `0x${string}`;     // hex-encoded content
+  key: `0x${string}`; // bytes32 storage key
+  text: string; // filename/description
+  value: `0x${string}`; // hex-encoded content
 }
 
 /**
  * Chunked storage transaction args
  */
 export interface ChunkedStorageArgs {
-  hash: `0x${string}`;       // chunkedStorage hash
-  text: string;              // empty string for chunks
-  chunks: `0x${string}`[];   // empty array for chunks
+  hash: `0x${string}`; // chunkedStorage hash
+  text: string; // empty string for chunks
+  chunks: `0x${string}`[]; // empty array for chunks
 }
 
 /**
@@ -32,7 +32,7 @@ export interface MetadataStorageArgs {
 /**
  * Union type for typed args
  */
-export type StorageTransactionArgs = 
+export type StorageTransactionArgs =
   | { type: "normal"; args: NormalStorageArgs }
   | { type: "chunked"; args: ChunkedStorageArgs }
   | { type: "metadata"; args: MetadataStorageArgs };
@@ -202,7 +202,10 @@ export interface PreviewResult {
 export type {
   UploadWithRelayOptions,
   UploadWithRelayResult,
+} from "./relay/types";
+// Re-export package types directly
+export type {
   RelayFundResult,
   RelaySubmitResult,
   RetryConfig,
-} from "./relay/types";
+} from "@net-protocol/relay";

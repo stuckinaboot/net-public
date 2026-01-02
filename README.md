@@ -34,6 +34,7 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 | --------------------------------------------------------- | ------------------ | ---------------------------------------------- |
 | [@net-protocol/core](./packages/net-core/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/relay](./packages/net-relay/README.md)     | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 
 ## Packages
@@ -61,6 +62,21 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 - Access complete version history of all changes
 - Build applications that need permanent, verifiable data storage
 
+### [@net-protocol/relay](./packages/net-relay/README.md)
+
+**Transaction relay service** - Submit on-chain transactions without holding ETH by paying with USDC via x402.
+
+**What you can do:**
+
+- Submit transactions via relay service (backend wallet pays gas)
+- Fund backend wallets via x402 payments (USDC)
+- Batch transactions automatically to respect API limits
+- Retry failed transactions with exponential backoff
+- Create session tokens for authenticated batch requests
+- Check backend wallet balance before submitting
+- Wait for transaction confirmations on-chain
+- Build applications that allow users to interact without ETH
+
 ### [@net-protocol/feeds](./packages/net-feeds/README.md)
 
 **Topic-based message streams** - Build social feeds, announcements, and community discussions.
@@ -77,9 +93,9 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 ### Installation
 
 ```bash
-npm install @net-protocol/core @net-protocol/storage @net-protocol/feeds wagmi viem react
+npm install @net-protocol/core @net-protocol/storage @net-protocol/relay @net-protocol/feeds wagmi viem react
 # or
-yarn add @net-protocol/core @net-protocol/storage @net-protocol/feeds wagmi viem react
+yarn add @net-protocol/core @net-protocol/storage @net-protocol/relay @net-protocol/feeds wagmi viem react
 ```
 
 ### React Hooks Example
@@ -149,6 +165,7 @@ For detailed usage, API reference, and examples, see the individual package docu
 
 - [@net-protocol/core documentation](./packages/net-core/README.md)
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
+- [@net-protocol/relay documentation](./packages/net-relay/README.md)
 - [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
 
 ## Examples

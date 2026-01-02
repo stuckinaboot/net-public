@@ -13,14 +13,16 @@ import type { Address, Hash } from "viem";
 import { filterXmlStorageTransactions } from "../transactions/filter";
 import { checkXmlMetadataExists } from "../storage/check";
 import { extractTypedArgsFromTransaction } from "../utils";
-import { createRelayX402Client } from "../relay/x402Client";
-import { fundBackendWallet } from "../relay/fund";
-import { checkBackendWalletBalance } from "../relay/balance";
-import { submitTransactionsViaRelay } from "../relay/submit";
+import {
+  createRelayX402Client,
+  fundBackendWallet,
+  checkBackendWalletBalance,
+  submitTransactionsViaRelay,
+  waitForConfirmations,
+  createRelaySession,
+  batchTransactions,
+} from "@net-protocol/relay";
 import { retryFailedTransactions } from "../relay/retry";
-import { waitForConfirmations } from "../relay/confirmations";
-import { createRelaySession } from "../relay/session";
-import { batchTransactions } from "@net-protocol/relay";
 import type {
   UploadWithRelayOptions,
   UploadWithRelayResult,

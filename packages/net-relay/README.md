@@ -1,5 +1,7 @@
 # @net-protocol/relay
 
+**Status: In Development** - Do not use yet. Will have breaking changes and may be incomplete.
+
 Net Relay SDK for submitting transactions via x402 payment relay service.
 
 This package provides client-side functionality for interacting with the Net relay service, which allows users to submit on-chain transactions without holding ETH by paying with USDC via x402.
@@ -27,7 +29,10 @@ yarn add @net-protocol/relay
 ### Basic Usage
 
 ```typescript
-import { createRelaySession, submitTransactionsViaRelay } from "@net-protocol/relay";
+import {
+  createRelaySession,
+  submitTransactionsViaRelay,
+} from "@net-protocol/relay";
 import { privateKeyToAccount } from "viem/accounts";
 
 // Create a session token
@@ -147,8 +152,9 @@ function fundBackendWallet(params: {
   secretKey: string;
   fetchWithPayment: typeof fetch;
   httpClient: {
-    getPaymentSettleResponse: (getHeader: (name: string) => string | null) => 
-      { transaction?: string; txHash?: string } | null;
+    getPaymentSettleResponse: (
+      getHeader: (name: string) => string | null
+    ) => { transaction?: string; txHash?: string } | null;
   };
 }): Promise<RelayFundResult>;
 ```
@@ -226,8 +232,9 @@ function createRelayX402Client(
 ): {
   fetchWithPayment: typeof fetch;
   httpClient: {
-    getPaymentSettleResponse: (getHeader: (name: string) => string | null) => 
-      { transaction?: string; txHash?: string } | null;
+    getPaymentSettleResponse: (
+      getHeader: (name: string) => string | null
+    ) => { transaction?: string; txHash?: string } | null;
   };
 };
 ```
@@ -241,7 +248,7 @@ High-level class-based API for the relay service.
 ```typescript
 class RelayClient {
   constructor(options: { apiUrl: string; chainId: number });
-  
+
   createSession(params: {...}): Promise<{ sessionToken: string; expiresAt: number }>;
   checkBalance(params: {...}): Promise<CheckBalanceResult>;
   fundBackendWallet(params: {...}): Promise<RelayFundResult>;
@@ -370,9 +377,9 @@ for (const batch of batches) {
     transactions: batch,
     sessionToken,
   });
-  
+
   allHashes.push(...result.transactionHashes);
-  
+
   // Retry failed transactions if any
   if (result.failedIndexes.length > 0) {
     const retryResult = await client.retryFailedTransactions({
@@ -383,7 +390,7 @@ for (const batch of batches) {
       backendWalletAddress: result.backendWalletAddress,
       sessionToken,
     });
-    
+
     allHashes.push(...retryResult.transactionHashes);
   }
 }
@@ -419,4 +426,3 @@ All functions throw errors with descriptive messages. Common error scenarios:
 ## License
 
 MIT
-

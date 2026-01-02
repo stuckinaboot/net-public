@@ -34,7 +34,7 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 | --------------------------------------------------------- | ------------------ | ---------------------------------------------- |
 | [@net-protocol/core](./packages/net-core/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | Usable but may have breaking changes over time |
-| [@net-protocol/relay](./packages/net-relay/README.md)     | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/relay](./packages/net-relay/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 
 ## Packages

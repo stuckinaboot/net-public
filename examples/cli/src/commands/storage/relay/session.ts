@@ -52,7 +52,7 @@ export async function createRelaySession(params: {
     message,
   });
 
-  // Call session endpoint
+  // Call session endpoint (send expiresAt - the exact value that was signed)
   const response = await fetch(`${apiUrl}/api/relay/session`, {
     method: "POST",
     headers: {
@@ -63,7 +63,7 @@ export async function createRelaySession(params: {
       operatorAddress,
       secretKey,
       signature,
-      expiresIn: expiresInSeconds,
+      expiresAt, // Send the exact expiresAt that was signed
     }),
   });
 

@@ -550,9 +550,8 @@ export class StorageClient {
 
       // Generate storage key for this XML chunk's ChunkedStorage entry
       // This will be the key used in XML metadata to reference this XML chunk
-      const chunkedHash = keccak256HashString(
-        xmlChunk + params.operatorAddress
-      );
+      // Note: Hash is content-based only (no operator) - ChunkedStorage handles operator namespace internally
+      const chunkedHash = keccak256HashString(xmlChunk);
       chunkedStorageHashes.push(chunkedHash);
 
       // Create ChunkedStorage transaction config

@@ -109,13 +109,17 @@ export async function sendTransactionsWithIdempotency(
       );
       // Convert typed args to array for viem compatibility
       const args = typedArgsToArray(tx.typedArgs);
+      if (!walletClient.account) {
+        throw new Error("Wallet client must have an account");
+      }
       const hash = await walletClient.writeContract({
+        account: walletClient.account,
         address: tx.transaction.to as `0x${string}`,
         abi: tx.transaction.abi,
         functionName: tx.transaction.functionName as string,
         args,
         value: tx.transaction.value,
-        chain: undefined,
+        chain: null,
       });
 
       // Wait for confirmation

@@ -81,7 +81,6 @@ export async function previewFile(
 
   // 5. Prepare transactions
   let transactions: TransactionWithId[];
-  let chunkedHashes: string[] | undefined;
 
   if (useXmlStorage) {
     transactions = prepareXmlStorageTransactions({
@@ -91,10 +90,7 @@ export async function previewFile(
       content: fileContent,
       operatorAddress,
     });
-    // Extract chunked hashes for efficient checking
-    chunkedHashes = transactions
-      .filter((tx) => tx.type === "chunked")
-      .map((tx) => tx.id);
+    // No need to extract chunkedHashes - filterXmlStorageTransactions derives them internally
   } else {
     // Build typed args JSON object
     const storageKeyBytes = getStorageKeyBytes(
@@ -119,15 +115,44 @@ export async function previewFile(
   let transactionsToSend: TransactionWithId[];
   let transactionsSkipped: TransactionWithId[];
 
-  if (useXmlStorage && chunkedHashes) {
+  if (useXmlStorage) {
+    // Extract WriteTransactionConfig[] from TransactionWithId[]
+    // First transaction is metadata, rest are chunk transactions
+    const chunkTransactions = transactions
+      .filter((tx) => tx.type === "chunked")
+      .map((tx) => tx.transaction);
+
+    // Create a map from WriteTransactionConfig to TransactionWithId for easy lookup
+    const txConfigToTxWithId = new Map(
+      transactions
+        .filter((tx) => tx.type === "chunked")
+        .map((tx) => [tx.transaction, tx])
+    );
+
     const filtered = await filterXmlStorageTransactions({
       storageClient,
-      transactions,
+      transactions: chunkTransactions, // Only chunk transactions
       operatorAddress,
-      chunkedHashes,
     });
-    transactionsToSend = filtered.toSend;
-    transactionsSkipped = filtered.skipped;
+
+    // Map filtered WriteTransactionConfig[] back to TransactionWithId[]
+    const filteredToSend: TransactionWithId[] = filtered.toSend
+      .map((txConfig) => txConfigToTxWithId.get(txConfig))
+      .filter((tx): tx is TransactionWithId => tx !== undefined);
+
+    const filteredSkipped: TransactionWithId[] = filtered.skipped
+      .map((txConfig) => txConfigToTxWithId.get(txConfig))
+      .filter((tx): tx is TransactionWithId => tx !== undefined);
+
+    // Metadata is handled separately - check if it needs to be sent
+    const metadataTx = transactions.find((tx) => tx.type === "metadata");
+    if (metadataTx) {
+      // For now, always include metadata in toSend (caller should check separately)
+      filteredToSend.unshift(metadataTx);
+    }
+
+    transactionsToSend = filteredToSend;
+    transactionsSkipped = filteredSkipped;
   } else {
     const filtered = await filterExistingTransactions({
       storageClient,
@@ -142,8 +167,12 @@ export async function previewFile(
   // Calculate statistics
   if (useXmlStorage) {
     // XML storage: separate chunks from metadata
-    const chunkTransactions = transactions.filter((tx) => tx.type === "chunked");
-    const metadataTransaction = transactions.find((tx) => tx.type === "metadata");
+    const chunkTransactions = transactions.filter(
+      (tx) => tx.type === "chunked"
+    );
+    const metadataTransaction = transactions.find(
+      (tx) => tx.type === "metadata"
+    );
 
     const totalChunks = chunkTransactions.length;
     const alreadyStoredChunks = transactionsSkipped.filter(
@@ -187,4 +216,3 @@ export async function previewFile(
     };
   }
 }
-

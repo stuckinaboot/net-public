@@ -97,9 +97,9 @@ export interface FilterExistingTransactionsParams {
  */
 export interface FilterXmlStorageTransactionsParams {
   storageClient: StorageClient;
-  transactions: TransactionWithId[];
+  transactions: WriteTransactionConfig[];
   operatorAddress: string;
-  chunkedHashes: string[];
+  // chunkedHashes removed - derived internally from transaction args
 }
 
 /**
@@ -195,3 +195,14 @@ export interface PreviewResult {
   transactionsToSend: number; // Transactions that would be sent
   transactionsSkipped: number; // Transactions already stored
 }
+
+/**
+ * Re-export relay types for convenience
+ */
+export type {
+  UploadWithRelayOptions,
+  UploadWithRelayResult,
+  RelayFundResult,
+  RelaySubmitResult,
+  RetryConfig,
+} from "./relay/types";

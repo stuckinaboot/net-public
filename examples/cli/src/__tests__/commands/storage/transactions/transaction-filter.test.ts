@@ -158,7 +158,7 @@ describe("transaction-filter", () => {
     });
 
     it("should filter out existing chunked storage", async () => {
-      const chunkedHash = "0x" + "a".repeat(64) as `0x${string}`;
+      const chunkedHash = ("0x" + "a".repeat(64)) as `0x${string}`;
       const typedArgs = createChunkedStorageTypedArgs(chunkedHash);
       const transactions: TransactionWithId[] = [
         {
@@ -189,7 +189,7 @@ describe("transaction-filter", () => {
     });
 
     it("should keep chunked storage that doesn't exist", async () => {
-      const chunkedHash = "0x" + "a".repeat(64) as `0x${string}`;
+      const chunkedHash = ("0x" + "a".repeat(64)) as `0x${string}`;
       const typedArgs = createChunkedStorageTypedArgs(chunkedHash);
       const transactions: TransactionWithId[] = [
         {
@@ -254,7 +254,7 @@ describe("transaction-filter", () => {
     });
 
     it("should handle mixed transaction types", async () => {
-      const chunkedHash = "0x" + "a".repeat(64) as `0x${string}`;
+      const chunkedHash = ("0x" + "a".repeat(64)) as `0x${string}`;
       const normalTypedArgs = createNormalStorageTypedArgs(
         TEST_STORAGE_KEY_BYTES,
         "test.txt",
@@ -350,17 +350,25 @@ describe("transaction-filter", () => {
         .mockResolvedValueOnce(createMockChunkedMetadata({ chunkCount: 3 }))
         .mockResolvedValueOnce(null);
 
+      // Extract WriteTransactionConfig[] from TransactionWithId[]
+      const writeTransactions = transactions.map((tx) => tx.transaction);
+
       const result = await filterXmlStorageTransactions({
         storageClient,
-        transactions,
+        transactions: writeTransactions,
         operatorAddress: TEST_OPERATOR,
-        chunkedHashes,
       });
 
       expect(result.toSend.length).toBe(2); // Metadata + one chunk
       expect(result.skipped.length).toBe(2); // Two chunks
-      expect(result.toSend[0].type).toBe("metadata"); // Metadata first
-      expect(result.toSend[1].type).toBe("chunked");
+      // Check that first transaction is metadata (has storage contract address)
+      expect(result.toSend[0].to.toLowerCase()).toBe(
+        STORAGE_CONTRACT.address.toLowerCase()
+      );
+      // Check that second transaction is chunked (has chunked storage contract address)
+      expect(result.toSend[1].to.toLowerCase()).toBe(
+        CHUNKED_STORAGE_CONTRACT.address.toLowerCase()
+      );
     });
 
     it("should skip metadata when all chunks exist and metadata matches", async () => {
@@ -406,11 +414,13 @@ describe("transaction-filter", () => {
         createMockStorageData({ text: "test.txt", value: metadata })
       );
 
+      // Extract WriteTransactionConfig[] from TransactionWithId[]
+      const writeTransactions = transactions.map((tx) => tx.transaction);
+
       const result = await filterXmlStorageTransactions({
         storageClient,
-        transactions,
+        transactions: writeTransactions,
         operatorAddress: TEST_OPERATOR,
-        chunkedHashes,
       });
 
       expect(result.toSend.length).toBe(0);
@@ -453,16 +463,21 @@ describe("transaction-filter", () => {
       // No chunks exist
       mockClient.getChunkedMetadata.mockResolvedValue(null);
 
+      // Extract WriteTransactionConfig[] from TransactionWithId[]
+      const writeTransactions = transactions.map((tx) => tx.transaction);
+
       const result = await filterXmlStorageTransactions({
         storageClient,
-        transactions,
+        transactions: writeTransactions,
         operatorAddress: TEST_OPERATOR,
-        chunkedHashes,
       });
 
       expect(result.toSend.length).toBe(3); // Metadata + 2 chunks
       expect(result.skipped.length).toBe(0);
-      expect(result.toSend[0].type).toBe("metadata");
+      // Check that first transaction is metadata (has storage contract address)
+      expect(result.toSend[0].to.toLowerCase()).toBe(
+        STORAGE_CONTRACT.address.toLowerCase()
+      );
     });
 
     it("should keep metadata when metadata doesn't match", async () => {
@@ -512,16 +527,21 @@ describe("transaction-filter", () => {
         createMockStorageData({ text: "test.txt", value: differentMetadata })
       );
 
+      // Extract WriteTransactionConfig[] from TransactionWithId[]
+      const writeTransactions = transactions.map((tx) => tx.transaction);
+
       const result = await filterXmlStorageTransactions({
         storageClient,
-        transactions,
+        transactions: writeTransactions,
         operatorAddress: TEST_OPERATOR,
-        chunkedHashes,
       });
 
       expect(result.toSend.length).toBe(1); // Only metadata
       expect(result.skipped.length).toBe(2); // Both chunks
-      expect(result.toSend[0].type).toBe("metadata");
+      // Check that first transaction is metadata (has storage contract address)
+      expect(result.toSend[0].to.toLowerCase()).toBe(
+        STORAGE_CONTRACT.address.toLowerCase()
+      );
     });
 
     it("should preserve transaction order (metadata first)", async () => {
@@ -553,21 +573,31 @@ describe("transaction-filter", () => {
             functionName: "put",
             args: [chunkedHashes[0], "", []],
           },
-          typedArgs: createChunkedStorageTypedArgs(chunkedHashes[0] as `0x${string}`),
+          typedArgs: createChunkedStorageTypedArgs(
+            chunkedHashes[0] as `0x${string}`
+          ),
         },
       ];
 
       mockClient.getChunkedMetadata.mockResolvedValue(null);
 
+      // Extract WriteTransactionConfig[] from TransactionWithId[]
+      const writeTransactions = transactions.map((tx) => tx.transaction);
+
       const result = await filterXmlStorageTransactions({
         storageClient,
-        transactions,
+        transactions: writeTransactions,
         operatorAddress: TEST_OPERATOR,
-        chunkedHashes,
       });
 
-      expect(result.toSend[0].type).toBe("metadata");
-      expect(result.toSend[1].type).toBe("chunked");
+      // Check that first transaction is metadata (has storage contract address)
+      expect(result.toSend[0].to.toLowerCase()).toBe(
+        STORAGE_CONTRACT.address.toLowerCase()
+      );
+      // Check that second transaction is chunked (has chunked storage contract address)
+      expect(result.toSend[1].to.toLowerCase()).toBe(
+        CHUNKED_STORAGE_CONTRACT.address.toLowerCase()
+      );
     });
   });
 });

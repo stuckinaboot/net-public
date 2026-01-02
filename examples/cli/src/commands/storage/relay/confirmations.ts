@@ -1,13 +1,7 @@
 import { waitForTransactionReceipt } from "viem/actions";
 import type { Hash } from "viem";
-import type { PublicClient } from "viem";
 import type { WaitForConfirmationsParams } from "./types";
-
-/**
- * Default confirmation configuration
- */
-const DEFAULT_CONFIRMATIONS = 1;
-const DEFAULT_TIMEOUT = 60000; // 60 seconds
+import { DEFAULT_CONFIRMATIONS, DEFAULT_TIMEOUT } from "./constants";
 
 /**
  * Wait for transaction confirmations

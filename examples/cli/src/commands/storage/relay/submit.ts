@@ -2,29 +2,9 @@ import type { Hash, Address } from "viem";
 import type {
   SubmitTransactionsViaRelayParams,
   RelaySubmitResult,
+  SubmitResponse,
+  ErrorResponse,
 } from "./types";
-
-/**
- * Response from /api/relay/submit endpoint
- */
-interface SubmitResponse {
-  success: boolean;
-  transactionHashes: Hash[];
-  successfulIndexes: number[];
-  failedIndexes: number[];
-  errors: { index: number; error: string }[];
-  backendWalletAddress: Address;
-  appFeeTransactionHash: Hash;
-  error?: string;
-}
-
-/**
- * Error response from API endpoints
- */
-interface ErrorResponse {
-  success: false;
-  error: string;
-}
 
 /**
  * Submit transactions via relay service

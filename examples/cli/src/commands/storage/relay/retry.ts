@@ -6,19 +6,10 @@ import type {
   RetryConfig,
   RelaySubmitResult,
 } from "./types";
+import { DEFAULT_RETRY_CONFIG } from "./constants";
 import { submitTransactionsViaRelay } from "./submit";
 import { checkXmlChunksExist } from "../storage/check";
 import { extractTypedArgsFromTransaction } from "../utils";
-
-/**
- * Default retry configuration
- */
-const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
-  maxRetries: 3,
-  initialDelay: 1000,
-  maxDelay: 30000,
-  backoffMultiplier: 2,
-};
 
 /**
  * Sleep for specified milliseconds
@@ -34,7 +25,8 @@ function calculateDelay(
   attempt: number,
   config: Required<RetryConfig>
 ): number {
-  const delay = config.initialDelay * Math.pow(config.backoffMultiplier, attempt);
+  const delay =
+    config.initialDelay * Math.pow(config.backoffMultiplier, attempt);
   return Math.min(delay, config.maxDelay);
 }
 
@@ -196,9 +188,7 @@ export async function retryFailedTransactions(
         lastResult.transactionHashes.push(...retryResult.transactionHashes);
         // Combine successful indexes (adjust for original index)
         lastResult.successfulIndexes.push(
-          ...retryResult.successfulIndexes.map(
-            (idx) => failedIndexes[idx]
-          )
+          ...retryResult.successfulIndexes.map((idx) => failedIndexes[idx])
         );
         // Update failed indexes
         lastResult.failedIndexes = retryResult.failedIndexes.map(
@@ -228,7 +218,9 @@ export async function retryFailedTransactions(
       }
 
       // Update failed indexes for next iteration
-      failedIndexes = retryResult.failedIndexes.map((idx) => failedIndexes[idx]);
+      failedIndexes = retryResult.failedIndexes.map(
+        (idx) => failedIndexes[idx]
+      );
     } catch (error) {
       // Retry failed, keep current failed indexes
       console.error(`Retry attempt ${attempt} failed:`, error);
@@ -241,4 +233,3 @@ export async function retryFailedTransactions(
 
   return lastResult;
 }
-

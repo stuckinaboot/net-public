@@ -1,39 +1,12 @@
-import type { Hash, Address } from "viem";
-import type { FundBackendWalletParams, RelayFundResult } from "./types";
+import type { Hash } from "viem";
+import type {
+  FundBackendWalletParams,
+  RelayFundResult,
+  FundResponse,
+  VerifyFundResponse,
+  ErrorResponse,
+} from "./types";
 import { x402HTTPClient } from "@x402/fetch";
-
-/**
- * Response from /api/relay/[chainId]/fund endpoint
- */
-interface FundResponse {
-  success: boolean;
-  message?: string;
-  payer?: Address;
-  amount?: string;
-  error?: string;
-}
-
-/**
- * Response from /api/relay/fund/verify endpoint
- */
-interface VerifyFundResponse {
-  success: boolean;
-  paymentTxHash?: Hash;
-  backendWalletAddress?: Address;
-  fundedAmountEth?: string;
-  transactionHash?: Hash; // Combined: payment record storage + ETH transfer (atomic)
-  alreadyProcessed?: boolean;
-  message?: string;
-  error?: string;
-}
-
-/**
- * Error response from API endpoints
- */
-interface ErrorResponse {
-  success: false;
-  error: string;
-}
 
 /**
  * Extract payment transaction hash from response headers

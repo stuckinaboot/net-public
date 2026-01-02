@@ -1,34 +1,11 @@
 import { keccak256, toBytes } from "viem";
 import type { LocalAccount, Address } from "viem/accounts";
-
-const RELAY_DOMAIN_NAME = "Net Relay Service";
-const RELAY_DOMAIN_VERSION = "1";
-
-const RELAY_SESSION_TYPES = {
-  RelaySession: [
-    { name: "operatorAddress", type: "address" },
-    { name: "secretKeyHash", type: "bytes32" },
-    { name: "expiresAt", type: "uint256" },
-  ],
-} as const;
-
-/**
- * Response from /api/relay/session endpoint
- */
-interface CreateSessionResponse {
-  success: boolean;
-  sessionToken?: string;
-  expiresAt?: number;
-  error?: string;
-}
-
-/**
- * Error response from API endpoints
- */
-interface ErrorResponse {
-  success: false;
-  error: string;
-}
+import {
+  RELAY_DOMAIN_NAME,
+  RELAY_DOMAIN_VERSION,
+  RELAY_SESSION_TYPES,
+} from "./constants";
+import type { CreateSessionResponse, ErrorResponse } from "./types";
 
 /**
  * Create a relay session token
@@ -93,19 +70,27 @@ export async function createRelaySession(params: {
   if (!response.ok) {
     const errorData = (await response.json()) as ErrorResponse;
     throw new Error(
-      `Session creation failed: ${response.status} ${errorData.error || response.statusText}`
+      `Session creation failed: ${response.status} ${
+        errorData.error || response.statusText
+      }`
     );
   }
 
-  const result = (await response.json()) as CreateSessionResponse | ErrorResponse;
+  const result = (await response.json()) as
+    | CreateSessionResponse
+    | ErrorResponse;
   if (!result.success || "error" in result) {
     throw new Error(
-      `Session creation failed: ${("error" in result ? result.error : null) || "Unknown error"}`
+      `Session creation failed: ${
+        ("error" in result ? result.error : null) || "Unknown error"
+      }`
     );
   }
 
   if (!result.sessionToken || !result.expiresAt) {
-    throw new Error("Session creation failed: Missing sessionToken or expiresAt in response");
+    throw new Error(
+      "Session creation failed: Missing sessionToken or expiresAt in response"
+    );
   }
 
   return {
@@ -113,4 +98,3 @@ export async function createRelaySession(params: {
     expiresAt: result.expiresAt,
   };
 }
-

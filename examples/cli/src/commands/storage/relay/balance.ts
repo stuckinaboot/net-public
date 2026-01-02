@@ -1,49 +1,9 @@
-import type { Address } from "viem";
-import type { FundBackendWalletParams } from "./types";
-
-/**
- * Response from /api/relay/balance endpoint
- */
-interface BalanceResponse {
-  success: boolean;
-  backendWalletAddress: Address;
-  balanceWei: string;
-  balanceEth: string;
-  sufficientBalance: boolean;
-  minRequiredWei: string;
-  minRequiredEth: string;
-  error?: string;
-}
-
-/**
- * Error response from API endpoints
- */
-interface ErrorResponse {
-  success: false;
-  error: string;
-}
-
-/**
- * Parameters for checking backend wallet balance
- */
-export interface CheckBackendWalletBalanceParams {
-  apiUrl: string;
-  chainId: number;
-  operatorAddress: Address;
-  secretKey: string;
-}
-
-/**
- * Result of checking backend wallet balance
- */
-export interface CheckBalanceResult {
-  backendWalletAddress: Address;
-  balanceWei: string;
-  balanceEth: string;
-  sufficientBalance: boolean;
-  minRequiredWei: string;
-  minRequiredEth: string;
-}
+import type {
+  CheckBackendWalletBalanceParams,
+  CheckBalanceResult,
+  BalanceResponse,
+  ErrorResponse,
+} from "./types";
 
 /**
  * Check backend wallet balance via relay service

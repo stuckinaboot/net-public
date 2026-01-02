@@ -3,6 +3,77 @@ import type { WriteTransactionConfig } from "@net-protocol/core";
 import type { StorageClient } from "@net-protocol/storage";
 
 /**
+ * Error response from API endpoints
+ */
+export interface ErrorResponse {
+  success: false;
+  error: string;
+}
+
+/**
+ * Response from /api/relay/[chainId]/fund endpoint
+ */
+export interface FundResponse {
+  success: boolean;
+  message?: string;
+  payer?: Address;
+  amount?: string;
+  error?: string;
+}
+
+/**
+ * Response from /api/relay/fund/verify endpoint
+ */
+export interface VerifyFundResponse {
+  success: boolean;
+  paymentTxHash?: Hash;
+  backendWalletAddress?: Address;
+  fundedAmountEth?: string;
+  transactionHash?: Hash; // Combined: payment record storage + ETH transfer (atomic)
+  alreadyProcessed?: boolean;
+  message?: string;
+  error?: string;
+}
+
+/**
+ * Response from /api/relay/submit endpoint
+ */
+export interface SubmitResponse {
+  success: boolean;
+  transactionHashes: Hash[];
+  successfulIndexes: number[];
+  failedIndexes: number[];
+  errors: { index: number; error: string }[];
+  backendWalletAddress: Address;
+  appFeeTransactionHash: Hash;
+  error?: string;
+}
+
+/**
+ * Response from /api/relay/session endpoint
+ */
+export interface CreateSessionResponse {
+  success: boolean;
+  sessionToken?: string;
+  expiresAt?: number;
+  error?: string;
+}
+
+/**
+ * Response from /api/relay/balance endpoint
+ */
+export interface BalanceResponse {
+  success: boolean;
+  backendWalletAddress: Address;
+  balanceWei: string;
+  balanceEth: string;
+  sufficientBalance: boolean;
+  minRequiredWei: string;
+  minRequiredEth: string;
+  error?: string;
+}
+
+/**
  * Options for uploading a file via relay
  */
 export interface UploadWithRelayOptions {
@@ -115,3 +186,24 @@ export interface WaitForConfirmationsParams {
   onProgress?: (confirmed: number, total: number) => void;
 }
 
+/**
+ * Parameters for checking backend wallet balance
+ */
+export interface CheckBackendWalletBalanceParams {
+  apiUrl: string;
+  chainId: number;
+  operatorAddress: Address;
+  secretKey: string;
+}
+
+/**
+ * Result of checking backend wallet balance
+ */
+export interface CheckBalanceResult {
+  backendWalletAddress: Address;
+  balanceWei: string;
+  balanceEth: string;
+  sufficientBalance: boolean;
+  minRequiredWei: string;
+  minRequiredEth: string;
+}

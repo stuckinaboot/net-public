@@ -21,8 +21,7 @@ interface VerifyFundResponse {
   paymentTxHash?: Hash;
   backendWalletAddress?: Address;
   fundedAmountEth?: string;
-  paymentRecordTxHash?: Hash;
-  fundingTxHash?: Hash;
+  transactionHash?: Hash; // Combined: payment record storage + ETH transfer (atomic)
   alreadyProcessed?: boolean;
   message?: string;
   error?: string;

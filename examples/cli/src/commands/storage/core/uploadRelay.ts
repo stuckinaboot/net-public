@@ -27,8 +27,6 @@ import type {
 } from "../relay/types";
 import type { WriteTransactionConfig } from "@net-protocol/core";
 
-// batchTransactions is imported from @net-protocol/relay package
-
 /**
  * Main upload function with relay - orchestrates the entire relay upload process
  *

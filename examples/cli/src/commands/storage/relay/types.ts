@@ -1,4 +1,4 @@
-import type { Hash, Address, PublicClient } from "viem";
+import type { Hash, Address } from "viem";
 import type { WriteTransactionConfig } from "@net-protocol/core";
 import type { StorageClient } from "@net-protocol/storage";
 // Import duplicate types from package

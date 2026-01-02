@@ -50,10 +50,6 @@ export async function retryFailedTransactions(
       transactions: WriteTransactionConfig[],
       backendWalletAddress: Address
     ) => {
-      if (!storageClient) {
-        // No storage client, return all failed indexes
-        return failedIndexes;
-      }
       return recheckFailedTransactionsStorage(
         failedIndexes,
         transactions,

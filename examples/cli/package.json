@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@net-protocol/core": "*",
+    "@net-protocol/relay": "*",
     "@net-protocol/storage": "*",
     "@x402/evm": "^2.1.0",
     "@x402/fetch": "^2.1.0",

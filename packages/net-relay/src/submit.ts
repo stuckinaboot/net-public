@@ -72,5 +72,7 @@ export async function submitTransactionsViaRelay(
     failedIndexes: result.failedIndexes || [],
     errors: result.errors || [],
     backendWalletAddress: result.backendWalletAddress as Address,
+    appFeeTransactionHash: result.appFeeTransactionHash as Hash,
   };
 }
+

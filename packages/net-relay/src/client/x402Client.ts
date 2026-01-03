@@ -1,6 +1,7 @@
 import { x402Client, wrapFetchWithPayment, x402HTTPClient } from "@x402/fetch";
 import { registerExactEvmScheme } from "@x402/evm/exact/client";
 import type { LocalAccount } from "viem/accounts";
+import type { X402ClientResult } from "../types";
 
 /**
  * Create x402 client for relay payments
@@ -15,7 +16,7 @@ import type { LocalAccount } from "viem/accounts";
 export function createRelayX402Client(
   account: LocalAccount,
   chainId?: number
-) {
+): X402ClientResult {
   const client = new x402Client();
   registerExactEvmScheme(client, { signer: account });
   const fetchWithPayment = wrapFetchWithPayment(fetch, client);

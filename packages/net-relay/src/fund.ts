@@ -6,7 +6,6 @@ import type {
   VerifyFundResponse,
   ErrorResponse,
 } from "./types";
-import { x402HTTPClient } from "@x402/fetch";
 
 /**
  * Extract payment transaction hash from response headers
@@ -166,3 +165,4 @@ export async function fundBackendWallet(
     backendWalletAddress: verifyData.backendWalletAddress,
   };
 }
+

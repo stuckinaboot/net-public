@@ -1,6 +1,9 @@
 import { waitForTransactionReceipt } from "viem/actions";
 import type { Hash } from "viem";
-import type { WaitForConfirmationsParams } from "./types";
+import type {
+  WaitForConfirmationsParams,
+  ConfirmationResult,
+} from "./types";
 import { DEFAULT_CONFIRMATIONS, DEFAULT_TIMEOUT } from "./constants";
 
 /**
@@ -15,7 +18,7 @@ import { DEFAULT_CONFIRMATIONS, DEFAULT_TIMEOUT } from "./constants";
  */
 export async function waitForConfirmations(
   params: WaitForConfirmationsParams
-): Promise<Array<{ hash: Hash; receipt: any }>> {
+): Promise<ConfirmationResult[]> {
   const {
     publicClient,
     transactionHashes,
@@ -28,7 +31,7 @@ export async function waitForConfirmations(
     return [];
   }
 
-  const results: Array<{ hash: Hash; receipt: any }> = [];
+  const results: ConfirmationResult[] = [];
   let confirmed = 0;
 
   // Wait for all transactions in parallel

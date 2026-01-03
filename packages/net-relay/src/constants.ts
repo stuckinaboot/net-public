@@ -41,3 +41,19 @@ export const DEFAULT_CONFIRMATIONS = 1;
  */
 export const DEFAULT_TIMEOUT = 60000; // 60 seconds
 
+/**
+ * Maximum transactions per batch (matches server limit)
+ */
+export const MAX_TRANSACTIONS_PER_BATCH = 100;
+
+/**
+ * Maximum request size in bytes (slightly under 1MB for safety margin)
+ */
+export const MAX_BATCH_SIZE_BYTES = 900 * 1024; // 900KB
+
+/**
+ * Maximum size per transaction in bytes
+ * Storage transactions can include large data chunks, so we assume up to 100KB per transaction
+ */
+export const MAX_TRANSACTION_SIZE_BYTES = 100 * 1024; // 100KB
+

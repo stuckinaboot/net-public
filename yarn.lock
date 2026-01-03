@@ -1168,7 +1168,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/relay@workspace:packages/net-relay":
+"@net-protocol/relay@npm:*, @net-protocol/relay@workspace:packages/net-relay":
   version: 0.0.0-use.local
   resolution: "@net-protocol/relay@workspace:packages/net-relay"
   dependencies:
@@ -6321,6 +6321,7 @@ __metadata:
   resolution: "net-cli@workspace:examples/cli"
   dependencies:
     "@net-protocol/core": "npm:*"
+    "@net-protocol/relay": "npm:*"
     "@net-protocol/storage": "npm:*"
     "@types/node": "npm:^20.17.6"
     "@x402/evm": "npm:^2.1.0"

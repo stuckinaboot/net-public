@@ -1,11 +1,8 @@
 import type { WriteTransactionConfig } from "@net-protocol/core";
 import type { StorageClient } from "@net-protocol/storage";
 import type { Address } from "viem";
-import type {
-  RetryFailedTransactionsParams,
-  RetryConfig,
-  RelaySubmitResult,
-} from "./types";
+import type { RetryConfig, RelaySubmitResult } from "@net-protocol/relay";
+import type { RetryFailedTransactionsParams } from "./types";
 import { retryFailedTransactions as retryFailedTransactionsPackage } from "@net-protocol/relay";
 import { recheckFailedTransactionsStorage } from "./recheckStorage";
 

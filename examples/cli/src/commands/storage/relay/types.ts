@@ -1,17 +1,7 @@
 import type { Hash, Address } from "viem";
 import type { WriteTransactionConfig } from "@net-protocol/core";
 import type { StorageClient } from "@net-protocol/storage";
-// Import duplicate types from package
-import type {
-  RelayFundResult,
-  RelaySubmitResult,
-  RetryConfig,
-  FundBackendWalletParams,
-  SubmitTransactionsViaRelayParams,
-  CheckBackendWalletBalanceParams,
-  CheckBalanceResult,
-  WaitForConfirmationsParams,
-} from "@net-protocol/relay";
+import type { RetryConfig } from "@net-protocol/relay";
 
 /**
  * Options for uploading a file via relay
@@ -41,18 +31,6 @@ export interface UploadWithRelayResult {
   backendWalletAddress: Address;
   errors?: Error[];
 }
-
-// Re-export types from package (these are identical)
-export type {
-  RelayFundResult,
-  RelaySubmitResult,
-  RetryConfig,
-  FundBackendWalletParams,
-  SubmitTransactionsViaRelayParams,
-  CheckBackendWalletBalanceParams,
-  CheckBalanceResult,
-  WaitForConfirmationsParams,
-};
 
 /**
  * Parameters for retrying failed transactions

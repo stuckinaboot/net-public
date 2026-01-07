@@ -118,6 +118,63 @@ describe("chunkUtils", () => {
         true
       );
     });
+
+    describe("returnHex parameter", () => {
+      it("should return hex string when returnHex=true", () => {
+        const originalData = "test data for hex";
+        const chunks = chunkDataForStorage(originalData);
+        const assembledHex = assembleChunks(chunks, true);
+
+        expect(assembledHex).toBeDefined();
+        if (assembledHex) {
+          // Should be a hex string (starts with 0x)
+          expect(assembledHex).toMatch(/^0x[0-9a-f]*$/);
+          // Should be different from the UTF-8 string version
+          const assembledUtf8 = assembleChunks(chunks, false);
+          if (assembledUtf8) {
+            expect(assembledHex).not.toBe(assembledUtf8);
+            // Converting hex back to UTF-8 should give original data
+            const convertedBack = hexToString(assembledHex as `0x${string}`);
+            expect(convertedBack).toBe(originalData);
+          }
+        }
+      });
+
+      it("should return UTF-8 string when returnHex=false (default)", () => {
+        const originalData = "test data";
+        const chunks = chunkDataForStorage(originalData);
+        const assembledDefault = assembleChunks(chunks);
+        const assembledExplicit = assembleChunks(chunks, false);
+
+        expect(assembledDefault).toBeDefined();
+        expect(assembledExplicit).toBeDefined();
+        if (assembledDefault && assembledExplicit) {
+          // Both should return the same UTF-8 string
+          expect(assembledDefault).toBe(assembledExplicit);
+          expect(assembledDefault).toBe(originalData);
+        }
+      });
+
+      it("should handle returnHex=true with round-trip conversion", () => {
+        const originalData = "round-trip test";
+        const chunks = chunkDataForStorage(originalData);
+        const assembledHex = assembleChunks(chunks, true);
+
+        expect(assembledHex).toBeDefined();
+        if (assembledHex) {
+          // Hex string should be convertible back to original data
+          const convertedBack = hexToString(assembledHex as `0x${string}`);
+          expect(convertedBack).toBe(originalData);
+        }
+      });
+
+      it("should return undefined for invalid data with returnHex=true", () => {
+        const invalidChunks = ["0x1234", "0x5678"];
+        const assembled = assembleChunks(invalidChunks, true);
+        // Should return undefined if decompression fails, regardless of returnHex
+        expect(assembled).toBeUndefined();
+      });
+    });
   });
 
   describe("shouldSuggestXmlStorage", () => {

@@ -65,9 +65,13 @@ export function getChunkCount(data: string): number {
  * Assemble chunks into a single string and decompress
  * Pure function - can be used in both client and server code
  * @param chunks - Array of hex-encoded chunk strings
- * @returns Decompressed string or undefined if decompression fails
+ * @param returnHex - If true, returns hex string instead of converting to UTF-8
+ * @returns Decompressed string (or hex string if returnHex=true) or undefined if decompression fails
  */
-export function assembleChunks(chunks: string[]): string | undefined {
+export function assembleChunks(
+  chunks: string[],
+  returnHex?: boolean
+): string | undefined {
   try {
     // Concatenate hex strings, keeping only first 0x prefix
     let assembled = chunks[0] || "0x";
@@ -88,6 +92,12 @@ export function assembleChunks(chunks: string[]): string | undefined {
       // Decompressed bytes are UTF-8 bytes of the hex string (because chunkDataForStorage compressed the hex string)
       // Convert bytes to UTF-8 string (which is the hex string)
       const hexString = Buffer.from(decompressed).toString("utf8");
+
+      // If returnHex is true, return the hex string directly
+      if (returnHex) {
+        return hexString.startsWith("0x") ? hexString : `0x${hexString}`;
+      }
+
       // Convert hex string to plain string
       const result = hexToString(hexString as `0x${string}`);
       return result;

@@ -53,7 +53,8 @@ export const MAX_BATCH_SIZE_BYTES = 900 * 1024; // 900KB
 
 /**
  * Maximum size per transaction in bytes
- * Storage transactions can include large data chunks, so we assume up to 100KB per transaction
+ * Storage transactions can include large data chunks (up to ~200KB per transaction)
+ * This cap prevents a single malformed transaction from blocking the entire batch
  */
-export const MAX_TRANSACTION_SIZE_BYTES = 100 * 1024; // 100KB
+export const MAX_TRANSACTION_SIZE_BYTES = 250 * 1024; // 250KB
 

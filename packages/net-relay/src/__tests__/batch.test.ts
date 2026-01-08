@@ -117,6 +117,59 @@ describe("estimateTransactionSize", () => {
     const size = estimateTransactionSize(tx);
     expect(size).toBeGreaterThan(0);
   });
+
+  it("should include ABI size in estimate", () => {
+    const mockAbi = [
+      { type: "function", name: "put", inputs: [], outputs: [], stateMutability: "nonpayable" },
+      { type: "function", name: "get", inputs: [], outputs: [], stateMutability: "view" },
+    ];
+
+    const txWithoutAbi: WriteTransactionConfig = {
+      to: "0x0000000000000000000000000000000000000000" as Address,
+      data: "0x1234",
+      args: ["0x1234"],
+    };
+
+    const txWithAbi: WriteTransactionConfig = {
+      to: "0x0000000000000000000000000000000000000000" as Address,
+      data: "0x1234",
+      args: ["0x1234"],
+      abi: mockAbi as any,
+    };
+
+    const sizeWithoutAbi = estimateTransactionSize(txWithoutAbi);
+    const sizeWithAbi = estimateTransactionSize(txWithAbi);
+
+    // Size with ABI should be larger due to serialized ABI
+    expect(sizeWithAbi).toBeGreaterThan(sizeWithoutAbi);
+  });
+
+  it("should handle large ABI correctly", () => {
+    // Simulate a realistic ABI with multiple functions
+    const largeAbi = Array(20).fill({
+      type: "function",
+      name: "someFunction",
+      inputs: [
+        { name: "key", type: "bytes32", internalType: "bytes32" },
+        { name: "value", type: "string", internalType: "string" },
+      ],
+      outputs: [{ name: "", type: "bool", internalType: "bool" }],
+      stateMutability: "nonpayable",
+    });
+
+    const tx: WriteTransactionConfig = {
+      to: "0x0000000000000000000000000000000000000000" as Address,
+      data: "0x1234",
+      args: ["0x1234"],
+      abi: largeAbi as any,
+    };
+
+    const size = estimateTransactionSize(tx);
+    const abiSize = JSON.stringify(largeAbi).length;
+
+    // Size should include the ABI
+    expect(size).toBeGreaterThan(abiSize);
+  });
 });
 
 describe("estimateRequestSize", () => {

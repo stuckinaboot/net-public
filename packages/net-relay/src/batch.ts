@@ -11,21 +11,23 @@ import {
  * Storage transactions can be large due to:
  * - Large args arrays (chunk data)
  * - Hex-encoded data in args
- * - ABI structure overhead
+ * - Full ABI included in each transaction (can be 2-3KB)
  *
- * We use a conservative estimate of 100KB per transaction to ensure we stay under the 1MB limit.
- * With 100KB per transaction, we can fit ~9 transactions per batch (900KB / 100KB).
+ * The entire transaction object is serialized to JSON, including the ABI,
+ * so we must account for all fields.
  */
 export function estimateTransactionSize(tx: WriteTransactionConfig): number {
-  // Estimate based on args size
-  // Args can contain large hex-encoded data (chunks), so we assume up to 100KB
-  // Add overhead for JSON structure, ABI, function name, etc. (~1KB)
+  // Measure actual sizes of serialized fields
   const argsSize = tx.args ? JSON.stringify(tx.args).length : 0;
+  const abiSize = tx.abi ? JSON.stringify(tx.abi).length : 0;
+  
+  // Add overhead for: to (~44 bytes), functionName (~20 bytes), 
+  // JSON structure/keys (~100 bytes)
+  const overhead = 200;
 
-  // Use the larger of: actual args size or conservative estimate
   // Cap at MAX_TRANSACTION_SIZE_BYTES to prevent single transaction from exceeding batch limit
   return Math.min(
-    argsSize + 1024, // args + overhead
+    argsSize + abiSize + overhead,
     MAX_TRANSACTION_SIZE_BYTES
   );
 }

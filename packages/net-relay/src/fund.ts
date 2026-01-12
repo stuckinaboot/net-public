@@ -26,6 +26,82 @@ function extractPaymentTxHash(
 }
 
 /**
+ * Determine if a verify error is retryable based on HTTP status and error message
+ */
+function isRetryableVerifyError(
+  statusCode: number,
+  errorMessage: string
+): boolean {
+  // 5xx = always retryable
+  if (statusCode >= 500) return true;
+
+  // 4xx = check for retryable patterns
+  if (statusCode >= 400 && statusCode < 500) {
+    const msg = errorMessage.toLowerCase();
+    return (
+      msg.includes("failed to fetch payment transaction") ||
+      msg.includes("treasury wallet has insufficient balance") ||
+      msg.includes("transferfailed")
+    );
+  }
+
+  return false;
+}
+
+/**
+ * Retry /fund/verify with exponential backoff
+ */
+async function verifyFundWithRetry(
+  apiUrl: string,
+  paymentTxHash: Hash,
+  operatorAddress: string,
+  secretKey: string,
+  chainId: number
+): Promise<VerifyFundResponse> {
+  const maxRetries = 3;
+  const initialDelayMs = 2000;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(`${apiUrl}/api/relay/fund/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chainId,
+        paymentTxHash,
+        operatorAddress,
+        secretKey,
+      }),
+    });
+
+    const data = (await response.json()) as VerifyFundResponse | ErrorResponse;
+
+    if (response.ok && data.success) {
+      return data as VerifyFundResponse;
+    }
+
+    const errorMessage = (data as ErrorResponse).error || "Unknown error";
+
+    // Don't retry non-retryable errors
+    if (!isRetryableVerifyError(response.status, errorMessage)) {
+      throw new Error(`Fund verify failed: ${response.status} ${errorMessage}`);
+    }
+
+    // Last attempt failed
+    if (attempt === maxRetries) {
+      throw new Error(
+        `Fund verify failed after ${maxRetries + 1} attempts: ${errorMessage}`
+      );
+    }
+
+    // Wait before retry (exponential backoff)
+    const delayMs = initialDelayMs * Math.pow(2, attempt);
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error("Verify failed after all retries");
+}
+
+/**
  * Fund backend wallet via x402 relay service
  *
  * This function:
@@ -122,39 +198,18 @@ export async function fundBackendWallet(
   // Step 2: Wait for payment confirmation
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // Step 3: Call /api/relay/fund/verify (Verification & Funding)
-  const verifyFundResponse = await fetch(`${apiUrl}/api/relay/fund/verify`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      chainId,
-      paymentTxHash: paymentTxHash as Hash,
-      operatorAddress,
-      secretKey,
-    }),
-  });
+  // Step 3: Call /api/relay/fund/verify with retry logic
+  const verifyData = await verifyFundWithRetry(
+    apiUrl,
+    paymentTxHash as Hash,
+    operatorAddress,
+    secretKey,
+    chainId
+  );
 
-  if (!verifyFundResponse.ok) {
-    const errorData = (await verifyFundResponse.json()) as ErrorResponse;
-    throw new Error(
-      `Fund verify endpoint failed: ${
-        verifyFundResponse.status
-      } ${JSON.stringify(errorData)}`
-    );
-  }
-
-  const verifyData = (await verifyFundResponse.json()) as VerifyFundResponse;
   console.log("✓ Payment verified and backend wallet funded", {
     backendWalletAddress: verifyData.backendWalletAddress,
   });
-
-  if (!verifyData.success) {
-    throw new Error(
-      `Fund verify failed: ${verifyData.error || "Unknown error"}`
-    );
-  }
 
   if (!verifyData.backendWalletAddress) {
     throw new Error("Backend wallet address not found in verify response");
@@ -165,4 +220,3 @@ export async function fundBackendWallet(
     backendWalletAddress: verifyData.backendWalletAddress,
   };
 }
-

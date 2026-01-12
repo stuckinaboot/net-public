@@ -5,7 +5,7 @@ import {
   NULL_ADDRESS,
 } from "@net-protocol/core";
 import { normalizeFeedTopic } from "../utils/feedUtils";
-import type { UseFeedPostsOptions, NetMessage } from "../types";
+import type { UseFeedPostsOptions } from "../types";
 
 /**
  * React hook for fetching posts from a feed topic.
@@ -78,4 +78,3 @@ export function useFeedPosts({
     // Note: No error field returned (matches useTopicFeed API)
   };
 }
-

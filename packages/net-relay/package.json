@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/relay",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Net Relay SDK for submitting transactions via x402 payment relay service",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

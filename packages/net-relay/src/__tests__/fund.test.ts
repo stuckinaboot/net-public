@@ -152,7 +152,7 @@ describe("fundBackendWallet", () => {
     ).rejects.toThrow("Failed to extract payment transaction hash");
   });
 
-  it("should throw error if verify endpoint fails", async () => {
+  it("should throw error if verify endpoint fails with non-retryable error", async () => {
     mockFetchWithPayment.mockResolvedValueOnce({
       ok: true,
       headers: {
@@ -169,10 +169,10 @@ describe("fundBackendWallet", () => {
 
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,
-      status: 500,
+      status: 400,
       json: async () => ({
         success: false,
-        error: "Verification failed",
+        error: "No USDC transfer to treasury address found",
       }),
     });
 
@@ -185,7 +185,107 @@ describe("fundBackendWallet", () => {
         fetchWithPayment: mockFetchWithPayment as any,
         httpClient: mockHttpClient as any,
       })
-    ).rejects.toThrow("Fund verify endpoint failed");
+    ).rejects.toThrow("Fund verify failed");
+
+    expect(global.fetch).toHaveBeenCalledTimes(1); // No retry
+  });
+
+  it("should retry on network error and succeed", async () => {
+    mockFetchWithPayment.mockResolvedValueOnce({
+      ok: true,
+      headers: {
+        get: vi.fn(() => null),
+      },
+      json: async () => ({
+        success: true,
+      }),
+    });
+
+    mockHttpClient.getPaymentSettleResponse.mockReturnValueOnce({
+      transaction: mockPaymentTxHash,
+    });
+
+    let verifyCallCount = 0;
+    (global.fetch as any).mockImplementation(async () => {
+      verifyCallCount++;
+      if (verifyCallCount === 1) {
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: "Failed to fetch payment transaction or receipt: Network error",
+          }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          success: true,
+          backendWalletAddress: mockBackendWalletAddress,
+        }),
+      };
+    });
+
+    const result = await fundBackendWallet({
+      apiUrl: mockApiUrl,
+      chainId: mockChainId,
+      operatorAddress: mockOperatorAddress,
+      secretKey: mockSecretKey,
+      fetchWithPayment: mockFetchWithPayment as any,
+      httpClient: mockHttpClient as any,
+    });
+
+    expect(verifyCallCount).toBe(2); // Verify retry happened
+    expect(result.backendWalletAddress).toBe(mockBackendWalletAddress);
+  });
+
+  it("should retry on 500 error", async () => {
+    mockFetchWithPayment.mockResolvedValueOnce({
+      ok: true,
+      headers: {
+        get: vi.fn(() => null),
+      },
+      json: async () => ({
+        success: true,
+      }),
+    });
+
+    mockHttpClient.getPaymentSettleResponse.mockReturnValueOnce({
+      transaction: mockPaymentTxHash,
+    });
+
+    let verifyCallCount = 0;
+    (global.fetch as any).mockImplementation(async () => {
+      verifyCallCount++;
+      return verifyCallCount === 1
+        ? {
+            ok: false,
+            status: 500,
+            json: async () => ({
+              success: false,
+              error: "Server error",
+            }),
+          }
+        : {
+            ok: true,
+            json: async () => ({
+              success: true,
+              backendWalletAddress: mockBackendWalletAddress,
+            }),
+          };
+    });
+
+    await fundBackendWallet({
+      apiUrl: mockApiUrl,
+      chainId: mockChainId,
+      operatorAddress: mockOperatorAddress,
+      secretKey: mockSecretKey,
+      fetchWithPayment: mockFetchWithPayment as any,
+      httpClient: mockHttpClient as any,
+    });
+
+    expect(verifyCallCount).toBe(2); // Verify retry happened
   });
 });
 

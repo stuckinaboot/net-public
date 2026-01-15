@@ -14,6 +14,7 @@ export type UseFeedPostsOptions = {
   topic: string;
   maxMessages?: number; // Keep same name as useTopicFeed for compatibility
   enabled?: boolean; // Defaults to true if not provided
+  sender?: `0x${string}`; // Optional: filter by sender address
 };
 
 /**

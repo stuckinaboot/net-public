@@ -381,5 +381,86 @@ describe("useFeedPosts", () => {
     expect("error" in result.current).toBe(false);
     expect(result.current).not.toHaveProperty("error");
   });
+
+  it("should include maker in filter when sender is provided", () => {
+    (useNetMessageCount as any).mockReturnValue({
+      count: 10,
+      isLoading: false,
+    });
+    (useNetMessages as any).mockReturnValue({
+      messages: [],
+      isLoading: false,
+    });
+
+    const senderAddress = "0x1234567890123456789012345678901234567890" as `0x${string}`;
+
+    renderHook(() =>
+      useFeedPosts({
+        chainId: BASE_CHAIN_ID,
+        topic: "crypto",
+        sender: senderAddress,
+      })
+    );
+
+    expect(useNetMessageCount).toHaveBeenCalledWith({
+      chainId: BASE_CHAIN_ID,
+      filter: {
+        appAddress: "0x0000000000000000000000000000000000000000",
+        topic: "feed-crypto",
+        maker: senderAddress,
+      },
+      enabled: true,
+    });
+
+    expect(useNetMessages).toHaveBeenCalledWith({
+      chainId: BASE_CHAIN_ID,
+      filter: {
+        appAddress: "0x0000000000000000000000000000000000000000",
+        topic: "feed-crypto",
+        maker: senderAddress,
+      },
+      startIndex: 0,
+      endIndex: 10,
+      enabled: true,
+    });
+  });
+
+  it("should not include maker in filter when sender is not provided", () => {
+    (useNetMessageCount as any).mockReturnValue({
+      count: 10,
+      isLoading: false,
+    });
+    (useNetMessages as any).mockReturnValue({
+      messages: [],
+      isLoading: false,
+    });
+
+    renderHook(() =>
+      useFeedPosts({
+        chainId: BASE_CHAIN_ID,
+        topic: "crypto",
+      })
+    );
+
+    expect(useNetMessageCount).toHaveBeenCalledWith({
+      chainId: BASE_CHAIN_ID,
+      filter: {
+        appAddress: "0x0000000000000000000000000000000000000000",
+        topic: "feed-crypto",
+      },
+      enabled: true,
+    });
+
+    expect(useNetMessages).toHaveBeenCalledWith({
+      chainId: BASE_CHAIN_ID,
+      filter: {
+        appAddress: "0x0000000000000000000000000000000000000000",
+        topic: "feed-crypto",
+      },
+      startIndex: 0,
+      endIndex: 10,
+      enabled: true,
+    });
+  });
 });
 

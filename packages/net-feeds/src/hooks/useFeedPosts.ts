@@ -16,6 +16,7 @@ import type { UseFeedPostsOptions } from "../types";
  * @param options.topic - Topic name (will be auto-prefixed with "feed-" if not already present)
  * @param options.maxMessages - Maximum number of messages to fetch (default: 50)
  * @param options.enabled - Whether the query is enabled (default: true)
+ * @param options.sender - Optional sender address to filter by
  * @returns Object with posts, totalCount, and isLoading
  *
  * @example
@@ -24,6 +25,7 @@ import type { UseFeedPostsOptions } from "../types";
  *   chainId: 8453,
  *   topic: "crypto", // Auto-prefixed to "feed-crypto"
  *   maxMessages: 50,
+ *   sender: "0x123...", // Optional: only show posts from this address
  * });
  * ```
  */
@@ -32,6 +34,7 @@ export function useFeedPosts({
   topic,
   maxMessages = 50,
   enabled = true,
+  sender,
 }: UseFeedPostsOptions) {
   // Normalize topic (idempotent - safe to call multiple times)
   const normalizedTopic = useMemo(
@@ -39,14 +42,26 @@ export function useFeedPosts({
     [topic]
   );
 
+  // Build filter with optional sender
+  const filter = useMemo(() => {
+    const baseFilter = {
+      appAddress: NULL_ADDRESS as `0x${string}`,
+      topic: normalizedTopic,
+    };
+    if (sender) {
+      return {
+        ...baseFilter,
+        maker: sender as `0x${string}`,
+      };
+    }
+    return baseFilter;
+  }, [normalizedTopic, sender]);
+
   // Get total message count for this feed
   const { count: totalCount, isLoading: isLoadingCount } =
     useNetMessageCount({
       chainId,
-      filter: {
-        appAddress: NULL_ADDRESS as `0x${string}`,
-        topic: normalizedTopic,
-      },
+      filter,
       enabled,
     });
 
@@ -62,10 +77,7 @@ export function useFeedPosts({
   // Get messages (only if enabled and count > 0)
   const { messages, isLoading: isLoadingMessages } = useNetMessages({
     chainId,
-    filter: {
-      appAddress: NULL_ADDRESS as `0x${string}`,
-      topic: normalizedTopic,
-    },
+    filter,
     startIndex,
     endIndex: totalCount,
     enabled: enabled && totalCount > 0, // Guard to prevent query when no messages

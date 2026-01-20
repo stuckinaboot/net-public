@@ -116,6 +116,8 @@ export interface FundBackendWalletParams {
       getHeader: (name: string) => string | null
     ) => { transaction?: string; txHash?: string } | null;
   };
+  /** Optional custom USDC amount. If not provided, uses default minimum. */
+  amount?: number;
 }
 
 /**

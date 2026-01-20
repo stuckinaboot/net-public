@@ -125,14 +125,20 @@ export async function fundBackendWallet(
     fetchWithPayment,
     httpClient,
     chainId,
+    amount,
   } = params;
 
-  const fundUrl = `${apiUrl}/api/relay/${chainId}/fund`;
+  // Build URL with optional amount query param
+  let fundUrl = `${apiUrl}/api/relay/${chainId}/fund`;
+  if (amount !== undefined && amount > 0) {
+    fundUrl += `?amount=${amount}`;
+  }
 
   console.log("💰 Funding backend wallet", {
     url: fundUrl,
     chainId,
     operatorAddress,
+    amount: amount !== undefined ? `$${amount.toFixed(2)}` : "default",
     facilitator:
       chainId === 8453
         ? "Coinbase CDP (Base Mainnet)"

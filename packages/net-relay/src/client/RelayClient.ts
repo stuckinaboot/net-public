@@ -79,6 +79,8 @@ export class RelayClient {
     secretKey: string;
     fetchWithPayment: typeof fetch;
     httpClient: FundBackendWalletParams["httpClient"];
+    /** Optional custom USDC amount. If not provided, uses default minimum. */
+    amount?: number;
   }): Promise<RelayFundResult> {
     return fundBackendWallet({
       apiUrl: this.apiUrl,

@@ -82,6 +82,125 @@ describe("fundBackendWallet", () => {
     );
   });
 
+  it("should use default amount when amount parameter is not provided", async () => {
+    // Mock fund endpoint response
+    mockFetchWithPayment.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: {
+        get: vi.fn((name: string) => {
+          if (name === "X-PAYMENT-RESPONSE") {
+            return JSON.stringify({ transaction: mockPaymentTxHash });
+          }
+          return null;
+        }),
+      },
+      json: async () => ({
+        success: true,
+        payer: mockOperatorAddress,
+        amount: "0.01",
+      }),
+    });
+
+    // Mock httpClient.getPaymentSettleResponse
+    mockHttpClient.getPaymentSettleResponse.mockReturnValueOnce({
+      transaction: mockPaymentTxHash,
+    });
+
+    // Mock verify endpoint response
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        backendWalletAddress: mockBackendWalletAddress,
+        fundedAmountEth: "0.01",
+        transactionHash: mockPaymentTxHash,
+      }),
+    });
+
+    const result = await fundBackendWallet({
+      apiUrl: mockApiUrl,
+      chainId: mockChainId,
+      operatorAddress: mockOperatorAddress,
+      secretKey: mockSecretKey,
+      fetchWithPayment: mockFetchWithPayment as any,
+      httpClient: mockHttpClient as any,
+      // Explicitly not providing amount parameter
+    });
+
+    expect(result.paymentTxHash).toBe(mockPaymentTxHash);
+    expect(result.backendWalletAddress).toBe(mockBackendWalletAddress);
+    // Verify URL does NOT have amount query param
+    expect(mockFetchWithPayment).toHaveBeenCalledWith(
+      `${mockApiUrl}/api/relay/${mockChainId}/fund`,
+      expect.objectContaining({
+        method: "POST",
+      })
+    );
+    // Verify URL doesn't contain ?amount=
+    const callUrl = (mockFetchWithPayment as any).mock.calls[0][0];
+    expect(callUrl).not.toContain("?amount=");
+  });
+
+  it("should append amount query param when custom amount is provided", async () => {
+    const customAmount = 0.25;
+
+    // Mock fund endpoint response
+    mockFetchWithPayment.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: {
+        get: vi.fn((name: string) => {
+          if (name === "X-PAYMENT-RESPONSE") {
+            return JSON.stringify({ transaction: mockPaymentTxHash });
+          }
+          return null;
+        }),
+      },
+      json: async () => ({
+        success: true,
+        payer: mockOperatorAddress,
+        amount: customAmount.toString(),
+      }),
+    });
+
+    // Mock httpClient.getPaymentSettleResponse
+    mockHttpClient.getPaymentSettleResponse.mockReturnValueOnce({
+      transaction: mockPaymentTxHash,
+    });
+
+    // Mock verify endpoint response
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        backendWalletAddress: mockBackendWalletAddress,
+        fundedAmountEth: customAmount.toString(),
+        transactionHash: mockPaymentTxHash,
+      }),
+    });
+
+    const result = await fundBackendWallet({
+      apiUrl: mockApiUrl,
+      chainId: mockChainId,
+      operatorAddress: mockOperatorAddress,
+      secretKey: mockSecretKey,
+      fetchWithPayment: mockFetchWithPayment as any,
+      httpClient: mockHttpClient as any,
+      amount: customAmount,
+    });
+
+    expect(result.paymentTxHash).toBe(mockPaymentTxHash);
+    expect(result.backendWalletAddress).toBe(mockBackendWalletAddress);
+    // Verify URL includes amount query param
+    expect(mockFetchWithPayment).toHaveBeenCalledWith(
+      `${mockApiUrl}/api/relay/${mockChainId}/fund?amount=${customAmount}`,
+      expect.objectContaining({
+        method: "POST",
+      })
+    );
+  });
+
   it("should handle 402 Payment Required status", async () => {
     mockFetchWithPayment.mockResolvedValueOnce({
       ok: false,

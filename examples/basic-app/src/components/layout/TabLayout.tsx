@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 
-type Tab = "chat" | "storage";
+type Tab = "chat" | "storage" | "launch";
 
 interface TabLayoutProps {
   activeTab: Tab;
@@ -18,6 +18,7 @@ export function TabLayout({ activeTab, onTabChange, children }: TabLayoutProps) 
   const tabs: { id: Tab; label: string }[] = [
     { id: "chat", label: "Chat" },
     { id: "storage", label: "Storage" },
+    { id: "launch", label: "Launch" },
   ];
 
   return (

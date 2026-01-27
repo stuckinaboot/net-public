@@ -10,7 +10,7 @@ A Netr token is a memecoin-NFT pairing:
 - **Optional NFT Drop**: A paired ERC1155 NFT collection (via Inscribed Drops)
 - **Automatic Liquidity**: Uniswap V3 pool created at deployment
 - **Locked Liquidity**: LP locked for ~1000 years (rug-pull protection)
-- **Creator Fees**: 5% of trading fees go to token creator
+- **Fee split**: The memecoin creator earns 50% of the memecoin trading fees
 
 > **Note**: At the smart contract level, this system is called "Banger" (e.g., `BangerV4.sol`). The SDK uses "Netr" for consistency with the Net Protocol brand.
 

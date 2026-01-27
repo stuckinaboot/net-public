@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/netr",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Netr Token SDK for deploying and interacting with memecoin-NFT pairs on Net Protocol",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

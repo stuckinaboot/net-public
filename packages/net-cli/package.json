@@ -3,18 +3,8 @@
   "version": "0.1.0",
   "description": "CLI tool for Net Protocol",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "module": "./dist/index.mjs",
   "bin": {
     "net": "./dist/cli/index.mjs"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
   },
   "files": [
     "dist",

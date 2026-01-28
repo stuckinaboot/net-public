@@ -1,16 +1,44 @@
 import chalk from "chalk";
-import type { CommonOptions } from "../shared/types";
+import type { CommonOptions, ReadOnlyOptions } from "../shared/types";
 
 /**
- * Parse and validate common options shared across all commands
- * Extracts private key, chain ID, and RPC URL from command options or environment variables
+ * Get chain ID from option or environment variable, exit if not found
+ */
+function getRequiredChainId(optionValue?: number): number {
+  const chainId =
+    optionValue ||
+    (process.env.NET_CHAIN_ID
+      ? parseInt(process.env.NET_CHAIN_ID, 10)
+      : undefined);
+
+  if (!chainId) {
+    console.error(
+      chalk.red(
+        "Error: Chain ID is required. Provide via --chain-id flag or NET_CHAIN_ID environment variable"
+      )
+    );
+    process.exit(1);
+  }
+
+  return chainId;
+}
+
+/**
+ * Get RPC URL from option or environment variable
+ */
+function getRpcUrl(optionValue?: string): string | undefined {
+  return optionValue || process.env.NET_RPC_URL;
+}
+
+/**
+ * Parse and validate common options shared across all commands.
+ * Extracts private key, chain ID, and RPC URL from command options or environment variables.
  */
 export function parseCommonOptions(options: {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
 }): CommonOptions {
-  // Get private key from option or environment variable
   const privateKey =
     options.privateKey ||
     process.env.NET_PRIVATE_KEY ||
@@ -25,7 +53,6 @@ export function parseCommonOptions(options: {
     process.exit(1);
   }
 
-  // Validate private key format
   if (!privateKey.startsWith("0x") || privateKey.length !== 66) {
     console.error(
       chalk.red(
@@ -35,38 +62,31 @@ export function parseCommonOptions(options: {
     process.exit(1);
   }
 
-  // Warn about private key security if provided via command line
   if (options.privateKey) {
     console.warn(
       chalk.yellow(
-        "⚠️  Warning: Private key provided via command line. Consider using NET_PRIVATE_KEY environment variable instead."
+        "Warning: Private key provided via command line. Consider using NET_PRIVATE_KEY environment variable instead."
       )
     );
   }
-
-  // Get chain ID from option or environment variable
-  const chainId =
-    options.chainId ||
-    (process.env.NET_CHAIN_ID
-      ? parseInt(process.env.NET_CHAIN_ID, 10)
-      : undefined);
-
-  if (!chainId) {
-    console.error(
-      chalk.red(
-        "Error: Chain ID is required. Provide via --chain-id flag or NET_CHAIN_ID environment variable"
-      )
-    );
-    process.exit(1);
-  }
-
-  // Get RPC URL from option or environment variable
-  const rpcUrl = options.rpcUrl || process.env.NET_RPC_URL;
 
   return {
     privateKey: privateKey as `0x${string}`,
-    chainId,
-    rpcUrl,
+    chainId: getRequiredChainId(options.chainId),
+    rpcUrl: getRpcUrl(options.rpcUrl),
   };
 }
 
+/**
+ * Parse and validate read-only options for commands that don't need a private key.
+ * Extracts chain ID and RPC URL from command options or environment variables.
+ */
+export function parseReadOnlyOptions(options: {
+  chainId?: number;
+  rpcUrl?: string;
+}): ReadOnlyOptions {
+  return {
+    chainId: getRequiredChainId(options.chainId),
+    rpcUrl: getRpcUrl(options.rpcUrl),
+  };
+}

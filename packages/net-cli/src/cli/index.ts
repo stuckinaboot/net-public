@@ -3,6 +3,9 @@
 import "dotenv/config";
 import { Command } from "commander";
 import { registerStorageCommand } from "../commands/storage";
+import { registerMessageCommand } from "../commands/message";
+import { registerChainsCommand } from "../commands/chains";
+import { registerInfoCommand } from "../commands/info";
 
 const program = new Command();
 
@@ -13,5 +16,8 @@ program
 
 // Register commands
 registerStorageCommand(program);
+registerMessageCommand(program);
+registerChainsCommand(program);
+registerInfoCommand(program);
 
 program.parse();

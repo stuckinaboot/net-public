@@ -9,43 +9,51 @@ type GetNetMessagesReadConfigParams = {
   endIndex?: number;
 };
 
-// Build contract read args for message queries
-// Accepts GetNetMessagesOptions for backward compatibility with hooks
+/**
+ * Build contract read args for message queries.
+ * Accepts GetNetMessagesOptions for backward compatibility with hooks.
+ */
 export function getNetMessagesReadConfig(
   params: GetNetMessagesOptions | GetNetMessagesReadConfigParams
 ) {
   const { chainId, filter, startIndex = 0, endIndex } = params;
   const netContract = getNetContract(chainId);
 
-  // Standard filter-based config
-  if (filter) {
-    const functionName = filter.maker
-      ? "getMessagesInRangeForAppUserTopic"
-      : filter.topic
-      ? "getMessagesInRangeForAppTopic"
-      : "getMessagesInRangeForApp";
-
-    const args = filter.maker
-      ? [startIndex, endIndex, filter.appAddress, filter.maker, filter.topic ?? ""]
-      : filter.topic
-      ? [startIndex, endIndex, filter.appAddress, filter.topic]
-      : [startIndex, endIndex, filter.appAddress];
-
+  if (!filter) {
     return {
       abi: netContract.abi,
       address: netContract.address,
-      functionName,
-      args,
+      functionName: "getMessagesInRange",
+      args: [startIndex, endIndex ?? 0],
       chainId,
     };
   }
 
-  // Global messages
+  const hasMaker = Boolean(filter.maker);
+  const hasTopic = Boolean(filter.topic);
+
+  let functionName: string;
+  let args: unknown[];
+
+  if (hasMaker && hasTopic) {
+    functionName = "getMessagesInRangeForAppUserTopic";
+    args = [startIndex, endIndex, filter.appAddress, filter.maker, filter.topic];
+  } else if (hasMaker) {
+    functionName = "getMessagesInRangeForAppUser";
+    args = [startIndex, endIndex, filter.appAddress, filter.maker];
+  } else if (hasTopic) {
+    functionName = "getMessagesInRangeForAppTopic";
+    args = [startIndex, endIndex, filter.appAddress, filter.topic];
+  } else {
+    functionName = "getMessagesInRangeForApp";
+    args = [startIndex, endIndex, filter.appAddress];
+  }
+
   return {
     abi: netContract.abi,
     address: netContract.address,
-    functionName: "getMessagesInRange",
-    args: [startIndex, endIndex ?? 0],
+    functionName,
+    args,
     chainId,
   };
 }
@@ -56,45 +64,51 @@ type GetNetMessageCountReadConfigParams = {
   filter?: GetNetMessageCountOptions["filter"];
 };
 
-// Build contract read args for message count
-// Accepts GetNetMessageCountOptions for backward compatibility with hooks
+/**
+ * Build contract read args for message count.
+ * Accepts GetNetMessageCountOptions for backward compatibility with hooks.
+ */
 export function getNetMessageCountReadConfig(
   params: GetNetMessageCountOptions | GetNetMessageCountReadConfigParams
 ) {
   const { chainId, filter } = params;
   const netContract = getNetContract(chainId);
 
-  // Standard filter-based config
-  if (filter) {
-    const functionName = filter.maker
-      ? "getTotalMessagesForAppUserTopicCount"
-      : filter.topic
-      ? "getTotalMessagesForAppTopicCount"
-      : "getTotalMessagesForAppCount";
-
-    const args = filter.maker
-      ? [filter.appAddress, filter.maker, filter.topic ?? ""]
-      : filter.topic
-      ? [filter.appAddress, filter.topic]
-      : [filter.appAddress];
-
+  if (!filter) {
     return {
       abi: netContract.abi,
       address: netContract.address,
-      functionName,
-      args,
+      functionName: "getTotalMessagesCount",
+      args: [],
       chainId,
     };
   }
 
-  // Global count
+  const hasMaker = Boolean(filter.maker);
+  const hasTopic = Boolean(filter.topic);
+
+  let functionName: string;
+  let args: unknown[];
+
+  if (hasMaker && hasTopic) {
+    functionName = "getTotalMessagesForAppUserTopicCount";
+    args = [filter.appAddress, filter.maker, filter.topic];
+  } else if (hasMaker) {
+    functionName = "getTotalMessagesForAppUserCount";
+    args = [filter.appAddress, filter.maker];
+  } else if (hasTopic) {
+    functionName = "getTotalMessagesForAppTopicCount";
+    args = [filter.appAddress, filter.topic];
+  } else {
+    functionName = "getTotalMessagesForAppCount";
+    args = [filter.appAddress];
+  }
+
   return {
     abi: netContract.abi,
     address: netContract.address,
-    functionName: "getTotalMessagesCount",
-    args: [],
+    functionName,
+    args,
     chainId,
   };
 }
-
-

@@ -11,18 +11,23 @@ Interact with Net Protocol - a decentralized onchain messaging and storage syste
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/stuckinaboot/net-public.git
-   cd net-public
+1. Add the marketplace:
+   ```
+   /plugin marketplace add stuckinaboot/net-public
    ```
 
-2. Run Claude Code with the plugin:
-   ```bash
-   claude --plugin-dir ./claude/plugins/net-protocol
+2. Install the plugin:
+   ```
+   /plugin install net-protocol@net-protocol-marketplace
    ```
 
-   Or add to your Claude Code settings for permanent use.
+Alternatively, for local development:
+
+```bash
+git clone https://github.com/stuckinaboot/net-public.git
+cd net-public
+claude --plugin-dir ./plugins/net-protocol
+```
 
 ## Prerequisites
 
@@ -86,9 +91,15 @@ Autonomous exploration of Net Protocol data:
 |-------|----------|----------|
 | Base | 8453 | Messages, Storage, Tokens |
 | Ethereum | 1 | Messages, Storage |
+| Degen | 666666666 | Messages, Storage |
+| Ham | 5112 | Messages, Storage |
+| Ink | 57073 | Messages, Storage |
+| Unichain | 130 | Messages, Storage |
+| HyperEVM | 999 | Messages, Storage, Tokens |
 | Plasma | 9745 | Messages, Storage, Tokens |
 | Monad | 143 | Messages, Storage, Tokens |
-| HyperEVM | 999 | Messages, Storage, Tokens |
+| Base Sepolia | 84532 | Messages, Storage (Testnet) |
+| Sepolia | 11155111 | Messages, Storage (Testnet) |
 
 ## Documentation
 

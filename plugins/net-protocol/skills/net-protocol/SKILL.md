@@ -15,10 +15,20 @@ Net Protocol is a decentralized onchain messaging and storage system on EVM chai
 - **Storage**: Permanent key-value storage with version history
 - **Token Launching**: Deploy memecoins with automatic liquidity (Netr/Banger)
 
-**Supported Chains:**
+**Supported Chains (Messages & Storage):**
 - Base (8453) - Primary chain
 - Ethereum (1)
-- Plasma (9745), Monad (143), HyperEVM (999) - For tokens
+- Degen (666666666)
+- Ham (5112)
+- Ink (57073)
+- Unichain (130)
+- HyperEVM (999)
+- Plasma (9745)
+- Monad (143)
+- Base Sepolia (84532), Sepolia (11155111) - Testnets
+
+**Token Deployment Chains:**
+- Base (8453), Plasma (9745), Monad (143), HyperEVM (999)
 
 ## CLI Tool: `netp`
 

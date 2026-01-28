@@ -7,7 +7,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "yarn workspaces foreach -At run build",
+    "build": "yarn workspaces foreach -A --topological-dev run build",
     "build:all": "yarn build",
     "clean": "yarn workspaces foreach -A run clean",
     "typecheck": "yarn workspaces foreach -A run typecheck",

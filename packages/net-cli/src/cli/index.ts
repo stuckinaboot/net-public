@@ -7,9 +7,9 @@ import { registerStorageCommand } from "../commands/storage";
 const program = new Command();
 
 program
-  .name("net-cli")
+  .name("net")
   .description("CLI tool for Net Protocol")
-  .version("1.0.0");
+  .version("0.1.0");
 
 // Register commands
 registerStorageCommand(program);

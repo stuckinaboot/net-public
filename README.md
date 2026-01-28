@@ -35,6 +35,7 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 | [@net-protocol/core](./packages/net-core/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/cli](./packages/net-cli/README.md)         | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/netr](./packages/net-netr/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/relay](./packages/net-relay/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 
@@ -130,6 +131,46 @@ netp message send --text "Hello!" --chain-id 8453 --encode-only
 netp token deploy --name "My Token" --symbol "MTK" --image "https://example.com/image.png" --chain-id 8453 --encode-only
 ```
 
+### [@net-protocol/netr](./packages/net-netr/README.md)
+
+**Netr token SDK** - Deploy and interact with memecoin-NFT pairs on Net Protocol.
+
+**What you can do:**
+
+- Deploy memecoins with automatic Uniswap V3 liquidity
+- Query token metadata, prices, and pool information
+- Build deployment transactions for external signing
+- Access locker data (LP locked for ~1000 years)
+
+**Quick examples:**
+
+```typescript
+import { NetrClient } from "@net-protocol/netr";
+
+const client = new NetrClient({ chainId: 8453 });
+
+// Get token info
+const token = await client.getToken("0x...");
+console.log(token?.name, token?.symbol);
+
+// Get current price
+const price = await client.getPrice("0x...");
+console.log(`Price: ${price?.priceInEth} ETH`);
+
+// Generate salt and build deploy transaction
+const saltResult = await client.generateSalt({
+  name: "My Token",
+  symbol: "MTK",
+  image: "https://example.com/image.png",
+  deployer: "0x...",
+});
+
+const txConfig = client.buildDeployConfig(
+  { name: "My Token", symbol: "MTK", image: "https://...", deployer: "0x..." },
+  saltResult.salt
+);
+```
+
 ## Quick Start
 
 ### Installation
@@ -208,6 +249,7 @@ For detailed usage, API reference, and examples, see the individual package docu
 - [@net-protocol/core documentation](./packages/net-core/README.md)
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
 - [@net-protocol/cli documentation](./packages/net-cli/README.md)
+- [@net-protocol/netr documentation](./packages/net-netr/README.md)
 - [@net-protocol/relay documentation](./packages/net-relay/README.md)
 - [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
 
@@ -218,6 +260,29 @@ Working examples demonstrating how to build with Net Protocol:
 - **[Basic App](./examples/basic-app/)** - A Next.js React application showing chat messaging and storage features with wallet integration
 
 See the [examples directory](./examples/) for more details and setup instructions.
+
+## Claude Code Plugin
+
+This repository includes a [Claude Code](https://claude.ai/claude-code) plugin that enables AI-assisted development with Net Protocol. The plugin provides skills and agents that understand Net Protocol's contracts, SDK patterns, and best practices.
+
+### Installation
+
+1. Add the marketplace:
+   ```
+   /plugin marketplace add stuckinaboot/net-public
+   ```
+
+2. Install the plugin:
+   ```
+   /plugin install net-protocol@net-protocol-marketplace
+   ```
+
+### What's Included
+
+- **Net Protocol skill** - Contextual knowledge about Net contracts, SDK usage patterns, and best practices
+- **Net Explorer agent** - Specialized agent for exploring and building with Net Protocol
+
+See the [plugin README](./plugins/net-protocol/README.md) for more details.
 
 ## Repository Structure
 

@@ -1,0 +1,20 @@
+{
+  "name": "net-protocol-marketplace",
+  "owner": {
+    "name": "Net Protocol"
+  },
+  "metadata": {
+    "description": "Official Claude Code plugins for Net Protocol - decentralized onchain messaging and storage",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "net-protocol",
+      "source": "./plugins/net-protocol",
+      "description": "Interact with Net Protocol - decentralized onchain messaging and storage on EVM chains",
+      "version": "0.1.0",
+      "category": "blockchain",
+      "tags": ["blockchain", "web3", "storage", "messaging", "tokens", "base"]
+    }
+  ]
+}

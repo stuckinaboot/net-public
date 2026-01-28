@@ -17,7 +17,7 @@ yarn global add @net-protocol/cli
 The CLI uses a subcommand pattern. Each command is isolated and has its own options:
 
 ```bash
-net <command> [options]
+netp <command> [options]
 ```
 
 ### Available Commands
@@ -36,7 +36,7 @@ Storage operations for Net Protocol. The `storage` command is a command group wi
 Upload files to Net Storage using either normal storage (for files ≤ 20KB) or XML storage (for files > 20KB or containing XML references).
 
 ```bash
-net storage upload \
+netp storage upload \
   --file <path> \
   --key <storage-key> \
   --text <description> \
@@ -58,7 +58,7 @@ net storage upload \
 
 ```bash
 # Using command-line flags
-net storage upload \
+netp storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -68,7 +68,7 @@ net storage upload \
 # Using environment variables (recommended)
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 export NET_CHAIN_ID=8453
-net storage upload \
+netp storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file"
@@ -78,7 +78,7 @@ net storage upload \
 # NET_PRIVATE_KEY=0x...
 # NET_CHAIN_ID=8453
 # NET_RPC_URL=https://base-mainnet.public.blastapi.io  # optional
-net storage upload --file ./example.txt --key "my-file" --text "Example file"
+netp storage upload --file ./example.txt --key "my-file" --text "Example file"
 ```
 
 ##### Storage Preview
@@ -86,7 +86,7 @@ net storage upload --file ./example.txt --key "my-file" --text "Example file"
 Preview what would be uploaded without actually submitting transactions. Shows statistics about chunks, transactions, and what's already stored.
 
 ```bash
-net storage preview \
+netp storage preview \
   --file <path> \
   --key <storage-key> \
   --text <description> \
@@ -102,7 +102,7 @@ Same as `storage upload` - see above.
 **Example:**
 
 ```bash
-net storage preview \
+netp storage preview \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -169,11 +169,11 @@ If an upload fails mid-way:
 
 ```bash
 # First upload
-net storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
+netp storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 # Output: ✓ File uploaded successfully!
 
 # Second upload (same file, same key)
-net storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
+netp storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 # Output: ✓ All data already stored - skipping upload
 ```
 
@@ -298,7 +298,7 @@ These are parsed and validated by `parseCommonOptions()` from `cli/shared.ts`.
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 # Run without --private-key flag (it will use the env var)
-net storage upload \
+netp storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \

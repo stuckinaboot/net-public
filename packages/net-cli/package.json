@@ -4,7 +4,7 @@
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
-    "net": "./dist/cli/index.mjs"
+    "netp": "./dist/cli/index.mjs"
   },
   "files": [
     "dist",

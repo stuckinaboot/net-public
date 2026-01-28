@@ -34,6 +34,7 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 | --------------------------------------------------------- | ------------------ | ---------------------------------------------- |
 | [@net-protocol/core](./packages/net-core/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/cli](./packages/net-cli/README.md)         | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/relay](./packages/net-relay/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 
@@ -87,6 +88,19 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 - Post to feeds (social media style)
 - Build decentralized social applications
 - Create community discussion forums
+
+### [@net-protocol/cli](./packages/net-cli/README.md)
+
+**Command-line interface** - Interact with Net Protocol from the terminal.
+
+**What you can do:**
+
+- Upload files to Net Storage (supports small and large files)
+- Read data from Net Storage
+- Send and read messages
+- Deploy Netr tokens
+- Preview transactions before executing
+- Works with environment variables for secure key management
 
 ## Quick Start
 
@@ -165,6 +179,7 @@ For detailed usage, API reference, and examples, see the individual package docu
 
 - [@net-protocol/core documentation](./packages/net-core/README.md)
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
+- [@net-protocol/cli documentation](./packages/net-cli/README.md)
 - [@net-protocol/relay documentation](./packages/net-relay/README.md)
 - [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
 
@@ -173,7 +188,6 @@ For detailed usage, API reference, and examples, see the individual package docu
 Working examples demonstrating how to build with Net Protocol:
 
 - **[Basic App](./examples/basic-app/)** - A Next.js React application showing chat messaging and storage features with wallet integration
-- **[CLI](./examples/cli/)** - A command-line tool for interacting with Net Protocol, supporting storage operations and more
 
 See the [examples directory](./examples/) for more details and setup instructions.
 

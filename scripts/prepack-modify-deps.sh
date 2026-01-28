@@ -28,32 +28,58 @@ if [[ -z "$PACKAGE_NAME" ]]; then
   exit 0  # Invalid package.json, skip
 fi
 
-CURRENT_DEP=$(node -p "require('$PACKAGE_JSON').dependencies['@net-protocol/core']" 2>/dev/null || echo "")
+# Check if any dependencies use file: references
+HAS_FILE_DEPS=$(node -p "
+  const pkg = require('$PACKAGE_JSON');
+  const deps = pkg.dependencies || {};
+  Object.values(deps).some(v => v.startsWith('file:')) ? 'true' : 'false'
+" 2>/dev/null || echo "false")
 
-if [[ "$CURRENT_DEP" == *"file:"* ]]; then
-  # Get version from net-core package.json
-  CORE_VERSION=$(node -p "require('$CORE_PKG').version")
-  
+if [[ "$HAS_FILE_DEPS" == "true" ]]; then
   echo "📦 Preparing for pack/publish: converting file: → version..."
   echo "   Package: $PACKAGE_NAME"
-  echo "   Current net-core version: $CORE_VERSION"
-  
-  # Save original and modify
+
+  # Save original and modify all file: dependencies
   node -e "
     const fs = require('fs');
+    const path = require('path');
     const pkg = JSON.parse(fs.readFileSync('$PACKAGE_JSON', 'utf8'));
-    
+
     // Save original
     fs.writeFileSync('$PACKAGE_JSON.orig', JSON.stringify(pkg, null, 2) + '\n');
-    
-    // Modify dependency
-    pkg.dependencies['@net-protocol/core'] = '^$CORE_VERSION';
+
+    // Map of package names to their package directory names
+    const pkgDirMap = {
+      '@net-protocol/core': 'net-core',
+      '@net-protocol/storage': 'net-storage',
+      '@net-protocol/relay': 'net-relay',
+      '@net-protocol/feeds': 'net-feeds',
+      '@net-protocol/netr': 'net-netr'
+    };
+
+    // Convert all file: dependencies to versioned dependencies
+    for (const [depName, depValue] of Object.entries(pkg.dependencies || {})) {
+      if (depValue.startsWith('file:')) {
+        const dirName = pkgDirMap[depName];
+        if (dirName) {
+          const depPkgPath = path.join('$ROOT_DIR', 'packages', dirName, 'package.json');
+          try {
+            const depPkg = JSON.parse(fs.readFileSync(depPkgPath, 'utf8'));
+            pkg.dependencies[depName] = '^' + depPkg.version;
+            console.log('   ' + depName + ': file: → ^' + depPkg.version);
+          } catch (e) {
+            console.error('   Warning: Could not read version for ' + depName);
+          }
+        }
+      }
+    }
+
     fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
   "
-  
-  echo "✅ Temporarily updated to @net-protocol/core@^$CORE_VERSION"
+
+  echo "✅ Temporarily updated file: dependencies to versions"
   echo "   Original saved to package.json.orig"
 else
-  echo "   Already using version: $CURRENT_DEP (skipping)"
+  echo "   No file: dependencies found (skipping)"
 fi
 

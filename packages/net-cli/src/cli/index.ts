@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
 import "dotenv/config";
 import { Command } from "commander";
@@ -7,9 +7,9 @@ import { registerStorageCommand } from "../commands/storage";
 const program = new Command();
 
 program
-  .name("net-cli")
+  .name("netp")
   .description("CLI tool for Net Protocol")
-  .version("1.0.0");
+  .version("0.1.0");
 
 // Register commands
 registerStorageCommand(program);

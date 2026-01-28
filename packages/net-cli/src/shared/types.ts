@@ -24,4 +24,3 @@ export interface EncodedTransaction {
   chainId: number;
   value: string;
 }
-

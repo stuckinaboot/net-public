@@ -910,6 +910,42 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@net-protocol/cli@workspace:packages/net-cli":
+  version: 0.0.0-use.local
+  resolution: "@net-protocol/cli@workspace:packages/net-cli"
+  dependencies:
+    "@net-protocol/core": "file:../net-core"
+    "@net-protocol/relay": "file:../net-relay"
+    "@net-protocol/storage": "file:../net-storage"
+    "@types/node": "npm:^20.17.6"
+    "@vitest/ui": "npm:^1.0.0"
+    "@x402/evm": "npm:^2.1.0"
+    "@x402/fetch": "npm:^2.1.0"
+    chalk: "npm:^5.3.0"
+    commander: "npm:^12.1.0"
+    dotenv: "npm:^17.2.3"
+    tsup: "npm:^8.0.0"
+    tsx: "npm:^4.21.0"
+    typescript: "npm:^5.6.3"
+    viem: "npm:^2.31.4"
+    vitest: "npm:^1.0.0"
+  bin:
+    net: ./dist/cli/index.mjs
+  languageName: unknown
+  linkType: soft
+
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
+  version: 0.1.4
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=05afab&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  dependencies:
+    viem: "npm:^2.31.4"
+  peerDependencies:
+    react: ^18.0.0
+    wagmi: ^2.15.0
+  checksum: 2ba434df680954801f9bcdccc0e220be956347ee214764bc831f247f68e2d4e43b5ca792d4cc03aff1839a3731c334808d41396e57135770bf73b3730d589130
+  languageName: node
+  linkType: hard
+
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds":
   version: 0.1.4
   resolution: "@net-protocol/core@file:../net-core#../net-core::hash=05afab&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
@@ -934,9 +970,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Frelay%40file%3A..%2Fnet-relay%23..%2Fnet-relay%3A%3Ahash%3D6ad5d2%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+  version: 0.1.4
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=05afab&locator=%40net-protocol%2Frelay%40file%3A..%2Fnet-relay%23..%2Fnet-relay%3A%3Ahash%3D6ad5d2%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  dependencies:
+    viem: "npm:^2.31.4"
+  peerDependencies:
+    react: ^18.0.0
+    wagmi: ^2.15.0
+  checksum: 2ba434df680954801f9bcdccc0e220be956347ee214764bc831f247f68e2d4e43b5ca792d4cc03aff1839a3731c334808d41396e57135770bf73b3730d589130
+  languageName: node
+  linkType: hard
+
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Frelay%40workspace%3Apackages%2Fnet-relay":
   version: 0.1.4
   resolution: "@net-protocol/core@file:../net-core#../net-core::hash=05afab&locator=%40net-protocol%2Frelay%40workspace%3Apackages%2Fnet-relay"
+  dependencies:
+    viem: "npm:^2.31.4"
+  peerDependencies:
+    react: ^18.0.0
+    wagmi: ^2.15.0
+  checksum: 2ba434df680954801f9bcdccc0e220be956347ee214764bc831f247f68e2d4e43b5ca792d4cc03aff1839a3731c334808d41396e57135770bf73b3730d589130
+  languageName: node
+  linkType: hard
+
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3Deebcd5%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+  version: 0.1.4
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=05afab&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3Deebcd5%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1032,7 +1092,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/relay@npm:*, @net-protocol/relay@workspace:packages/net-relay":
+"@net-protocol/relay@file:../net-relay::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
+  version: 0.1.3
+  resolution: "@net-protocol/relay@file:../net-relay#../net-relay::hash=6ad5d2&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  dependencies:
+    "@net-protocol/core": "file:../net-core"
+    "@x402/evm": "npm:^2.1.0"
+    "@x402/fetch": "npm:^2.1.0"
+    viem: "npm:^2.31.4"
+  checksum: 7a4f0b844e4fe737a51434ecf2f6b0bcce14985c28f22d14d9488dd306d3ac10ce23cf9f0bc35cbb491305d3c5be8745682eaaa84a5977c8608ceeb09c0d9d68
+  languageName: node
+  linkType: hard
+
+"@net-protocol/relay@workspace:packages/net-relay":
   version: 0.0.0-use.local
   resolution: "@net-protocol/relay@workspace:packages/net-relay"
   dependencies:
@@ -1047,6 +1119,21 @@ __metadata:
     vitest: "npm:^1.0.0"
   languageName: unknown
   linkType: soft
+
+"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
+  version: 0.1.9
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=eebcd5&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  dependencies:
+    "@net-protocol/core": "file:../net-core"
+    pako: "npm:^2.1.0"
+    use-async-effect: "npm:^2.2.7"
+    viem: "npm:^2.31.4"
+  peerDependencies:
+    react: ^18.0.0
+    wagmi: ^2.15.0
+  checksum: d7c6f94e7f6852eb652a919dfaadc2822548848bfb4c08f69a290846ab4593671f74f9856c1e9f12224b6a98aa47460aa5c506f617b513fd2072a32dc48b4ae9
+  languageName: node
+  linkType: hard
 
 "@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr":
   version: 0.1.9
@@ -6244,28 +6331,6 @@ __metadata:
   checksum: 4c559dd52669ea48e1914f9d634227c561221dd54734070791f999c52ed0ff36e437b2e07d5c1f6e32909fc625fe46491c16e4a8f0572567d4dd15c3a4fda04b
   languageName: node
   linkType: hard
-
-"net-cli@workspace:examples/cli":
-  version: 0.0.0-use.local
-  resolution: "net-cli@workspace:examples/cli"
-  dependencies:
-    "@net-protocol/core": "npm:*"
-    "@net-protocol/relay": "npm:*"
-    "@net-protocol/storage": "npm:*"
-    "@types/node": "npm:^20.17.6"
-    "@x402/evm": "npm:^2.1.0"
-    "@x402/fetch": "npm:^2.1.0"
-    chalk: "npm:^5.3.0"
-    commander: "npm:^12.1.0"
-    dotenv: "npm:^17.2.3"
-    tsx: "npm:^4.21.0"
-    typescript: "npm:^5.6.3"
-    viem: "npm:^2.31.4"
-    vitest: "npm:^1.0.0"
-  bin:
-    net-cli: ./src/cli/index.ts
-  languageName: unknown
-  linkType: soft
 
 "net-protocol-example-app@workspace:examples/basic-app":
   version: 0.0.0-use.local

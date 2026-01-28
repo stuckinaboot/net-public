@@ -95,12 +95,40 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 
 **What you can do:**
 
+- Send and read messages on Net Protocol
 - Upload files to Net Storage (supports small and large files)
 - Read data from Net Storage
-- Send and read messages
-- Deploy Netr tokens
+- Deploy Netr tokens (memecoin-NFT pairs with automatic Uniswap pool, locked liquidity, and creator fee share)
 - Preview transactions before executing
 - Works with environment variables for secure key management
+
+**Quick examples:**
+
+```bash
+# Install globally
+npm install -g @net-protocol/cli
+
+# Send a message
+netp message send --text "Hello from CLI!" --private-key $PRIVATE_KEY --chain-id 8453
+
+# Read recent messages from an app
+netp message read --app 0x1234... --limit 10 --chain-id 8453
+
+# Read messages by topic
+netp message read --topic "announcements" --chain-id 8453
+
+# Deploy a Netr token
+netp token deploy \
+  --name "My Token" \
+  --symbol "MTK" \
+  --image "https://example.com/image.png" \
+  --private-key $PRIVATE_KEY \
+  --chain-id 8453
+
+# Encode-only mode (outputs transaction JSON without executing)
+netp message send --text "Hello!" --chain-id 8453 --encode-only
+netp token deploy --name "My Token" --symbol "MTK" --image "https://example.com/image.png" --chain-id 8453 --encode-only
+```
 
 ## Quick Start
 

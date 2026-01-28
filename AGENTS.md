@@ -209,6 +209,7 @@ registerMyCommand(program);
 2. If chain supports storage, add to `packages/net-storage/src/chainConfig.ts`
 3. If chain supports Netr tokens, add to `packages/net-netr/src/chainConfig.ts`
 4. Update tests and documentation
+5. **Update Claude plugin:** `plugins/net-protocol/skills/net-protocol/SKILL.md` (supported chains list)
 
 ### Adding a New Hook
 
@@ -233,6 +234,7 @@ registerMyCommand(program);
 3. Import and register in `packages/net-cli/src/cli/index.ts`
 4. Add tests in `packages/net-cli/src/__tests__/commands/{name}/`
 5. Update CLI README
+6. **Update Claude plugin:** `plugins/net-protocol/skills/net-protocol/SKILL.md` (CLI commands section)
 
 ## Testing
 
@@ -302,6 +304,17 @@ function getMessages(chainId: number, filter: Filter, limit: number) { }
 
 - Store ABIs in `constants.ts` as `const` with `as const` assertion
 - Only include necessary ABI fragments, not full contract ABI
+
+## Updating the Claude Plugin
+
+The Claude Code plugin in `plugins/net-protocol/` provides AI assistance for Net development. **Update it when:**
+
+| Change | Files to Update |
+|--------|-----------------|
+| New chain added | `plugins/net-protocol/skills/net-protocol/SKILL.md` |
+| New CLI command | `plugins/net-protocol/skills/net-protocol/SKILL.md` |
+| SDK pattern changes | `plugins/net-protocol/skills/net-protocol/references/sdk-patterns.md` |
+| Contract changes | `plugins/net-protocol/skills/net-protocol/references/contracts.md` |
 
 ## Quick Reference
 

@@ -6,6 +6,7 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import {
   getNetrContract,
   DEFAULT_TOTAL_SUPPLY,
+  CHAIN_INITIAL_TICKS,
   DEFAULT_INITIAL_TICK,
   ZERO_ADDRESS,
 } from "@net-protocol/netr";
@@ -25,10 +26,11 @@ interface TokenLaunchFormProps {
  * - Token symbol
  * - Initial buy amount (ETH)
  *
- * Uses sensible defaults for other parameters:
- * - 100B total supply
- * - ~$35k market cap initial tick
- * - Empty image/animation
+ * Uses SDK defaults for other parameters:
+ * - DEFAULT_TOTAL_SUPPLY (100B tokens)
+ * - CHAIN_INITIAL_TICKS for chain-specific initial tick
+ * - Empty image/animation (no NFT drop)
+ * - 0 for mintPrice/mintEndTimestamp/maxMintSupply (no NFT minting)
  */
 export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
   const [tokenName, setTokenName] = useState("");
@@ -103,7 +105,7 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
       functionName: "deployToken",
       args: [
         DEFAULT_TOTAL_SUPPLY, // supply
-        DEFAULT_INITIAL_TICK, // initialTick (~$35k market cap)
+        CHAIN_INITIAL_TICKS[BASE_CHAIN_ID] ?? DEFAULT_INITIAL_TICK, // initialTick
         salt, // from generateSalt
         deployerAddress, // deployer
         BigInt(0), // fid (0 for non-Farcaster)

@@ -9,7 +9,8 @@ import {
   POOL_FEE_TIER,
   TOKEN_DECIMALS,
   ZERO_ADDRESS,
-  CHAIN_INITIAL_TICKS,
+  DEFAULT_MINT_DURATION_SECONDS,
+  DEFAULT_MINT_PRICE,
 } from "../constants";
 
 describe("constants", () => {
@@ -114,31 +115,14 @@ describe("constants", () => {
     });
   });
 
-  describe("CHAIN_INITIAL_TICKS", () => {
-    it("should have tick for Base (8453)", () => {
-      expect(CHAIN_INITIAL_TICKS[8453]).toBe(-230400);
+  describe("NFT mint defaults", () => {
+    it("DEFAULT_MINT_DURATION_SECONDS should be 24 hours", () => {
+      expect(DEFAULT_MINT_DURATION_SECONDS).toBe(60 * 60 * 24);
+      expect(DEFAULT_MINT_DURATION_SECONDS).toBe(86400);
     });
 
-    it("should have tick for HyperEVM (999)", () => {
-      expect(CHAIN_INITIAL_TICKS[999]).toBe(-177400);
-    });
-
-    it("should have tick for Plasma (9745)", () => {
-      expect(CHAIN_INITIAL_TICKS[9745]).toBe(-147200);
-    });
-
-    it("should have tick for Monad (143)", () => {
-      expect(CHAIN_INITIAL_TICKS[143]).toBe(-115000);
-    });
-
-    it("all ticks should be negative", () => {
-      Object.values(CHAIN_INITIAL_TICKS).forEach((tick) => {
-        expect(tick).toBeLessThan(0);
-      });
-    });
-
-    it("should have 4 chain entries", () => {
-      expect(Object.keys(CHAIN_INITIAL_TICKS).length).toBe(4);
+    it("DEFAULT_MINT_PRICE should be 0.0005 ETH in wei", () => {
+      expect(DEFAULT_MINT_PRICE).toBe(BigInt("500000000000000"));
     });
   });
 });

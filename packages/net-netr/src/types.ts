@@ -61,6 +61,8 @@ export type NetrDeployConfig = {
   mintPrice?: bigint;
   mintEndTimestamp?: bigint;
   maxMintSupply?: bigint;
+  /** ETH amount in wei to swap for tokens on deployment */
+  initialBuy?: bigint;
 };
 
 export type NetrDeployTxConfig = {
@@ -84,6 +86,8 @@ export type NetrDeployTxConfig = {
     string
   ];
   chainId: number;
+  /** ETH value to send with transaction (for initial buy) */
+  value?: bigint;
 };
 
 export type UseNetrTokenOptions = {

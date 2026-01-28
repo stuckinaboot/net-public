@@ -6,6 +6,8 @@ import {
   getNetAddress,
   getStorageAddress,
   getWethAddress,
+  getInitialTick,
+  getMintPrice,
   isNetrSupportedChain,
 } from "../chainConfig";
 
@@ -175,6 +177,68 @@ describe("chainConfig", () => {
 
     it("should return undefined for unsupported chain", () => {
       expect(getNetAddress(1)).toBeUndefined();
+    });
+  });
+
+  describe("getInitialTick", () => {
+    it("should return initial tick for Base (8453)", () => {
+      expect(getInitialTick(8453)).toBe(-230400);
+    });
+
+    it("should return initial tick for HyperEVM (999)", () => {
+      expect(getInitialTick(999)).toBe(-177400);
+    });
+
+    it("should return initial tick for Plasma (9745)", () => {
+      expect(getInitialTick(9745)).toBe(-147200);
+    });
+
+    it("should return initial tick for Monad (143)", () => {
+      expect(getInitialTick(143)).toBe(-115000);
+    });
+
+    it("should return undefined for unsupported chain", () => {
+      expect(getInitialTick(1)).toBeUndefined();
+    });
+
+    it("all initial ticks should be negative", () => {
+      const chainIds = getNetrSupportedChainIds();
+      chainIds.forEach((chainId) => {
+        const tick = getInitialTick(chainId);
+        expect(tick).toBeDefined();
+        expect(tick).toBeLessThan(0);
+      });
+    });
+  });
+
+  describe("getMintPrice", () => {
+    it("should return mint price for Base (8453) - 0.0005 ETH", () => {
+      expect(getMintPrice(8453)).toBe(BigInt("500000000000000"));
+    });
+
+    it("should return mint price for HyperEVM (999) - 0.05 HYPE", () => {
+      expect(getMintPrice(999)).toBe(BigInt("50000000000000000"));
+    });
+
+    it("should return mint price for Plasma (9745) - 1 XPL", () => {
+      expect(getMintPrice(9745)).toBe(BigInt("1000000000000000000"));
+    });
+
+    it("should return mint price for Monad (143) - 1 MONAD", () => {
+      expect(getMintPrice(143)).toBe(BigInt("1000000000000000000"));
+    });
+
+    it("should return undefined for unsupported chain", () => {
+      expect(getMintPrice(1)).toBeUndefined();
+    });
+
+    it("all mint prices should be positive", () => {
+      const chainIds = getNetrSupportedChainIds();
+      chainIds.forEach((chainId) => {
+        const price = getMintPrice(chainId);
+        expect(price).toBeDefined();
+        expect(price).toBeGreaterThan(0n);
+      });
     });
   });
 });

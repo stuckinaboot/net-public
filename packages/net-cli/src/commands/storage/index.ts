@@ -1,9 +1,11 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { parseCommonOptions } from "../../cli/shared";
+import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { uploadFile } from "./core/upload";
 import { uploadFileWithRelay } from "./core/uploadRelay";
 import { previewFile } from "./core/preview";
+import { executeStorageRead } from "./core/read";
+import { encodeStorageUpload } from "./core/encode";
 import { generateStorageUrl } from "./utils";
 import type { UploadOptions } from "./types";
 import type { UploadWithRelayOptions } from "./relay/types";
@@ -36,7 +38,37 @@ export function registerStorageCommand(program: Command): void {
       "--rpc-url <url>",
       "Custom RPC URL (can also be set via NET_RPC_URL env var)"
     )
+    .option(
+      "--encode-only",
+      "Output transaction data as JSON instead of executing"
+    )
     .action(async (options) => {
+      // Handle encode-only mode
+      if (options.encodeOnly) {
+        try {
+          const result = await encodeStorageUpload({
+            filePath: options.file,
+            storageKey: options.key,
+            text: options.text,
+            privateKey: options.privateKey,
+            chainId: options.chainId,
+            rpcUrl: options.rpcUrl,
+          });
+          console.log(JSON.stringify(result, null, 2));
+          process.exit(0);
+        } catch (error) {
+          console.error(
+            chalk.red(
+              `Encode failed: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            )
+          );
+          process.exit(1);
+        }
+        return;
+      }
+
       // Parse common options (private-key, chain-id, rpc-url)
       const commonOptions = parseCommonOptions({
         privateKey: options.privateKey,
@@ -358,7 +390,41 @@ export function registerStorageCommand(program: Command): void {
       }
     });
 
+  // Read subcommand
+  const readCommand = new Command("read")
+    .description("Read data from Net Storage")
+    .requiredOption("--key <key>", "Storage key to read")
+    .requiredOption("--operator <address>", "Operator address (wallet that stored the data)")
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option(
+      "--index <n>",
+      "Historical version index (0 = oldest). Omit for latest.",
+      (value) => parseInt(value, 10)
+    )
+    .option("--json", "Output in JSON format")
+    .option("--raw", "Output raw data without truncation (use with --json)")
+    .action(async (options) => {
+      await executeStorageRead({
+        key: options.key,
+        operator: options.operator,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        index: options.index,
+        json: options.json,
+        raw: options.raw,
+      });
+    });
+
   storageCommand.addCommand(uploadCommand);
   storageCommand.addCommand(previewCommand);
   storageCommand.addCommand(uploadRelayCommand);
+  storageCommand.addCommand(readCommand);
 }

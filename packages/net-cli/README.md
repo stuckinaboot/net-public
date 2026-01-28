@@ -30,6 +30,7 @@ Storage operations for Net Protocol. The `storage` command is a command group wi
 
 - `storage upload` - Upload files to Net Storage
 - `storage preview` - Preview storage upload without submitting transactions
+- `storage read` - Read data from Net Storage
 
 ##### Storage Upload
 
@@ -126,6 +127,243 @@ netp storage preview \
   Operator Address: 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf
 
 ⚠ 1 transaction(s) would be sent
+```
+
+##### Storage Read
+
+Read data from Net Storage by key and operator address.
+
+```bash
+netp storage read \
+  --key <storage-key> \
+  --operator <address> \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--index <n>] \
+  [--json]
+```
+
+**Storage Read Arguments:**
+
+- `--key` (required): Storage key to read
+- `--operator` (required): Operator address (wallet that stored the data)
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--index` (optional): Historical version index (0 = oldest). Omit for latest.
+- `--json` (optional): Output in JSON format
+
+**Example:**
+
+```bash
+# Read latest version
+netp storage read \
+  --key "my-file" \
+  --operator 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf \
+  --chain-id 8453
+
+# Read historical version
+netp storage read \
+  --key "my-file" \
+  --operator 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf \
+  --chain-id 8453 \
+  --index 0
+
+# JSON output
+netp storage read \
+  --key "my-file" \
+  --operator 0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf \
+  --chain-id 8453 \
+  --json
+```
+
+##### Encode-Only Mode
+
+All write commands support `--encode-only` mode which outputs transaction data as JSON instead of executing transactions. This is useful for:
+- Building transactions to sign with a hardware wallet
+- Integrating with other tools
+- Previewing exact transaction data
+
+```bash
+# Storage upload encode-only
+netp storage upload \
+  --file ./example.txt \
+  --key "my-file" \
+  --text "Example file" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+
+```json
+{
+  "storageKey": "my-file",
+  "storageType": "normal",
+  "operatorAddress": "0x0000000000000000000000000000000000000000",
+  "transactions": [
+    {
+      "to": "0x00000000db40fcb9f4466330982372e27fd7bbf5",
+      "data": "0x...",
+      "chainId": 8453,
+      "value": "0"
+    }
+  ]
+}
+```
+
+#### Message Command
+
+Message operations for Net Protocol.
+
+**Available Subcommands:**
+
+- `message send` - Send a message to Net Protocol
+- `message read` - Read messages from Net Protocol
+- `message count` - Get message count
+
+##### Message Send
+
+```bash
+netp message send \
+  --text <message> \
+  [--topic <topic>] \
+  [--data <hex>] \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--encode-only]
+```
+
+##### Message Read
+
+```bash
+netp message read \
+  [--app <address>] \
+  [--topic <topic>] \
+  [--sender <address>] \
+  [--limit <n>] \
+  [--start <n>] \
+  [--end <n>] \
+  [--chain-id <8453|1|...>] \
+  [--json]
+```
+
+##### Message Count
+
+```bash
+netp message count \
+  [--app <address>] \
+  [--topic <topic>] \
+  [--sender <address>] \
+  [--chain-id <8453|1|...>] \
+  [--json]
+```
+
+#### Token Command
+
+Token operations for Netr/Banger tokens (memecoin deployment).
+
+**Available Subcommands:**
+
+- `token deploy` - Deploy a new Netr token
+- `token info` - Get information about a Netr token
+
+##### Token Deploy
+
+Deploy a new memecoin with automatic Uniswap V3 pool creation and locked liquidity.
+
+```bash
+netp token deploy \
+  --name <name> \
+  --symbol <symbol> \
+  --image <url> \
+  [--animation <url>] \
+  [--fid <number>] \
+  [--private-key <0x...>] \
+  [--chain-id <8453|9745|143|999>] \
+  [--encode-only]
+```
+
+**Token Deploy Arguments:**
+
+- `--name` (required): Token name
+- `--symbol` (required): Token symbol
+- `--image` (required): Token image URL
+- `--animation` (optional): Token animation URL
+- `--fid` (optional): Farcaster ID
+- `--initial-buy` (optional): ETH amount to swap for tokens on deploy (e.g., "0.001")
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Supported: Base (8453), Plasma (9745), Monad (143), HyperEVM (999)
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Example:**
+
+```bash
+# Deploy token
+netp token deploy \
+  --name "My Token" \
+  --symbol "MTK" \
+  --image "https://example.com/image.png" \
+  --chain-id 8453
+
+# Deploy with initial buy (swap 0.001 ETH for tokens on deploy)
+netp token deploy \
+  --name "My Token" \
+  --symbol "MTK" \
+  --image "https://example.com/image.png" \
+  --initial-buy "0.001" \
+  --chain-id 8453
+
+# Deploy with animation
+netp token deploy \
+  --name "My Token" \
+  --symbol "MTK" \
+  --image "https://example.com/image.png" \
+  --animation "https://example.com/video.mp4" \
+  --chain-id 8453
+
+# Encode-only (get transaction data without executing)
+netp token deploy \
+  --name "My Token" \
+  --symbol "MTK" \
+  --image "https://example.com/image.png" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+##### Token Info
+
+Get information about an existing Netr token.
+
+```bash
+netp token info \
+  --address <token-address> \
+  [--chain-id <8453|9745|143|999>] \
+  [--json]
+```
+
+**Example:**
+
+```bash
+netp token info \
+  --address 0x1234567890abcdef1234567890abcdef12345678 \
+  --chain-id 8453 \
+  --json
+```
+
+#### Info Command
+
+Show contract info and stats.
+
+```bash
+netp info [--chain-id <id>] [--json]
+```
+
+#### Chains Command
+
+List supported chains.
+
+```bash
+netp chains [--json]
 ```
 
 ## Storage Types

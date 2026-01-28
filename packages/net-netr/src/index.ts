@@ -33,6 +33,8 @@ export {
   getNetAddress,
   getStorageAddress,
   getWethAddress,
+  getInitialTick,
+  getMintPrice,
   isNetrSupportedChain,
 } from "./chainConfig";
 
@@ -55,8 +57,9 @@ export type {
 // Constants
 export {
   BANGER_V4_ABI,
-  CHAIN_INITIAL_TICKS,
   DEFAULT_INITIAL_TICK,
+  DEFAULT_MINT_DURATION_SECONDS,
+  DEFAULT_MINT_PRICE,
   DEFAULT_TOTAL_SUPPLY,
   LP_LOCKER_ABI,
   NETR_TOKEN_ABI,

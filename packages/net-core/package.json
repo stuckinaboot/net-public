@@ -24,13 +24,19 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn build",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:record": "POLLY_RECORD=true vitest run"
   },
   "dependencies": {
     "viem": "^2.31.4"
   },
   "devDependencies": {
+    "@pollyjs/adapter-fetch": "^6.0.7",
+    "@pollyjs/adapter-node-http": "^6.0.6",
+    "@pollyjs/core": "^6.0.6",
+    "@pollyjs/persister-fs": "^6.0.6",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@vitest/ui": "^1.0.0",

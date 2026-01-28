@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom", // Use jsdom for React testing
-    include: ["src/__tests__/**/*.test.ts"],
+    include: ["src/__tests__/**/*.test.ts", "src/__tests__/**/*.test.tsx"],
     testTimeout: 30000,
     hookTimeout: 30000,
     pool: "forks",

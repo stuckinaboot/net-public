@@ -7,11 +7,11 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "yarn workspaces foreach -pt run build",
+    "build": "yarn workspaces foreach -Apt run build",
     "build:all": "yarn build",
-    "clean": "yarn workspaces foreach run clean",
-    "typecheck": "yarn workspaces foreach run typecheck",
-    "test": "yarn workspaces foreach run test",
+    "clean": "yarn workspaces foreach -A run clean",
+    "typecheck": "yarn workspaces foreach -A run typecheck",
+    "test": "yarn workspaces foreach -A run test",
     "test:all": "yarn test"
   },
   "devDependencies": {

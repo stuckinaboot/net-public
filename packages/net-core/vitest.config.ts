@@ -12,6 +12,8 @@ export default defineConfig({
         singleFork: true, // Run all tests in a single process sequentially
       },
     },
+    // Include polly tests in the test run
+    include: ['src/**/*.test.ts'],
   },
 });
 

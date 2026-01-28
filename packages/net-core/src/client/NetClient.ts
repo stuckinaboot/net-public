@@ -92,15 +92,22 @@ export class NetClient {
     messageIndex: number;
     appAddress?: `0x${string}`;
     topic?: string;
+    maker?: `0x${string}`;
   }): Promise<NetMessage | null> {
-    const { messageIndex, appAddress, topic } = params;
+    const { messageIndex, appAddress, topic, maker } = params;
     const netContract = getNetContract(this.chainId);
     const msgIdxBigInt = BigInt(messageIndex);
 
     let functionName: string;
     let args: any[];
 
-    if (appAddress && topic) {
+    if (appAddress && maker && topic) {
+      functionName = "getMessageForAppUserTopic";
+      args = [msgIdxBigInt, appAddress, maker, topic];
+    } else if (appAddress && maker) {
+      functionName = "getMessageForAppUser";
+      args = [msgIdxBigInt, appAddress, maker];
+    } else if (appAddress && topic) {
       functionName = "getMessageForAppTopic";
       args = [msgIdxBigInt, appAddress, topic];
     } else if (appAddress) {

@@ -1,13 +1,15 @@
-# Net CLI
+# @net-protocol/cli
 
-A command-line tool for interacting with Net Protocol. Supports multiple commands including storage uploads, core protocol operations, and more.
+A command-line tool for interacting with Net Protocol. Supports storage uploads and more.
 
 ## Installation
 
 ```bash
-cd examples/cli
-yarn install
-yarn build
+# Global install
+npm install -g @net-protocol/cli
+
+# Or with yarn
+yarn global add @net-protocol/cli
 ```
 
 ## Usage
@@ -15,7 +17,7 @@ yarn build
 The CLI uses a subcommand pattern. Each command is isolated and has its own options:
 
 ```bash
-net-cli <command> [options]
+net <command> [options]
 ```
 
 ### Available Commands
@@ -34,7 +36,7 @@ Storage operations for Net Protocol. The `storage` command is a command group wi
 Upload files to Net Storage using either normal storage (for files ≤ 20KB) or XML storage (for files > 20KB or containing XML references).
 
 ```bash
-net-cli storage upload \
+net storage upload \
   --file <path> \
   --key <storage-key> \
   --text <description> \
@@ -56,7 +58,7 @@ net-cli storage upload \
 
 ```bash
 # Using command-line flags
-net-cli storage upload \
+net storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -66,7 +68,7 @@ net-cli storage upload \
 # Using environment variables (recommended)
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 export NET_CHAIN_ID=8453
-net-cli storage upload \
+net storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file"
@@ -76,7 +78,7 @@ net-cli storage upload \
 # NET_PRIVATE_KEY=0x...
 # NET_CHAIN_ID=8453
 # NET_RPC_URL=https://base-mainnet.public.blastapi.io  # optional
-net-cli storage upload --file ./example.txt --key "my-file" --text "Example file"
+net storage upload --file ./example.txt --key "my-file" --text "Example file"
 ```
 
 ##### Storage Preview
@@ -84,7 +86,7 @@ net-cli storage upload --file ./example.txt --key "my-file" --text "Example file
 Preview what would be uploaded without actually submitting transactions. Shows statistics about chunks, transactions, and what's already stored.
 
 ```bash
-net-cli storage preview \
+net storage preview \
   --file <path> \
   --key <storage-key> \
   --text <description> \
@@ -100,7 +102,7 @@ Same as `storage upload` - see above.
 **Example:**
 
 ```bash
-net-cli storage preview \
+net storage preview \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -167,11 +169,11 @@ If an upload fails mid-way:
 
 ```bash
 # First upload
-net-cli storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
+net storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 # Output: ✓ File uploaded successfully!
 
 # Second upload (same file, same key)
-net-cli storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
+net storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 # Output: ✓ All data already stored - skipping upload
 ```
 
@@ -185,15 +187,13 @@ src/
 │   ├── index.ts          # Main entry point, sets up commander program
 │   └── shared.ts         # Shared option parsing and validation
 ├── commands/
-│   ├── storage/          # Storage command module
-│   │   ├── index.ts      # Storage command definition
-│   │   ├── core/         # Storage-specific core logic
-│   │   ├── storage/     # Storage operations
-│   │   ├── transactions/# Transaction handling
-│   │   ├── utils.ts     # Storage-specific utilities
-│   │   └── types.ts     # Storage-specific types
-│   ├── core/             # Future: Core command module
-│   └── upvote/           # Future: Upvote command module
+│   └── storage/          # Storage command module
+│       ├── index.ts      # Storage command definition
+│       ├── core/         # Upload and preview logic
+│       ├── storage/      # Storage operations
+│       ├── transactions/ # Transaction handling
+│       ├── utils.ts      # Storage-specific utilities
+│       └── types.ts      # Storage-specific types
 └── shared/               # Shared utilities across commands
     └── types.ts          # Common types (CommonOptions, etc.)
 ```
@@ -298,7 +298,7 @@ These are parsed and validated by `parseCommonOptions()` from `cli/shared.ts`.
 export NET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 # Run without --private-key flag (it will use the env var)
-net-cli storage upload \
+net storage upload \
   --file ./example.txt \
   --key "my-file" \
   --text "Example file" \
@@ -310,17 +310,20 @@ The tool supports both `NET_PRIVATE_KEY` and `PRIVATE_KEY` environment variables
 ## Development
 
 ```bash
+# Install dependencies (from repo root)
+yarn install
+
 # Build
-yarn build
+yarn workspace @net-protocol/cli build
 
-# Run storage upload command
-yarn start storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
-
-# Run storage preview command
-yarn start storage preview --file example.txt --key "test" --text "Test" --chain-id 8453
+# Run in dev mode
+yarn workspace @net-protocol/cli start storage upload --file example.txt --key "test" --text "Test" --chain-id 8453
 
 # Watch mode
-yarn dev
+yarn workspace @net-protocol/cli dev
+
+# Run tests
+yarn workspace @net-protocol/cli test
 ```
 
 ## Error Handling

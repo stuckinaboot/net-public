@@ -6,6 +6,7 @@ import { registerStorageCommand } from "../commands/storage";
 import { registerMessageCommand } from "../commands/message";
 import { registerChainsCommand } from "../commands/chains";
 import { registerInfoCommand } from "../commands/info";
+import { registerTokenCommand } from "../commands/token";
 
 const program = new Command();
 
@@ -19,5 +20,6 @@ registerStorageCommand(program);
 registerMessageCommand(program);
 registerChainsCommand(program);
 registerInfoCommand(program);
+registerTokenCommand(program);
 
 program.parse();

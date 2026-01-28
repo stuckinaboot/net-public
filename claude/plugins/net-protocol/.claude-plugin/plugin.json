@@ -1,0 +1,9 @@
+{
+  "name": "net-protocol",
+  "version": "0.1.0",
+  "description": "Interact with Net Protocol - decentralized onchain messaging and storage on EVM chains",
+  "author": {
+    "name": "Net Protocol"
+  },
+  "keywords": ["blockchain", "web3", "storage", "messaging", "tokens", "base"]
+}

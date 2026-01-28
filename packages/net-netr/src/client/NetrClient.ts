@@ -4,7 +4,6 @@ import { getChainRpcUrls, getNetContract } from "@net-protocol/core";
 import { STORAGE_CONTRACT } from "@net-protocol/storage";
 import { getNetrChainConfig, getNetrContract } from "../chainConfig";
 import {
-  CHAIN_INITIAL_TICKS,
   DEFAULT_INITIAL_TICK,
   DEFAULT_TOTAL_SUPPLY,
   LP_LOCKER_ABI,
@@ -12,6 +11,7 @@ import {
   UNISWAP_V3_POOL_ABI,
   ZERO_ADDRESS,
 } from "../constants";
+import { getInitialTick } from "../chainConfig";
 import type {
   NetrClientOptions,
   NetrDeployConfig,
@@ -241,7 +241,7 @@ export class NetrClient {
   buildDeployConfig(config: NetrDeployConfig, salt: `0x${string}`): NetrDeployTxConfig {
     const netrContract = getNetrContract(this.chainId);
     const totalSupply = config.totalSupply ?? DEFAULT_TOTAL_SUPPLY;
-    const initialTick = config.initialTick ?? CHAIN_INITIAL_TICKS[this.chainId] ?? DEFAULT_INITIAL_TICK;
+    const initialTick = config.initialTick ?? getInitialTick(this.chainId) ?? DEFAULT_INITIAL_TICK;
 
     return {
       address: netrContract.address,
@@ -264,6 +264,7 @@ export class NetrClient {
         config.extraStringData ?? "",
       ],
       chainId: this.chainId,
+      ...(config.initialBuy && { value: config.initialBuy }),
     };
   }
 

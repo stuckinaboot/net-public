@@ -100,4 +100,3 @@ jobs:
           images: examples/basic-app/screenshots/*.png
           upload_to: github_branch
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_attachment_msg: "## 📸 Example App Screenshots"

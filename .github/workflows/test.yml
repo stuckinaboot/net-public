@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
@@ -97,21 +97,52 @@ jobs:
         run: npx playwright test screenshots.spec.ts --project=chromium
         working-directory: examples/basic-app
 
-      - name: Upload screenshots as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: example-app-screenshots
-          path: examples/basic-app/screenshots/
-          retention-days: 30
+      - name: Push screenshots to branch
+        run: |
+          # Save screenshots to temp location
+          cp -r examples/basic-app/screenshots /tmp/screenshots
 
-      - name: Comment PR with screenshot link
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create orphan branch for screenshots
+          git checkout --orphan screenshots-pr-${{ github.event.pull_request.number }}
+          git rm -rf .
+
+          # Copy screenshots back and commit
+          cp /tmp/screenshots/*.png .
+          git add *.png
+          git commit -m "Screenshots for PR #${{ github.event.pull_request.number }}"
+          git push -f origin screenshots-pr-${{ github.event.pull_request.number }}
+
+      - name: Wait for GitHub CDN
+        run: sleep 10
+
+      - name: Comment PR with embedded screenshots
         uses: actions/github-script@v7
         with:
           script: |
-            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-            github.rest.issues.createComment({
+            const fs = require('fs');
+            const prNumber = context.payload.pull_request.number;
+            const branch = `screenshots-pr-${prNumber}`;
+            const baseUrl = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/${branch}`;
+
+            // Read screenshot filenames
+            const files = fs.readdirSync('/tmp/screenshots')
+              .filter(f => f.endsWith('.png'))
+              .sort();
+
+            const images = files.map(f => {
+              const name = f.replace('.png', '').replace(/^\d+-/, '').replace(/-/g, ' ');
+              return `### ${name}\n![${name}](${baseUrl}/${f})`;
+            }).join('\n\n');
+
+            const body = `## 📸 Example App Screenshots\n\n${images}`;
+
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## 📸 Example App Screenshots\n\nScreenshots have been captured for this PR.\n\n[View screenshots artifact](${runUrl}#artifacts)`
+              issue_number: prNumber,
+              body
             });

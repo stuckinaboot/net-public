@@ -8,6 +8,7 @@ export default defineConfig({
       "@net-protocol/storage": path.resolve(__dirname, "../net-storage/src"),
       "@net-protocol/relay": path.resolve(__dirname, "../net-relay/src"),
       "@net-protocol/netr": path.resolve(__dirname, "../net-netr/src"),
+      "@net-protocol/profiles": path.resolve(__dirname, "../net-profiles/src"),
     },
   },
   test: {

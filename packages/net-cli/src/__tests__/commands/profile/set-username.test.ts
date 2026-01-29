@@ -31,10 +31,14 @@ vi.mock("viem/accounts", () => ({
   }),
 }));
 
-// Mock @net-protocol/core
-vi.mock("@net-protocol/core", () => ({
-  getChainRpcUrls: vi.fn().mockReturnValue(["https://rpc.example.com"]),
-}));
+// Mock @net-protocol/core - preserve actual exports for toBytes32, etc.
+vi.mock("@net-protocol/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@net-protocol/core")>();
+  return {
+    ...actual,
+    getChainRpcUrls: vi.fn().mockReturnValue(["https://rpc.example.com"]),
+  };
+});
 
 // Mock cli/shared
 vi.mock("../../../cli/shared", () => ({

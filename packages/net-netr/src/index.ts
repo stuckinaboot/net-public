@@ -1,8 +1,3 @@
-// React Hooks
-export { useNetrToken } from "./hooks/useNetrToken";
-export { useNetrPrice } from "./hooks/useNetrPrice";
-export { useNetrLocker } from "./hooks/useNetrLocker";
-
 // Client
 export { NetrClient } from "./client/NetrClient";
 

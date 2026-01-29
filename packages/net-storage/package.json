@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/storage",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Net Storage SDK for key-value storage on the Net protocol",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.js"
     }
   },
   "files": [
@@ -49,6 +54,14 @@
   "peerDependencies": {
     "react": "^18.0.0",
     "wagmi": "^2.15.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "wagmi": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public",

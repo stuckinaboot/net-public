@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/feeds",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Feed functionality for Net Protocol - topic-based message streams",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.js"
     }
   },
   "files": [
@@ -49,6 +54,14 @@
   "peerDependencies": {
     "react": "^18.0.0",
     "wagmi": "^2.15.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "wagmi": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public",

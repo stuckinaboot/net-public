@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/netr",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Netr Token SDK for deploying and interacting with memecoin-NFT pairs on Net Protocol",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.js"
     }
   },
   "files": [
@@ -48,6 +53,14 @@
   "peerDependencies": {
     "react": "^18.0.0",
     "wagmi": "^2.15.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "wagmi": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public",

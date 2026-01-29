@@ -97,7 +97,7 @@ jobs:
       - name: Comment PR with screenshots
         uses: opengisch/comment-pr-with-images@0.0.5
         with:
-          images-path: examples/basic-app/screenshots/
+          images: examples/basic-app/screenshots/*.png
           upload_to: github_branch
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          header: "## 📸 Example App Screenshots"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_attachment_msg: "## 📸 Example App Screenshots"

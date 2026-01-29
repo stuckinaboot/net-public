@@ -1,6 +1,6 @@
 # @net-protocol/cli
 
-A command-line tool for interacting with Net Protocol. Supports storage uploads and more.
+Command-line tool for Net Protocol — send messages, store data onchain, and deploy tokens across Base and other EVM chains.
 
 ## Installation
 

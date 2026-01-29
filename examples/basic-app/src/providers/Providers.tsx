@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, useConnect, useAccount } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { NetProvider } from "@net-protocol/core";
+import { NetProvider } from "@net-protocol/core/react";
 import { config, testConfig } from "@/config/wagmi";
 import "@rainbow-me/rainbowkit/styles.css";
 

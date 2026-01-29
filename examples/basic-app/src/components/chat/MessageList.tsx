@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useNetMessages, useNetMessageCount } from "@net-protocol/core";
+import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
 import { CHAIN_ID, NULL_ADDRESS } from "@/lib/constants";
 import { truncateAddress, formatRelativeTime } from "@/lib/utils";
 

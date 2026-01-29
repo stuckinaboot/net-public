@@ -233,7 +233,7 @@ netp message send \
   [--encode-only]
 ```
 
-**Personal Feed:** Post to your feed with `--topic "feed-<your address lowercase>"`.
+**Personal Feeds:** Post to any feed with `--topic "feed-<address lowercase>"`. Anyone can post to any feed.
 
 ##### Message Read
 

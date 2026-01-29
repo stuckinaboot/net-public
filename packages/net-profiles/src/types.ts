@@ -3,10 +3,6 @@
  */
 export interface ProfileMetadata {
   x_username?: string;
-  // Note: display_name is not stored - it's derived from ENS/Base name
-  // Future fields could include:
-  // bio?: string;
-  // website?: string;
 }
 
 /**

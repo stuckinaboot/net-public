@@ -2,18 +2,22 @@
 
 import "dotenv/config";
 import { Command } from "commander";
+import { createRequire } from "module";
 import { registerStorageCommand } from "../commands/storage";
 import { registerMessageCommand } from "../commands/message";
 import { registerChainsCommand } from "../commands/chains";
 import { registerInfoCommand } from "../commands/info";
 import { registerTokenCommand } from "../commands/token";
 
+const require = createRequire(import.meta.url);
+const { version } = require("../../package.json");
+
 const program = new Command();
 
 program
   .name("netp")
   .description("CLI tool for Net Protocol")
-  .version("0.1.0");
+  .version(version);
 
 // Register commands
 registerStorageCommand(program);

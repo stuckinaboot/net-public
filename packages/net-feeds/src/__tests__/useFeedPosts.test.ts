@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useFeedPosts } from "../hooks/useFeedPosts";
-import { useNetMessages, useNetMessageCount } from "@net-protocol/core";
+import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
 import { BASE_CHAIN_ID } from "./test-utils";
 import type { NetMessage } from "../types";
 
-// Mock the hooks from @net-protocol/core
-vi.mock("@net-protocol/core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@net-protocol/core")>();
+// Mock the hooks from @net-protocol/core/react
+vi.mock("@net-protocol/core/react", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@net-protocol/core/react")>();
   return {
     ...actual,
     useNetMessages: vi.fn(),

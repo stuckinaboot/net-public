@@ -1,9 +1,6 @@
 import { useMemo } from "react";
-import {
-  useNetMessages,
-  useNetMessageCount,
-  NULL_ADDRESS,
-} from "@net-protocol/core";
+import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
+import { NULL_ADDRESS } from "@net-protocol/core";
 import { normalizeFeedTopic } from "../utils/feedUtils";
 import type { UseFeedPostsOptions } from "../types";
 

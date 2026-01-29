@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { parseEther } from "viem";
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import {
   getNetrContract,
   DEFAULT_TOTAL_SUPPLY,
-  CHAIN_INITIAL_TICKS,
   DEFAULT_INITIAL_TICK,
   ZERO_ADDRESS,
+  getInitialTick,
 } from "@net-protocol/netr";
 
 const BASE_CHAIN_ID = 8453;
@@ -36,7 +40,9 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
   const [tokenName, setTokenName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [initialBuyAmount, setInitialBuyAmount] = useState("0.001");
-  const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | null>(null);
+  const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | null>(
+    null,
+  );
 
   const netrContract = getNetrContract(BASE_CHAIN_ID);
 
@@ -66,8 +72,12 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
     },
   });
 
-  const salt = (saltResult as [string, string] | undefined)?.[0] as `0x${string}` | undefined;
-  const predictedAddress = (saltResult as [string, string] | undefined)?.[1] as `0x${string}` | undefined;
+  const salt = (saltResult as [string, string] | undefined)?.[0] as
+    | `0x${string}`
+    | undefined;
+  const predictedAddress = (saltResult as [string, string] | undefined)?.[1] as
+    | `0x${string}`
+    | undefined;
 
   // Deploy token transaction
   const {
@@ -79,9 +89,10 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
   } = useWriteContract();
 
   // Wait for transaction confirmation
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: txHash,
+    });
 
   // Set deployed address when confirmed
   useEffect(() => {
@@ -105,7 +116,7 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
       functionName: "deployToken",
       args: [
         DEFAULT_TOTAL_SUPPLY, // supply
-        CHAIN_INITIAL_TICKS[BASE_CHAIN_ID] ?? DEFAULT_INITIAL_TICK, // initialTick
+        getInitialTick(BASE_CHAIN_ID) ?? DEFAULT_INITIAL_TICK, // initialTick
         salt, // from generateSalt
         deployerAddress, // deployer
         BigInt(0), // fid (0 for non-Farcaster)
@@ -149,7 +160,9 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
           </h3>
           <div className="space-y-3">
             <div>
-              <p className="text-sm text-green-600 dark:text-green-400">Token Address</p>
+              <p className="text-sm text-green-600 dark:text-green-400">
+                Token Address
+              </p>
               <p className="font-mono text-sm break-all text-green-800 dark:text-green-200">
                 {deployedAddress}
               </p>
@@ -255,16 +268,18 @@ export function TokenLaunchForm({ deployerAddress }: TokenLaunchFormProps) {
         {/* Deploy Button */}
         <button
           onClick={handleDeploy}
-          disabled={!isFormValid || isDeploying || isConfirming || isSaltLoading}
+          disabled={
+            !isFormValid || isDeploying || isConfirming || isSaltLoading
+          }
           className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isSaltLoading
             ? "Preparing..."
             : isDeploying
-            ? "Confirm in Wallet..."
-            : isConfirming
-            ? "Deploying..."
-            : "Deploy Token"}
+              ? "Confirm in Wallet..."
+              : isConfirming
+                ? "Deploying..."
+                : "Deploy Token"}
         </button>
 
         {/* Info */}

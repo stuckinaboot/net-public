@@ -96,7 +96,7 @@ jobs:
         working-directory: examples/basic-app
 
       - name: Comment PR with screenshots
-        uses: opengisch/comment-pr-with-images@v1
+        uses: opengisch/comment-pr-with-images@v0.0.5
         with:
           images-path: examples/basic-app/screenshots/
           upload_to: github_branch

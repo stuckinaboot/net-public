@@ -138,11 +138,33 @@ jobs:
               return `### ${name}\n![${name}](${baseUrl}/${f})`;
             }).join('\n\n');
 
-            const body = `## 📸 Example App Screenshots\n\n${images}`;
+            const marker = '<!-- screenshot-preview-comment -->';
+            const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+            const body = `${marker}\n## 📸 Example App Screenshots\n\n_Updated: ${timestamp}_\n\n${images}`;
 
-            await github.rest.issues.createComment({
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body
             });
+
+            const existingComment = comments.find(c => c.body.includes(marker));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body
+              });
+              console.log('Updated existing screenshot comment');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+              console.log('Created new screenshot comment');
+            }

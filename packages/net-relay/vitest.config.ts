@@ -1,6 +1,12 @@
 import { defineConfig } from "vitest/config";
+import path from "path";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@net-protocol/core": path.resolve(__dirname, "../net-core/src"),
+    },
+  },
   test: {
     globals: true,
     environment: "node",

@@ -1,6 +1,3 @@
-// React hooks
-export { useFeedPosts } from "./hooks/useFeedPosts";
-
 // Client classes
 export { FeedClient } from "./client/FeedClient";
 

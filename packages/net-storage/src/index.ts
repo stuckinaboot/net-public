@@ -1,12 +1,3 @@
-// React Hooks
-export { useStorage } from "./hooks/useStorage";
-export { useStorageForOperator } from "./hooks/useStorage";
-export { useStorageForOperatorAndKey } from "./hooks/useStorage";
-export { useBulkStorage } from "./hooks/useStorage";
-export { useStorageTotalWrites } from "./hooks/useStorage";
-export { useXmlStorage } from "./hooks/useXmlStorage";
-export { useStorageFromRouter } from "./hooks/useStorageFromRouter";
-
 // Client
 export { StorageClient } from "./client/StorageClient";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useNetMessageCount } from "@net-protocol/core";
+import { useNetMessageCount } from "@net-protocol/core/react";
 import { base } from "wagmi/chains";
 import { NULL_ADDRESS } from "@/lib/constants";
 

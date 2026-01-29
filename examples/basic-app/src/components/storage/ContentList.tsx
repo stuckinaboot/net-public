@@ -1,6 +1,6 @@
 "use client";
 
-import { useStorageForOperator } from "@net-protocol/storage";
+import { useStorageForOperator } from "@net-protocol/storage/react";
 import { formatStorageKeyForDisplay } from "@net-protocol/storage";
 import { CHAIN_ID } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/utils";

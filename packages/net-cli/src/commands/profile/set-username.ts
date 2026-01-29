@@ -8,7 +8,7 @@ import {
   isValidXUsername,
   STORAGE_CONTRACT,
 } from "@net-protocol/profiles";
-import { parseCommonOptions } from "../../cli/shared";
+import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { encodeTransaction } from "../../shared/encode";
 import type { ProfileSetUsernameOptions } from "./types";
@@ -26,13 +26,6 @@ export async function executeProfileSetUsername(
     );
   }
 
-  // Parse common options
-  const commonOptions = parseCommonOptions({
-    privateKey: options.privateKey,
-    chainId: options.chainId,
-    rpcUrl: options.rpcUrl,
-  });
-
   // Get storage args (will add @ prefix if needed)
   const storageArgs = getXUsernameStorageArgs(options.username);
 
@@ -41,8 +34,12 @@ export async function executeProfileSetUsername(
     ? options.username
     : `@${options.username}`;
 
-  // Handle encode-only mode
+  // Handle encode-only mode (no private key required)
   if (options.encodeOnly) {
+    const readOnlyOptions = parseReadOnlyOptions({
+      chainId: options.chainId,
+      rpcUrl: options.rpcUrl,
+    });
     const encoded = encodeTransaction(
       {
         to: STORAGE_CONTRACT.address,
@@ -50,11 +47,18 @@ export async function executeProfileSetUsername(
         functionName: "put",
         args: [storageArgs.bytesKey, storageArgs.topic, storageArgs.bytesValue],
       },
-      commonOptions.chainId
+      readOnlyOptions.chainId
     );
     console.log(JSON.stringify(encoded, null, 2));
     return;
   }
+
+  // Parse common options (requires private key for transaction submission)
+  const commonOptions = parseCommonOptions({
+    privateKey: options.privateKey,
+    chainId: options.chainId,
+    rpcUrl: options.rpcUrl,
+  });
 
   try {
     // Create wallet client

@@ -47,6 +47,10 @@ vi.mock("../../../cli/shared", () => ({
     chainId: opts.chainId || TEST_CHAIN_ID,
     rpcUrl: opts.rpcUrl,
   })),
+  parseReadOnlyOptions: vi.fn().mockImplementation((opts) => ({
+    chainId: opts.chainId || TEST_CHAIN_ID,
+    rpcUrl: opts.rpcUrl,
+  })),
 }));
 
 // Mock shared/output

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import QueryProvider from "@/providers/QueryProvider";
 import { Providers } from "@/providers/Providers";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Net Protocol Example App",
@@ -16,9 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>
-          <Providers>{children}</Providers>
-        </QueryProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

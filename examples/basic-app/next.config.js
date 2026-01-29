@@ -10,6 +10,12 @@ const nextConfig = {
     // Fallbacks for Node.js modules that don't exist in browser
     config.resolve.fallback = { fs: false, net: false, tls: false };
 
+    // Stub React Native modules that MetaMask SDK tries to import
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@react-native-async-storage/async-storage": false,
+    };
+
     // Exclude problematic packages from server bundle
     if (isServer) {
       config.externals.push("pino-pretty", "lokijs", "encoding");

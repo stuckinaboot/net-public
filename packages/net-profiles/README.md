@@ -104,7 +104,7 @@ function UpdateProfile() {
 | X Username | Your X (Twitter) handle | Stored with @ prefix, displayed without |
 | Canvas | Custom HTML profile page | For advanced customization |
 
-**Note:** Display name is not currently supported. The X username is specifically for linking your X/Twitter account - it is not a display name.
+**Note:** Display name is not a stored field - it's automatically derived from your ENS name or Base name. The X username field is specifically for linking your X/Twitter account.
 
 ## Storage Keys
 

@@ -94,6 +94,9 @@ jobs:
         run: npx playwright test screenshots.spec.ts --project=chromium
         working-directory: examples/basic-app
 
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory /github/workspace
+
       - name: Comment PR with screenshots
         uses: opengisch/comment-pr-with-images@0.0.5
         with:

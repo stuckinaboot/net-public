@@ -1,0 +1,88 @@
+/**
+ * Test utilities for profile command tests
+ */
+
+export const TEST_CHAIN_ID = 8453;
+export const TEST_ADDRESS = "0x1234567890123456789012345678901234567890";
+export const TEST_PRIVATE_KEY =
+  "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+export const TEST_PROFILE_PICTURE = "https://example.com/image.jpg";
+export const TEST_X_USERNAME = "testuser";
+
+/**
+ * Create mock storage data for profile picture
+ */
+export function createMockProfilePictureData(url: string = TEST_PROFILE_PICTURE) {
+  return {
+    text: "profile-picture",
+    data: url,
+    isXml: false,
+  };
+}
+
+/**
+ * Create mock storage data for profile metadata
+ */
+export function createMockProfileMetadataData(username: string = TEST_X_USERNAME) {
+  return {
+    text: "profile-metadata",
+    data: JSON.stringify({ x_username: `@${username}` }),
+    isXml: false,
+  };
+}
+
+/**
+ * Create options for profile get command
+ */
+export function createGetOptions(overrides?: {
+  address?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  json?: boolean;
+}) {
+  return {
+    address: overrides?.address ?? TEST_ADDRESS,
+    chainId: overrides?.chainId ?? TEST_CHAIN_ID,
+    rpcUrl: overrides?.rpcUrl,
+    json: overrides?.json ?? false,
+  };
+}
+
+/**
+ * Create options for profile set-picture command
+ */
+export function createSetPictureOptions(overrides?: {
+  url?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}) {
+  return {
+    url: overrides?.url ?? TEST_PROFILE_PICTURE,
+    privateKey: overrides?.privateKey ?? TEST_PRIVATE_KEY,
+    chainId: overrides?.chainId ?? TEST_CHAIN_ID,
+    rpcUrl: overrides?.rpcUrl,
+    encodeOnly: overrides?.encodeOnly ?? false,
+  };
+}
+
+/**
+ * Create options for profile set-username command
+ */
+export function createSetUsernameOptions(overrides?: {
+  username?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}) {
+  return {
+    username: overrides?.username ?? TEST_X_USERNAME,
+    privateKey: overrides?.privateKey ?? TEST_PRIVATE_KEY,
+    chainId: overrides?.chainId ?? TEST_CHAIN_ID,
+    rpcUrl: overrides?.rpcUrl,
+    encodeOnly: overrides?.encodeOnly ?? false,
+  };
+}

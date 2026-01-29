@@ -24,8 +24,10 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn build",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:record": "POLLY_RECORD=true vitest run"
   },
   "dependencies": {
     "viem": "^2.31.4"

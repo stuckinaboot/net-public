@@ -11,7 +11,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ["react", "wagmi", "viem"],
+  external: ["react", "wagmi", "viem", "@net-protocol/core"],
   treeshake: true,
   outExtension({ format }) {
     return {

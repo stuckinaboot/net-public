@@ -7,11 +7,12 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "yarn workspaces foreach -pt run build",
+    "build": "yarn workspace @net-protocol/core run build && yarn workspace @net-protocol/storage run build && yarn workspace @net-protocol/relay run build && yarn workspace @net-protocol/feeds run build && yarn workspace @net-protocol/netr run build && yarn workspace @net-protocol/cli run build",
+    "build:packages": "yarn build",
     "build:all": "yarn build",
-    "clean": "yarn workspaces foreach run clean",
-    "typecheck": "yarn workspaces foreach run typecheck",
-    "test": "yarn workspaces foreach run test",
+    "clean": "yarn workspaces foreach -A run clean",
+    "typecheck": "yarn workspaces foreach -A run typecheck",
+    "test": "yarn workspaces foreach -A run test",
     "test:all": "yarn test"
   },
   "devDependencies": {

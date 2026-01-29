@@ -11,7 +11,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ["viem", "@x402/fetch", "@x402/evm"],
+  external: ["viem", "@x402/fetch", "@x402/evm", "@net-protocol/core"],
   treeshake: true,
   outExtension({ format }) {
     return {

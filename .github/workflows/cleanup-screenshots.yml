@@ -1,0 +1,18 @@
+name: Cleanup Screenshot Branches
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete screenshot branch
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/screenshots-pr-${PR_NUMBER}" || echo "Branch not found or already deleted"

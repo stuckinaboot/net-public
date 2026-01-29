@@ -62,3 +62,109 @@ jobs:
           name: playwright-report
           path: examples/basic-app/playwright-report/
           retention-days: 30
+
+  screenshot-preview:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: examples/basic-app
+
+      - name: Create screenshots directory
+        run: mkdir -p screenshots
+        working-directory: examples/basic-app
+
+      - name: Capture screenshots
+        run: npx playwright test screenshots.spec.ts --project=chromium
+        working-directory: examples/basic-app
+
+      - name: Push screenshots to branch
+        run: |
+          # Save screenshots to temp location
+          cp -r examples/basic-app/screenshots /tmp/screenshots
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create orphan branch for screenshots
+          git checkout --orphan screenshots-pr-${{ github.event.pull_request.number }}
+          git rm -rf .
+
+          # Copy screenshots back and commit
+          cp /tmp/screenshots/*.png .
+          git add *.png
+          git commit -m "Screenshots for PR #${{ github.event.pull_request.number }}"
+          git push -f origin screenshots-pr-${{ github.event.pull_request.number }}
+
+      - name: Wait for GitHub CDN
+        run: sleep 10
+
+      - name: Comment PR with embedded screenshots
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const prNumber = context.payload.pull_request.number;
+            const branch = `screenshots-pr-${prNumber}`;
+            const baseUrl = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/${branch}`;
+
+            // Read screenshot filenames
+            const files = fs.readdirSync('/tmp/screenshots')
+              .filter(f => f.endsWith('.png'))
+              .sort();
+
+            const images = files.map(f => {
+              const name = f.replace('.png', '').replace(/^\d+-/, '').replace(/-/g, ' ');
+              return `### ${name}\n![${name}](${baseUrl}/${f})`;
+            }).join('\n\n');
+
+            const marker = '<!-- screenshot-preview-comment -->';
+            const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+            const body = `${marker}\n## 📸 Example App Screenshots\n\n_Updated: ${timestamp}_\n\n${images}`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existingComment = comments.find(c => c.body.includes(marker));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body
+              });
+              console.log('Updated existing screenshot comment');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+              console.log('Created new screenshot comment');
+            }

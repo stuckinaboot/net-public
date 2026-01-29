@@ -354,6 +354,126 @@ netp token info \
   --json
 ```
 
+#### Profile Command
+
+Profile operations for managing your Net Protocol profile.
+
+**Available Subcommands:**
+
+- `profile get` - Get profile data for an address
+- `profile set-picture` - Set your profile picture URL
+- `profile set-x-username` - Set your X (Twitter) username
+
+##### Profile Get
+
+Read profile data for any address.
+
+```bash
+netp profile get \
+  --address <wallet-address> \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--json]
+```
+
+**Profile Get Arguments:**
+
+- `--address` (required): Wallet address to get profile for
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--json` (optional): Output in JSON format
+
+**Example:**
+
+```bash
+# Human-readable output
+netp profile get \
+  --address 0x1234567890abcdef1234567890abcdef12345678 \
+  --chain-id 8453
+
+# JSON output
+netp profile get \
+  --address 0x1234567890abcdef1234567890abcdef12345678 \
+  --chain-id 8453 \
+  --json
+```
+
+##### Profile Set Picture
+
+Set your profile picture URL.
+
+```bash
+netp profile set-picture \
+  --url <image-url> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Profile Set Picture Arguments:**
+
+- `--url` (required): Image URL for profile picture (HTTPS, IPFS, etc.)
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Example:**
+
+```bash
+# Set profile picture
+netp profile set-picture \
+  --url "https://example.com/my-avatar.jpg" \
+  --chain-id 8453
+
+# Encode-only (get transaction data without executing)
+netp profile set-picture \
+  --url "https://example.com/my-avatar.jpg" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+##### Profile Set X Username
+
+Set your X (Twitter) username for your profile.
+
+```bash
+netp profile set-x-username \
+  --username <x-username> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Profile Set X Username Arguments:**
+
+- `--username` (required): Your X (Twitter) username (with or without @)
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Example:**
+
+```bash
+# Set X username (with or without @)
+netp profile set-x-username \
+  --username "myusername" \
+  --chain-id 8453
+
+netp profile set-x-username \
+  --username "@myusername" \
+  --chain-id 8453
+
+# Encode-only
+netp profile set-x-username \
+  --username "myusername" \
+  --chain-id 8453 \
+  --encode-only
+```
+
 #### Info Command
 
 Show contract info and stats.
@@ -429,13 +549,21 @@ src/
 │   ├── index.ts          # Main entry point, sets up commander program
 │   └── shared.ts         # Shared option parsing and validation
 ├── commands/
-│   └── storage/          # Storage command module
-│       ├── index.ts      # Storage command definition
-│       ├── core/         # Upload and preview logic
-│       ├── storage/      # Storage operations
-│       ├── transactions/ # Transaction handling
-│       ├── utils.ts      # Storage-specific utilities
-│       └── types.ts      # Storage-specific types
+│   ├── storage/          # Storage command module
+│   │   ├── index.ts      # Storage command definition
+│   │   ├── core/         # Upload and preview logic
+│   │   ├── storage/      # Storage operations
+│   │   ├── transactions/ # Transaction handling
+│   │   ├── utils.ts      # Storage-specific utilities
+│   │   └── types.ts      # Storage-specific types
+│   ├── profile/          # Profile command module
+│   │   ├── index.ts      # Profile command definition
+│   │   ├── get.ts        # Profile get logic
+│   │   ├── set-picture.ts    # Set profile picture
+│   │   ├── set-username.ts   # Set X username
+│   │   └── types.ts      # Profile-specific types
+│   ├── message/          # Message command module
+│   └── token/            # Token command module
 └── shared/               # Shared utilities across commands
     └── types.ts          # Common types (CommonOptions, etc.)
 ```

@@ -233,6 +233,8 @@ netp message send \
   [--encode-only]
 ```
 
+**Personal Feed:** Post to your feed with `--topic "feed-<your address lowercase>"`.
+
 ##### Message Read
 
 ```bash
@@ -246,6 +248,8 @@ netp message read \
   [--chain-id <8453|1|...>] \
   [--json]
 ```
+
+**Personal Feeds:** Every address has a feed at topic `feed-<address lowercase>`. Use `--topic "feed-0x..."` to read someone's feed.
 
 ##### Message Count
 

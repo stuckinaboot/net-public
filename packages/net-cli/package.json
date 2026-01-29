@@ -28,6 +28,7 @@
   "dependencies": {
     "@net-protocol/core": "file:../net-core",
     "@net-protocol/netr": "file:../net-netr",
+    "@net-protocol/profiles": "file:../net-profiles",
     "@net-protocol/relay": "file:../net-relay",
     "@net-protocol/storage": "file:../net-storage",
     "@x402/evm": "^2.1.0",

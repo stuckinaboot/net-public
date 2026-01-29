@@ -8,6 +8,7 @@ import { registerMessageCommand } from "../commands/message";
 import { registerChainsCommand } from "../commands/chains";
 import { registerInfoCommand } from "../commands/info";
 import { registerTokenCommand } from "../commands/token";
+import { registerProfileCommand } from "../commands/profile";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../../package.json");
@@ -25,5 +26,6 @@ registerMessageCommand(program);
 registerChainsCommand(program);
 registerInfoCommand(program);
 registerTokenCommand(program);
+registerProfileCommand(program);
 
 program.parse();

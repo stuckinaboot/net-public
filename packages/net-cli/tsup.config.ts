@@ -6,7 +6,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ["viem", "dotenv"],
+  external: ["viem", "dotenv", "@net-protocol/core", "@net-protocol/storage", "@net-protocol/relay", "@net-protocol/netr"],
   treeshake: true,
   outExtension: () => ({ js: ".mjs" }),
 });

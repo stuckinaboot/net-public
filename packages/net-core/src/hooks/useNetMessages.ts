@@ -15,7 +15,7 @@ export function useNetMessages(params: UseNetMessagesOptions) {
     [params.chainId, params.filter, params.startIndex, params.endIndex]
   );
 
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error, refetch } = useReadContract({
     ...readContractArgs,
     query: {
       enabled: params.enabled,
@@ -30,5 +30,6 @@ export function useNetMessages(params: UseNetMessagesOptions) {
     messages,
     isLoading,
     error: error as Error | undefined,
+    refetch,
   };
 }

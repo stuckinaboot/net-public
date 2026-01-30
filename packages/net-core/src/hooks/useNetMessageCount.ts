@@ -12,7 +12,7 @@ export function useNetMessageCount(params: UseNetMessageCountOptions) {
     [params.chainId, params.filter]
   );
 
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error, refetch } = useReadContract({
     ...readContractArgs,
     query: {
       refetchInterval: params.refetchInterval,
@@ -24,6 +24,7 @@ export function useNetMessageCount(params: UseNetMessageCountOptions) {
     count: data ? Number(data) : 0,
     isLoading,
     error: error as Error | undefined,
+    refetch,
   };
 }
 

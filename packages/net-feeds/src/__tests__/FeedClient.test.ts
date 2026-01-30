@@ -381,5 +381,197 @@ describe("FeedClient", () => {
       });
     });
   });
+
+  describe("getComments", () => {
+    const mockPost: NetMessage = {
+      app: "0x0000000000000000000000000000000000000000",
+      sender: "0x1234567890123456789012345678901234567890",
+      timestamp: BigInt(1234567890),
+      data: "0x",
+      text: "Test post",
+      topic: "feed-crypto",
+    };
+
+    it("should get comments with comment topic", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      const mockComments: NetMessage[] = [
+        {
+          app: "0x0000000000000000000000000000000000000000",
+          sender: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          timestamp: BigInt(1234567891),
+          data: "0x",
+          text: "Test comment",
+          topic: "feed-crypto:comments:0x123",
+        },
+      ];
+
+      mockNetClient.getMessageCount.mockResolvedValue(1);
+      mockNetClient.getMessages.mockResolvedValue(mockComments);
+
+      const comments = await client.getComments({ post: mockPost });
+
+      expect(comments).toEqual(mockComments);
+      expect(mockNetClient.getMessageCount).toHaveBeenCalledWith({
+        filter: {
+          appAddress: "0x0000000000000000000000000000000000000000",
+          topic: expect.stringMatching(/^feed-crypto:comments:0x[a-fA-F0-9]{64}$/),
+        },
+      });
+    });
+
+    it("should use default maxComments = 50", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      mockNetClient.getMessageCount.mockResolvedValue(100);
+      mockNetClient.getMessages.mockResolvedValue([]);
+
+      await client.getComments({ post: mockPost });
+
+      expect(mockNetClient.getMessages).toHaveBeenCalledWith({
+        filter: expect.any(Object),
+        startIndex: 50,
+        endIndex: 100,
+      });
+    });
+
+    it("should handle maxComments = 0", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      mockNetClient.getMessageCount.mockResolvedValue(10);
+      mockNetClient.getMessages.mockResolvedValue([]);
+
+      await client.getComments({ post: mockPost, maxComments: 0 });
+
+      expect(mockNetClient.getMessages).toHaveBeenCalledWith({
+        filter: expect.any(Object),
+        startIndex: 10,
+        endIndex: 10,
+      });
+    });
+  });
+
+  describe("getCommentCount", () => {
+    const mockPost: NetMessage = {
+      app: "0x0000000000000000000000000000000000000000",
+      sender: "0x1234567890123456789012345678901234567890",
+      timestamp: BigInt(1234567890),
+      data: "0x",
+      text: "Test post",
+      topic: "feed-crypto",
+    };
+
+    it("should get comment count with comment topic", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      mockNetClient.getMessageCount.mockResolvedValue(5);
+
+      const count = await client.getCommentCount(mockPost);
+
+      expect(count).toBe(5);
+      expect(mockNetClient.getMessageCount).toHaveBeenCalledWith({
+        filter: {
+          appAddress: "0x0000000000000000000000000000000000000000",
+          topic: expect.stringMatching(/^feed-crypto:comments:0x[a-fA-F0-9]{64}$/),
+        },
+      });
+    });
+  });
+
+  describe("prepareComment", () => {
+    const mockPost: NetMessage = {
+      app: "0x0000000000000000000000000000000000000000",
+      sender: "0x1234567890123456789012345678901234567890",
+      timestamp: BigInt(1234567890),
+      data: "0x",
+      text: "Test post",
+      topic: "feed-crypto",
+    };
+
+    it("should prepare top-level comment", () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      const mockConfig = {
+        address: "0x123",
+        abi: [],
+        functionName: "sendMessage",
+        args: [],
+      };
+
+      mockNetClient.prepareSendMessage.mockReturnValue(mockConfig);
+
+      const config = client.prepareComment({
+        post: mockPost,
+        text: "Great post!",
+      });
+
+      expect(config).toEqual(mockConfig);
+      expect(mockNetClient.prepareSendMessage).toHaveBeenCalledWith({
+        text: "Great post!",
+        topic: expect.stringMatching(/^feed-crypto:comments:0x[a-fA-F0-9]{64}$/),
+        data: expect.stringMatching(/^0x/), // Should be hex-encoded JSON
+      });
+    });
+
+    it("should prepare reply to another comment", () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      const mockConfig = {
+        address: "0x123",
+        abi: [],
+        functionName: "sendMessage",
+        args: [],
+      };
+
+      mockNetClient.prepareSendMessage.mockReturnValue(mockConfig);
+
+      const config = client.prepareComment({
+        post: mockPost,
+        text: "I agree!",
+        replyTo: {
+          sender: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          timestamp: 1234567891,
+        },
+      });
+
+      expect(config).toEqual(mockConfig);
+
+      // Verify the data includes replyTo
+      const callArgs = mockNetClient.prepareSendMessage.mock.calls[0][0];
+      expect(callArgs.data).toMatch(/^0x/);
+      // Decode and verify replyTo is present
+      const dataString = Buffer.from(callArgs.data.slice(2), "hex").toString();
+      const parsed = JSON.parse(dataString);
+      expect(parsed.replyTo).toBeDefined();
+      expect(parsed.replyTo.sender).toBe("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      expect(parsed.replyTo.timestamp).toBe(1234567891);
+    });
+
+    it("should include parent post info in comment data", () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      const mockConfig = {
+        address: "0x123",
+        abi: [],
+        functionName: "sendMessage",
+        args: [],
+      };
+
+      mockNetClient.prepareSendMessage.mockReturnValue(mockConfig);
+
+      client.prepareComment({
+        post: mockPost,
+        text: "Comment text",
+      });
+
+      const callArgs = mockNetClient.prepareSendMessage.mock.calls[0][0];
+      const dataString = Buffer.from(callArgs.data.slice(2), "hex").toString();
+      const parsed = JSON.parse(dataString);
+
+      expect(parsed.parentTopic).toBe("feed-crypto");
+      expect(parsed.parentSender).toBe("0x1234567890123456789012345678901234567890");
+      expect(parsed.parentTimestamp).toBe(1234567890);
+    });
+  });
 });
 

@@ -26,10 +26,12 @@ export {
   getProfilePictureStorageArgs,
   getProfileMetadataStorageArgs,
   getXUsernameStorageArgs,
+  getBioStorageArgs,
   getProfileCanvasStorageArgs,
   parseProfileMetadata,
   isValidUrl,
   isValidXUsername,
+  isValidBio,
 } from "./utils";
 
 // Re-export storage contract for convenience

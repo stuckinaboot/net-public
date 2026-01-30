@@ -9,6 +9,7 @@ export const TEST_PRIVATE_KEY =
 
 export const TEST_PROFILE_PICTURE = "https://example.com/image.jpg";
 export const TEST_X_USERNAME = "testuser";
+export const TEST_BIO = "Hello, I'm a developer!";
 
 /**
  * Create mock storage data for profile picture
@@ -24,10 +25,20 @@ export function createMockProfilePictureData(url: string = TEST_PROFILE_PICTURE)
 /**
  * Create mock storage data for profile metadata
  */
-export function createMockProfileMetadataData(username: string = TEST_X_USERNAME) {
+export function createMockProfileMetadataData(
+  username: string = TEST_X_USERNAME,
+  bio?: string
+) {
+  const metadata: { x_username?: string; bio?: string } = {};
+  if (username) {
+    metadata.x_username = `@${username}`;
+  }
+  if (bio) {
+    metadata.bio = bio;
+  }
   return {
     text: "profile-metadata",
-    data: JSON.stringify({ x_username: `@${username}` }),
+    data: JSON.stringify(metadata),
     isXml: false,
   };
 }
@@ -80,6 +91,25 @@ export function createSetUsernameOptions(overrides?: {
 }) {
   return {
     username: overrides?.username ?? TEST_X_USERNAME,
+    privateKey: overrides?.privateKey ?? TEST_PRIVATE_KEY,
+    chainId: overrides?.chainId ?? TEST_CHAIN_ID,
+    rpcUrl: overrides?.rpcUrl,
+    encodeOnly: overrides?.encodeOnly ?? false,
+  };
+}
+
+/**
+ * Create options for profile set-bio command
+ */
+export function createSetBioOptions(overrides?: {
+  bio?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}) {
+  return {
+    bio: overrides?.bio ?? TEST_BIO,
     privateKey: overrides?.privateKey ?? TEST_PRIVATE_KEY,
     chainId: overrides?.chainId ?? TEST_CHAIN_ID,
     rpcUrl: overrides?.rpcUrl,

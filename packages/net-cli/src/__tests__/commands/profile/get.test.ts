@@ -4,6 +4,7 @@ import {
   TEST_ADDRESS,
   TEST_PROFILE_PICTURE,
   TEST_X_USERNAME,
+  TEST_BIO,
   createGetOptions,
   createMockProfilePictureData,
   createMockProfileMetadataData,
@@ -94,6 +95,21 @@ describe("executeProfileGet", () => {
       );
     });
 
+    it("should display bio", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, TEST_BIO));
+
+      await executeProfileGet(createGetOptions());
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Bio:")
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(TEST_BIO)
+      );
+    });
+
     it("should display (not set) when no profile picture", async () => {
       // First call throws not found, second returns metadata
       mockReadStorageData
@@ -141,7 +157,7 @@ describe("executeProfileGet", () => {
     it("should include all fields in JSON output", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME));
+        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, TEST_BIO));
 
       await executeProfileGet(createGetOptions({ json: true }));
 
@@ -160,6 +176,7 @@ describe("executeProfileGet", () => {
       expect(output.chainId).toBe(TEST_CHAIN_ID);
       expect(output.profilePicture).toBe(TEST_PROFILE_PICTURE);
       expect(output.xUsername).toBe(TEST_X_USERNAME);
+      expect(output.bio).toBe(TEST_BIO);
       expect(output.hasProfile).toBeTruthy();
     });
 
@@ -181,7 +198,29 @@ describe("executeProfileGet", () => {
       const output = JSON.parse(jsonOutputCall![0]);
       expect(output.profilePicture).toBeNull();
       expect(output.xUsername).toBeNull();
+      expect(output.bio).toBeNull();
       expect(output.hasProfile).toBeFalsy();
+    });
+
+    it("should include bio as null when not set", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
+        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME));
+
+      await executeProfileGet(createGetOptions({ json: true }));
+
+      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
+        try {
+          const parsed = JSON.parse(call[0]);
+          return parsed.address !== undefined;
+        } catch {
+          return false;
+        }
+      });
+
+      expect(jsonOutputCall).toBeDefined();
+      const output = JSON.parse(jsonOutputCall![0]);
+      expect(output.bio).toBeNull();
     });
   });
 

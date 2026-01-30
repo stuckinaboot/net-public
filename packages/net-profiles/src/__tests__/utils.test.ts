@@ -4,11 +4,13 @@ import {
   getBytesArgsForStorage,
   getProfilePictureStorageArgs,
   getXUsernameStorageArgs,
+  getBioStorageArgs,
   getProfileMetadataStorageArgs,
   getProfileCanvasStorageArgs,
   parseProfileMetadata,
   isValidUrl,
   isValidXUsername,
+  isValidBio,
 } from "../utils";
 import {
   PROFILE_PICTURE_STORAGE_KEY,
@@ -253,6 +255,43 @@ describe("utils", () => {
       const result = parseProfileMetadata("");
       expect(result).toBeUndefined();
     });
+
+    // Bio parsing tests
+    it("should parse valid JSON with bio", () => {
+      const result = parseProfileMetadata('{"bio":"Hello world"}');
+      expect(result?.bio).toBe("Hello world");
+    });
+
+    it("should parse JSON with both x_username and bio", () => {
+      const result = parseProfileMetadata('{"x_username":"@testuser","bio":"My bio"}');
+      expect(result?.x_username).toBe("testuser");
+      expect(result?.bio).toBe("My bio");
+    });
+
+    it("should return undefined for empty bio", () => {
+      const result = parseProfileMetadata('{"bio":""}');
+      expect(result?.bio).toBeUndefined();
+    });
+
+    it("should handle null bio", () => {
+      const result = parseProfileMetadata('{"bio":null}');
+      expect(result?.bio).toBeUndefined();
+    });
+
+    it("should handle numeric bio (invalid)", () => {
+      const result = parseProfileMetadata('{"bio":123}');
+      expect(result?.bio).toBeUndefined();
+    });
+
+    it("should handle bio with newlines", () => {
+      const result = parseProfileMetadata('{"bio":"Line 1\\nLine 2"}');
+      expect(result?.bio).toBe("Line 1\nLine 2");
+    });
+
+    it("should handle bio with unicode characters", () => {
+      const result = parseProfileMetadata('{"bio":"Hello 👋 世界"}');
+      expect(result?.bio).toBe("Hello 👋 世界");
+    });
   });
 
   describe("isValidUrl", () => {
@@ -345,6 +384,89 @@ describe("utils", () => {
 
     it("should return false for @ only", () => {
       expect(isValidXUsername("@")).toBe(false);
+    });
+  });
+
+  describe("isValidBio", () => {
+    it("should return true for valid bio", () => {
+      expect(isValidBio("Hello, I'm a developer!")).toBe(true);
+      expect(isValidBio("Short bio")).toBe(true);
+      expect(isValidBio("a")).toBe(true);
+    });
+
+    it("should return true for bio with newlines", () => {
+      expect(isValidBio("Line 1\nLine 2")).toBe(true);
+      expect(isValidBio("Line 1\r\nLine 2")).toBe(true);
+    });
+
+    it("should return true for bio with unicode/emojis", () => {
+      expect(isValidBio("Hello 👋 世界")).toBe(true);
+      expect(isValidBio("🚀 Building cool stuff")).toBe(true);
+    });
+
+    it("should return true for bio at max length (280 chars)", () => {
+      expect(isValidBio("a".repeat(280))).toBe(true);
+    });
+
+    it("should return false for empty string", () => {
+      expect(isValidBio("")).toBe(false);
+    });
+
+    it("should return false for bio over 280 characters", () => {
+      expect(isValidBio("a".repeat(281))).toBe(false);
+      expect(isValidBio("a".repeat(500))).toBe(false);
+    });
+
+    it("should return false for bio with control characters", () => {
+      expect(isValidBio("Hello\x00World")).toBe(false);
+      expect(isValidBio("Test\x07bell")).toBe(false);
+      expect(isValidBio("Tab\x08backspace")).toBe(false);
+    });
+
+    it("should allow tabs", () => {
+      expect(isValidBio("Hello\tWorld")).toBe(true);
+    });
+
+    it("should handle bio with special characters", () => {
+      expect(isValidBio("Email: test@example.com")).toBe(true);
+      expect(isValidBio("URL: https://example.com")).toBe(true);
+      expect(isValidBio("Symbols: !@#$%^&*()")).toBe(true);
+    });
+  });
+
+  describe("getBioStorageArgs", () => {
+    it("should return metadata topic", () => {
+      const args = getBioStorageArgs("My bio");
+      expect(args.topic).toBe(PROFILE_METADATA_TOPIC);
+    });
+
+    it("should return hex-encoded bytesKey", () => {
+      const args = getBioStorageArgs("My bio");
+      expect(args.bytesKey).toMatch(/^0x[0-9a-f]{64}$/);
+    });
+
+    it("should return hex-encoded bytesValue", () => {
+      const args = getBioStorageArgs("My bio");
+      expect(args.bytesValue).toMatch(/^0x/);
+    });
+
+    it("should produce consistent results", () => {
+      const args1 = getBioStorageArgs("Test bio");
+      const args2 = getBioStorageArgs("Test bio");
+      expect(args1.bytesKey).toBe(args2.bytesKey);
+      expect(args1.bytesValue).toBe(args2.bytesValue);
+    });
+
+    it("should produce different bytesValue for different bios", () => {
+      const args1 = getBioStorageArgs("Bio 1");
+      const args2 = getBioStorageArgs("Bio 2");
+      expect(args1.bytesValue).not.toBe(args2.bytesValue);
+    });
+
+    it("should use same storage key as other metadata", () => {
+      const bioArgs = getBioStorageArgs("My bio");
+      const usernameArgs = getXUsernameStorageArgs("testuser");
+      expect(bioArgs.bytesKey).toBe(usernameArgs.bytesKey);
     });
   });
 });

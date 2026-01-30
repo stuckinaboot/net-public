@@ -46,8 +46,9 @@ export async function executeProfileGet(
       }
     }
 
-    // Fetch profile metadata (X username)
+    // Fetch profile metadata (X username, bio)
     let xUsername: string | undefined;
+    let bio: string | undefined;
     try {
       const metadataResult = await client.readStorageData({
         key: PROFILE_METADATA_STORAGE_KEY,
@@ -56,6 +57,7 @@ export async function executeProfileGet(
       if (metadataResult.data) {
         const metadata = parseProfileMetadata(metadataResult.data);
         xUsername = metadata?.x_username;
+        bio = metadata?.bio;
       }
     } catch (error) {
       // Not found is okay
@@ -66,7 +68,7 @@ export async function executeProfileGet(
       }
     }
 
-    const hasProfile = profilePicture || xUsername;
+    const hasProfile = profilePicture || xUsername || bio;
 
     if (options.json) {
       const output = {
@@ -74,6 +76,7 @@ export async function executeProfileGet(
         chainId: readOnlyOptions.chainId,
         profilePicture: profilePicture || null,
         xUsername: xUsername || null,
+        bio: bio || null,
         hasProfile,
       };
       console.log(JSON.stringify(output, null, 2));
@@ -93,6 +96,9 @@ export async function executeProfileGet(
       `  ${chalk.cyan("X Username:")} ${
         xUsername ? `@${xUsername}` : chalk.gray("(not set)")
       }`
+    );
+    console.log(
+      `  ${chalk.cyan("Bio:")} ${bio || chalk.gray("(not set)")}`
     );
 
     if (!hasProfile) {

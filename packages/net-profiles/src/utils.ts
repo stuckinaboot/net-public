@@ -164,8 +164,15 @@ export function parseProfileMetadata(
       ? storedUsername.slice(1)
       : storedUsername;
 
+    // Extract bio if present
+    const bio =
+      parsed?.bio && typeof parsed.bio === "string" && parsed.bio.length > 0
+        ? parsed.bio
+        : undefined;
+
     return {
       x_username: usernameWithoutAt,
+      bio,
     };
   } catch {
     return undefined;
@@ -195,4 +202,28 @@ export function isValidXUsername(username: string): boolean {
   const cleanUsername = username.startsWith("@") ? username.slice(1) : username;
   // X usernames: 1-15 chars, alphanumeric and underscores only
   return /^[a-zA-Z0-9_]{1,15}$/.test(cleanUsername);
+}
+
+/**
+ * Validate bio format
+ * Returns true if valid (max 280 chars, no control characters except newlines)
+ */
+export function isValidBio(bio: string): boolean {
+  if (!bio) return false;
+  if (bio.length > 280) return false;
+  // Allow printable characters, spaces, and newlines. Disallow other control chars.
+  // eslint-disable-next-line no-control-regex
+  const hasControlChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(bio);
+  return !hasControlChars;
+}
+
+/**
+ * Prepare transaction arguments for updating bio
+ * This is a convenience wrapper around getProfileMetadataStorageArgs
+ *
+ * @param bio - The bio text
+ * @returns Arguments for Storage.put()
+ */
+export function getBioStorageArgs(bio: string): ProfileStorageArgs {
+  return getProfileMetadataStorageArgs({ bio });
 }

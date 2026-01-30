@@ -31,7 +31,6 @@ import type {
  * // Prepare registration transaction
  * const config = prepareRegisterFeed({
  *   feedName: "my-feed",
- *   description: "My awesome feed",
  * });
  * ```
  */
@@ -72,7 +71,7 @@ export function useFeedRegistry({ chainId }: UseFeedRegistryOptions) {
           abi: FEED_REGISTRY_CONTRACT.abi,
           to: FEED_REGISTRY_CONTRACT.address,
           functionName: "registerFeed",
-          args: [params.feedName, params.description ?? ""],
+          args: [params.feedName],
         };
       },
     [validateFeedName]

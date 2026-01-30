@@ -80,7 +80,7 @@ export class FeedRegistryClient {
    * Checks if a feed name is already registered.
    * Uses the same logic as the smart contract by checking message count.
    *
-   * @param feedName - The feed name to check
+   * @param feedName - The feed name to check (without "feed-" prefix)
    * @returns True if registered, false if available
    *
    * @example
@@ -90,10 +90,12 @@ export class FeedRegistryClient {
    * ```
    */
   async isFeedRegistered(feedName: string): Promise<boolean> {
+    // Contract stores with "feed-" prefix
+    const fullTopic = `feed-${feedName}`;
     const count = await this.netClient.getMessageCount({
       filter: {
         appAddress: FEED_REGISTRY_CONTRACT.address,
-        topic: feedName,
+        topic: fullTopic,
       },
     });
 
@@ -142,24 +144,11 @@ export class FeedRegistryClient {
     });
 
     // Parse messages into RegisteredFeed objects
-    return messages.map((msg) => {
-      // Decode hex data to string (data is description encoded as bytes)
-      let description = "";
-      if (msg.data && msg.data.length > 2) {
-        const hexBytes = msg.data.slice(2).match(/.{1,2}/g);
-        if (hexBytes) {
-          description = new TextDecoder().decode(
-            Uint8Array.from(hexBytes.map((byte) => parseInt(byte, 16)))
-          );
-        }
-      }
-      return {
-        feedName: msg.topic, // Feed name is stored as the topic
-        registrant: msg.sender,
-        description,
-        timestamp: Number(msg.timestamp),
-      };
-    });
+    return messages.map((msg) => ({
+      feedName: msg.text, // Feed name is stored as the text field
+      registrant: msg.sender,
+      timestamp: Number(msg.timestamp),
+    }));
   }
 
   /**
@@ -186,8 +175,7 @@ export class FeedRegistryClient {
    * Does not submit the transaction - you must submit it using your wallet library.
    *
    * @param params - Registration options
-   * @param params.feedName - The feed name to register (max 64 characters)
-   * @param params.description - Optional description of the feed
+   * @param params.feedName - The feed name to register (max 64 characters, without "feed-" prefix)
    * @returns Transaction configuration ready to be submitted
    * @throws Error if feed name fails validation
    *
@@ -196,7 +184,6 @@ export class FeedRegistryClient {
    * const client = new FeedRegistryClient({ chainId: 8453 });
    * const config = client.prepareRegisterFeed({
    *   feedName: "crypto",
-   *   description: "Discussion about cryptocurrency",
    * });
    * // Then submit using your wallet library
    * ```
@@ -212,7 +199,7 @@ export class FeedRegistryClient {
       abi: FEED_REGISTRY_CONTRACT.abi,
       to: FEED_REGISTRY_CONTRACT.address,
       functionName: "registerFeed",
-      args: [params.feedName, params.description ?? ""],
+      args: [params.feedName],
     };
   }
 

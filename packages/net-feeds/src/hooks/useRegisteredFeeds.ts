@@ -77,32 +77,11 @@ export function useRegisteredFeeds({
   const feeds: RegisteredFeed[] = useMemo(() => {
     if (!messages) return [];
 
-    return messages.map((msg) => {
-      // Decode description from data field (stored as hex bytes)
-      let description = "";
-      if (msg.data && msg.data.length > 2) {
-        try {
-          // Remove 0x prefix and convert hex to bytes
-          const hexString = msg.data.slice(2);
-          const hexBytes = hexString.match(/.{1,2}/g);
-          if (hexBytes) {
-            const bytes = new Uint8Array(
-              hexBytes.map((byte) => parseInt(byte, 16))
-            );
-            description = new TextDecoder().decode(bytes);
-          }
-        } catch {
-          // If decoding fails, leave description empty
-        }
-      }
-
-      return {
-        feedName: msg.topic, // Feed name is stored as the topic
-        registrant: msg.sender,
-        description,
-        timestamp: Number(msg.timestamp),
-      };
-    });
+    return messages.map((msg) => ({
+      feedName: msg.text, // Feed name is stored as the text field
+      registrant: msg.sender,
+      timestamp: Number(msg.timestamp),
+    }));
   }, [messages]);
 
   return {

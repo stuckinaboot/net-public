@@ -110,7 +110,7 @@ describe("FeedRegistryClient", () => {
       expect(mockNetClient.getMessageCount).toHaveBeenCalledWith({
         filter: {
           appAddress: FEED_REGISTRY_CONTRACT.address,
-          topic: "crypto",
+          topic: "feed-crypto", // Contract uses "feed-" prefix
         },
       });
     });
@@ -144,17 +144,17 @@ describe("FeedRegistryClient", () => {
           app: FEED_REGISTRY_CONTRACT.address,
           sender: "0x1234567890123456789012345678901234567890",
           timestamp: BigInt(1234567890),
-          topic: "crypto",
-          text: "crypto",
-          data: "0x" + Buffer.from("A feed about cryptocurrency").toString("hex"),
+          topic: "feed-crypto", // Topic has "feed-" prefix
+          text: "crypto", // Feed name is in text field
+          data: "0x",
         },
         {
           app: FEED_REGISTRY_CONTRACT.address,
           sender: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
           timestamp: BigInt(1234567900),
-          topic: "gaming",
+          topic: "feed-gaming",
           text: "gaming",
-          data: null, // Empty description - data can be null
+          data: null,
         },
       ];
 
@@ -167,13 +167,11 @@ describe("FeedRegistryClient", () => {
       expect(feeds[0]).toEqual({
         feedName: "crypto",
         registrant: "0x1234567890123456789012345678901234567890",
-        description: "A feed about cryptocurrency",
         timestamp: 1234567890,
       });
       expect(feeds[1]).toEqual({
         feedName: "gaming",
         registrant: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        description: "",
         timestamp: 1234567900,
       });
     });
@@ -233,23 +231,12 @@ describe("FeedRegistryClient", () => {
 
       const config = client.prepareRegisterFeed({
         feedName: "crypto",
-        description: "A feed about cryptocurrency",
       });
 
       expect(config.to).toBe(FEED_REGISTRY_CONTRACT.address);
       expect(config.functionName).toBe("registerFeed");
-      expect(config.args).toEqual(["crypto", "A feed about cryptocurrency"]);
+      expect(config.args).toEqual(["crypto"]);
       expect(config.abi).toBe(FEED_REGISTRY_CONTRACT.abi);
-    });
-
-    it("should use empty string for missing description", () => {
-      const client = new FeedRegistryClient({ chainId: BASE_CHAIN_ID });
-
-      const config = client.prepareRegisterFeed({
-        feedName: "crypto",
-      });
-
-      expect(config.args).toEqual(["crypto", ""]);
     });
 
     it("should throw error for empty feed name", () => {

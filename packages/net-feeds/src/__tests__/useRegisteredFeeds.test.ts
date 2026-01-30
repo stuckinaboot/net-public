@@ -107,17 +107,17 @@ describe("useRegisteredFeeds", () => {
         app: FEED_REGISTRY_CONTRACT.address,
         sender: "0x1234567890123456789012345678901234567890",
         timestamp: BigInt(1234567890),
-        topic: "crypto",
-        text: "crypto",
-        data: "0x" + Buffer.from("A feed about cryptocurrency").toString("hex"),
+        topic: "feed-crypto", // Topic has "feed-" prefix
+        text: "crypto", // Feed name is in text field
+        data: "0x",
       },
       {
         app: FEED_REGISTRY_CONTRACT.address,
         sender: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         timestamp: BigInt(1234567900),
-        topic: "gaming",
+        topic: "feed-gaming",
         text: "gaming",
-        data: null, // Empty description
+        data: null,
       },
     ];
 
@@ -140,13 +140,11 @@ describe("useRegisteredFeeds", () => {
     expect(result.current.feeds[0]).toEqual({
       feedName: "crypto",
       registrant: "0x1234567890123456789012345678901234567890",
-      description: "A feed about cryptocurrency",
       timestamp: 1234567890,
     });
     expect(result.current.feeds[1]).toEqual({
       feedName: "gaming",
       registrant: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-      description: "",
       timestamp: 1234567900,
     });
   });

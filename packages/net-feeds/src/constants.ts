@@ -17,7 +17,7 @@ export const MAX_FEED_NAME_LENGTH = 64 as const;
 // FeedRegistry contract - deployed on Base mainnet only
 export const FEED_REGISTRY_CONTRACT = {
   abi: feedRegistryAbi as Abi,
-  address: "0x000000072f8609a70129edf71d2f6c79b82c3a21" as `0x${string}`,
+  address: "0x000000049ad5f63b6074d3466aa00415c012fc4c" as `0x${string}`,
 } as const;
 
 // Note: NULL_ADDRESS is imported directly from @net-protocol/core in files that need it

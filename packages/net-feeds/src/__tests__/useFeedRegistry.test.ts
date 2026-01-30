@@ -68,24 +68,11 @@ describe("useFeedRegistry", () => {
 
       const config = result.current.prepareRegisterFeed({
         feedName: "crypto",
-        description: "A feed about cryptocurrency",
       });
 
       expect(config.to).toBe(FEED_REGISTRY_CONTRACT.address);
       expect(config.functionName).toBe("registerFeed");
-      expect(config.args).toEqual(["crypto", "A feed about cryptocurrency"]);
-    });
-
-    it("should use empty string for missing description", () => {
-      const { result } = renderHook(() =>
-        useFeedRegistry({ chainId: BASE_CHAIN_ID })
-      );
-
-      const config = result.current.prepareRegisterFeed({
-        feedName: "crypto",
-      });
-
-      expect(config.args).toEqual(["crypto", ""]);
+      expect(config.args).toEqual(["crypto"]);
     });
 
     it("should throw error for invalid feed name", () => {

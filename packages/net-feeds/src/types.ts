@@ -124,12 +124,10 @@ export type PrepareCommentOptions = {
  * A registered feed from the FeedRegistry contract
  */
 export type RegisteredFeed = {
-  /** The feed name (topic) */
+  /** The feed name (without "feed-" prefix) */
   feedName: string;
   /** The address that registered the feed */
   registrant: `0x${string}`;
-  /** Optional description of the feed */
-  description: string;
   /** Timestamp when the feed was registered */
   timestamp: number;
 };
@@ -164,6 +162,5 @@ export type UseRegisteredFeedsOptions = {
  */
 export type PrepareRegisterFeedOptions = {
   feedName: string;
-  description?: string;
 };
 

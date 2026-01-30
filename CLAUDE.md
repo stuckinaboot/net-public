@@ -192,3 +192,27 @@ See `examples/basic-app/TESTING.md` for comprehensive testing guide including:
 - RPC mocking patterns
 - Debugging failed tests
 - Adding new E2E tests
+
+## Troubleshooting
+
+### "Cannot find module '@net-protocol/X/dist/index.mjs'"
+
+**Symptom:** Running the CLI fails with `ERR_MODULE_NOT_FOUND` for a workspace package.
+
+**Cause:** Yarn workspace linking issue. Some packages in `node_modules/@net-protocol/` are **copies** instead of **symlinks** to the actual packages. When you run `yarn build`, the dist is created in `packages/net-X/dist/`, but the copy in `node_modules/` doesn't have it.
+
+```
+node_modules/@net-protocol/
+├── core -> ../../packages/net-core      # ✓ symlink (works)
+├── storage -> ../../packages/net-storage # ✓ symlink (works)
+├── profiles/                             # ✗ copy (missing dist/)
+└── relay/                                # ✗ copy (missing dist/)
+```
+
+**Fix:** Run the full workspace build to populate dist in all locations:
+
+```bash
+yarn workspaces foreach -A run build
+```
+
+This is especially common in git worktrees or after switching branches.

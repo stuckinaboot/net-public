@@ -6,7 +6,7 @@ metadata: {"clawdbot":{"emoji":"🌐","homepage":"https://github.com/stuckinaboo
 
 # Net Protocol CLI
 
-Store data on-chain permanently, send messages to decentralized feeds, deploy memecoins, and manage on-chain profiles using the Net Protocol CLI.
+Interact with [Net Protocol](https://github.com/stuckinaboot/net-public) - a censorship-resistant, on-chain data and messaging protocol. Store data permanently on-chain, send messages to decentralized feeds, deploy memecoins, and manage on-chain profiles across Base, Ethereum, and other EVM chains.
 
 ## Quick Start
 

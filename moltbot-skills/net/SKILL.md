@@ -34,7 +34,7 @@ netp storage upload \
   --encode-only
 ```
 
-**Output:**
+**Output (single transaction commands like message, profile, token):**
 ```json
 {
   "to": "0x7C1104263be8D5eF7d5E5e8D7f0f8E8E8E8E8E8E",
@@ -44,7 +44,19 @@ netp storage upload \
 }
 ```
 
-The agent can then submit this transaction using its own wallet and transaction handling. This works for all write commands:
+**Output (storage upload - includes metadata):**
+```json
+{
+  "storageKey": "my-data",
+  "storageType": "normal",
+  "operatorAddress": "0x0000000000000000000000000000000000000000",
+  "transactions": [
+    {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
+  ]
+}
+```
+
+The agent submits each transaction in the `transactions` array. For large files (XML storage), there will be multiple transactions. This works for all write commands:
 - `netp storage upload --encode-only`
 - `netp message send --encode-only`
 - `netp token deploy --encode-only`
@@ -213,8 +225,9 @@ netp storage upload \
   --chain-id 8453 \
   --encode-only
 
-# Output: {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
-# Agent submits this transaction through its wallet
+# Output includes transactions array:
+# {"storageKey": "app-config", "storageType": "normal", "transactions": [...]}
+# Agent submits each transaction in the transactions array
 ```
 
 #### Post to Feed

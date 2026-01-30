@@ -81,19 +81,21 @@ netp storage upload \
   --encode-only
 ```
 
-**Output:**
+**Output (normal storage - single transaction):**
 ```json
 {
-  "to": "0x7C1104263be8D5eF7d5E5e8D7f0f8E8E8E8E8E8E",
-  "data": "0x1234abcd...",
-  "chainId": 8453,
-  "value": "0"
+  "storageKey": "my-key",
+  "storageType": "normal",
+  "operatorAddress": "0x0000000000000000000000000000000000000000",
+  "transactions": [
+    {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
+  ]
 }
 ```
 
-The agent then submits this transaction through its own wallet infrastructure. No private key is required for the CLI when using `--encode-only`.
+The agent submits each transaction in the `transactions` array through its own wallet infrastructure. No private key is required for the CLI when using `--encode-only`.
 
-**For large files (chunked storage)**, encode-only returns an array of transactions:
+**For large files (XML chunked storage)**, the output includes multiple transactions:
 ```bash
 netp storage upload \
   --file ./large-file.json \
@@ -105,14 +107,20 @@ netp storage upload \
 
 **Output:**
 ```json
-[
-  {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"},
-  {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"},
-  {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
-]
+{
+  "storageKey": "big-data",
+  "storageType": "xml",
+  "operatorAddress": "0x0000000000000000000000000000000000000000",
+  "transactions": [
+    {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"},
+    {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"},
+    {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
+  ],
+  "topLevelHash": "0xabc123..."
+}
 ```
 
-Submit each transaction in order.
+Submit each transaction in order. The `topLevelHash` is used internally for XML storage reassembly.
 
 ### Preview
 

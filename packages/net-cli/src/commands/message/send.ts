@@ -25,11 +25,14 @@ export async function executeSend(options: MessageSendOptions): Promise<void> {
     return;
   }
 
-  const commonOptions = parseCommonOptions({
-    privateKey: options.privateKey,
-    chainId: options.chainId,
-    rpcUrl: options.rpcUrl,
-  });
+  const commonOptions = parseCommonOptions(
+    {
+      privateKey: options.privateKey,
+      chainId: options.chainId,
+      rpcUrl: options.rpcUrl,
+    },
+    true // supports --encode-only
+  );
 
   const client = createNetClient(commonOptions);
   const txConfig = prepareMessageConfig(client, options);

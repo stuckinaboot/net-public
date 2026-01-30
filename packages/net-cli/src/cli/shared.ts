@@ -33,21 +33,29 @@ function getRpcUrl(optionValue?: string): string | undefined {
 /**
  * Parse and validate common options shared across all commands.
  * Extracts private key, chain ID, and RPC URL from command options or environment variables.
+ * @param options - Command options
+ * @param supportsEncodeOnly - If true, mention --encode-only in error messages as an alternative
  */
-export function parseCommonOptions(options: {
-  privateKey?: string;
-  chainId?: number;
-  rpcUrl?: string;
-}): CommonOptions {
+export function parseCommonOptions(
+  options: {
+    privateKey?: string;
+    chainId?: number;
+    rpcUrl?: string;
+  },
+  supportsEncodeOnly = false
+): CommonOptions {
   const privateKey =
     options.privateKey ||
     process.env.NET_PRIVATE_KEY ||
     process.env.PRIVATE_KEY;
 
   if (!privateKey) {
+    const encodeOnlyHint = supportsEncodeOnly
+      ? ", or use --encode-only to output transaction data without submitting"
+      : "";
     console.error(
       chalk.red(
-        "Error: Private key is required. Provide via --private-key flag or NET_PRIVATE_KEY/PRIVATE_KEY environment variable"
+        `Error: Private key is required. Provide via --private-key flag or NET_PRIVATE_KEY/PRIVATE_KEY environment variable${encodeOnlyHint}`
       )
     );
     process.exit(1);

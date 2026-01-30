@@ -59,7 +59,7 @@ netp storage upload \
 | `--rpc-url` | No | Custom RPC endpoint |
 | `--encode-only` | No | Output transaction JSON without executing |
 
-**Example Output:**
+**Example Output (Direct Execution):**
 ```
 Uploading to Net Storage...
 Storage type: normal
@@ -67,6 +67,52 @@ Chunks needed: 1
 ✓ Upload complete
 Storage URL: net://8453/0xOperator/my-key
 ```
+
+### Encode-Only Mode (For Agents)
+
+**For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data without executing:
+
+```bash
+netp storage upload \
+  --file ./data.json \
+  --key "my-key" \
+  --text "Description" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x7C1104263be8D5eF7d5E5e8D7f0f8E8E8E8E8E8E",
+  "data": "0x1234abcd...",
+  "chainId": 8453,
+  "value": "0"
+}
+```
+
+The agent then submits this transaction through its own wallet infrastructure. No private key is required for the CLI when using `--encode-only`.
+
+**For large files (chunked storage)**, encode-only returns an array of transactions:
+```bash
+netp storage upload \
+  --file ./large-file.json \
+  --key "big-data" \
+  --text "Large file" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+[
+  {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"},
+  {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"},
+  {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
+]
+```
+
+Submit each transaction in order.
 
 ### Preview
 

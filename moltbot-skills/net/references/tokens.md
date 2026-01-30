@@ -98,6 +98,52 @@ netp token deploy \
   --chain-id 8453
 ```
 
+### Encode-Only Mode (For Agents)
+
+**For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data:
+
+```bash
+netp token deploy \
+  --name "Bot Token" \
+  --symbol "BOT" \
+  --image "https://example.com/bot.png" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x1234567890abcdef1234567890abcdef12345678",
+  "data": "0xabcdef...",
+  "chainId": 8453,
+  "value": "0"
+}
+```
+
+**With initial buy** (includes ETH value):
+```bash
+netp token deploy \
+  --name "Bot Token" \
+  --symbol "BOT" \
+  --image "https://example.com/bot.png" \
+  --initial-buy 0.1 \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x1234567890abcdef1234567890abcdef12345678",
+  "data": "0xabcdef...",
+  "chainId": 8453,
+  "value": "100000000000000000"
+}
+```
+
+Note: The `value` field is in wei. 0.1 ETH = 100000000000000000 wei. The agent must include this value when submitting the transaction.
+
 ### Get Token Info
 
 Retrieve information about a deployed token:

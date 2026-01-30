@@ -46,7 +46,7 @@ netp message send \
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
 
-**Examples:**
+**Examples (Direct Execution):**
 ```bash
 # Simple message
 netp message send --text "Hello, Net!" --chain-id 8453
@@ -57,6 +57,30 @@ netp message send --text "New proposal!" --topic "governance" --chain-id 8453
 # Message with data payload
 netp message send --text "Event" --data "0x1234abcd" --topic "events" --chain-id 8453
 ```
+
+### Encode-Only Mode (For Agents)
+
+**For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data:
+
+```bash
+netp message send \
+  --text "Hello from the bot!" \
+  --topic "announcements" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x7C1104263be8D5eF7d5E5e8D7f0f8E8E8E8E8E8E",
+  "data": "0x1234abcd...",
+  "chainId": 8453,
+  "value": "0"
+}
+```
+
+The agent submits this transaction through its own wallet. No private key needed for the CLI.
 
 ### Read Messages
 

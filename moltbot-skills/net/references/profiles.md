@@ -166,6 +166,46 @@ netp profile set-x-username --username "myhandle" --chain-id 8453
 netp profile set-x-username --username "@myhandle" --chain-id 8453
 ```
 
+## Encode-Only Mode (For Agents)
+
+**For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data for any profile update:
+
+### Set Profile Picture
+```bash
+netp profile set-picture \
+  --url "https://example.com/avatar.png" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x7C1104263be8D5eF7d5E5e8D7f0f8E8E8E8E8E8E",
+  "data": "0x1234abcd...",
+  "chainId": 8453,
+  "value": "0"
+}
+```
+
+### Set Bio
+```bash
+netp profile set-bio \
+  --bio "Automated trading bot on Base" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+### Set X Username
+```bash
+netp profile set-x-username \
+  --username "mybothandle" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+The agent submits these transactions through its own wallet infrastructure. No private key is required for the CLI when using `--encode-only`.
+
 ## Profile Data Storage
 
 Profile data is stored on-chain via Net Storage:

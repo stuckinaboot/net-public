@@ -20,12 +20,48 @@ npm install -g @net-protocol/cli
 yarn global add @net-protocol/cli
 ```
 
-### First-Time Setup
+### Agent Integration (Encode-Only Mode)
 
-Net CLI requires a private key for write operations. Set it via environment variable:
+**For Bankr agent and other services that handle their own transaction submission**, use `--encode-only` mode. This generates the transaction data without requiring a private key, allowing your agent to submit the transaction through its own infrastructure.
 
 ```bash
-# Create config directory and .env file
+# Generate transaction data for storage upload
+netp storage upload \
+  --file ./data.json \
+  --key "my-data" \
+  --text "My stored data" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x7C1104263be8D5eF7d5E5e8D7f0f8E8E8E8E8E8E",
+  "data": "0x1234abcd...",
+  "chainId": 8453,
+  "value": "0"
+}
+```
+
+The agent can then submit this transaction using its own wallet and transaction handling. This works for all write commands:
+- `netp storage upload --encode-only`
+- `netp message send --encode-only`
+- `netp token deploy --encode-only`
+- `netp profile set-picture --encode-only`
+- `netp profile set-bio --encode-only`
+- `netp profile set-x-username --encode-only`
+
+### Direct CLI Usage (With Private Key)
+
+For users running the CLI directly with their own wallet:
+
+```bash
+# Set private key via environment variable (recommended)
+export NET_PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
+export NET_CHAIN_ID=8453
+
+# Or create a .env file
 mkdir -p ~/.net
 cat > ~/.net/.env << 'EOF'
 NET_PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
@@ -33,14 +69,7 @@ NET_CHAIN_ID=8453
 EOF
 ```
 
-Or export directly:
-
-```bash
-export NET_PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
-export NET_CHAIN_ID=8453
-```
-
-#### Verify Setup
+### Verify Setup
 
 ```bash
 # Check supported chains
@@ -169,30 +198,104 @@ netp profile set-x-username --username "myhandle" --chain-id 8453
 
 ## Common Patterns
 
-### Store and Retrieve JSON Data
+### Agent Patterns (Encode-Only)
 
+For Bankr agent and other services that submit transactions themselves:
+
+#### Store Data On-Chain
 ```bash
-# Store configuration
+# Generate transaction to store JSON data
 echo '{"setting": "value"}' > config.json
-netp storage upload --file config.json --key "app-config" --text "App configuration" --chain-id 8453
+netp storage upload \
+  --file config.json \
+  --key "app-config" \
+  --text "App configuration" \
+  --chain-id 8453 \
+  --encode-only
 
-# Read it back
-netp storage read --key "app-config" --operator 0xYourAddress --chain-id 8453 --json
+# Output: {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
+# Agent submits this transaction through its wallet
 ```
 
-### Post to Personal Feed
+#### Post to Feed
+```bash
+# Generate transaction to post a message
+netp message send \
+  --text "Hello from the bot!" \
+  --topic "announcements" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+#### Deploy a Token
+```bash
+# Generate transaction to deploy memecoin
+netp token deploy \
+  --name "Bot Token" \
+  --symbol "BOT" \
+  --image "https://example.com/bot.png" \
+  --chain-id 8453 \
+  --encode-only
+
+# For tokens with initial buy, include value in the transaction
+netp token deploy \
+  --name "Bot Token" \
+  --symbol "BOT" \
+  --image "https://example.com/bot.png" \
+  --initial-buy 0.1 \
+  --chain-id 8453 \
+  --encode-only
+# Output includes "value": "100000000000000000" (0.1 ETH in wei)
+```
+
+#### Update User Profile
+```bash
+# Generate transaction to set profile picture
+netp profile set-picture \
+  --url "https://example.com/avatar.png" \
+  --chain-id 8453 \
+  --encode-only
+
+# Generate transaction to set bio
+netp profile set-bio \
+  --bio "Automated trading bot" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+### Reading Data (No Transaction Needed)
+
+Read operations don't require transactions - they query the chain directly:
 
 ```bash
-# Your personal feed topic is feed-<your-address-lowercase>
+# Read stored data (free, no gas)
+netp storage read --key "app-config" --operator 0xAddress --chain-id 8453 --json
+
+# Read messages from a feed (free, no gas)
+netp message read --topic "announcements" --chain-id 8453 --json
+
+# Get message count (free, no gas)
+netp message count --topic "announcements" --chain-id 8453 --json
+
+# Get token info (free, no gas)
+netp token info --address 0xTokenAddress --chain-id 8453 --json
+
+# Get user profile (free, no gas)
+netp profile get --address 0xUserAddress --chain-id 8453 --json
+```
+
+### Direct CLI Patterns (With Private Key)
+
+For users running CLI directly with their own wallet:
+
+```bash
+# Store data (executes transaction immediately)
+netp storage upload --file config.json --key "app-config" --text "Config" --chain-id 8453
+
+# Post to personal feed
 netp message send --text "My first post!" --topic "feed-0xabcd..." --chain-id 8453
 
-# Read your feed
-netp message read --topic "feed-0xabcd..." --chain-id 8453
-```
-
-### Deploy Token with Initial Buy
-
-```bash
+# Deploy token with initial buy
 netp token deploy \
   --name "Cool Token" \
   --symbol "COOL" \
@@ -201,30 +304,17 @@ netp token deploy \
   --chain-id 8453
 ```
 
-### Encode-Only Mode (Hardware Wallet)
-
-Generate transaction data without executing:
-
-```bash
-netp storage upload \
-  --file data.txt \
-  --key "my-key" \
-  --text "Description" \
-  --chain-id 8453 \
-  --encode-only
-
-# Output: {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
-```
-
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `NET_PRIVATE_KEY` | Wallet private key (0x-prefixed) | For write ops |
-| `PRIVATE_KEY` | Alternative to NET_PRIVATE_KEY | For write ops |
 | `NET_CHAIN_ID` | Default chain ID | Optional |
 | `NET_RPC_URL` | Custom RPC endpoint | Optional |
+| `NET_PRIVATE_KEY` | Wallet private key (0x-prefixed) | Only for direct CLI execution (not needed with --encode-only) |
+| `PRIVATE_KEY` | Alternative to NET_PRIVATE_KEY | Only for direct CLI execution |
 | `X402_SECRET_KEY` | Secret key for relay uploads | For relay ops |
+
+**Note for agents:** When using `--encode-only`, no private key is needed. The CLI generates the transaction data, and your agent submits it through its own wallet infrastructure.
 
 ## Error Handling
 
@@ -246,11 +336,18 @@ netp storage upload \
 
 ## Prompt Examples
 
+### For Agents (Encode-Only Transactions)
+- "Generate a transaction to store this data on Base"
+- "Create the calldata to post a message to my feed"
+- "Build a transaction to deploy a memecoin called 'Bot Token'"
+- "Generate the transaction data to update my profile picture"
+- "Create a token deployment transaction with 0.1 ETH initial buy"
+
 ### Storage Operations
 - "Store this JSON file on Base"
 - "Read my stored data with key 'config'"
 - "Preview how many transactions this upload will take"
-- "Upload this file using the relay so I don't pay gas"
+- "What data is stored at this key by this operator?"
 
 ### Messaging
 - "Post a message to my personal feed"

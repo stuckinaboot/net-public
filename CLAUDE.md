@@ -21,10 +21,46 @@ net-public/
 │   ├── net-feeds/          # Feed/post utilities
 │   ├── net-cli/            # CLI tools
 │   ├── net-netr/           # Netr utilities
+│   ├── net-profiles/       # User profile utilities
 │   ├── net-relay/          # Relay client
 │   └── net-storage/        # Storage utilities
+├── scripts/
+│   ├── prepack-modify-deps.sh    # Converts file: deps to versions for publishing
+│   └── postpublish-restore-deps.sh
 └── .github/workflows/      # CI/CD
 ```
+
+## Adding New Packages
+
+When creating a new package in `packages/`, you MUST:
+
+1. **Update `scripts/prepack-modify-deps.sh`** - Add the new package to `pkgDirMap`:
+   ```javascript
+   const pkgDirMap = {
+     '@net-protocol/core': 'net-core',
+     '@net-protocol/storage': 'net-storage',
+     // ... add your new package here:
+     '@net-protocol/your-pkg': 'net-your-pkg'
+   };
+   ```
+   This ensures `file:` dependencies are converted to version numbers when publishing.
+
+2. **Add prepack/postpublish scripts** to the new package's `package.json`:
+   ```json
+   "scripts": {
+     "prepack": "../../scripts/prepack-modify-deps.sh",
+     "postpublish": "../../scripts/postpublish-restore-deps.sh"
+   }
+   ```
+
+3. **Update vitest.config.ts** in packages that depend on the new package - add an alias:
+   ```typescript
+   alias: {
+     "@net-protocol/your-pkg": path.resolve(__dirname, "../net-your-pkg/src"),
+   }
+   ```
+
+4. **Add to this CLAUDE.md** - Update the repository structure and test commands table.
 
 ## Running Tests
 
@@ -47,6 +83,7 @@ cd examples/basic-app && yarn test:run
 | `packages/net-feeds` | `yarn test` | - |
 | `packages/net-cli` | `yarn test` | - |
 | `packages/net-netr` | `yarn test` | - |
+| `packages/net-profiles` | `yarn test` | - |
 | `packages/net-relay` | `yarn test` | - |
 | `packages/net-storage` | `yarn test` | - |
 

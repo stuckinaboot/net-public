@@ -3,6 +3,8 @@ import { executeProfileGet } from "./get";
 import { executeProfileSetPicture } from "./set-picture";
 import { executeProfileSetUsername } from "./set-username";
 import { executeProfileSetBio } from "./set-bio";
+import { executeProfileSetCanvas } from "./set-canvas";
+import { executeProfileGetCanvas } from "./get-canvas";
 
 /**
  * Register the profile command with the commander program
@@ -132,8 +134,68 @@ export function registerProfileCommand(program: Command): void {
       });
     });
 
+  // Set-canvas subcommand (write)
+  const setCanvasCommand = new Command("set-canvas")
+    .description("Set your profile canvas (HTML content)")
+    .option("--file <path>", "Path to file containing canvas content")
+    .option("--content <html>", "HTML content for canvas (inline)")
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option(
+      "--encode-only",
+      "Output transaction data as JSON instead of executing"
+    )
+    .action(async (options) => {
+      await executeProfileSetCanvas({
+        file: options.file,
+        content: options.content,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
+  // Get-canvas subcommand (read-only)
+  const getCanvasCommand = new Command("get-canvas")
+    .description("Get profile canvas for an address")
+    .requiredOption("--address <address>", "Wallet address to get canvas for")
+    .option("--output <path>", "Write canvas content to file instead of stdout")
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option("--json", "Output in JSON format")
+    .action(async (options) => {
+      await executeProfileGetCanvas({
+        address: options.address,
+        output: options.output,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        json: options.json,
+      });
+    });
+
   profileCommand.addCommand(getCommand);
   profileCommand.addCommand(setPictureCommand);
   profileCommand.addCommand(setUsernameCommand);
   profileCommand.addCommand(setBioCommand);
+  profileCommand.addCommand(setCanvasCommand);
+  profileCommand.addCommand(getCanvasCommand);
 }

@@ -26,11 +26,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@net-protocol/core": "^0.1.6",
-    "@net-protocol/netr": "^0.1.3",
+    "@net-protocol/core": "file:../net-core",
+    "@net-protocol/netr": "file:../net-netr",
     "@net-protocol/profiles": "file:../net-profiles",
-    "@net-protocol/relay": "^0.1.3",
-    "@net-protocol/storage": "^0.1.11",
+    "@net-protocol/relay": "file:../net-relay",
+    "@net-protocol/storage": "file:../net-storage",
     "@x402/evm": "^2.1.0",
     "@x402/fetch": "^2.1.0",
     "chalk": "^5.3.0",

@@ -70,11 +70,14 @@ export function registerStorageCommand(program: Command): void {
       }
 
       // Parse common options (private-key, chain-id, rpc-url)
-      const commonOptions = parseCommonOptions({
-        privateKey: options.privateKey,
-        chainId: options.chainId,
-        rpcUrl: options.rpcUrl,
-      });
+      const commonOptions = parseCommonOptions(
+        {
+          privateKey: options.privateKey,
+          chainId: options.chainId,
+          rpcUrl: options.rpcUrl,
+        },
+        true // supports --encode-only
+      );
 
       const uploadOptions: UploadOptions = {
         filePath: options.file,

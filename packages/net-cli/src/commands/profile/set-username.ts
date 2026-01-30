@@ -54,11 +54,14 @@ export async function executeProfileSetUsername(
   }
 
   // Parse common options (requires private key for transaction submission)
-  const commonOptions = parseCommonOptions({
-    privateKey: options.privateKey,
-    chainId: options.chainId,
-    rpcUrl: options.rpcUrl,
-  });
+  const commonOptions = parseCommonOptions(
+    {
+      privateKey: options.privateKey,
+      chainId: options.chainId,
+      rpcUrl: options.rpcUrl,
+    },
+    true // supports --encode-only
+  );
 
   try {
     // Create wallet client

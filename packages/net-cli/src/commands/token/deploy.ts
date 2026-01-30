@@ -130,11 +130,14 @@ export async function executeTokenDeploy(
     return;
   }
 
-  const commonOptions = parseCommonOptions({
-    privateKey: options.privateKey,
-    chainId: options.chainId,
-    rpcUrl: options.rpcUrl,
-  });
+  const commonOptions = parseCommonOptions(
+    {
+      privateKey: options.privateKey,
+      chainId: options.chainId,
+      rpcUrl: options.rpcUrl,
+    },
+    true // supports --encode-only
+  );
 
   if (!isNetrSupportedChain(commonOptions.chainId)) {
     exitWithError(

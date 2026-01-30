@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { executeProfileGet } from "./get";
 import { executeProfileSetPicture } from "./set-picture";
 import { executeProfileSetUsername } from "./set-username";
+import { executeProfileSetBio } from "./set-bio";
 
 /**
  * Register the profile command with the commander program
@@ -100,7 +101,39 @@ export function registerProfileCommand(program: Command): void {
       });
     });
 
+  // Set-bio subcommand (write)
+  const setBioCommand = new Command("set-bio")
+    .description("Set your profile bio")
+    .requiredOption("--bio <bio>", "Your profile bio (max 280 characters)")
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option(
+      "--encode-only",
+      "Output transaction data as JSON instead of executing"
+    )
+    .action(async (options) => {
+      await executeProfileSetBio({
+        bio: options.bio,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
   profileCommand.addCommand(getCommand);
   profileCommand.addCommand(setPictureCommand);
   profileCommand.addCommand(setUsernameCommand);
+  profileCommand.addCommand(setBioCommand);
 }

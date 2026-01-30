@@ -29,3 +29,14 @@ export interface ProfileSetUsernameOptions {
   rpcUrl?: string;
   encodeOnly?: boolean;
 }
+
+/**
+ * Options for profile set-bio command (write)
+ */
+export interface ProfileSetBioOptions {
+  bio: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
 import { NULL_ADDRESS } from "@net-protocol/core";
 import {
@@ -128,7 +128,7 @@ export function useComments({
   );
 
   // Get total comment count
-  const { count: totalCount, isLoading: isLoadingCount } = useNetMessageCount({
+  const { count: totalCount, isLoading: isLoadingCount, refetch: refetchCount } = useNetMessageCount({
     chainId,
     filter,
     enabled,
@@ -143,7 +143,7 @@ export function useComments({
         : 0;
 
   // Get comment messages
-  const { messages, isLoading: isLoadingMessages } = useNetMessages({
+  const { messages, isLoading: isLoadingMessages, refetch: refetchMessages } = useNetMessages({
     chainId,
     filter,
     startIndex,
@@ -157,9 +157,16 @@ export function useComments({
     [messages]
   );
 
+  // Combined refetch function
+  const refetch = useCallback(async () => {
+    await refetchCount();
+    await refetchMessages();
+  }, [refetchCount, refetchMessages]);
+
   return {
     comments,
     totalCount,
     isLoading: isLoadingCount || isLoadingMessages,
+    refetch,
   };
 }

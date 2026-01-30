@@ -10,6 +10,8 @@ export const TEST_PRIVATE_KEY =
 export const TEST_PROFILE_PICTURE = "https://example.com/image.jpg";
 export const TEST_X_USERNAME = "testuser";
 export const TEST_BIO = "Hello, I'm a developer!";
+export const TEST_CANVAS_CONTENT = "<html><body><h1>My Canvas</h1></body></html>";
+export const TEST_CANVAS_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
 /**
  * Create mock storage data for profile picture
@@ -114,5 +116,59 @@ export function createSetBioOptions(overrides?: {
     chainId: overrides?.chainId ?? TEST_CHAIN_ID,
     rpcUrl: overrides?.rpcUrl,
     encodeOnly: overrides?.encodeOnly ?? false,
+  };
+}
+
+/**
+ * Create options for profile set-canvas command
+ * Note: If file is provided, content should be explicitly set to undefined
+ */
+export function createSetCanvasOptions(overrides?: {
+  file?: string;
+  content?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}) {
+  // If overrides includes 'content' key (even if undefined), use that value
+  // Otherwise default to TEST_CANVAS_CONTENT
+  const hasContentKey = overrides && "content" in overrides;
+  return {
+    file: overrides?.file,
+    content: hasContentKey ? overrides?.content : TEST_CANVAS_CONTENT,
+    privateKey: overrides?.privateKey ?? TEST_PRIVATE_KEY,
+    chainId: overrides?.chainId ?? TEST_CHAIN_ID,
+    rpcUrl: overrides?.rpcUrl,
+    encodeOnly: overrides?.encodeOnly ?? false,
+  };
+}
+
+/**
+ * Create options for profile get-canvas command
+ */
+export function createGetCanvasOptions(overrides?: {
+  address?: string;
+  output?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  json?: boolean;
+}) {
+  return {
+    address: overrides?.address ?? TEST_ADDRESS,
+    output: overrides?.output,
+    chainId: overrides?.chainId ?? TEST_CHAIN_ID,
+    rpcUrl: overrides?.rpcUrl,
+    json: overrides?.json ?? false,
+  };
+}
+
+/**
+ * Create mock storage data for profile canvas
+ */
+export function createMockCanvasData(content: string = TEST_CANVAS_CONTENT) {
+  return {
+    text: "profile-compressed.html",
+    data: content,
   };
 }

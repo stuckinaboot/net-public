@@ -364,6 +364,8 @@ Profile operations for managing your Net Protocol profile.
 - `profile set-picture` - Set your profile picture URL
 - `profile set-x-username` - Set your X (Twitter) username
 - `profile set-bio` - Set your profile bio
+- `profile set-canvas` - Set your profile canvas (HTML content)
+- `profile get-canvas` - Get profile canvas for an address
 
 ##### Profile Get
 
@@ -511,6 +513,99 @@ netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
   --chain-id 8453 \
   --encode-only
+```
+
+##### Profile Set Canvas
+
+Set your profile canvas (HTML content, max 60KB). Canvas content is stored using ChunkedStorage with gzip compression.
+
+```bash
+netp profile set-canvas \
+  --file <path> | --content <html> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Profile Set Canvas Arguments:**
+
+- `--file` (optional): Path to file containing canvas content (HTML, images, etc.)
+- `--content` (optional): HTML content for canvas (inline). Must provide either `--file` or `--content`, but not both.
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Notes:**
+- Maximum canvas size is 60KB
+- Binary files (images) are automatically converted to data URIs
+- Content is compressed using gzip before storage
+
+**Example:**
+
+```bash
+# Set canvas from file
+netp profile set-canvas \
+  --file ./my-canvas.html \
+  --chain-id 8453
+
+# Set canvas from inline content
+netp profile set-canvas \
+  --content "<html><body><h1>My Profile</h1></body></html>" \
+  --chain-id 8453
+
+# Encode-only
+netp profile set-canvas \
+  --file ./my-canvas.html \
+  --chain-id 8453 \
+  --encode-only
+```
+
+##### Profile Get Canvas
+
+Get profile canvas for an address.
+
+```bash
+netp profile get-canvas \
+  --address <wallet-address> \
+  [--output <path>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--json]
+```
+
+**Profile Get Canvas Arguments:**
+
+- `--address` (required): Wallet address to get canvas for
+- `--output` (optional): Write canvas content to file instead of stdout
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--json` (optional): Output in JSON format (includes metadata like size and type)
+
+**Notes:**
+- Binary content (data URIs) is automatically converted to binary files when using `--output`
+- JSON output includes: canvas content, filename, size, and whether it's a data URI
+
+**Example:**
+
+```bash
+# Output to stdout
+netp profile get-canvas \
+  --address 0x1234567890abcdef1234567890abcdef12345678 \
+  --chain-id 8453
+
+# Save to file
+netp profile get-canvas \
+  --address 0x1234567890abcdef1234567890abcdef12345678 \
+  --output ./canvas.html \
+  --chain-id 8453
+
+# JSON output
+netp profile get-canvas \
+  --address 0x1234567890abcdef1234567890abcdef12345678 \
+  --chain-id 8453 \
+  --json
 ```
 
 #### Info Command

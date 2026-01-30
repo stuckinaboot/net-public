@@ -8,6 +8,7 @@ Net Profiles provide on-chain identity storage for:
 - Profile pictures (avatar URLs)
 - Bio/description text
 - Social links (X/Twitter username)
+- Canvas (custom HTML profile page)
 
 All profile data is stored on-chain, making it portable and decentralized.
 
@@ -166,6 +167,100 @@ netp profile set-x-username --username "myhandle" --chain-id 8453
 netp profile set-x-username --username "@myhandle" --chain-id 8453
 ```
 
+### Set Canvas
+
+Set a custom HTML profile canvas (max 60KB):
+
+```bash
+netp profile set-canvas \
+  --file <path> | --content <html> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--file` | No* | Path to HTML file |
+| `--content` | No* | Inline HTML content |
+| `--private-key` | No | Wallet key (prefer env var) |
+| `--chain-id` | No | Target chain |
+| `--encode-only` | No | Output transaction JSON |
+
+*Must provide either `--file` or `--content`, but not both.
+
+**Notes:**
+- Maximum canvas size: 60KB
+- Binary files (images) are automatically converted to data URIs
+- Content is compressed using gzip before storage
+- Uses ChunkedStorage for efficient on-chain storage
+
+**Examples:**
+```bash
+# Set canvas from file
+netp profile set-canvas --file ./my-canvas.html --chain-id 8453
+
+# Set canvas from inline content
+netp profile set-canvas --content "<html><body><h1>My Profile</h1></body></html>" --chain-id 8453
+
+# Encode-only (for agents)
+netp profile set-canvas --file ./canvas.html --chain-id 8453 --encode-only
+```
+
+### Get Canvas
+
+Retrieve a user's profile canvas:
+
+```bash
+netp profile get-canvas \
+  --address <wallet-address> \
+  [--output <path>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--json]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--address` | Yes | Wallet address to lookup |
+| `--output` | No | Write to file instead of stdout |
+| `--chain-id` | No | Chain to query (default from env) |
+| `--rpc-url` | No | Custom RPC endpoint |
+| `--json` | No | Output in JSON format |
+
+**Notes:**
+- Outputs canvas HTML to stdout by default
+- Binary content (data URIs) is automatically converted to binary files when using `--output`
+- JSON output includes metadata (size, type, filename)
+
+**Examples:**
+```bash
+# Output canvas to stdout
+netp profile get-canvas --address 0x1234... --chain-id 8453
+
+# Save canvas to file
+netp profile get-canvas --address 0x1234... --output ./canvas.html --chain-id 8453
+
+# JSON output with metadata
+netp profile get-canvas --address 0x1234... --chain-id 8453 --json
+```
+
+**JSON Output:**
+```json
+{
+  "address": "0x1234...",
+  "chainId": 8453,
+  "canvas": "<html>...</html>",
+  "filename": "profile-compressed.html",
+  "hasCanvas": true,
+  "isDataUri": false,
+  "contentLength": 25591
+}
+```
+
 ## Encode-Only Mode (For Agents)
 
 **For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data for any profile update:
@@ -204,6 +299,14 @@ netp profile set-x-username \
   --encode-only
 ```
 
+### Set Canvas
+```bash
+netp profile set-canvas \
+  --file ./custom-profile.html \
+  --chain-id 8453 \
+  --encode-only
+```
+
 The agent submits these transactions through its own wallet infrastructure. No private key is required for the CLI when using `--encode-only`.
 
 ## Profile Data Storage
@@ -221,6 +324,7 @@ Profile data is stored on-chain via Net Storage:
 netp profile set-picture --url "https://example.com/avatar.png" --chain-id 8453
 netp profile set-bio --bio "Blockchain enthusiast and developer" --chain-id 8453
 netp profile set-x-username --username "blockchaindev" --chain-id 8453
+netp profile set-canvas --file ./my-profile.html --chain-id 8453
 ```
 
 ### Update Profile Picture
@@ -280,9 +384,10 @@ Profile updates are on-chain transactions:
 - L2 chains (Base) are cheapest
 
 **Estimates (Base):**
-- Set picture: ~0.0001-0.0005 ETH
-- Set bio: ~0.0001-0.001 ETH (depends on length)
-- Set X username: ~0.0001-0.0005 ETH
+- Set picture: ~0.00001-0.0001 ETH
+- Set bio: ~0.00001-0.0001 ETH
+- Set X username: ~0.00001-0.0001 ETH
+- Set canvas: ~0.0001-0.001 ETH (depends on size)
 
 ## Error Handling
 
@@ -292,6 +397,8 @@ Profile updates are on-chain transactions:
 | "Invalid URL" | Malformed URL | Check URL format |
 | "Invalid characters" | Control chars in bio | Remove special characters |
 | "Profile not found" | No profile set | Profile fields are optional |
+| "File too large" | Canvas exceeds 60KB | Reduce canvas file size |
+| "No canvas found" | Address has no canvas | Canvas is optional |
 
 ## Best Practices
 

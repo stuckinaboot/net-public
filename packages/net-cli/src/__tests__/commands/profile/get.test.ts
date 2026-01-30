@@ -5,17 +5,21 @@ import {
   TEST_PROFILE_PICTURE,
   TEST_X_USERNAME,
   TEST_BIO,
+  TEST_CANVAS_CONTENT,
   createGetOptions,
   createMockProfilePictureData,
   createMockProfileMetadataData,
+  createMockCanvasData,
 } from "./test-utils";
 
 // Mock StorageClient
 const mockReadStorageData = vi.fn();
+const mockReadChunkedStorage = vi.fn();
 
 vi.mock("@net-protocol/storage", () => ({
   StorageClient: vi.fn().mockImplementation(() => ({
     readStorageData: mockReadStorageData,
+    readChunkedStorage: mockReadChunkedStorage,
   })),
 }));
 
@@ -43,6 +47,10 @@ import { executeProfileGet } from "../../../commands/profile/get";
 describe("executeProfileGet", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: no canvas
+    mockReadChunkedStorage.mockRejectedValue(
+      new Error("ChunkedStorage metadata not found")
+    );
   });
 
   afterEach(() => {
@@ -230,6 +238,104 @@ describe("executeProfileGet", () => {
 
       await expect(executeProfileGet(createGetOptions())).rejects.toThrow(
         "Failed to read profile"
+      );
+    });
+  });
+
+  describe("canvas display", () => {
+    it("should display canvas summary when canvas exists", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData());
+      mockReadChunkedStorage.mockResolvedValue(createMockCanvasData());
+
+      await executeProfileGet(createGetOptions());
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Canvas:")
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("bytes")
+      );
+    });
+
+    it("should display (not set) when no canvas", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData());
+      // Default mock already rejects with not found
+
+      await executeProfileGet(createGetOptions());
+
+      // Look for Canvas: followed by (not set)
+      const canvasCall = consoleSpy.mock.calls.find(
+        (call) =>
+          call[0] &&
+          typeof call[0] === "string" &&
+          call[0].includes("Canvas:")
+      );
+      expect(canvasCall).toBeDefined();
+      expect(canvasCall![0]).toContain("(not set)");
+    });
+
+    it("should include canvas in JSON output when canvas exists", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData());
+      mockReadChunkedStorage.mockResolvedValue(createMockCanvasData());
+
+      await executeProfileGet(createGetOptions({ json: true }));
+
+      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
+        try {
+          const parsed = JSON.parse(call[0]);
+          return parsed.address !== undefined;
+        } catch {
+          return false;
+        }
+      });
+
+      expect(jsonOutputCall).toBeDefined();
+      const output = JSON.parse(jsonOutputCall![0]);
+      expect(output.canvas).toBeDefined();
+      expect(output.canvas.size).toBe(TEST_CANVAS_CONTENT.length);
+      expect(output.canvas.isDataUri).toBe(false);
+    });
+
+    it("should show canvas as null in JSON when no canvas", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData());
+      // Default mock already rejects with not found
+
+      await executeProfileGet(createGetOptions({ json: true }));
+
+      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
+        try {
+          const parsed = JSON.parse(call[0]);
+          return parsed.address !== undefined;
+        } catch {
+          return false;
+        }
+      });
+
+      expect(jsonOutputCall).toBeDefined();
+      const output = JSON.parse(jsonOutputCall![0]);
+      expect(output.canvas).toBeNull();
+    });
+
+    it("should show data URI indicator for binary canvas", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData());
+      mockReadChunkedStorage.mockResolvedValue(
+        createMockCanvasData("data:image/png;base64,abc123")
+      );
+
+      await executeProfileGet(createGetOptions());
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("(data URI)")
       );
     });
   });

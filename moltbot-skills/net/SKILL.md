@@ -1,7 +1,7 @@
 ---
 name: net
 description: On-chain data storage and messaging protocol via CLI. Use when the user wants to store data on-chain permanently, read on-chain data, send/read messages to feeds, deploy memecoins with Uniswap V3 liquidity, or manage on-chain user profiles (picture, bio, X username). Supports Base, Ethereum, Degen, Ham, Ink, Unichain, HyperEVM, Plasma, and Monad. Capabilities include permanent file storage (up to 80KB chunks), key-value storage, personal feeds, topic-based messaging, token deployment with locked liquidity, and decentralized identity profiles.
-metadata: {"clawdbot":{"emoji":"🌐","homepage":"https://github.com/stuckinaboot/net-public","requires":{"bins":["node","yarn"]}}}
+metadata: {"clawdbot":{"emoji":"🌐","homepage":"https://github.com/stuckinaboot/net-public","requires":{"bins":["node","netp"]}}}
 ---
 
 # Net Protocol CLI

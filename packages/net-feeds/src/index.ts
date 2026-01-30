@@ -1,5 +1,10 @@
 // Client classes
 export { FeedClient } from "./client/FeedClient";
+export { FeedRegistryClient } from "./client/FeedRegistryClient";
+export type {
+  FeedRegistryClientOptions,
+  GetRegisteredFeedsOptions,
+} from "./client/FeedRegistryClient";
 
 // Utilities
 export { normalizeFeedTopic, isFeedTopic } from "./utils/feedUtils";
@@ -14,6 +19,8 @@ export {
   FEED_TOPIC_PREFIX,
   COMMENT_TOPIC_SUFFIX,
   MAX_COMMENT_NESTING_DEPTH,
+  MAX_FEED_NAME_LENGTH,
+  FEED_REGISTRY_CONTRACT,
 } from "./constants";
 
 // Types
@@ -32,6 +39,12 @@ export type {
   CommentWithReplies,
   GetCommentsOptions,
   PrepareCommentOptions,
+  // Feed Registry types
+  RegisteredFeed,
+  UseFeedRegistryOptions,
+  UseIsFeedRegisteredOptions,
+  UseRegisteredFeedsOptions,
+  PrepareRegisterFeedOptions,
 } from "./types";
 
 // Note: NULL_ADDRESS is not exported from this package

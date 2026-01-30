@@ -59,3 +59,4 @@ package.json.orig
 
 # Beads
 .beads
+package-lock.json

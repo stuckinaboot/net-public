@@ -42,8 +42,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@net-protocol/core": "file:../net-core",
-    "@net-protocol/storage": "file:../net-storage",
+    "@net-protocol/core": "^0.1.6",
+    "@net-protocol/storage": "^0.1.11",
     "viem": "^2.31.4"
   },
   "devDependencies": {

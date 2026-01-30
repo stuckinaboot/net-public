@@ -54,7 +54,7 @@ export function useCommentCountBatch({
   );
 
   // Use wagmi's multicall to fetch all counts in one request
-  const { data, isLoading, error } = useReadContracts({
+  const { data, isLoading, error, refetch } = useReadContracts({
     contracts,
     query: {
       enabled: enabled && posts.length > 0,
@@ -85,5 +85,6 @@ export function useCommentCountBatch({
     counts,
     isLoading,
     error: error as Error | undefined,
+    refetch,
   };
 }

@@ -438,6 +438,8 @@ netp profile set-picture \
 
 Set your X (Twitter) username for your profile.
 
+**Note:** The username is stored without the @ prefix. If you provide @ it will be stripped automatically.
+
 ```bash
 netp profile set-x-username \
   --username <x-username> \
@@ -449,7 +451,7 @@ netp profile set-x-username \
 
 **Profile Set X Username Arguments:**
 
-- `--username` (required): Your X (Twitter) username (with or without @)
+- `--username` (required): Your X (Twitter) username (with or without @, stored without @)
 - `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
 - `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
 - `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
@@ -458,7 +460,7 @@ netp profile set-x-username \
 **Example:**
 
 ```bash
-# Set X username (with or without @)
+# Set X username (@ is optional, will be stripped before storage)
 netp profile set-x-username \
   --username "myusername" \
   --chain-id 8453

@@ -69,7 +69,7 @@ export function getProfilePictureStorageArgs(
  *
  * @example
  * ```ts
- * const args = getProfileMetadataStorageArgs({ x_username: "@myusername" });
+ * const args = getProfileMetadataStorageArgs({ x_username: "myusername" });
  * writeContract({
  *   abi: STORAGE_CONTRACT.abi,
  *   address: STORAGE_CONTRACT.address,
@@ -97,14 +97,16 @@ export function getProfileMetadataStorageArgs(
  * Prepare transaction arguments for updating X username
  * This is a convenience wrapper around getProfileMetadataStorageArgs
  *
+ * Note: Username is stored WITHOUT the @ prefix. The @ is stripped if provided.
+ *
  * @param username - X/Twitter username (with or without @)
  * @returns Arguments for Storage.put()
  */
 export function getXUsernameStorageArgs(username: string): ProfileStorageArgs {
-  // Ensure username has @ prefix for storage
+  // Strip @ prefix if present - store username without @
   const normalizedUsername = username.startsWith("@")
-    ? username
-    : `@${username}`;
+    ? username.slice(1)
+    : username;
   return getProfileMetadataStorageArgs({ x_username: normalizedUsername });
 }
 
@@ -157,7 +159,7 @@ export function parseProfileMetadata(
         ? parsed.x_username
         : undefined;
 
-    // Strip @ from stored username for display
+    // Strip @ if present for backwards compatibility with older stored data
     const usernameWithoutAt = storedUsername?.startsWith("@")
       ? storedUsername.slice(1)
       : storedUsername;

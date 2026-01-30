@@ -101,7 +101,7 @@ function UpdateProfile() {
 | Field | Description | Notes |
 |-------|-------------|-------|
 | Profile Picture | URL to your profile image | Any valid URL (HTTPS, IPFS, etc.) |
-| X Username | Your X (Twitter) handle | Stored with @ prefix, displayed without |
+| X Username | Your X (Twitter) handle | Stored without @ prefix (e.g., `myusername`) |
 | Canvas | Custom HTML profile page | For advanced customization |
 
 ## Storage Keys
@@ -109,7 +109,7 @@ function UpdateProfile() {
 | Key | Description | Data Format |
 |-----|-------------|-------------|
 | `PROFILE_PICTURE_STORAGE_KEY` | Profile picture URL | Plain string (URL) |
-| `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "@handle" }` |
+| `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle" }` (no @) |
 | `PROFILE_CANVAS_STORAGE_KEY` | Custom HTML canvas | HTML string |
 
 ## API Reference

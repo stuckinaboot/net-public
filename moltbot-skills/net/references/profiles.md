@@ -384,10 +384,10 @@ Profile updates are on-chain transactions:
 - L2 chains (Base) are cheapest
 
 **Estimates (Base):**
-- Set picture: ~0.0001-0.0005 ETH
-- Set bio: ~0.0001-0.001 ETH (depends on length)
-- Set X username: ~0.0001-0.0005 ETH
-- Set canvas: ~0.001-0.01 ETH (depends on size, uses ChunkedStorage)
+- Set picture: ~0.00001-0.0001 ETH
+- Set bio: ~0.00001-0.0001 ETH
+- Set X username: ~0.00001-0.0001 ETH
+- Set canvas: ~0.0001-0.001 ETH (depends on size)
 
 ## Error Handling
 

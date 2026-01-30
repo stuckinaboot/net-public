@@ -118,3 +118,52 @@ export type PrepareCommentOptions = {
   };
 };
 
+// ============ Feed Registry Types ============
+
+/**
+ * A registered feed from the FeedRegistry contract
+ */
+export type RegisteredFeed = {
+  /** The feed name (topic) */
+  feedName: string;
+  /** The address that registered the feed */
+  registrant: `0x${string}`;
+  /** Optional description of the feed */
+  description: string;
+  /** Timestamp when the feed was registered */
+  timestamp: number;
+};
+
+/**
+ * Options for the useFeedRegistry hook
+ */
+export type UseFeedRegistryOptions = {
+  chainId: number;
+};
+
+/**
+ * Options for checking if a feed is registered
+ */
+export type UseIsFeedRegisteredOptions = {
+  chainId: number;
+  feedName: string;
+  enabled?: boolean;
+};
+
+/**
+ * Options for the useRegisteredFeeds hook
+ */
+export type UseRegisteredFeedsOptions = {
+  chainId: number;
+  maxFeeds?: number; // Defaults to 100 if not provided
+  enabled?: boolean; // Defaults to true if not provided
+};
+
+/**
+ * Options for preparing a feed registration transaction
+ */
+export type PrepareRegisterFeedOptions = {
+  feedName: string;
+  description?: string;
+};
+

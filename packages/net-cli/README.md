@@ -363,6 +363,7 @@ Profile operations for managing your Net Protocol profile.
 - `profile get` - Get profile data for an address
 - `profile set-picture` - Set your profile picture URL
 - `profile set-x-username` - Set your X (Twitter) username
+- `profile set-bio` - Set your profile bio
 
 ##### Profile Get
 
@@ -472,6 +473,42 @@ netp profile set-x-username \
 # Encode-only
 netp profile set-x-username \
   --username "myusername" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+##### Profile Set Bio
+
+Set your profile bio (max 280 characters).
+
+```bash
+netp profile set-bio \
+  --bio <bio-text> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Profile Set Bio Arguments:**
+
+- `--bio` (required): Your profile bio (max 280 characters, no control characters)
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Example:**
+
+```bash
+# Set bio
+netp profile set-bio \
+  --bio "Building cool stuff on Net Protocol" \
+  --chain-id 8453
+
+# Encode-only
+netp profile set-bio \
+  --bio "Building cool stuff on Net Protocol" \
   --chain-id 8453 \
   --encode-only
 ```

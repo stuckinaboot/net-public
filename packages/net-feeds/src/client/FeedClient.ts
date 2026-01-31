@@ -1,7 +1,13 @@
 import { stringToHex } from "viem";
-import { NetClient, NULL_ADDRESS } from "@net-protocol/core";
+import { readContract } from "viem/actions";
+import { NetClient, NULL_ADDRESS, getPublicClient } from "@net-protocol/core";
 import { normalizeFeedTopic } from "../utils/feedUtils";
-import { getCommentTopic, encodeCommentData } from "../utils/commentUtils";
+import {
+  getCommentTopic,
+  encodeCommentData,
+  generatePostHash,
+} from "../utils/commentUtils";
+import { TOPIC_COUNT_BULK_HELPER_CONTRACT } from "../constants";
 import type {
   WriteTransactionConfig,
   NetMessage,
@@ -19,6 +25,8 @@ import type {
  */
 export class FeedClient {
   private netClient: NetClient;
+  private chainId: number;
+  private rpcUrls?: string[];
 
   /**
    * Creates a new FeedClient instance.
@@ -28,6 +36,8 @@ export class FeedClient {
    * @param params.overrides - Optional RPC URL overrides
    */
   constructor(params: FeedClientOptions) {
+    this.chainId = params.chainId;
+    this.rpcUrls = params.overrides?.rpcUrls;
     this.netClient = new NetClient({
       chainId: params.chainId,
       overrides: params.overrides,
@@ -255,6 +265,60 @@ export class FeedClient {
       topic: commentTopic,
       data,
     });
+  }
+
+  /**
+   * Gets comment counts for multiple posts in a single RPC call.
+   * Uses the TopicCountBulkHelper contract for efficient batching.
+   *
+   * @param posts - Array of posts to get comment counts for
+   * @returns Map from post hash to comment count
+   *
+   * @example
+   * ```ts
+   * const client = new FeedClient({ chainId: 8453 });
+   * const posts = await client.getFeedPosts({ topic: "crypto" });
+   * const counts = await client.getCommentCountBatch(posts);
+   *
+   * // Get count for a specific post
+   * const postHash = generatePostHash(post);
+   * const count = counts.get(postHash) ?? 0;
+   * ```
+   */
+  async getCommentCountBatch(
+    posts: NetMessage[]
+  ): Promise<Map<`0x${string}`, number>> {
+    const counts = new Map<`0x${string}`, number>();
+
+    if (posts.length === 0) {
+      return counts;
+    }
+
+    // Generate comment topics for each post
+    const topics = posts.map((post) => getCommentTopic(post));
+    const postHashes = posts.map((post) => generatePostHash(post));
+
+    // Get public client for this chain
+    const client = getPublicClient({
+      chainId: this.chainId,
+      rpcUrl: this.rpcUrls,
+    });
+
+    // Call the bulk helper contract
+    const result = await readContract(client, {
+      abi: TOPIC_COUNT_BULK_HELPER_CONTRACT.abi,
+      address: TOPIC_COUNT_BULK_HELPER_CONTRACT.address,
+      functionName: "getMessageCountsForTopics",
+      args: [NULL_ADDRESS, topics],
+    });
+
+    // Build the result map
+    const countsArray = result as bigint[];
+    for (let i = 0; i < postHashes.length; i++) {
+      counts.set(postHashes[i], Number(countsArray[i]));
+    }
+
+    return counts;
   }
 }
 

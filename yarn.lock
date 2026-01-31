@@ -1228,7 +1228,7 @@ __metadata:
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1239,13 +1239,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Ffeeds%40workspace%3Apackages%2Fnet-feeds"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1256,13 +1256,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D664b6c%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D7e2bf3%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D664b6c%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D7e2bf3%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1273,13 +1273,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1290,13 +1290,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D380545%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D80aaaf%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D380545%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D80aaaf%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1307,13 +1307,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fprofiles%40workspace%3Apackages%2Fnet-profiles":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fprofiles%40workspace%3Apackages%2Fnet-profiles"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fprofiles%40workspace%3Apackages%2Fnet-profiles"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1324,13 +1324,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Frelay%40file%3A..%2Fnet-relay%23..%2Fnet-relay%3A%3Ahash%3D36a308%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Frelay%40file%3A..%2Fnet-relay%23..%2Fnet-relay%3A%3Ahash%3D9b5401%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Frelay%40file%3A..%2Fnet-relay%23..%2Fnet-relay%3A%3Ahash%3D36a308%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Frelay%40file%3A..%2Fnet-relay%23..%2Fnet-relay%3A%3Ahash%3D9b5401%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1341,13 +1341,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Frelay%40workspace%3Apackages%2Fnet-relay":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Frelay%40workspace%3Apackages%2Fnet-relay"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Frelay%40workspace%3Apackages%2Fnet-relay"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1358,13 +1358,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1375,13 +1375,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fnetr%2540file%253A..%252Fnet-netr%2523..%252Fnet-netr%253A%253Ahash%253D664b6c%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fnetr%2540file%253A..%252Fnet-netr%2523..%252Fnet-netr%253A%253Ahash%253D7e2bf3%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fnetr%2540file%253A..%252Fnet-netr%2523..%252Fnet-netr%253A%253Ahash%253D664b6c%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fnetr%2540file%253A..%252Fnet-netr%2523..%252Fnet-netr%253A%253Ahash%253D7e2bf3%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1392,13 +1392,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fnetr%2540workspace%253Apackages%252Fnet-netr":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fnetr%2540workspace%253Apackages%252Fnet-netr":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fnetr%2540workspace%253Apackages%252Fnet-netr"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fnetr%2540workspace%253Apackages%252Fnet-netr"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1409,13 +1409,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fprofiles%2540file%253A..%252Fnet-profiles%2523..%252Fnet-profiles%253A%253Ahash%253D380545%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fprofiles%2540file%253A..%252Fnet-profiles%2523..%252Fnet-profiles%253A%253Ahash%253D80aaaf%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fprofiles%2540file%253A..%252Fnet-profiles%2523..%252Fnet-profiles%253A%253Ahash%253D380545%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fprofiles%2540file%253A..%252Fnet-profiles%2523..%252Fnet-profiles%253A%253Ahash%253D80aaaf%2526locator%253D%252540net-protocol%25252Fcli%252540workspace%25253Apackages%25252Fnet-cli"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1426,13 +1426,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fprofiles%2540workspace%253Apackages%252Fnet-profiles":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fprofiles%2540workspace%253Apackages%252Fnet-profiles":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D794797%26locator%3D%2540net-protocol%252Fprofiles%2540workspace%253Apackages%252Fnet-profiles"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3D7ae9ea%26locator%3D%2540net-protocol%252Fprofiles%2540workspace%253Apackages%252Fnet-profiles"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1443,13 +1443,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
 "@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage":
   version: 0.1.7
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=b625bf&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=83dd6c&locator=%40net-protocol%2Fstorage%40workspace%3Apackages%2Fnet-storage"
   dependencies:
     viem: "npm:^2.31.4"
   peerDependencies:
@@ -1460,7 +1460,7 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 1e42e7c94ebfbec3daa5fbe7f5561f21593ee9ecd0d56563519f2ec7d965ad7e364226a185fda13cfa9507a8ed7441d802481edbcbc853a66e057f8511cb2ae6
+  checksum: ea0bb47e501ae6455456da0ad47d49b50eb33f390c4ed01d613d1375a8109871223ae07a903813ed327a752004e8c7a3909700888c82a37bce52600262041d67
   languageName: node
   linkType: hard
 
@@ -1516,7 +1516,7 @@ __metadata:
 
 "@net-protocol/netr@file:../net-netr::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
   version: 0.1.3
-  resolution: "@net-protocol/netr@file:../net-netr#../net-netr::hash=664b6c&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  resolution: "@net-protocol/netr@file:../net-netr#../net-netr::hash=7e2bf3&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     "@net-protocol/storage": "file:../net-storage"
@@ -1529,7 +1529,7 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 9a15c0344353a0120d439fc90b36e785e982437f31289e55d16130c525bfe5f63a93ce7f61053968fcfad4e28c52c78c9200f0186729bf025ba7494b7d9a930d
+  checksum: 1e958c4f32314784ef72252ee7f2516f5adc6c9b559b0f8131aef7fe5c5c2124b53649f9a5a5ea93c44cffa080beb5b5a9c7f7a5dadd1d0aa1447d92caa979de
   languageName: node
   linkType: hard
 
@@ -1562,7 +1562,7 @@ __metadata:
 
 "@net-protocol/profiles@file:../net-profiles::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
   version: 0.1.2
-  resolution: "@net-protocol/profiles@file:../net-profiles#../net-profiles::hash=380545&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  resolution: "@net-protocol/profiles@file:../net-profiles#../net-profiles::hash=80aaaf&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     "@net-protocol/storage": "file:../net-storage"
@@ -1575,7 +1575,7 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 08eee9a4ff1b8b2bde81494150137e640c9e0077b83266b274b0f17013248c431f9a5363fe4ecd36db4f25cb119aee860d1ed469a3b5725d2ad7a4bfec968260
+  checksum: 7fd538bdbb271e85984ab06797dede7dabea9e8d2b43463a9db9af992fd8377906613b10281ff86a1a8f422b11e8a00ab532a422ccd5a18a1c90fbcc2e9dd29a
   languageName: node
   linkType: hard
 
@@ -1607,13 +1607,13 @@ __metadata:
 
 "@net-protocol/relay@file:../net-relay::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
   version: 0.1.3
-  resolution: "@net-protocol/relay@file:../net-relay#../net-relay::hash=36a308&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  resolution: "@net-protocol/relay@file:../net-relay#../net-relay::hash=9b5401&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     "@x402/evm": "npm:^2.1.0"
     "@x402/fetch": "npm:^2.1.0"
     viem: "npm:^2.31.4"
-  checksum: 54bf86c5ae7c95f89b43500aeb6e2fa9302f911ad49ef636df89f0bfd34fb0694361a907d53edbfd073ffd03232eb686e67b1b552e77ca57becf7f5d2b64c74c
+  checksum: 37792aad098c0d5b51d54be0a9ec519386c529f7a1f904330cc506f613b03e7d7c718d4c994f533d015b24ae29db5bceaf8723380f34f394fc35450628385dee
   languageName: node
   linkType: hard
 
@@ -1635,7 +1635,7 @@ __metadata:
 
 "@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli":
   version: 0.1.11
-  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=794797&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=7ae9ea&locator=%40net-protocol%2Fcli%40workspace%3Apackages%2Fnet-cli"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     pako: "npm:^2.1.0"
@@ -1649,13 +1649,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 0f67144d70e06123637c2c0e659de1d04b537b70068baa360eb804bbe4dc769e0ba7b4185856342f9af272f4dc8387489bb6f7806e60f48f33b3f2848110aa12
+  checksum: 8281054600842d8228f094c9e3188f70074fd1ad247613741a43329b4d399c488de3f796269ae28b56632da899607bb3c9f00dc73c7d146720ab755929c8a335
   languageName: node
   linkType: hard
 
-"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D664b6c%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D7e2bf3%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
   version: 0.1.11
-  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=794797&locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D664b6c%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=7ae9ea&locator=%40net-protocol%2Fnetr%40file%3A..%2Fnet-netr%23..%2Fnet-netr%3A%3Ahash%3D7e2bf3%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     pako: "npm:^2.1.0"
@@ -1669,13 +1669,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 0f67144d70e06123637c2c0e659de1d04b537b70068baa360eb804bbe4dc769e0ba7b4185856342f9af272f4dc8387489bb6f7806e60f48f33b3f2848110aa12
+  checksum: 8281054600842d8228f094c9e3188f70074fd1ad247613741a43329b4d399c488de3f796269ae28b56632da899607bb3c9f00dc73c7d146720ab755929c8a335
   languageName: node
   linkType: hard
 
 "@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr":
   version: 0.1.11
-  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=794797&locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr"
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=7ae9ea&locator=%40net-protocol%2Fnetr%40workspace%3Apackages%2Fnet-netr"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     pako: "npm:^2.1.0"
@@ -1689,13 +1689,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 0f67144d70e06123637c2c0e659de1d04b537b70068baa360eb804bbe4dc769e0ba7b4185856342f9af272f4dc8387489bb6f7806e60f48f33b3f2848110aa12
+  checksum: 8281054600842d8228f094c9e3188f70074fd1ad247613741a43329b4d399c488de3f796269ae28b56632da899607bb3c9f00dc73c7d146720ab755929c8a335
   languageName: node
   linkType: hard
 
-"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D380545%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
+"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D80aaaf%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli":
   version: 0.1.11
-  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=794797&locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D380545%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=7ae9ea&locator=%40net-protocol%2Fprofiles%40file%3A..%2Fnet-profiles%23..%2Fnet-profiles%3A%3Ahash%3D80aaaf%26locator%3D%2540net-protocol%252Fcli%2540workspace%253Apackages%252Fnet-cli"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     pako: "npm:^2.1.0"
@@ -1709,13 +1709,13 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 0f67144d70e06123637c2c0e659de1d04b537b70068baa360eb804bbe4dc769e0ba7b4185856342f9af272f4dc8387489bb6f7806e60f48f33b3f2848110aa12
+  checksum: 8281054600842d8228f094c9e3188f70074fd1ad247613741a43329b4d399c488de3f796269ae28b56632da899607bb3c9f00dc73c7d146720ab755929c8a335
   languageName: node
   linkType: hard
 
 "@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fprofiles%40workspace%3Apackages%2Fnet-profiles":
   version: 0.1.11
-  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=794797&locator=%40net-protocol%2Fprofiles%40workspace%3Apackages%2Fnet-profiles"
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=7ae9ea&locator=%40net-protocol%2Fprofiles%40workspace%3Apackages%2Fnet-profiles"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     pako: "npm:^2.1.0"
@@ -1729,7 +1729,7 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 0f67144d70e06123637c2c0e659de1d04b537b70068baa360eb804bbe4dc769e0ba7b4185856342f9af272f4dc8387489bb6f7806e60f48f33b3f2848110aa12
+  checksum: 8281054600842d8228f094c9e3188f70074fd1ad247613741a43329b4d399c488de3f796269ae28b56632da899607bb3c9f00dc73c7d146720ab755929c8a335
   languageName: node
   linkType: hard
 

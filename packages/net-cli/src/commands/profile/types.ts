@@ -40,3 +40,26 @@ export interface ProfileSetBioOptions {
   rpcUrl?: string;
   encodeOnly?: boolean;
 }
+
+/**
+ * Options for profile set-canvas command (write)
+ */
+export interface ProfileSetCanvasOptions {
+  file?: string;
+  content?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+/**
+ * Options for profile get-canvas command (read-only)
+ */
+export interface ProfileGetCanvasOptions {
+  address: string;
+  output?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  json?: boolean;
+}

@@ -4,6 +4,7 @@ import { hexToString } from "viem";
 import {
   PROFILE_PICTURE_STORAGE_KEY,
   PROFILE_METADATA_STORAGE_KEY,
+  PROFILE_CANVAS_STORAGE_KEY,
   parseProfileMetadata,
 } from "@net-protocol/profiles";
 import { parseReadOnlyOptions } from "../../cli/shared";
@@ -68,7 +69,31 @@ export async function executeProfileGet(
       }
     }
 
-    const hasProfile = profilePicture || xUsername || bio;
+    // Fetch profile canvas
+    let canvasSize: number | undefined;
+    let canvasIsDataUri = false;
+    try {
+      const canvasResult = await client.readChunkedStorage({
+        key: PROFILE_CANVAS_STORAGE_KEY,
+        operator: options.address,
+      });
+      if (canvasResult.data) {
+        canvasSize = canvasResult.data.length;
+        canvasIsDataUri = canvasResult.data.startsWith("data:");
+      }
+    } catch (error) {
+      // Not found is okay
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (
+        errorMessage !== "ChunkedStorage metadata not found" &&
+        !errorMessage.includes("not found")
+      ) {
+        throw error;
+      }
+    }
+
+    const hasProfile = profilePicture || xUsername || bio || canvasSize;
 
     if (options.json) {
       const output = {
@@ -77,6 +102,9 @@ export async function executeProfileGet(
         profilePicture: profilePicture || null,
         xUsername: xUsername || null,
         bio: bio || null,
+        canvas: canvasSize
+          ? { size: canvasSize, isDataUri: canvasIsDataUri }
+          : null,
         hasProfile,
       };
       console.log(JSON.stringify(output, null, 2));
@@ -99,6 +127,13 @@ export async function executeProfileGet(
     );
     console.log(
       `  ${chalk.cyan("Bio:")} ${bio || chalk.gray("(not set)")}`
+    );
+    console.log(
+      `  ${chalk.cyan("Canvas:")} ${
+        canvasSize
+          ? `${canvasSize} bytes${canvasIsDataUri ? " (data URI)" : ""}`
+          : chalk.gray("(not set)")
+      }`
     );
 
     if (!hasProfile) {

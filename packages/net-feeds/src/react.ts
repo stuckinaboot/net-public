@@ -5,6 +5,10 @@ export { useCommentCountBatch } from "./hooks/useCommentCountBatch";
 export { useComments } from "./hooks/useComments";
 export { useFeedRegistry, useIsFeedRegistered } from "./hooks/useFeedRegistry";
 export { useRegisteredFeeds } from "./hooks/useRegisteredFeeds";
+export {
+  useFeedMessageCountBatch,
+  type UseFeedMessageCountBatchOptions,
+} from "./hooks/useFeedMessageCountBatch";
 
 // Re-export utilities commonly needed with hooks
 export { generatePostHash } from "./utils/commentUtils";

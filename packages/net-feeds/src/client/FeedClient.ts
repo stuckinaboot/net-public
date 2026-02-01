@@ -320,5 +320,56 @@ export class FeedClient {
 
     return counts;
   }
+
+  /**
+   * Gets message counts for multiple feeds in a single RPC call.
+   * Uses the TopicCountBulkHelper contract for efficient batching.
+   *
+   * @param feedNames - Array of feed names to get message counts for
+   * @returns Map from feed name to message count
+   *
+   * @example
+   * ```ts
+   * const client = new FeedClient({ chainId: 8453 });
+   * const counts = await client.getFeedMessageCountBatch(["crypto", "gaming", "music"]);
+   *
+   * // Get count for a specific feed
+   * const count = counts.get("crypto") ?? 0;
+   * ```
+   */
+  async getFeedMessageCountBatch(
+    feedNames: string[]
+  ): Promise<Map<string, number>> {
+    const counts = new Map<string, number>();
+
+    if (feedNames.length === 0) {
+      return counts;
+    }
+
+    // Normalize feed names to topics
+    const topics = feedNames.map((feedName) => normalizeFeedTopic(feedName));
+
+    // Get public client for this chain
+    const client = getPublicClient({
+      chainId: this.chainId,
+      rpcUrl: this.rpcUrls,
+    });
+
+    // Call the bulk helper contract
+    const result = await readContract(client, {
+      abi: TOPIC_COUNT_BULK_HELPER_CONTRACT.abi,
+      address: TOPIC_COUNT_BULK_HELPER_CONTRACT.address,
+      functionName: "getMessageCountsForTopics",
+      args: [NULL_ADDRESS, topics],
+    });
+
+    // Build the result map
+    const countsArray = result as bigint[];
+    for (let i = 0; i < feedNames.length; i++) {
+      counts.set(feedNames[i], Number(countsArray[i]));
+    }
+
+    return counts;
+  }
 }
 

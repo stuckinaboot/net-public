@@ -1,17 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { FeedClient } from "../client/FeedClient";
-import { NetClient } from "@net-protocol/core";
+import { NetClient, getPublicClient } from "@net-protocol/core";
+import { readContract } from "viem/actions";
 import { BASE_CHAIN_ID, BASE_TEST_RPC_URL } from "./test-utils";
 import type { NetMessage } from "../types";
 
-// Mock NetClient
+// Mock NetClient and viem
 vi.mock("@net-protocol/core", async () => {
   const actual = await vi.importActual("@net-protocol/core");
   return {
     ...actual,
     NetClient: vi.fn(),
+    getPublicClient: vi.fn(),
   };
 });
+
+vi.mock("viem/actions", () => ({
+  readContract: vi.fn(),
+}));
 
 describe("FeedClient", () => {
   let mockNetClient: {
@@ -571,6 +577,99 @@ describe("FeedClient", () => {
       expect(parsed.parentTopic).toBe("feed-crypto");
       expect(parsed.parentSender).toBe("0x1234567890123456789012345678901234567890");
       expect(parsed.parentTimestamp).toBe(1234567890);
+    });
+  });
+
+  describe("getFeedMessageCountBatch", () => {
+    beforeEach(() => {
+      (getPublicClient as any).mockReturnValue({});
+    });
+
+    it("should return empty map for empty feed names array", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      const counts = await client.getFeedMessageCountBatch([]);
+
+      expect(counts.size).toBe(0);
+      expect(readContract).not.toHaveBeenCalled();
+    });
+
+    it("should batch fetch counts for multiple feeds", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      (readContract as any).mockResolvedValue([
+        BigInt(10),
+        BigInt(20),
+        BigInt(30),
+      ]);
+
+      const counts = await client.getFeedMessageCountBatch([
+        "crypto",
+        "gaming",
+        "music",
+      ]);
+
+      expect(counts.get("crypto")).toBe(10);
+      expect(counts.get("gaming")).toBe(20);
+      expect(counts.get("music")).toBe(30);
+
+      expect(readContract).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          functionName: "getMessageCountsForTopics",
+          args: [
+            "0x0000000000000000000000000000000000000000",
+            ["feed-crypto", "feed-gaming", "feed-music"],
+          ],
+        })
+      );
+    });
+
+    it("should normalize feed names to topics", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      (readContract as any).mockResolvedValue([BigInt(5)]);
+
+      await client.getFeedMessageCountBatch(["CRYPTO"]); // uppercase
+
+      expect(readContract).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          args: [
+            "0x0000000000000000000000000000000000000000",
+            ["feed-crypto"], // should be lowercase
+          ],
+        })
+      );
+    });
+
+    it("should handle already prefixed feed names", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      (readContract as any).mockResolvedValue([BigInt(5)]);
+
+      await client.getFeedMessageCountBatch(["feed-crypto"]); // already prefixed
+
+      expect(readContract).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          args: [
+            "0x0000000000000000000000000000000000000000",
+            ["feed-crypto"], // should not double-prefix
+          ],
+        })
+      );
+    });
+
+    it("should propagate errors", async () => {
+      const client = new FeedClient({ chainId: BASE_CHAIN_ID });
+
+      const error = new Error("RPC error");
+      (readContract as any).mockRejectedValue(error);
+
+      await expect(
+        client.getFeedMessageCountBatch(["crypto"])
+      ).rejects.toThrow("RPC error");
     });
   });
 });

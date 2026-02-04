@@ -55,7 +55,8 @@ if [[ "$HAS_FILE_DEPS" == "true" ]]; then
       '@net-protocol/relay': 'net-relay',
       '@net-protocol/feeds': 'net-feeds',
       '@net-protocol/netr': 'net-netr',
-      '@net-protocol/profiles': 'net-profiles'
+      '@net-protocol/profiles': 'net-profiles',
+      '@net-protocol/bazaar': 'net-bazaar'
     };
 
     // Convert all file: dependencies to versioned dependencies

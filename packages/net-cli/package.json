@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
@@ -36,6 +36,7 @@
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "dotenv": "^17.2.3",
+    "undici": "^7.20.0",
     "viem": "^2.31.4"
   },
   "devDependencies": {

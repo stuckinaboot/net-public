@@ -122,6 +122,23 @@ export function useBazaarCollectionOffers({
     enabled: enabled && isSupported && totalCount > 0,
   });
 
+  const TAG = `[useBazaarCollectionOffers chain=${chainId} nft=${nftAddress.slice(0, 10)}]`;
+
+  // Log pipeline state changes
+  useEffect(() => {
+    console.log(TAG, {
+      enabled,
+      isSupported,
+      totalCount,
+      isLoadingCount,
+      startIndex,
+      endIndex: totalCount,
+      messagesLength: messages?.length ?? 0,
+      isLoadingMessages,
+      messagesError: messagesError?.message,
+    });
+  }, [enabled, isSupported, totalCount, isLoadingCount, startIndex, messages?.length, isLoadingMessages, messagesError]);
+
   // Process offers when messages change
   useEffect(() => {
     if (!isSupported || !enabled) {
@@ -139,19 +156,21 @@ export function useBazaarCollectionOffers({
     async function processOffers() {
       setIsProcessing(true);
       setProcessingError(undefined);
+      console.log(TAG, `processing ${messages.length} messages...`);
 
       try {
         const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
-        const validOffers = await client.getCollectionOffers({
-          nftAddress,
-          excludeMaker,
-          maxMessages,
-        });
+        const validOffers = await client.processCollectionOffersFromMessages(
+          messages,
+          { nftAddress, excludeMaker }
+        );
+        console.log(TAG, `processed → ${validOffers.length} valid offers`);
 
         if (!cancelled) {
           setOffers(validOffers);
         }
       } catch (err) {
+        console.error(TAG, "processing error:", err);
         if (!cancelled) {
           setProcessingError(err instanceof Error ? err : new Error(String(err)));
           setOffers([]);
@@ -168,7 +187,7 @@ export function useBazaarCollectionOffers({
     return () => {
       cancelled = true;
     };
-  }, [chainId, nftAddress, excludeMaker, maxMessages, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, nftAddress, excludeMaker, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

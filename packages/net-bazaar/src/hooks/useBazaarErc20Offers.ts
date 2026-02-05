@@ -132,6 +132,23 @@ export function useBazaarErc20Offers({
     enabled: enabled && hasErc20Offers && totalCount > 0,
   });
 
+  const TAG = `[useBazaarErc20Offers chain=${chainId} token=${tokenAddress.slice(0, 10)}]`;
+
+  // Log pipeline state changes
+  useEffect(() => {
+    console.log(TAG, {
+      enabled,
+      hasErc20Offers,
+      totalCount,
+      isLoadingCount,
+      startIndex,
+      endIndex: totalCount,
+      messagesLength: messages?.length ?? 0,
+      isLoadingMessages,
+      messagesError: messagesError?.message,
+    });
+  }, [enabled, hasErc20Offers, totalCount, isLoadingCount, startIndex, messages?.length, isLoadingMessages, messagesError]);
+
   // Process offers when messages change
   useEffect(() => {
     if (!hasErc20Offers || !enabled) {
@@ -149,19 +166,21 @@ export function useBazaarErc20Offers({
     async function processOffers() {
       setIsProcessing(true);
       setProcessingError(undefined);
+      console.log(TAG, `processing ${messages.length} messages...`);
 
       try {
         const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
-        const validOffers = await client.getErc20Offers({
-          tokenAddress,
-          excludeMaker,
-          maxMessages,
-        });
+        const validOffers = await client.processErc20OffersFromMessages(
+          messages,
+          { tokenAddress, excludeMaker }
+        );
+        console.log(TAG, `processed → ${validOffers.length} valid offers`);
 
         if (!cancelled) {
           setOffers(validOffers);
         }
       } catch (err) {
+        console.error(TAG, "processing error:", err);
         if (!cancelled) {
           setProcessingError(err instanceof Error ? err : new Error(String(err)));
           setOffers([]);
@@ -178,7 +197,7 @@ export function useBazaarErc20Offers({
     return () => {
       cancelled = true;
     };
-  }, [chainId, tokenAddress, excludeMaker, maxMessages, messages, hasErc20Offers, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, excludeMaker, messages, hasErc20Offers, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

@@ -286,11 +286,6 @@ export class BazaarClient {
   async getCollectionOffers(options: GetCollectionOffersOptions): Promise<CollectionOffer[]> {
     const { nftAddress, excludeMaker, maxMessages = 100 } = options;
     const collectionOffersAddress = getCollectionOffersAddress(this.chainId);
-    const weth = getWrappedNativeCurrency(this.chainId);
-
-    if (!weth) {
-      return [];
-    }
 
     // Get message count
     const count = await this.netClient.getMessageCount({
@@ -315,6 +310,27 @@ export class BazaarClient {
       endIndex: count,
     });
 
+    return this.processCollectionOffersFromMessages(messages, options);
+  }
+
+  /**
+   * Process pre-fetched messages into valid collection offers.
+   *
+   * Use this when messages have already been fetched (e.g. via useNetMessages)
+   * to avoid redundant RPC calls.
+   */
+  async processCollectionOffersFromMessages(
+    messages: NetMessage[],
+    options: Pick<GetCollectionOffersOptions, "nftAddress" | "excludeMaker">
+  ): Promise<CollectionOffer[]> {
+    const { nftAddress, excludeMaker } = options;
+    const tag = `[BazaarClient.processCollectionOffers chain=${this.chainId}]`;
+    const weth = getWrappedNativeCurrency(this.chainId);
+
+    if (!weth) {
+      return [];
+    }
+
     // Parse messages into offers
     let offers: CollectionOffer[] = [];
     for (const message of messages) {
@@ -335,6 +351,8 @@ export class BazaarClient {
 
       offers.push(offer);
     }
+
+    console.log(tag, `parsed ${offers.length}/${messages.length} messages into offers`);
 
     if (offers.length === 0) {
       return [];
@@ -358,11 +376,14 @@ export class BazaarClient {
     });
 
     // Filter to OPEN orders only
+    const now = Math.floor(Date.now() / 1000);
     offers = offers.filter(
       (o) =>
         o.orderStatus === SeaportOrderStatus.OPEN &&
-        o.expirationDate > Math.floor(Date.now() / 1000)
+        o.expirationDate > now
     );
+
+    console.log(tag, `after status filter: ${offers.length} OPEN & not expired`);
 
     if (offers.length === 0) {
       return [];
@@ -378,6 +399,7 @@ export class BazaarClient {
     });
 
     // Filter to offers where buyer has sufficient balance
+    const beforeBalance = offers.length;
     offers = offers.filter((offer) => {
       const balance = balanceMap.get(offer.maker.toLowerCase()) || BigInt(0);
       return isCollectionOfferValid(
@@ -387,6 +409,8 @@ export class BazaarClient {
         balance
       );
     });
+
+    console.log(tag, `after balance filter: ${offers.length}/${beforeBalance} (${beforeBalance - offers.length} dropped)`);
 
     // Sort by price (highest first)
     return sortOffersByPrice(offers);
@@ -407,10 +431,9 @@ export class BazaarClient {
   async getErc20Offers(options: GetErc20OffersOptions): Promise<Erc20Offer[]> {
     const { tokenAddress, excludeMaker, maxMessages = 200 } = options;
     const erc20OffersAddress = getErc20OffersAddress(this.chainId);
-    const weth = getWrappedNativeCurrency(this.chainId);
 
     // ERC20 offers only available on Base and HyperEVM
-    if (!erc20OffersAddress || !weth) {
+    if (!erc20OffersAddress) {
       return [];
     }
 
@@ -436,6 +459,27 @@ export class BazaarClient {
       startIndex,
       endIndex: count,
     });
+
+    return this.processErc20OffersFromMessages(messages, options);
+  }
+
+  /**
+   * Process pre-fetched messages into valid ERC20 offers.
+   *
+   * Use this when messages have already been fetched (e.g. via useNetMessages)
+   * to avoid redundant RPC calls.
+   */
+  async processErc20OffersFromMessages(
+    messages: NetMessage[],
+    options: Pick<GetErc20OffersOptions, "tokenAddress" | "excludeMaker">
+  ): Promise<Erc20Offer[]> {
+    const { tokenAddress, excludeMaker } = options;
+    const tag = `[BazaarClient.processErc20Offers chain=${this.chainId}]`;
+    const weth = getWrappedNativeCurrency(this.chainId);
+
+    if (!weth) {
+      return [];
+    }
 
     // Parse messages into offers
     let offers: Erc20Offer[] = [];
@@ -463,6 +507,8 @@ export class BazaarClient {
       offers.push(offer);
     }
 
+    console.log(tag, `parsed ${offers.length}/${messages.length} messages into offers`);
+
     if (offers.length === 0) {
       return [];
     }
@@ -485,11 +531,14 @@ export class BazaarClient {
     });
 
     // Filter to OPEN orders only
+    const now = Math.floor(Date.now() / 1000);
     offers = offers.filter(
       (o) =>
         o.orderStatus === SeaportOrderStatus.OPEN &&
-        o.expirationDate > Math.floor(Date.now() / 1000)
+        o.expirationDate > now
     );
+
+    console.log(tag, `after status filter: ${offers.length} OPEN & not expired`);
 
     if (offers.length === 0) {
       return [];
@@ -505,6 +554,7 @@ export class BazaarClient {
     });
 
     // Filter to offers where buyer has sufficient balance
+    const beforeBalance = offers.length;
     offers = offers.filter((offer) => {
       const balance = balanceMap.get(offer.maker.toLowerCase()) || BigInt(0);
       return isErc20OfferValid(
@@ -514,6 +564,8 @@ export class BazaarClient {
         balance
       );
     });
+
+    console.log(tag, `after balance filter: ${offers.length}/${beforeBalance} (${beforeBalance - offers.length} dropped)`);
 
     // Sort by price per token (highest first) - no deduplication for ERC20 offers
     return sortErc20OffersByPricePerToken(offers);

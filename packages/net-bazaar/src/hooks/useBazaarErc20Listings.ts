@@ -27,6 +27,8 @@ export interface UseBazaarErc20ListingsOptions {
   endIndex?: number;
   /** Whether the query is enabled (default: true) */
   enabled?: boolean;
+  /** Optional viem PublicClient (defaults to wagmi's client for the chain) */
+  publicClient?: PublicClient;
 }
 
 export interface UseBazaarErc20ListingsResult {
@@ -82,8 +84,10 @@ export function useBazaarErc20Listings({
   startIndex: startIndexOverride,
   endIndex: endIndexOverride,
   enabled = true,
+  publicClient,
 }: UseBazaarErc20ListingsOptions): UseBazaarErc20ListingsResult {
   const wagmiClient = usePublicClient({ chainId });
+  const resolvedClient = (publicClient ?? wagmiClient) as PublicClient | undefined;
 
   const [listings, setListings] = useState<Erc20Listing[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -179,7 +183,7 @@ export function useBazaarErc20Listings({
       console.log(TAG, `processing ${messages.length} messages...`);
 
       try {
-        const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
+        const client = new BazaarClient({ chainId, publicClient: resolvedClient });
         const validListings = await client.processErc20ListingsFromMessages(
           messages,
           { tokenAddress, excludeMaker }
@@ -207,7 +211,7 @@ export function useBazaarErc20Listings({
     return () => {
       cancelled = true;
     };
-  }, [chainId, tokenAddress, excludeMaker, maker, maxMessages, startIndexOverride, endIndexOverride, hasRangeOverride, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, excludeMaker, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

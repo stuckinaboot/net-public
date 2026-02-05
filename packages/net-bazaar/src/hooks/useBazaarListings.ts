@@ -212,7 +212,7 @@ export function useBazaarListings({
     return () => {
       cancelled = true;
     };
-  }, [chainId, nftAddress, excludeMaker, maker, maxMessages, startIndexOverride, endIndexOverride, includeExpired, hasRangeOverride, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, nftAddress, excludeMaker, includeExpired, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

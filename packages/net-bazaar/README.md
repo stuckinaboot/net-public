@@ -1,6 +1,6 @@
 # @net-protocol/bazaar
 
-**Status: Alpha** - Usable but may have breaking changes over time. Suitable for early adopters and testing.
+**Status: In Development** - This package is under active development. APIs may change without notice.
 
 NFT marketplace SDK for Net Protocol - read listings, collection offers, and ERC20 offers via Seaport.
 

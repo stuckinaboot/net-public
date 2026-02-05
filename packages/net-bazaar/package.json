@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/bazaar",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "NFT marketplace SDK for Net Protocol - listings, collection offers, and ERC20 offers via Seaport",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

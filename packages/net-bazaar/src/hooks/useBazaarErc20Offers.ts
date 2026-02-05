@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { PublicClient } from "viem";
+import { usePublicClient } from "wagmi";
 import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
 import { BazaarClient } from "../client/BazaarClient";
 import { Erc20Offer } from "../types";
@@ -72,6 +74,8 @@ export function useBazaarErc20Offers({
   maxMessages = 200,
   enabled = true,
 }: UseBazaarErc20OffersOptions): UseBazaarErc20OffersResult {
+  const wagmiClient = usePublicClient({ chainId });
+
   const [offers, setOffers] = useState<Erc20Offer[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<Error | undefined>();
@@ -147,7 +151,7 @@ export function useBazaarErc20Offers({
       setProcessingError(undefined);
 
       try {
-        const client = new BazaarClient({ chainId });
+        const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
         const validOffers = await client.getErc20Offers({
           tokenAddress,
           excludeMaker,

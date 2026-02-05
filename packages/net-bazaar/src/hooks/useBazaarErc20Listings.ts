@@ -1,5 +1,5 @@
 /**
- * React hook for fetching NFT listings from Bazaar
+ * React hook for fetching ERC20 listings from Bazaar
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -7,14 +7,14 @@ import { PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
 import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
 import { BazaarClient } from "../client/BazaarClient";
-import { Listing, SeaportOrderStatus } from "../types";
-import { getBazaarAddress, isBazaarSupportedOnChain } from "../chainConfig";
+import { Erc20Listing } from "../types";
+import { getErc20BazaarAddress, isBazaarSupportedOnChain } from "../chainConfig";
 
-export interface UseBazaarListingsOptions {
+export interface UseBazaarErc20ListingsOptions {
   /** Chain ID to query */
   chainId: number;
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** ERC20 token address */
+  tokenAddress: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
   /** Only include listings from this address */
@@ -27,13 +27,11 @@ export interface UseBazaarListingsOptions {
   endIndex?: number;
   /** Whether the query is enabled (default: true) */
   enabled?: boolean;
-  /** Optional viem PublicClient (defaults to wagmi's client for the chain) */
-  publicClient?: PublicClient;
 }
 
-export interface UseBazaarListingsResult {
-  /** Valid listings (deduplicated, sorted by price) */
-  listings: Listing[];
+export interface UseBazaarErc20ListingsResult {
+  /** Valid ERC20 listings (sorted by price per token, lowest first) */
+  listings: Erc20Listing[];
   /** Whether the data is loading */
   isLoading: boolean;
   /** Error if any */
@@ -43,52 +41,51 @@ export interface UseBazaarListingsResult {
 }
 
 /**
- * React hook for fetching valid NFT listings from Bazaar
+ * React hook for fetching valid ERC20 listings from Bazaar
+ *
+ * ERC20 listings are available on all supported chains.
  *
  * Returns listings that are:
  * - OPEN status (not filled, cancelled, or expired)
  * - Not expired
- * - Seller still owns the NFT
+ * - Seller has sufficient ERC20 token balance
  *
- * Results are deduplicated (one per token) and sorted by price (lowest first)
+ * Results are sorted by price per token (lowest first)
  *
  * @example
  * ```tsx
- * const { listings, isLoading, error } = useBazaarListings({
+ * const { listings, isLoading, error } = useBazaarErc20Listings({
  *   chainId: 8453,
- *   nftAddress: "0x...",
- *   maxMessages: 100,
+ *   tokenAddress: "0x...",
  * });
  *
  * if (isLoading) return <div>Loading...</div>;
  * if (error) return <div>Error: {error.message}</div>;
  *
- * return (
- *   <ul>
- *     {listings.map((listing) => (
- *       <li key={listing.orderHash}>
- *         Token #{listing.tokenId} - {listing.price} {listing.currency}
- *       </li>
- *     ))}
- *   </ul>
- * );
+ * const bestListing = listings[0];
+ * if (bestListing) {
+ *   return (
+ *     <div>
+ *       Best listing: {bestListing.pricePerToken} {bestListing.currency} per token
+ *       (total: {bestListing.price} {bestListing.currency} for {bestListing.tokenAmount.toString()} tokens)
+ *     </div>
+ *   );
+ * }
  * ```
  */
-export function useBazaarListings({
+export function useBazaarErc20Listings({
   chainId,
-  nftAddress,
+  tokenAddress,
   excludeMaker,
   maker,
   maxMessages = 200,
   startIndex: startIndexOverride,
   endIndex: endIndexOverride,
   enabled = true,
-  publicClient,
-}: UseBazaarListingsOptions): UseBazaarListingsResult {
+}: UseBazaarErc20ListingsOptions): UseBazaarErc20ListingsResult {
   const wagmiClient = usePublicClient({ chainId });
-  const resolvedClient = (publicClient ?? wagmiClient) as PublicClient | undefined;
 
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<Erc20Listing[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<Error | undefined>();
   const [refetchTrigger, setRefetchTrigger] = useState(0);
@@ -101,20 +98,20 @@ export function useBazaarListings({
     [chainId]
   );
 
-  // Get bazaar address for the chain
-  const bazaarAddress = useMemo(
-    () => (isSupported ? getBazaarAddress(chainId) : undefined),
+  // Get ERC20 bazaar address for the chain (available on all chains)
+  const erc20BazaarAddress = useMemo(
+    () => (isSupported ? getErc20BazaarAddress(chainId) : undefined),
     [chainId, isSupported]
   );
 
   // Build filter
   const filter = useMemo(
     () => ({
-      appAddress: bazaarAddress as `0x${string}`,
-      topic: nftAddress.toLowerCase(),
+      appAddress: erc20BazaarAddress as `0x${string}`,
+      topic: tokenAddress.toLowerCase(),
       maker,
     }),
-    [bazaarAddress, nftAddress, maker]
+    [erc20BazaarAddress, tokenAddress, maker]
   );
 
   // Get message count (skip when range overrides are provided)
@@ -144,7 +141,7 @@ export function useBazaarListings({
     enabled: enabled && isSupported && (hasRangeOverride || totalCount > 0),
   });
 
-  const TAG = `[useBazaarListings chain=${chainId} nft=${nftAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarErc20Listings chain=${chainId} token=${tokenAddress.slice(0, 10)}]`;
 
   // Log pipeline state changes
   useEffect(() => {
@@ -182,12 +179,13 @@ export function useBazaarListings({
       console.log(TAG, `processing ${messages.length} messages...`);
 
       try {
-        const client = new BazaarClient({ chainId, publicClient: resolvedClient });
-        const validListings = await client.processListingsFromMessages(
+        const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
+        const validListings = await client.processErc20ListingsFromMessages(
           messages,
-          { nftAddress, excludeMaker }
+          { tokenAddress, excludeMaker }
         );
         console.log(TAG, `processed → ${validListings.length} valid listings`);
+
         if (!cancelled) {
           setListings(validListings);
         }
@@ -209,7 +207,7 @@ export function useBazaarListings({
     return () => {
       cancelled = true;
     };
-  }, [chainId, nftAddress, excludeMaker, maker, maxMessages, startIndexOverride, endIndexOverride, hasRangeOverride, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, excludeMaker, maker, maxMessages, startIndexOverride, endIndexOverride, hasRangeOverride, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

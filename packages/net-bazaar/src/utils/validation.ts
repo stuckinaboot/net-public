@@ -31,19 +31,27 @@ export async function bulkFetchOrderStatuses(
 
   const seaportAddress = getSeaportAddress(chainId);
 
-  const results = await readContract(client, {
-    address: BULK_SEAPORT_ORDER_STATUS_FETCHER_ADDRESS,
-    abi: BULK_SEAPORT_ORDER_STATUS_FETCHER_ABI,
-    functionName: "getOrderStatuses",
-    args: [seaportAddress, orderHashes],
-  });
+  try {
+    console.log(`[bulkFetchOrderStatuses] fetching ${orderHashes.length} statuses via ${BULK_SEAPORT_ORDER_STATUS_FETCHER_ADDRESS}`);
+    const results = await readContract(client, {
+      address: BULK_SEAPORT_ORDER_STATUS_FETCHER_ADDRESS,
+      abi: BULK_SEAPORT_ORDER_STATUS_FETCHER_ABI,
+      functionName: "getOrderStatuses",
+      args: [seaportAddress, orderHashes],
+    });
 
-  return (results as any[]).map((r) => ({
-    isValidated: r.isValidated,
-    isCancelled: r.isCancelled,
-    totalFilled: BigInt(r.totalFilled),
-    totalSize: BigInt(r.totalSize),
-  }));
+    const statuses = (results as any[]).map((r) => ({
+      isValidated: r.isValidated,
+      isCancelled: r.isCancelled,
+      totalFilled: BigInt(r.totalFilled),
+      totalSize: BigInt(r.totalSize),
+    }));
+    console.log(`[bulkFetchOrderStatuses] success: ${statuses.length} statuses`);
+    return statuses;
+  } catch (err) {
+    console.error(`[bulkFetchOrderStatuses] FAILED for ${orderHashes.length} hashes:`, err);
+    throw err;
+  }
 }
 
 /**
@@ -77,6 +85,7 @@ export async function bulkFetchNftOwners(
   }
 
   try {
+    console.log(`[bulkFetchNftOwners] fetching ${tokenIds.length} owners for ${nftAddress.slice(0, 10)} via ${ERC721_OWNER_OF_HELPER_ADDRESS}`);
     const owners = await readContract(client, {
       address: ERC721_OWNER_OF_HELPER_ADDRESS,
       abi: ERC721_OWNER_OF_HELPER_ABI,
@@ -84,11 +93,14 @@ export async function bulkFetchNftOwners(
       args: [nftAddress, tokenIds.map((id) => BigInt(id))],
     });
 
-    return (owners as `0x${string}`[]).map((owner) =>
+    const result = (owners as `0x${string}`[]).map((owner) =>
       owner === "0x0000000000000000000000000000000000000000" ? null : owner
     );
-  } catch {
-    // If the helper fails, return nulls
+    const validCount = result.filter((o) => o !== null).length;
+    console.log(`[bulkFetchNftOwners] success: ${validCount}/${tokenIds.length} have owners`);
+    return result;
+  } catch (err) {
+    console.error(`[bulkFetchNftOwners] FAILED for ${tokenIds.length} tokens — returning all null:`, err);
     return tokenIds.map(() => null);
   }
 }
@@ -124,6 +136,7 @@ export async function bulkFetchErc20Balances(
   }
 
   try {
+    console.log(`[bulkFetchErc20Balances] fetching ${addresses.length} balances for ${tokenAddress.slice(0, 10)}`);
     const balances = await readContract(client, {
       address: ERC20_BULK_BALANCE_CHECKER_ADDRESS,
       abi: ERC20_BULK_BALANCE_CHECKER_ABI,
@@ -131,9 +144,11 @@ export async function bulkFetchErc20Balances(
       args: [tokenAddress, addresses],
     });
 
-    return (balances as bigint[]).map((b) => BigInt(b));
-  } catch {
-    // If the helper fails, return zeros
+    const result = (balances as bigint[]).map((b) => BigInt(b));
+    console.log(`[bulkFetchErc20Balances] success: ${result.length} balances`);
+    return result;
+  } catch (err) {
+    console.error(`[bulkFetchErc20Balances] FAILED for ${addresses.length} addresses — returning all zero:`, err);
     return addresses.map(() => BigInt(0));
   }
 }
@@ -234,6 +249,34 @@ export function isErc20OfferValid(
   }
 
   if (buyerWethBalance < priceWei) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Validate that an ERC20 listing is still valid:
+ * - Order is OPEN
+ * - Not expired
+ * - Seller has sufficient ERC20 token balance
+ */
+export function isErc20ListingValid(
+  orderStatus: SeaportOrderStatus,
+  expirationDate: number,
+  tokenAmount: bigint,
+  sellerTokenBalance: bigint
+): boolean {
+  if (orderStatus !== SeaportOrderStatus.OPEN) {
+    return false;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (expirationDate <= now) {
+    return false;
+  }
+
+  if (sellerTokenBalance < tokenAmount) {
     return false;
   }
 

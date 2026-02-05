@@ -38,6 +38,8 @@ export interface Listing {
   messageData: `0x${string}`;
   /** Decoded Seaport order components */
   orderComponents?: SeaportOrderComponents;
+  /** Private order fulfiller zone hash (undefined = public order) */
+  targetFulfiller?: `0x${string}`;
 }
 
 /**
@@ -93,6 +95,38 @@ export interface Erc20Offer {
   /** Order status */
   orderStatus: SeaportOrderStatus;
   /** Raw message data for acceptance */
+  messageData: `0x${string}`;
+  /** Decoded Seaport order components */
+  orderComponents?: SeaportOrderComponents;
+}
+
+/**
+ * ERC20 listing information
+ */
+export interface Erc20Listing {
+  /** Seller's address */
+  maker: `0x${string}`;
+  /** ERC20 token address being sold */
+  tokenAddress: `0x${string}`;
+  /** Amount of tokens being sold */
+  tokenAmount: bigint;
+  /** Total price in wei (native currency) */
+  priceWei: bigint;
+  /** Price per token in wei (priceWei / tokenAmount) */
+  pricePerTokenWei: bigint;
+  /** Total price in native currency (formatted) */
+  price: number;
+  /** Price per token in native currency (formatted) */
+  pricePerToken: number;
+  /** Currency symbol (e.g., "eth", "hype") */
+  currency: string;
+  /** Expiration timestamp in seconds */
+  expirationDate: number;
+  /** Seaport order hash */
+  orderHash: `0x${string}`;
+  /** Order status */
+  orderStatus: SeaportOrderStatus;
+  /** Raw message data for fulfillment */
   messageData: `0x${string}`;
   /** Decoded Seaport order components */
   orderComponents?: SeaportOrderComponents;
@@ -220,8 +254,14 @@ export interface GetListingsOptions {
   nftAddress: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include listings from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
   maxMessages?: number;
+  /** Override start index for message range */
+  startIndex?: number;
+  /** Override end index for message range */
+  endIndex?: number;
 }
 
 /**
@@ -246,6 +286,24 @@ export interface GetErc20OffersOptions {
   excludeMaker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
   maxMessages?: number;
+}
+
+/**
+ * Options for fetching ERC20 listings
+ */
+export interface GetErc20ListingsOptions {
+  /** ERC20 token address to filter by */
+  tokenAddress: `0x${string}`;
+  /** Exclude listings from this address */
+  excludeMaker?: `0x${string}`;
+  /** Only include listings from this address */
+  maker?: `0x${string}`;
+  /** Maximum number of messages to fetch (default: 200) */
+  maxMessages?: number;
+  /** Override start index for message range */
+  startIndex?: number;
+  /** Override end index for message range */
+  endIndex?: number;
 }
 
 /**

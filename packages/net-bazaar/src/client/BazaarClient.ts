@@ -7,14 +7,16 @@
  */
 
 import { PublicClient, createPublicClient, defineChain, http } from "viem";
-import { NetClient } from "@net-protocol/core";
+import { NetClient, NetMessage } from "@net-protocol/core";
 import {
   Listing,
   CollectionOffer,
   Erc20Offer,
+  Erc20Listing,
   GetListingsOptions,
   GetCollectionOffersOptions,
   GetErc20OffersOptions,
+  GetErc20ListingsOptions,
   SeaportOrderStatus,
   WriteTransactionConfig,
   SeaportOrderComponents,
@@ -25,6 +27,7 @@ import {
   getBazaarAddress,
   getCollectionOffersAddress,
   getErc20OffersAddress,
+  getErc20BazaarAddress,
   getSeaportAddress,
   getWrappedNativeCurrency,
   isBazaarSupportedOnChain,
@@ -33,10 +36,12 @@ import {
   parseListingFromMessage,
   parseCollectionOfferFromMessage,
   parseErc20OfferFromMessage,
+  parseErc20ListingFromMessage,
   getBestListingPerToken,
   sortListingsByPrice,
   sortOffersByPrice,
   sortErc20OffersByPricePerToken,
+  sortErc20ListingsByPricePerToken,
   createSeaportInstance,
   computeOrderHash,
   getSeaportOrderFromMessageData,
@@ -49,6 +54,7 @@ import {
   isListingValid,
   isCollectionOfferValid,
   isErc20OfferValid,
+  isErc20ListingValid,
 } from "../utils/validation";
 
 // Default RPC URLs for chains (same as @net-protocol/core)
@@ -70,7 +76,7 @@ export class BazaarClient {
   private netClient: NetClient;
   private rpcUrl: string;
 
-  constructor(params: { chainId: number; rpcUrl?: string }) {
+  constructor(params: { chainId: number; rpcUrl?: string; publicClient?: PublicClient }) {
     if (!isBazaarSupportedOnChain(params.chainId)) {
       throw new Error(`Bazaar is not supported on chain ${params.chainId}`);
     }
@@ -78,28 +84,32 @@ export class BazaarClient {
     this.chainId = params.chainId;
     this.rpcUrl = params.rpcUrl || CHAIN_RPC_URLS[params.chainId]?.[0] || "";
 
-    if (!this.rpcUrl) {
-      throw new Error(`No RPC URL available for chain ${params.chainId}`);
+    if (params.publicClient) {
+      this.client = params.publicClient;
+    } else {
+      if (!this.rpcUrl) {
+        throw new Error(`No RPC URL available for chain ${params.chainId}`);
+      }
+
+      const config = getBazaarChainConfig(params.chainId)!;
+
+      this.client = createPublicClient({
+        chain: defineChain({
+          id: params.chainId,
+          name: `Chain ${params.chainId}`,
+          nativeCurrency: {
+            name: config.wrappedNativeCurrency.name.replace("Wrapped ", ""),
+            symbol: config.currencySymbol.toUpperCase(),
+            decimals: 18,
+          },
+          rpcUrls: {
+            default: { http: [this.rpcUrl] },
+          },
+        }),
+        transport: http(this.rpcUrl),
+        batch: { multicall: true },
+      });
     }
-
-    const config = getBazaarChainConfig(params.chainId)!;
-
-    this.client = createPublicClient({
-      chain: defineChain({
-        id: params.chainId,
-        name: `Chain ${params.chainId}`,
-        nativeCurrency: {
-          name: config.wrappedNativeCurrency.name.replace("Wrapped ", ""),
-          symbol: config.currencySymbol.toUpperCase(),
-          decimals: 18,
-        },
-        rpcUrls: {
-          default: { http: [this.rpcUrl] },
-        },
-      }),
-      transport: http(this.rpcUrl),
-      batch: { multicall: true },
-    });
 
     this.netClient = new NetClient({
       chainId: params.chainId,
@@ -118,31 +128,53 @@ export class BazaarClient {
    * Results are deduplicated (one per token) and sorted by price (lowest first)
    */
   async getListings(options: GetListingsOptions): Promise<Listing[]> {
-    const { nftAddress, excludeMaker, maxMessages = 200 } = options;
+    const { nftAddress, excludeMaker, maker, maxMessages = 200 } = options;
     const bazaarAddress = getBazaarAddress(this.chainId);
 
-    // Get message count
-    const count = await this.netClient.getMessageCount({
-      filter: {
-        appAddress: bazaarAddress,
-        topic: nftAddress.toLowerCase(),
-      },
-    });
+    const filter = {
+      appAddress: bazaarAddress,
+      topic: nftAddress.toLowerCase(),
+      maker,
+    };
 
-    if (count === 0) {
-      return [];
+    let startIndex: number;
+    let endIndex: number;
+
+    if (options.startIndex != null && options.endIndex != null) {
+      startIndex = options.startIndex;
+      endIndex = options.endIndex;
+    } else {
+      // Get message count
+      const count = await this.netClient.getMessageCount({ filter });
+      if (count === 0) {
+        return [];
+      }
+      startIndex = Math.max(0, count - maxMessages);
+      endIndex = count;
     }
 
     // Fetch messages (most recent)
-    const startIndex = Math.max(0, count - maxMessages);
     const messages = await this.netClient.getMessages({
-      filter: {
-        appAddress: bazaarAddress,
-        topic: nftAddress.toLowerCase(),
-      },
+      filter,
       startIndex,
-      endIndex: count,
+      endIndex,
     });
+
+    return this.processListingsFromMessages(messages, options);
+  }
+
+  /**
+   * Process pre-fetched messages into valid NFT listings.
+   *
+   * Use this when messages have already been fetched (e.g. via useNetMessages)
+   * to avoid redundant RPC calls.
+   */
+  async processListingsFromMessages(
+    messages: NetMessage[],
+    options: Pick<GetListingsOptions, "nftAddress" | "excludeMaker">
+  ): Promise<Listing[]> {
+    const { nftAddress, excludeMaker } = options;
+    const tag = `[BazaarClient.processListings chain=${this.chainId}]`;
 
     // Parse messages into listings
     let listings: Listing[] = [];
@@ -157,6 +189,8 @@ export class BazaarClient {
 
       listings.push(listing);
     }
+
+    console.log(tag, `parsed ${listings.length}/${messages.length} messages into listings`);
 
     if (listings.length === 0) {
       return [];
@@ -179,12 +213,24 @@ export class BazaarClient {
       listing.orderStatus = getOrderStatusFromInfo(listing.orderComponents!, statusInfo);
     });
 
+    // Log status distribution before filtering
+    const statusCounts: Record<string, number> = {};
+    const now = Math.floor(Date.now() / 1000);
+    let expiredCount = 0;
+    for (const l of listings) {
+      statusCounts[l.orderStatus] = (statusCounts[l.orderStatus] || 0) + 1;
+      if (l.expirationDate <= now) expiredCount++;
+    }
+    console.log(tag, `order statuses:`, statusCounts, `expired: ${expiredCount}`);
+
     // Filter to OPEN orders only
     listings = listings.filter(
       (l) =>
         l.orderStatus === SeaportOrderStatus.OPEN &&
-        l.expirationDate > Math.floor(Date.now() / 1000)
+        l.expirationDate > now
     );
+
+    console.log(tag, `after status filter: ${listings.length} OPEN & not expired`);
 
     if (listings.length === 0) {
       return [];
@@ -195,6 +241,7 @@ export class BazaarClient {
     const owners = await bulkFetchNftOwners(this.client, nftAddress, tokenIds);
 
     // Filter to listings where seller still owns the NFT
+    const beforeOwnership = listings.length;
     listings = listings.filter((listing, index) => {
       const owner = owners[index];
       return isListingValid(
@@ -205,8 +252,12 @@ export class BazaarClient {
       );
     });
 
+    console.log(tag, `after ownership filter: ${listings.length}/${beforeOwnership} (${beforeOwnership - listings.length} dropped)`);
+
     // Deduplicate (best price per token) and sort
-    return sortListingsByPrice(getBestListingPerToken(listings));
+    const result = sortListingsByPrice(getBestListingPerToken(listings));
+    console.log(tag, `final: ${result.length} listings`);
+    return result;
   }
 
   /**
@@ -456,6 +507,158 @@ export class BazaarClient {
   }
 
   /**
+   * Get valid ERC20 listings for a token
+   *
+   * Returns listings that are:
+   * - OPEN status (not filled, cancelled, or expired)
+   * - Not expired
+   * - Seller has sufficient ERC20 token balance
+   *
+   * Results are sorted by price per token (lowest first). No deduplication —
+   * all valid listings are returned (grouped by maker in the UI).
+   */
+  async getErc20Listings(options: GetErc20ListingsOptions): Promise<Erc20Listing[]> {
+    const { tokenAddress, excludeMaker, maker, maxMessages = 200 } = options;
+    const erc20BazaarAddress = getErc20BazaarAddress(this.chainId);
+
+    const filter = {
+      appAddress: erc20BazaarAddress,
+      topic: tokenAddress.toLowerCase(),
+      maker,
+    };
+
+    let startIndex: number;
+    let endIndex: number;
+
+    if (options.startIndex != null && options.endIndex != null) {
+      startIndex = options.startIndex;
+      endIndex = options.endIndex;
+    } else {
+      // Get message count
+      const count = await this.netClient.getMessageCount({ filter });
+      if (count === 0) {
+        return [];
+      }
+      startIndex = Math.max(0, count - maxMessages);
+      endIndex = count;
+    }
+
+    // Fetch messages (most recent)
+    const messages = await this.netClient.getMessages({
+      filter,
+      startIndex,
+      endIndex,
+    });
+
+    return this.processErc20ListingsFromMessages(messages, options);
+  }
+
+  /**
+   * Process pre-fetched messages into valid ERC20 listings.
+   *
+   * Use this when messages have already been fetched (e.g. via useNetMessages)
+   * to avoid redundant RPC calls.
+   */
+  async processErc20ListingsFromMessages(
+    messages: NetMessage[],
+    options: Pick<GetErc20ListingsOptions, "tokenAddress" | "excludeMaker">
+  ): Promise<Erc20Listing[]> {
+    const { tokenAddress, excludeMaker } = options;
+    const tag = `[BazaarClient.processErc20Listings chain=${this.chainId}]`;
+
+    // Parse messages into listings
+    let listings: Erc20Listing[] = [];
+    for (const message of messages) {
+      const listing = parseErc20ListingFromMessage(message, this.chainId);
+      if (!listing) continue;
+
+      // Validate the offer token matches the requested token
+      if (listing.tokenAddress.toLowerCase() !== tokenAddress.toLowerCase()) {
+        continue;
+      }
+
+      // Filter by excludeMaker
+      if (excludeMaker && listing.maker.toLowerCase() === excludeMaker.toLowerCase()) {
+        continue;
+      }
+
+      listings.push(listing);
+    }
+
+    console.log(tag, `parsed ${listings.length}/${messages.length} messages into listings`);
+
+    if (listings.length === 0) {
+      return [];
+    }
+
+    // Compute order hashes
+    const seaport = createSeaportInstance(this.chainId, this.rpcUrl);
+    for (const listing of listings) {
+      const order = getSeaportOrderFromMessageData(listing.messageData);
+      listing.orderHash = computeOrderHash(seaport, order.parameters, order.counter) as `0x${string}`;
+    }
+
+    // Fetch order statuses
+    const orderHashes = listings.map((l) => l.orderHash);
+    const statusInfos = await bulkFetchOrderStatuses(this.client, this.chainId, orderHashes);
+
+    // Update order statuses
+    listings.forEach((listing, index) => {
+      const statusInfo = statusInfos[index];
+      listing.orderStatus = getOrderStatusFromInfo(listing.orderComponents!, statusInfo);
+    });
+
+    // Log status distribution before filtering
+    const statusCounts: Record<string, number> = {};
+    const now = Math.floor(Date.now() / 1000);
+    let expiredCount = 0;
+    for (const l of listings) {
+      statusCounts[l.orderStatus] = (statusCounts[l.orderStatus] || 0) + 1;
+      if (l.expirationDate <= now) expiredCount++;
+    }
+    console.log(tag, `order statuses:`, statusCounts, `expired: ${expiredCount}`);
+
+    // Filter to OPEN orders only
+    listings = listings.filter(
+      (l) =>
+        l.orderStatus === SeaportOrderStatus.OPEN &&
+        l.expirationDate > now
+    );
+
+    console.log(tag, `after status filter: ${listings.length} OPEN & not expired`);
+
+    if (listings.length === 0) {
+      return [];
+    }
+
+    // Validate seller's ERC20 balances
+    const uniqueMakers = [...new Set(listings.map((l) => l.maker))];
+    const balances = await bulkFetchErc20Balances(this.client, tokenAddress, uniqueMakers);
+
+    const balanceMap = new Map<string, bigint>();
+    uniqueMakers.forEach((maker, index) => {
+      balanceMap.set(maker.toLowerCase(), balances[index]);
+    });
+
+    // Filter to listings where seller has sufficient token balance
+    const beforeBalance = listings.length;
+    listings = listings.filter((listing) => {
+      const balance = balanceMap.get(listing.maker.toLowerCase()) || BigInt(0);
+      return isErc20ListingValid(
+        listing.orderStatus,
+        listing.expirationDate,
+        listing.tokenAmount,
+        balance
+      );
+    });
+
+    console.log(tag, `after balance filter: ${listings.length}/${beforeBalance} (${beforeBalance - listings.length} dropped)`);
+
+    // Sort by price per token (lowest first) — no deduplication for ERC20 listings
+    return sortErc20ListingsByPricePerToken(listings);
+  }
+
+  /**
    * Get the chain ID this client is configured for
    */
   getChainId(): number {
@@ -482,6 +685,13 @@ export class BazaarClient {
    */
   getErc20OffersAddress(): `0x${string}` | undefined {
     return getErc20OffersAddress(this.chainId);
+  }
+
+  /**
+   * Get the ERC20 bazaar (listings) contract address for this chain
+   */
+  getErc20BazaarAddress(): `0x${string}` {
+    return getErc20BazaarAddress(this.chainId);
   }
 
   /**
@@ -517,6 +727,20 @@ export class BazaarClient {
     }
 
     return this.prepareCancelOrder(offer.orderComponents);
+  }
+
+  /**
+   * Prepare a transaction to cancel an ERC20 listing
+   *
+   * The listing must have been created by the caller.
+   * Use the orderComponents from the Erc20Listing object returned by getErc20Listings().
+   */
+  prepareCancelErc20Listing(listing: Erc20Listing): WriteTransactionConfig {
+    if (!listing.orderComponents) {
+      throw new Error("Listing does not have order components");
+    }
+
+    return this.prepareCancelOrder(listing.orderComponents);
   }
 
   /**

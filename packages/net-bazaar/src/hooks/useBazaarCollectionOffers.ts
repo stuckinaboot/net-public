@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { PublicClient } from "viem";
+import { usePublicClient } from "wagmi";
 import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
 import { BazaarClient } from "../client/BazaarClient";
 import { CollectionOffer } from "../types";
@@ -65,6 +67,8 @@ export function useBazaarCollectionOffers({
   maxMessages = 100,
   enabled = true,
 }: UseBazaarCollectionOffersOptions): UseBazaarCollectionOffersResult {
+  const wagmiClient = usePublicClient({ chainId });
+
   const [offers, setOffers] = useState<CollectionOffer[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<Error | undefined>();
@@ -137,7 +141,7 @@ export function useBazaarCollectionOffers({
       setProcessingError(undefined);
 
       try {
-        const client = new BazaarClient({ chainId });
+        const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
         const validOffers = await client.getCollectionOffers({
           nftAddress,
           excludeMaker,

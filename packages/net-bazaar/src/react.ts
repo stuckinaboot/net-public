@@ -17,3 +17,9 @@ export type {
   UseBazaarErc20OffersOptions,
   UseBazaarErc20OffersResult,
 } from "./hooks/useBazaarErc20Offers";
+
+export { useBazaarErc20Listings } from "./hooks/useBazaarErc20Listings";
+export type {
+  UseBazaarErc20ListingsOptions,
+  UseBazaarErc20ListingsResult,
+} from "./hooks/useBazaarErc20Listings";

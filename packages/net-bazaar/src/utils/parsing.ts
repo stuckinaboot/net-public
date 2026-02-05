@@ -3,14 +3,14 @@
  */
 
 import { NetMessage } from "@net-protocol/core";
-import { Listing, CollectionOffer, Erc20Offer, SeaportOrderStatus, ItemType } from "../types";
+import { Listing, CollectionOffer, Erc20Offer, Erc20Listing, SeaportOrderStatus, ItemType } from "../types";
 import {
   decodeSeaportSubmission,
   getSeaportOrderFromMessageData,
   getTotalConsiderationAmount,
   formatPrice,
 } from "./seaport";
-import { getCurrencySymbol, NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS } from "../chainConfig";
+import { getCurrencySymbol, NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS, NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS } from "../chainConfig";
 
 /**
  * Parse a Net message into an NFT listing
@@ -37,6 +37,12 @@ export function parseListingFromMessage(
     const priceWei = getTotalConsiderationAmount(parameters);
     const tokenId = offerItem.identifierOrCriteria.toString();
 
+    const targetFulfiller =
+      parameters.zone.toLowerCase() === NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS.toLowerCase() &&
+      parameters.zoneHash !== "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ? parameters.zoneHash
+        : undefined;
+
     return {
       maker: parameters.offerer,
       nftAddress: offerItem.token,
@@ -52,6 +58,7 @@ export function parseListingFromMessage(
         ...parameters,
         counter: submission.counter,
       },
+      targetFulfiller,
     };
   } catch {
     return null;
@@ -248,6 +255,82 @@ export function parseErc20OfferFromMessage(
 export function sortErc20OffersByPricePerToken(offers: Erc20Offer[]): Erc20Offer[] {
   return [...offers].sort((a, b) => {
     const diff = b.pricePerTokenWei - a.pricePerTokenWei;
+    if (diff < BigInt(0)) return -1;
+    if (diff > BigInt(0)) return 1;
+    return 0;
+  });
+}
+
+/**
+ * Parse a Net message into an ERC20 listing
+ *
+ * ERC20 listings have the ERC20 token in the offer array (seller is offering tokens)
+ * and native currency payments in the consideration array.
+ * They do NOT use the collection offer zone (that would be an offer, not a listing).
+ */
+export function parseErc20ListingFromMessage(
+  message: NetMessage,
+  chainId: number
+): Erc20Listing | null {
+  try {
+    const submission = decodeSeaportSubmission(message.data as `0x${string}`);
+    const { parameters } = submission;
+
+    // ERC20 listings must NOT use the collection offer zone (that would be an offer)
+    if (
+      parameters.zone.toLowerCase() ===
+      NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS.toLowerCase()
+    ) {
+      return null;
+    }
+
+    // ERC20 listings have the ERC20 token in the offer array
+    const offerItem = parameters.offer[0];
+    if (!offerItem || offerItem.itemType !== ItemType.ERC20) {
+      return null;
+    }
+
+    const tokenAmount = offerItem.startAmount;
+    if (tokenAmount === BigInt(0)) {
+      return null;
+    }
+
+    const priceWei = getTotalConsiderationAmount(parameters);
+    if (priceWei === BigInt(0)) {
+      return null;
+    }
+
+    const pricePerTokenWei = priceWei / tokenAmount;
+
+    return {
+      maker: parameters.offerer,
+      tokenAddress: offerItem.token,
+      tokenAmount,
+      priceWei,
+      pricePerTokenWei,
+      price: formatPrice(priceWei),
+      pricePerToken: formatPrice(pricePerTokenWei),
+      currency: getCurrencySymbol(chainId),
+      expirationDate: Number(parameters.endTime),
+      orderHash: "0x" as `0x${string}`, // Will be computed later
+      orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
+      messageData: message.data as `0x${string}`,
+      orderComponents: {
+        ...parameters,
+        counter: submission.counter,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sort ERC20 listings by price per token (lowest first)
+ */
+export function sortErc20ListingsByPricePerToken(listings: Erc20Listing[]): Erc20Listing[] {
+  return [...listings].sort((a, b) => {
+    const diff = a.pricePerTokenWei - b.pricePerTokenWei;
     if (diff < BigInt(0)) return -1;
     if (diff > BigInt(0)) return 1;
     return 0;

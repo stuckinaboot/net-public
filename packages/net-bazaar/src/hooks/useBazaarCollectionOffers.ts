@@ -13,8 +13,8 @@ import { getCollectionOffersAddress, isBazaarSupportedOnChain } from "../chainCo
 export interface UseBazaarCollectionOffersOptions {
   /** Chain ID to query */
   chainId: number;
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** NFT collection address (optional - if omitted, fetches recent offers across all collections) */
+  nftAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
@@ -90,7 +90,7 @@ export function useBazaarCollectionOffers({
   const filter = useMemo(
     () => ({
       appAddress: collectionOffersAddress as `0x${string}`,
-      topic: nftAddress.toLowerCase(),
+      topic: nftAddress?.toLowerCase(),
     }),
     [collectionOffersAddress, nftAddress]
   );
@@ -122,7 +122,7 @@ export function useBazaarCollectionOffers({
     enabled: enabled && isSupported && totalCount > 0,
   });
 
-  const TAG = `[useBazaarCollectionOffers chain=${chainId} nft=${nftAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarCollectionOffers chain=${chainId}${nftAddress ? ` nft=${nftAddress.slice(0, 10)}` : ""}]`;
 
   // Log pipeline state changes
   useEffect(() => {

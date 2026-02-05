@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/bazaar",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "SDK for Net Bazaar - a decentralized bazaar storing all orders onchain via Seaport",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

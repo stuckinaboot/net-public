@@ -1,5 +1,5 @@
 /**
- * BazaarClient - Client for interacting with Net Bazaar (NFT marketplace)
+ * BazaarClient - Client for interacting with Net Bazaar
  *
  * Provides methods for:
  * - Reading NFT listings and collection offers

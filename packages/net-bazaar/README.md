@@ -2,11 +2,11 @@
 
 **Status: In Development** - This package is under active development. APIs may change without notice.
 
-NFT marketplace SDK for Net Protocol - read listings, collection offers, and ERC20 offers via Seaport.
+SDK for Net Bazaar - a decentralized bazaar storing all orders onchain via Seaport.
 
 ## What is Net Bazaar?
 
-Net Bazaar is a decentralized NFT marketplace built on Net Protocol. It uses Seaport for order execution and Net Protocol for order storage and indexing.
+Net Bazaar is a decentralized bazaar built on Net Protocol. All orders are stored onchain. It uses Seaport for order execution and Net Protocol for order storage and indexing.
 
 **Key features:**
 - **NFT Listings**: Buy and sell NFTs with native currency

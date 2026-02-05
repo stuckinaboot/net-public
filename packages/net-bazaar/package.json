@@ -1,7 +1,7 @@
 {
   "name": "@net-protocol/bazaar",
   "version": "0.1.3",
-  "description": "NFT marketplace SDK for Net Protocol - listings, collection offers, and ERC20 offers via Seaport",
+  "description": "SDK for Net Bazaar - a decentralized bazaar storing all orders onchain via Seaport",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.mjs",
@@ -88,7 +88,7 @@
     "blockchain",
     "ethereum",
     "nft",
-    "marketplace",
+    "bazaar",
     "seaport",
     "opensea"
   ],

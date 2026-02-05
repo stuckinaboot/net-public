@@ -257,12 +257,19 @@ export class BazaarClient {
 
     console.log(tag, `after ownership filter: ${validOpenListings.length}/${beforeOwnership} (${beforeOwnership - validOpenListings.length} dropped)`);
 
-    // Combine valid open listings with expired listings
-    const allListings = [...validOpenListings, ...expiredListings];
+    // Deduplicate open listings (best price per token), sort by price
+    const dedupedOpen = sortListingsByPrice(getBestListingPerToken(validOpenListings));
 
-    // Deduplicate (best price per token) and sort
-    const result = sortListingsByPrice(getBestListingPerToken(allListings));
-    console.log(tag, `final: ${result.length} listings (${validOpenListings.length} open, ${expiredListings.length} expired)`);
+    // For expired: only keep tokens that don't already have an active listing
+    const activeTokenKeys = new Set(dedupedOpen.map((l) => `${l.nftAddress.toLowerCase()}-${l.tokenId}`));
+    const uniqueExpired = getBestListingPerToken(
+      expiredListings.filter((l) => !activeTokenKeys.has(`${l.nftAddress.toLowerCase()}-${l.tokenId}`))
+    );
+    const sortedExpired = sortListingsByPrice(uniqueExpired);
+
+    // Active listings first (by price), then expired listings after
+    const result = [...dedupedOpen, ...sortedExpired];
+    console.log(tag, `final: ${result.length} listings (${dedupedOpen.length} open, ${sortedExpired.length} expired)`);
     return result;
   }
 

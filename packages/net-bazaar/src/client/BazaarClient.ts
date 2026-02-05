@@ -171,9 +171,9 @@ export class BazaarClient {
    */
   async processListingsFromMessages(
     messages: NetMessage[],
-    options: Pick<GetListingsOptions, "nftAddress" | "excludeMaker">
+    options: Pick<GetListingsOptions, "nftAddress" | "excludeMaker" | "includeExpired">
   ): Promise<Listing[]> {
-    const { nftAddress, excludeMaker } = options;
+    const { nftAddress, excludeMaker, includeExpired = false } = options;
     const tag = `[BazaarClient.processListings chain=${this.chainId}]`;
 
     // Parse messages into listings
@@ -223,26 +223,29 @@ export class BazaarClient {
     }
     console.log(tag, `order statuses:`, statusCounts, `expired: ${expiredCount}`);
 
-    // Filter to OPEN orders only
+    // Filter by order status: keep OPEN (and optionally EXPIRED) listings
     listings = listings.filter(
       (l) =>
-        l.orderStatus === SeaportOrderStatus.OPEN &&
-        l.expirationDate > now
+        (l.orderStatus === SeaportOrderStatus.OPEN && l.expirationDate > now) ||
+        (includeExpired && l.orderStatus === SeaportOrderStatus.EXPIRED)
     );
 
-    console.log(tag, `after status filter: ${listings.length} OPEN & not expired`);
+    console.log(tag, `after status filter: ${listings.length} (OPEN${includeExpired ? ' + EXPIRED' : ''})`);
 
     if (listings.length === 0) {
       return [];
     }
 
-    // Validate ownership
-    const tokenIds = listings.map((l) => l.tokenId);
+    // Validate ownership (only for OPEN listings; expired listings skip ownership check)
+    const openListings = listings.filter((l) => l.orderStatus === SeaportOrderStatus.OPEN);
+    const expiredListings = includeExpired ? listings.filter((l) => l.orderStatus === SeaportOrderStatus.EXPIRED) : [];
+
+    const tokenIds = openListings.map((l) => l.tokenId);
     const owners = await bulkFetchNftOwners(this.client, nftAddress, tokenIds);
 
-    // Filter to listings where seller still owns the NFT
-    const beforeOwnership = listings.length;
-    listings = listings.filter((listing, index) => {
+    // Filter to listings where seller still owns the NFT (only OPEN listings)
+    const beforeOwnership = openListings.length;
+    const validOpenListings = openListings.filter((listing, index) => {
       const owner = owners[index];
       return isListingValid(
         listing.orderStatus,
@@ -252,11 +255,14 @@ export class BazaarClient {
       );
     });
 
-    console.log(tag, `after ownership filter: ${listings.length}/${beforeOwnership} (${beforeOwnership - listings.length} dropped)`);
+    console.log(tag, `after ownership filter: ${validOpenListings.length}/${beforeOwnership} (${beforeOwnership - validOpenListings.length} dropped)`);
+
+    // Combine valid open listings with expired listings
+    const allListings = [...validOpenListings, ...expiredListings];
 
     // Deduplicate (best price per token) and sort
-    const result = sortListingsByPrice(getBestListingPerToken(listings));
-    console.log(tag, `final: ${result.length} listings`);
+    const result = sortListingsByPrice(getBestListingPerToken(allListings));
+    console.log(tag, `final: ${result.length} listings (${validOpenListings.length} open, ${expiredListings.length} expired)`);
     return result;
   }
 

@@ -262,6 +262,8 @@ export interface GetListingsOptions {
   startIndex?: number;
   /** Override end index for message range */
   endIndex?: number;
+  /** Include expired listings in results (default: false) */
+  includeExpired?: boolean;
 }
 
 /**

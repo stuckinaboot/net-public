@@ -25,6 +25,8 @@ export interface UseBazaarListingsOptions {
   startIndex?: number;
   /** Override end index for message range */
   endIndex?: number;
+  /** Include expired listings in results (default: false) */
+  includeExpired?: boolean;
   /** Whether the query is enabled (default: true) */
   enabled?: boolean;
   /** Optional viem PublicClient (defaults to wagmi's client for the chain) */
@@ -82,6 +84,7 @@ export function useBazaarListings({
   maxMessages = 200,
   startIndex: startIndexOverride,
   endIndex: endIndexOverride,
+  includeExpired = false,
   enabled = true,
   publicClient,
 }: UseBazaarListingsOptions): UseBazaarListingsResult {
@@ -185,7 +188,7 @@ export function useBazaarListings({
         const client = new BazaarClient({ chainId, publicClient: resolvedClient });
         const validListings = await client.processListingsFromMessages(
           messages,
-          { nftAddress, excludeMaker }
+          { nftAddress, excludeMaker, includeExpired }
         );
         console.log(TAG, `processed → ${validListings.length} valid listings`);
         if (!cancelled) {
@@ -209,7 +212,7 @@ export function useBazaarListings({
     return () => {
       cancelled = true;
     };
-  }, [chainId, nftAddress, excludeMaker, maker, maxMessages, startIndexOverride, endIndexOverride, hasRangeOverride, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, nftAddress, excludeMaker, maker, maxMessages, startIndexOverride, endIndexOverride, includeExpired, hasRangeOverride, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

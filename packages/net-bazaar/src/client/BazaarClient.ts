@@ -291,7 +291,7 @@ export class BazaarClient {
     const count = await this.netClient.getMessageCount({
       filter: {
         appAddress: collectionOffersAddress,
-        topic: nftAddress.toLowerCase(),
+        topic: nftAddress?.toLowerCase(),
       },
     });
 
@@ -304,7 +304,7 @@ export class BazaarClient {
     const messages = await this.netClient.getMessages({
       filter: {
         appAddress: collectionOffersAddress,
-        topic: nftAddress.toLowerCase(),
+        topic: nftAddress?.toLowerCase(),
       },
       startIndex,
       endIndex: count,

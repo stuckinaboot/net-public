@@ -46,7 +46,6 @@ import {
   sortOffersByPrice,
   sortErc20OffersByPricePerToken,
   sortErc20ListingsByPricePerToken,
-  sortSalesByTimestamp,
   createSeaportInstance,
   computeOrderHash,
   getSeaportOrderFromMessageData,
@@ -814,7 +813,7 @@ export class BazaarClient {
 
     console.log(tag, `parsed ${sales.length}/${storedResults.length} sales`);
 
-    return sortSalesByTimestamp(sales);
+    return sales;
   }
 
   /**

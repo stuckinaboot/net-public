@@ -170,9 +170,18 @@ export function parseProfileMetadata(
         ? parsed.bio
         : undefined;
 
+    // Extract display name if present
+    const display_name =
+      parsed?.display_name &&
+      typeof parsed.display_name === "string" &&
+      parsed.display_name.length > 0
+        ? parsed.display_name
+        : undefined;
+
     return {
       x_username: usernameWithoutAt,
       bio,
+      display_name,
     };
   } catch {
     return undefined;
@@ -218,6 +227,19 @@ export function isValidBio(bio: string): boolean {
 }
 
 /**
+ * Validate display name format
+ * Returns true if valid (1-14 characters, no control characters except spaces)
+ */
+export function isValidDisplayName(displayName: string): boolean {
+  if (!displayName) return false;
+  if (displayName.length > 14) return false;
+  // Disallow control characters
+  // eslint-disable-next-line no-control-regex
+  const hasControlChars = /[\x00-\x1F\x7F]/.test(displayName);
+  return !hasControlChars;
+}
+
+/**
  * Prepare transaction arguments for updating bio
  * This is a convenience wrapper around getProfileMetadataStorageArgs
  *
@@ -226,4 +248,17 @@ export function isValidBio(bio: string): boolean {
  */
 export function getBioStorageArgs(bio: string): ProfileStorageArgs {
   return getProfileMetadataStorageArgs({ bio });
+}
+
+/**
+ * Prepare transaction arguments for updating display name
+ * This is a convenience wrapper around getProfileMetadataStorageArgs
+ *
+ * @param displayName - The display name (max 14 characters)
+ * @returns Arguments for Storage.put()
+ */
+export function getDisplayNameStorageArgs(
+  displayName: string
+): ProfileStorageArgs {
+  return getProfileMetadataStorageArgs({ display_name: displayName });
 }

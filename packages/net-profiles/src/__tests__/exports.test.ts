@@ -22,10 +22,12 @@ describe("exports", () => {
       expect(typeof exports.getProfilePictureStorageArgs).toBe("function");
       expect(typeof exports.getProfileMetadataStorageArgs).toBe("function");
       expect(typeof exports.getXUsernameStorageArgs).toBe("function");
+      expect(typeof exports.getDisplayNameStorageArgs).toBe("function");
       expect(typeof exports.getProfileCanvasStorageArgs).toBe("function");
       expect(typeof exports.parseProfileMetadata).toBe("function");
       expect(typeof exports.isValidUrl).toBe("function");
       expect(typeof exports.isValidXUsername).toBe("function");
+      expect(typeof exports.isValidDisplayName).toBe("function");
     });
 
     it("should re-export STORAGE_CONTRACT from @net-protocol/storage", async () => {

@@ -27,11 +27,13 @@ export {
   getProfileMetadataStorageArgs,
   getXUsernameStorageArgs,
   getBioStorageArgs,
+  getDisplayNameStorageArgs,
   getProfileCanvasStorageArgs,
   parseProfileMetadata,
   isValidUrl,
   isValidXUsername,
   isValidBio,
+  isValidDisplayName,
 } from "./utils";
 
 // Re-export storage contract for convenience

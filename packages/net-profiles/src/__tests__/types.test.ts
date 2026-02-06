@@ -19,6 +19,22 @@ describe("types", () => {
       const metadata: ProfileMetadata = {};
       expect(metadata.x_username).toBeUndefined();
     });
+
+    it("should allow display_name field", () => {
+      const metadata: ProfileMetadata = { display_name: "Alice" };
+      expect(metadata.display_name).toBe("Alice");
+    });
+
+    it("should allow all metadata fields together", () => {
+      const metadata: ProfileMetadata = {
+        x_username: "testuser",
+        bio: "My bio",
+        display_name: "Alice",
+      };
+      expect(metadata.x_username).toBe("testuser");
+      expect(metadata.bio).toBe("My bio");
+      expect(metadata.display_name).toBe("Alice");
+    });
   });
 
   describe("UserDisplayName", () => {
@@ -82,15 +98,25 @@ describe("types", () => {
       expect(metadata.forwardedTo).toBeDefined();
     });
 
+    it("should allow optional displayName", () => {
+      const metadata: BasicUserProfileMetadata = {
+        displayName: "Alice",
+        isLoading: false,
+      };
+      expect(metadata.displayName).toBe("Alice");
+    });
+
     it("should allow all fields together", () => {
       const metadata: BasicUserProfileMetadata = {
         profilePicture: "https://example.com/image.jpg",
         xUsername: "testuser",
+        displayName: "Alice",
         forwardedTo: "0x1234567890123456789012345678901234567890",
         isLoading: false,
       };
       expect(metadata.profilePicture).toBeDefined();
       expect(metadata.xUsername).toBeDefined();
+      expect(metadata.displayName).toBeDefined();
       expect(metadata.forwardedTo).toBeDefined();
       expect(metadata.isLoading).toBe(false);
     });
@@ -142,11 +168,13 @@ describe("types", () => {
         address: "0x1234567890123456789012345678901234567890",
         profilePicture: "https://example.com/image.jpg",
         xUsername: "testuser",
+        displayName: "Alice",
         canvas: "<div>Hello</div>",
         forwardedTo: "0x0987654321098765432109876543210987654321",
       };
       expect(profile.profilePicture).toBeDefined();
       expect(profile.xUsername).toBeDefined();
+      expect(profile.displayName).toBeDefined();
       expect(profile.canvas).toBeDefined();
       expect(profile.forwardedTo).toBeDefined();
     });

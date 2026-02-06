@@ -5,12 +5,14 @@ import {
   getProfilePictureStorageArgs,
   getXUsernameStorageArgs,
   getBioStorageArgs,
+  getDisplayNameStorageArgs,
   getProfileMetadataStorageArgs,
   getProfileCanvasStorageArgs,
   parseProfileMetadata,
   isValidUrl,
   isValidXUsername,
   isValidBio,
+  isValidDisplayName,
 } from "../utils";
 import {
   PROFILE_PICTURE_STORAGE_KEY,
@@ -292,6 +294,41 @@ describe("utils", () => {
       const result = parseProfileMetadata('{"bio":"Hello 👋 世界"}');
       expect(result?.bio).toBe("Hello 👋 世界");
     });
+
+    // Display name parsing tests
+    it("should parse valid JSON with display_name", () => {
+      const result = parseProfileMetadata('{"display_name":"Alice"}');
+      expect(result?.display_name).toBe("Alice");
+    });
+
+    it("should parse JSON with all metadata fields", () => {
+      const result = parseProfileMetadata(
+        '{"x_username":"@testuser","bio":"My bio","display_name":"Alice"}'
+      );
+      expect(result?.x_username).toBe("testuser");
+      expect(result?.bio).toBe("My bio");
+      expect(result?.display_name).toBe("Alice");
+    });
+
+    it("should return undefined for empty display_name", () => {
+      const result = parseProfileMetadata('{"display_name":""}');
+      expect(result?.display_name).toBeUndefined();
+    });
+
+    it("should handle null display_name", () => {
+      const result = parseProfileMetadata('{"display_name":null}');
+      expect(result?.display_name).toBeUndefined();
+    });
+
+    it("should handle numeric display_name (invalid)", () => {
+      const result = parseProfileMetadata('{"display_name":123}');
+      expect(result?.display_name).toBeUndefined();
+    });
+
+    it("should handle display_name with unicode characters", () => {
+      const result = parseProfileMetadata('{"display_name":"Alice 🚀"}');
+      expect(result?.display_name).toBe("Alice 🚀");
+    });
   });
 
   describe("isValidUrl", () => {
@@ -434,6 +471,46 @@ describe("utils", () => {
     });
   });
 
+  describe("isValidDisplayName", () => {
+    it("should return true for valid display names", () => {
+      expect(isValidDisplayName("Alice")).toBe(true);
+      expect(isValidDisplayName("Bob Smith")).toBe(true);
+      expect(isValidDisplayName("a")).toBe(true);
+      expect(isValidDisplayName("Hello World!")).toBe(true);
+    });
+
+    it("should return true for display names at max length (14 chars)", () => {
+      expect(isValidDisplayName("a".repeat(14))).toBe(true);
+    });
+
+    it("should return false for empty string", () => {
+      expect(isValidDisplayName("")).toBe(false);
+    });
+
+    it("should return false for display names over 14 characters", () => {
+      expect(isValidDisplayName("a".repeat(15))).toBe(false);
+      expect(isValidDisplayName("This Is Too Long")).toBe(false);
+    });
+
+    it("should return false for display names with control characters", () => {
+      expect(isValidDisplayName("Hello\x00World")).toBe(false);
+      expect(isValidDisplayName("Test\x07bell")).toBe(false);
+      expect(isValidDisplayName("Tab\tname")).toBe(false);
+      expect(isValidDisplayName("New\nline")).toBe(false);
+    });
+
+    it("should return true for display names with special characters", () => {
+      expect(isValidDisplayName("Alice!")).toBe(true);
+      expect(isValidDisplayName("@handle")).toBe(true);
+      expect(isValidDisplayName("#1 fan")).toBe(true);
+    });
+
+    it("should return true for display names with unicode/emojis", () => {
+      expect(isValidDisplayName("Alice 🚀")).toBe(true);
+      expect(isValidDisplayName("世界")).toBe(true);
+    });
+  });
+
   describe("getBioStorageArgs", () => {
     it("should return metadata topic", () => {
       const args = getBioStorageArgs("My bio");
@@ -467,6 +544,42 @@ describe("utils", () => {
       const bioArgs = getBioStorageArgs("My bio");
       const usernameArgs = getXUsernameStorageArgs("testuser");
       expect(bioArgs.bytesKey).toBe(usernameArgs.bytesKey);
+    });
+  });
+
+  describe("getDisplayNameStorageArgs", () => {
+    it("should return metadata topic", () => {
+      const args = getDisplayNameStorageArgs("Alice");
+      expect(args.topic).toBe(PROFILE_METADATA_TOPIC);
+    });
+
+    it("should return hex-encoded bytesKey", () => {
+      const args = getDisplayNameStorageArgs("Alice");
+      expect(args.bytesKey).toMatch(/^0x[0-9a-f]{64}$/);
+    });
+
+    it("should return hex-encoded bytesValue", () => {
+      const args = getDisplayNameStorageArgs("Alice");
+      expect(args.bytesValue).toMatch(/^0x/);
+    });
+
+    it("should produce consistent results", () => {
+      const args1 = getDisplayNameStorageArgs("Alice");
+      const args2 = getDisplayNameStorageArgs("Alice");
+      expect(args1.bytesKey).toBe(args2.bytesKey);
+      expect(args1.bytesValue).toBe(args2.bytesValue);
+    });
+
+    it("should produce different bytesValue for different names", () => {
+      const args1 = getDisplayNameStorageArgs("Alice");
+      const args2 = getDisplayNameStorageArgs("Bob");
+      expect(args1.bytesValue).not.toBe(args2.bytesValue);
+    });
+
+    it("should use same storage key as other metadata", () => {
+      const displayNameArgs = getDisplayNameStorageArgs("Alice");
+      const usernameArgs = getXUsernameStorageArgs("testuser");
+      expect(displayNameArgs.bytesKey).toBe(usernameArgs.bytesKey);
     });
   });
 });

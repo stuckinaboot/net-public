@@ -103,6 +103,7 @@ function UpdateProfile() {
 | Profile Picture | URL to your profile image | Any valid URL (HTTPS, IPFS, etc.) |
 | X Username | Your X (Twitter) handle | Stored without @ prefix (e.g., `myusername`) |
 | Bio | Short profile bio | Max 280 characters |
+| Display Name | User-chosen display name | Max 25 characters |
 | Canvas | Custom HTML profile page | For advanced customization |
 
 ## Storage Keys
@@ -110,7 +111,7 @@ function UpdateProfile() {
 | Key | Description | Data Format |
 |-----|-------------|-------------|
 | `PROFILE_PICTURE_STORAGE_KEY` | Profile picture URL | Plain string (URL) |
-| `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle", bio: "..." }` |
+| `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle", bio: "...", display_name: "..." }` |
 | `PROFILE_CANVAS_STORAGE_KEY` | Custom HTML canvas | HTML string |
 
 ## API Reference
@@ -127,12 +128,14 @@ function UpdateProfile() {
 - `getProfilePictureStorageArgs(imageUrl)` - Prepare picture update args
 - `getXUsernameStorageArgs(username)` - Prepare X username update args
 - `getBioStorageArgs(bio)` - Prepare bio update args
+- `getDisplayNameStorageArgs(displayName)` - Prepare display name update args
 - `getProfileMetadataStorageArgs(metadata)` - Prepare metadata update args
 - `getProfileCanvasStorageArgs(html)` - Prepare canvas update args
 - `parseProfileMetadata(json)` - Parse metadata JSON
 - `isValidUrl(url)` - Validate URL format
 - `isValidXUsername(username)` - Validate X username format
 - `isValidBio(bio)` - Validate bio format (max 280 chars, no control chars)
+- `isValidDisplayName(displayName)` - Validate display name format (max 25 chars, no control chars)
 
 ## Dependencies
 

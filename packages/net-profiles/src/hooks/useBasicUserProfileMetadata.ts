@@ -78,17 +78,19 @@ export function useBasicUserProfileMetadata({
     ? hexToString(profileMetadataJsonHex as `0x${string}`)
     : undefined;
 
-  // Parse X username and bio from JSON metadata
+  // Parse X username, bio, and display name from JSON metadata
   const profileMetadata = profileMetadataJson
     ? parseProfileMetadata(profileMetadataJson)
     : undefined;
   const xUsername = profileMetadata?.x_username;
   const bio = profileMetadata?.bio;
+  const displayName = profileMetadata?.display_name;
 
   return {
     profilePicture: profilePicture || undefined,
     xUsername: xUsername || undefined,
     bio: bio || undefined,
+    displayName: displayName || undefined,
     isLoading,
   };
 }

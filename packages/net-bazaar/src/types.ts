@@ -270,8 +270,8 @@ export interface GetListingsOptions {
  * Options for fetching collection offers
  */
 export interface GetCollectionOffersOptions {
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** NFT collection address (optional - if omitted, fetches recent offers across all collections) */
+  nftAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */

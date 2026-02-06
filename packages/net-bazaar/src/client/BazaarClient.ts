@@ -7,6 +7,7 @@
  */
 
 import { PublicClient, createPublicClient, defineChain, http } from "viem";
+import { readContract } from "viem/actions";
 import { NetClient, NetMessage } from "@net-protocol/core";
 import {
   Listing,
@@ -22,8 +23,21 @@ import {
   SeaportOrderStatus,
   WriteTransactionConfig,
   SeaportOrderComponents,
+  SeaportOrderParameters,
+  PreparedFulfillment,
+  PreparedOrder,
+  CreateListingParams,
+  CreateCollectionOfferParams,
+  CreateErc20OfferParams,
+  CreateErc20ListingParams,
 } from "../types";
-import { SEAPORT_CANCEL_ABI } from "../abis";
+import {
+  SEAPORT_CANCEL_ABI,
+  SEAPORT_GET_COUNTER_ABI,
+  BAZAAR_V2_ABI,
+  BAZAAR_COLLECTION_OFFERS_ABI,
+  BAZAAR_ERC20_OFFERS_ABI,
+} from "../abis";
 import {
   getBazaarChainConfig,
   getBazaarAddress,
@@ -50,6 +64,7 @@ import {
   computeOrderHash,
   getSeaportOrderFromMessageData,
   getOrderStatusFromInfo,
+  decodeSeaportSubmission,
 } from "../utils";
 import {
   bulkFetchOrderStatuses,
@@ -61,6 +76,21 @@ import {
   isErc20ListingValid,
 } from "../utils/validation";
 import { STORAGE_CONTRACT } from "@net-protocol/storage";
+import { checkErc721Approval, checkErc20Approval } from "../utils/approvals";
+import {
+  buildFulfillListingTx,
+  buildFulfillCollectionOfferTx,
+  buildFulfillErc20OfferTx,
+  buildFulfillErc20ListingTx,
+} from "../utils/fulfillment";
+import {
+  buildListingOrderComponents,
+  buildCollectionOfferOrderComponents,
+  buildErc20OfferOrderComponents,
+  buildErc20ListingOrderComponents,
+  buildEIP712OrderData,
+  buildSubmitOrderTx,
+} from "../utils/orderCreation";
 
 // Default RPC URLs for chains (same as @net-protocol/core)
 const CHAIN_RPC_URLS: Record<number, string[]> = {
@@ -988,5 +1018,341 @@ export class BazaarClient {
       args: [[orderForCancel]],
       abi: SEAPORT_CANCEL_ABI,
     };
+  }
+
+  // ─── Fulfillment Methods ───────────────────────────────────────────
+
+  /**
+   * Prepare a fulfillment for an NFT listing (buy an NFT).
+   *
+   * Returns approval transactions (if the listing requires ERC20 payment) and
+   * the Seaport `fulfillOrder` transaction with the correct native currency value.
+   */
+  async prepareFulfillListing(
+    listing: Listing,
+    fulfillerAddress: `0x${string}`
+  ): Promise<PreparedFulfillment> {
+    const submission = decodeSeaportSubmission(listing.messageData);
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const fulfillment = buildFulfillListingTx(submission, seaportAddress);
+
+    // NFT listings paid in native currency don't need ERC20 approvals from the buyer
+    return { approvals: [], fulfillment };
+  }
+
+  /**
+   * Prepare a fulfillment for a collection offer (sell your NFT into an offer).
+   *
+   * Returns ERC721 approval transaction (if the NFT isn't approved for Seaport)
+   * and the Seaport `fulfillAdvancedOrder` transaction.
+   */
+  async prepareFulfillCollectionOffer(
+    offer: CollectionOffer,
+    tokenId: string,
+    fulfillerAddress: `0x${string}`
+  ): Promise<PreparedFulfillment> {
+    const submission = decodeSeaportSubmission(offer.messageData);
+    const seaportAddress = getSeaportAddress(this.chainId);
+
+    // Check ERC721 approval (fulfiller needs to approve Seaport to transfer their NFT)
+    const approvals: WriteTransactionConfig[] = [];
+    const nftApproval = await checkErc721Approval(
+      this.client,
+      offer.nftAddress,
+      fulfillerAddress,
+      seaportAddress
+    );
+    if (nftApproval) {
+      approvals.push(nftApproval);
+    }
+
+    const fulfillment = buildFulfillCollectionOfferTx(
+      submission,
+      BigInt(tokenId),
+      fulfillerAddress,
+      seaportAddress
+    );
+
+    return { approvals, fulfillment };
+  }
+
+  /**
+   * Prepare a fulfillment for an ERC20 offer (sell your ERC20 tokens into an offer).
+   *
+   * Returns ERC20 approval transaction (if the token isn't approved for Seaport)
+   * and the Seaport `fulfillOrder` transaction.
+   */
+  async prepareFulfillErc20Offer(
+    offer: Erc20Offer,
+    fulfillerAddress: `0x${string}`
+  ): Promise<PreparedFulfillment> {
+    const submission = decodeSeaportSubmission(offer.messageData);
+    const seaportAddress = getSeaportAddress(this.chainId);
+
+    // Check ERC20 approval (fulfiller needs to approve Seaport for the token being sold)
+    const approvals: WriteTransactionConfig[] = [];
+    const tokenApproval = await checkErc20Approval(
+      this.client,
+      offer.tokenAddress,
+      fulfillerAddress,
+      seaportAddress,
+      offer.tokenAmount
+    );
+    if (tokenApproval) {
+      approvals.push(tokenApproval);
+    }
+
+    const fulfillment = buildFulfillErc20OfferTx(submission, seaportAddress);
+
+    return { approvals, fulfillment };
+  }
+
+  /**
+   * Prepare a fulfillment for an ERC20 listing (buy ERC20 tokens with native currency).
+   *
+   * Returns the Seaport `fulfillOrder` transaction with the correct native currency value.
+   * No approvals needed since the buyer pays in native currency.
+   */
+  async prepareFulfillErc20Listing(
+    listing: Erc20Listing,
+    fulfillerAddress: `0x${string}`
+  ): Promise<PreparedFulfillment> {
+    const submission = decodeSeaportSubmission(listing.messageData);
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const fulfillment = buildFulfillErc20ListingTx(submission, seaportAddress);
+
+    return { approvals: [], fulfillment };
+  }
+
+  // ─── Order Creation Methods (Step 1: Build EIP-712 data) ──────────
+
+  /**
+   * Fetch the Seaport counter for an address
+   */
+  private async getSeaportCounter(offerer: `0x${string}`): Promise<bigint> {
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const counter = await readContract(this.client, {
+      address: seaportAddress,
+      abi: SEAPORT_GET_COUNTER_ABI,
+      functionName: "getCounter",
+      args: [offerer],
+    });
+    return BigInt(counter as bigint);
+  }
+
+  /**
+   * Prepare an NFT listing order for signing.
+   *
+   * Returns EIP-712 typed data for the caller to sign, plus any maker approvals needed
+   * (ERC721 `setApprovalForAll` for Seaport).
+   */
+  async prepareCreateListing(
+    params: CreateListingParams & { offerer: `0x${string}`; targetFulfiller?: `0x${string}` }
+  ): Promise<PreparedOrder> {
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const counter = await this.getSeaportCounter(params.offerer);
+
+    const { orderParameters } = buildListingOrderComponents(params, this.chainId, counter);
+    const eip712 = buildEIP712OrderData(orderParameters, counter, this.chainId, seaportAddress);
+
+    // Check ERC721 approval
+    const approvals: WriteTransactionConfig[] = [];
+    const nftApproval = await checkErc721Approval(
+      this.client,
+      params.nftAddress,
+      params.offerer,
+      seaportAddress
+    );
+    if (nftApproval) {
+      approvals.push(nftApproval);
+    }
+
+    return { eip712, approvals };
+  }
+
+  /**
+   * Prepare a collection offer order for signing.
+   *
+   * Returns EIP-712 typed data for the caller to sign, plus any maker approvals needed
+   * (WETH `approve` for Seaport).
+   */
+  async prepareCreateCollectionOffer(
+    params: CreateCollectionOfferParams & { offerer: `0x${string}` }
+  ): Promise<PreparedOrder> {
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const weth = getWrappedNativeCurrency(this.chainId);
+    if (!weth) {
+      throw new Error(`No wrapped native currency configured for chain ${this.chainId}`);
+    }
+
+    const counter = await this.getSeaportCounter(params.offerer);
+
+    const { orderParameters } = buildCollectionOfferOrderComponents(params, this.chainId, counter);
+    const eip712 = buildEIP712OrderData(orderParameters, counter, this.chainId, seaportAddress);
+
+    // Check WETH approval
+    const approvals: WriteTransactionConfig[] = [];
+    const wethApproval = await checkErc20Approval(
+      this.client,
+      weth.address,
+      params.offerer,
+      seaportAddress,
+      params.priceWei
+    );
+    if (wethApproval) {
+      approvals.push(wethApproval);
+    }
+
+    return { eip712, approvals };
+  }
+
+  /**
+   * Prepare an ERC20 offer order for signing.
+   *
+   * Returns EIP-712 typed data for the caller to sign, plus any maker approvals needed
+   * (WETH `approve` for Seaport).
+   */
+  async prepareCreateErc20Offer(
+    params: CreateErc20OfferParams & { offerer: `0x${string}` }
+  ): Promise<PreparedOrder> {
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const weth = getWrappedNativeCurrency(this.chainId);
+    if (!weth) {
+      throw new Error(`No wrapped native currency configured for chain ${this.chainId}`);
+    }
+
+    const counter = await this.getSeaportCounter(params.offerer);
+
+    const { orderParameters } = buildErc20OfferOrderComponents(params, this.chainId, counter);
+    const eip712 = buildEIP712OrderData(orderParameters, counter, this.chainId, seaportAddress);
+
+    // Check WETH approval
+    const approvals: WriteTransactionConfig[] = [];
+    const wethApproval = await checkErc20Approval(
+      this.client,
+      weth.address,
+      params.offerer,
+      seaportAddress,
+      params.priceWei
+    );
+    if (wethApproval) {
+      approvals.push(wethApproval);
+    }
+
+    return { eip712, approvals };
+  }
+
+  /**
+   * Prepare an ERC20 listing order for signing.
+   *
+   * Returns EIP-712 typed data for the caller to sign, plus any maker approvals needed
+   * (ERC20 `approve` for Seaport).
+   */
+  async prepareCreateErc20Listing(
+    params: CreateErc20ListingParams & { offerer: `0x${string}`; targetFulfiller?: `0x${string}` }
+  ): Promise<PreparedOrder> {
+    const seaportAddress = getSeaportAddress(this.chainId);
+    const counter = await this.getSeaportCounter(params.offerer);
+
+    const { orderParameters } = buildErc20ListingOrderComponents(params, this.chainId, counter);
+    const eip712 = buildEIP712OrderData(orderParameters, counter, this.chainId, seaportAddress);
+
+    // Check ERC20 approval (seller needs to approve Seaport for the token being sold)
+    const approvals: WriteTransactionConfig[] = [];
+    const tokenApproval = await checkErc20Approval(
+      this.client,
+      params.tokenAddress,
+      params.offerer,
+      seaportAddress,
+      params.tokenAmount
+    );
+    if (tokenApproval) {
+      approvals.push(tokenApproval);
+    }
+
+    return { eip712, approvals };
+  }
+
+  // ─── Order Creation Methods (Step 2: Submit signed order) ─────────
+
+  /**
+   * Prepare a submit transaction for an NFT listing.
+   *
+   * Call this after the user has signed the EIP-712 data from prepareCreateListing().
+   */
+  prepareSubmitListing(
+    orderParameters: SeaportOrderParameters,
+    counter: bigint,
+    signature: `0x${string}`
+  ): WriteTransactionConfig {
+    return buildSubmitOrderTx(
+      getBazaarAddress(this.chainId),
+      BAZAAR_V2_ABI,
+      orderParameters,
+      counter,
+      signature
+    );
+  }
+
+  /**
+   * Prepare a submit transaction for a collection offer.
+   *
+   * Call this after the user has signed the EIP-712 data from prepareCreateCollectionOffer().
+   */
+  prepareSubmitCollectionOffer(
+    orderParameters: SeaportOrderParameters,
+    counter: bigint,
+    signature: `0x${string}`
+  ): WriteTransactionConfig {
+    return buildSubmitOrderTx(
+      getCollectionOffersAddress(this.chainId),
+      BAZAAR_COLLECTION_OFFERS_ABI,
+      orderParameters,
+      counter,
+      signature
+    );
+  }
+
+  /**
+   * Prepare a submit transaction for an ERC20 offer.
+   *
+   * Call this after the user has signed the EIP-712 data from prepareCreateErc20Offer().
+   */
+  prepareSubmitErc20Offer(
+    orderParameters: SeaportOrderParameters,
+    counter: bigint,
+    signature: `0x${string}`
+  ): WriteTransactionConfig {
+    const erc20OffersAddress = getErc20OffersAddress(this.chainId);
+    if (!erc20OffersAddress) {
+      throw new Error(`ERC20 offers not available on chain ${this.chainId}`);
+    }
+
+    return buildSubmitOrderTx(
+      erc20OffersAddress,
+      BAZAAR_ERC20_OFFERS_ABI,
+      orderParameters,
+      counter,
+      signature
+    );
+  }
+
+  /**
+   * Prepare a submit transaction for an ERC20 listing.
+   *
+   * Call this after the user has signed the EIP-712 data from prepareCreateErc20Listing().
+   */
+  prepareSubmitErc20Listing(
+    orderParameters: SeaportOrderParameters,
+    counter: bigint,
+    signature: `0x${string}`
+  ): WriteTransactionConfig {
+    return buildSubmitOrderTx(
+      getErc20BazaarAddress(this.chainId),
+      BAZAAR_V2_ABI,
+      orderParameters,
+      counter,
+      signature
+    );
   }
 }

@@ -250,8 +250,8 @@ export interface CreateCollectionOfferParams {
  * Options for fetching listings
  */
 export interface GetListingsOptions {
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** NFT collection address (optional - if omitted, fetches recent listings across all collections) */
+  nftAddress?: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
   /** Only include listings from this address */

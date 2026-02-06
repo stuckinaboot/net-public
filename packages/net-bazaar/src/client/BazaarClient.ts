@@ -138,7 +138,7 @@ export class BazaarClient {
 
     const filter = {
       appAddress: bazaarAddress,
-      topic: nftAddress.toLowerCase(),
+      topic: nftAddress?.toLowerCase(),
       maker,
     };
 
@@ -245,20 +245,65 @@ export class BazaarClient {
     const openListings = listings.filter((l) => l.orderStatus === SeaportOrderStatus.OPEN);
     const expiredListings = includeExpired ? listings.filter((l) => l.orderStatus === SeaportOrderStatus.EXPIRED) : [];
 
-    const tokenIds = openListings.map((l) => l.tokenId);
-    const owners = await bulkFetchNftOwners(this.client, nftAddress, tokenIds);
-
-    // Filter to listings where seller still owns the NFT (only OPEN listings)
+    let validOpenListings: Listing[];
     const beforeOwnership = openListings.length;
-    const validOpenListings = openListings.filter((listing, index) => {
-      const owner = owners[index];
-      return isListingValid(
-        listing.orderStatus,
-        listing.expirationDate,
-        listing.maker,
-        owner
+
+    if (nftAddress) {
+      // Single collection: one bulkFetchNftOwners call
+      const tokenIds = openListings.map((l) => l.tokenId);
+      const owners = await bulkFetchNftOwners(this.client, nftAddress, tokenIds);
+
+      validOpenListings = openListings.filter((listing, index) => {
+        const owner = owners[index];
+        return isListingValid(
+          listing.orderStatus,
+          listing.expirationDate,
+          listing.maker,
+          owner
+        );
+      });
+    } else {
+      // Cross-collection: group by nftAddress, fetch owners per group in parallel
+      const groups = new Map<string, Listing[]>();
+      for (const listing of openListings) {
+        const key = listing.nftAddress.toLowerCase();
+        const group = groups.get(key);
+        if (group) {
+          group.push(listing);
+        } else {
+          groups.set(key, [listing]);
+        }
+      }
+
+      const groupEntries = Array.from(groups.entries());
+      const ownerResults = await Promise.all(
+        groupEntries.map(([addr, groupListings]) =>
+          bulkFetchNftOwners(
+            this.client,
+            addr as `0x${string}`,
+            groupListings.map((l) => l.tokenId)
+          )
+        )
       );
-    });
+
+      validOpenListings = [];
+      groupEntries.forEach(([, groupListings], groupIndex) => {
+        const owners = ownerResults[groupIndex];
+        for (let i = 0; i < groupListings.length; i++) {
+          const listing = groupListings[i];
+          if (
+            isListingValid(
+              listing.orderStatus,
+              listing.expirationDate,
+              listing.maker,
+              owners[i]
+            )
+          ) {
+            validOpenListings.push(listing);
+          }
+        }
+      });
+    }
 
     console.log(tag, `after ownership filter: ${validOpenListings.length}/${beforeOwnership} (${beforeOwnership - validOpenListings.length} dropped)`);
 

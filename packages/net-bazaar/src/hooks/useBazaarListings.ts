@@ -13,8 +13,8 @@ import { getBazaarAddress, isBazaarSupportedOnChain } from "../chainConfig";
 export interface UseBazaarListingsOptions {
   /** Chain ID to query */
   chainId: number;
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** NFT collection address (optional - if omitted, fetches recent listings across all collections) */
+  nftAddress?: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
   /** Only include listings from this address */
@@ -52,7 +52,8 @@ export interface UseBazaarListingsResult {
  * - Not expired
  * - Seller still owns the NFT
  *
- * Results are deduplicated (one per token) and sorted by price (lowest first)
+ * Results are deduplicated (one per token) and sorted by price (lowest first).
+ * If `nftAddress` is omitted, fetches recent listings across all collections on the chain.
  *
  * @example
  * ```tsx
@@ -114,7 +115,7 @@ export function useBazaarListings({
   const filter = useMemo(
     () => ({
       appAddress: bazaarAddress as `0x${string}`,
-      topic: nftAddress.toLowerCase(),
+      topic: nftAddress?.toLowerCase(),
       maker,
     }),
     [bazaarAddress, nftAddress, maker]
@@ -147,7 +148,7 @@ export function useBazaarListings({
     enabled: enabled && isSupported && (hasRangeOverride || totalCount > 0),
   });
 
-  const TAG = `[useBazaarListings chain=${chainId} nft=${nftAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarListings chain=${chainId} nft=${nftAddress?.slice(0, 10) ?? "all"}]`;
 
   // Log pipeline state changes
   useEffect(() => {

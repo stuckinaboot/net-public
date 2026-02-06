@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/bazaar",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "SDK for Net Bazaar - a decentralized bazaar storing all orders onchain via Seaport",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@net-protocol/core": "file:../net-core",
+    "@net-protocol/storage": "file:../net-storage",
     "@opensea/seaport-js": "^4.0.4",
     "viem": "^2.31.4"
   },

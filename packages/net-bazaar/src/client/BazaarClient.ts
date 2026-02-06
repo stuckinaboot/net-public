@@ -13,10 +13,12 @@ import {
   CollectionOffer,
   Erc20Offer,
   Erc20Listing,
+  Sale,
   GetListingsOptions,
   GetCollectionOffersOptions,
   GetErc20OffersOptions,
   GetErc20ListingsOptions,
+  GetSalesOptions,
   SeaportOrderStatus,
   WriteTransactionConfig,
   SeaportOrderComponents,
@@ -31,17 +33,20 @@ import {
   getSeaportAddress,
   getWrappedNativeCurrency,
   isBazaarSupportedOnChain,
+  NET_SEAPORT_ZONE_ADDRESS,
 } from "../chainConfig";
 import {
   parseListingFromMessage,
   parseCollectionOfferFromMessage,
   parseErc20OfferFromMessage,
   parseErc20ListingFromMessage,
+  parseSaleFromStoredData,
   getBestListingPerToken,
   sortListingsByPrice,
   sortOffersByPrice,
   sortErc20OffersByPricePerToken,
   sortErc20ListingsByPricePerToken,
+  sortSalesByTimestamp,
   createSeaportInstance,
   computeOrderHash,
   getSeaportOrderFromMessageData,
@@ -56,6 +61,7 @@ import {
   isErc20OfferValid,
   isErc20ListingValid,
 } from "../utils/validation";
+import { STORAGE_CONTRACT } from "@net-protocol/storage";
 
 // Default RPC URLs for chains (same as @net-protocol/core)
 const CHAIN_RPC_URLS: Record<number, string[]> = {
@@ -721,6 +727,94 @@ export class BazaarClient {
 
     // Sort by price per token (lowest first) — no deduplication for ERC20 listings
     return sortErc20ListingsByPricePerToken(listings);
+  }
+
+  /**
+   * Get recent sales for a collection
+   *
+   * Sales are stored differently from listings: Net messages contain order hashes,
+   * and the actual sale data is fetched from the bulk storage contract.
+   *
+   * Results are sorted by timestamp (most recent first)
+   */
+  async getSales(options: GetSalesOptions): Promise<Sale[]> {
+    const { nftAddress, maxMessages = 100 } = options;
+
+    const filter = {
+      appAddress: NET_SEAPORT_ZONE_ADDRESS as `0x${string}`,
+      topic: nftAddress.toLowerCase(),
+    };
+
+    // Get message count
+    const count = await this.netClient.getMessageCount({ filter });
+    if (count === 0) {
+      return [];
+    }
+
+    // Fetch messages (most recent)
+    const startIndex = Math.max(0, count - maxMessages);
+    const messages = await this.netClient.getMessages({
+      filter,
+      startIndex,
+      endIndex: count,
+    });
+
+    return this.processSalesFromMessages(messages, options);
+  }
+
+  /**
+   * Process pre-fetched messages into sales.
+   *
+   * Each message's data field contains an order hash. The actual sale data
+   * is fetched from the bulk storage contract using these order hashes.
+   */
+  async processSalesFromMessages(
+    messages: NetMessage[],
+    options: Pick<GetSalesOptions, "nftAddress">
+  ): Promise<Sale[]> {
+    const tag = `[BazaarClient.processSales chain=${this.chainId}]`;
+
+    if (messages.length === 0) {
+      return [];
+    }
+
+    // Extract order hashes from message data
+    const orderHashes = messages.map((m) => m.data);
+    console.log(tag, `fetching ${orderHashes.length} sale details from storage...`);
+
+    // Build bulk storage keys: each keyed by order hash, operator = zone address
+    const bulkKeys = orderHashes.map((hash) => ({
+      key: hash as `0x${string}`,
+      operator: NET_SEAPORT_ZONE_ADDRESS as `0x${string}`,
+    }));
+
+    // Fetch sale data from bulk storage contract
+    let storedResults: readonly { text: string; value: string }[];
+    try {
+      storedResults = await this.client.readContract({
+        abi: STORAGE_CONTRACT.abi,
+        address: STORAGE_CONTRACT.address,
+        functionName: "bulkGet",
+        args: [bulkKeys],
+      }) as readonly { text: string; value: string }[];
+    } catch (err) {
+      console.error(tag, "bulk storage fetch failed:", err);
+      return [];
+    }
+
+    // Parse each stored result into a Sale
+    const sales: Sale[] = [];
+    for (const result of storedResults) {
+      if (!result.value || result.value === "0x") continue;
+      const sale = parseSaleFromStoredData(result.value, this.chainId);
+      if (sale) {
+        sales.push(sale);
+      }
+    }
+
+    console.log(tag, `parsed ${sales.length}/${storedResults.length} sales`);
+
+    return sortSalesByTimestamp(sales);
   }
 
   /**

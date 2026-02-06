@@ -3,7 +3,8 @@
  */
 
 import { NetMessage } from "@net-protocol/core";
-import { Listing, CollectionOffer, Erc20Offer, Erc20Listing, SeaportOrderStatus, ItemType } from "../types";
+import { decodeAbiParameters, formatEther } from "viem";
+import { Listing, CollectionOffer, Erc20Offer, Erc20Listing, Sale, SeaportOrderStatus, ItemType } from "../types";
 import {
   decodeSeaportSubmission,
   getSeaportOrderFromMessageData,
@@ -335,4 +336,107 @@ export function sortErc20ListingsByPricePerToken(listings: Erc20Listing[]): Erc2
     if (diff > BigInt(0)) return 1;
     return 0;
   });
+}
+
+/**
+ * ABI for decoding zone-stored sale data from bulk storage.
+ * The stored data contains: timestamp, netTotalMessageLength,
+ * netTotalMessageForAppTopicLength, and the full ZoneParameters struct.
+ */
+const ZONE_STORED_SALE_ABI = [
+  { type: "uint256" }, // timestamp
+  { type: "uint256" }, // netTotalMessageLength
+  { type: "uint256" }, // netTotalMessageForAppTopicLength
+  {
+    name: "zoneParameters",
+    type: "tuple",
+    internalType: "struct ZoneParameters",
+    components: [
+      { name: "orderHash", type: "bytes32", internalType: "bytes32" },
+      { name: "fulfiller", type: "address", internalType: "address" },
+      { name: "offerer", type: "address", internalType: "address" },
+      {
+        name: "offer",
+        type: "tuple[]",
+        internalType: "struct SpentItem[]",
+        components: [
+          { name: "itemType", type: "uint8", internalType: "enum ItemType" },
+          { name: "token", type: "address", internalType: "address" },
+          { name: "identifier", type: "uint256", internalType: "uint256" },
+          { name: "amount", type: "uint256", internalType: "uint256" },
+        ],
+      },
+      {
+        name: "consideration",
+        type: "tuple[]",
+        internalType: "struct ReceivedItem[]",
+        components: [
+          { name: "itemType", type: "uint8", internalType: "enum ItemType" },
+          { name: "token", type: "address", internalType: "address" },
+          { name: "identifier", type: "uint256", internalType: "uint256" },
+          { name: "amount", type: "uint256", internalType: "uint256" },
+          { name: "recipient", type: "address", internalType: "address payable" },
+        ],
+      },
+      { name: "extraData", type: "bytes", internalType: "bytes" },
+      { name: "orderHashes", type: "bytes32[]", internalType: "bytes32[]" },
+      { name: "startTime", type: "uint256", internalType: "uint256" },
+      { name: "endTime", type: "uint256", internalType: "uint256" },
+      { name: "zoneHash", type: "bytes32", internalType: "bytes32" },
+    ],
+  },
+] as const;
+
+/**
+ * Parse a sale from bulk storage data (zone-stored sale details).
+ *
+ * The storage contract stores the full ZoneParameters struct for each sale,
+ * keyed by order hash with operator = NET_SEAPORT_ZONE_ADDRESS.
+ */
+export function parseSaleFromStoredData(
+  storedData: string,
+  chainId: number
+): Sale | null {
+  try {
+    const cleanedData = (
+      "0x" +
+      (storedData.startsWith("0x") ? storedData.slice(2) : storedData)
+    ) as `0x${string}`;
+
+    const [timestamp, , , zoneParameters] = decodeAbiParameters(
+      ZONE_STORED_SALE_ABI,
+      cleanedData
+    );
+
+    const offerItem = zoneParameters.offer[0];
+    if (!offerItem) return null;
+
+    const totalConsideration = zoneParameters.consideration.reduce(
+      (acc, item) => acc + item.amount,
+      BigInt(0)
+    );
+
+    return {
+      seller: zoneParameters.offerer as `0x${string}`,
+      buyer: zoneParameters.fulfiller as `0x${string}`,
+      tokenAddress: offerItem.token as `0x${string}`,
+      tokenId: offerItem.identifier.toString(),
+      amount: offerItem.amount,
+      itemType: offerItem.itemType as ItemType,
+      priceWei: totalConsideration,
+      price: parseFloat(formatEther(totalConsideration)),
+      currency: getCurrencySymbol(chainId),
+      timestamp: Number(timestamp),
+      orderHash: zoneParameters.orderHash,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sort sales by timestamp (most recent first)
+ */
+export function sortSalesByTimestamp(sales: Sale[]): Sale[] {
+  return [...sales].sort((a, b) => b.timestamp - a.timestamp);
 }

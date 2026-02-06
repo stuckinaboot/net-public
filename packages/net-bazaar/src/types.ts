@@ -309,6 +309,44 @@ export interface GetErc20ListingsOptions {
 }
 
 /**
+ * Sale information (parsed from zone storage)
+ */
+export interface Sale {
+  /** Seller's address (offerer) */
+  seller: `0x${string}`;
+  /** Buyer's address (fulfiller) */
+  buyer: `0x${string}`;
+  /** NFT/token contract address */
+  tokenAddress: `0x${string}`;
+  /** Token ID */
+  tokenId: string;
+  /** Amount of tokens sold */
+  amount: bigint;
+  /** Item type (ERC20, ERC721, etc.) */
+  itemType: ItemType;
+  /** Total price in wei */
+  priceWei: bigint;
+  /** Total price in native currency (formatted) */
+  price: number;
+  /** Currency symbol (e.g., "eth", "degen") */
+  currency: string;
+  /** Sale timestamp in seconds */
+  timestamp: number;
+  /** Seaport order hash */
+  orderHash: string;
+}
+
+/**
+ * Options for fetching sales
+ */
+export interface GetSalesOptions {
+  /** NFT collection address */
+  nftAddress: `0x${string}`;
+  /** Maximum number of messages to fetch (default: 100) */
+  maxMessages?: number;
+}
+
+/**
  * Transaction configuration for write operations
  */
 export interface WriteTransactionConfig {

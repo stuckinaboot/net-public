@@ -228,11 +228,11 @@ export function isValidBio(bio: string): boolean {
 
 /**
  * Validate display name format
- * Returns true if valid (1-14 characters, no control characters except spaces)
+ * Returns true if valid (1-25 characters, no control characters except spaces)
  */
 export function isValidDisplayName(displayName: string): boolean {
   if (!displayName) return false;
-  if (displayName.length > 14) return false;
+  if (displayName.length > 25) return false;
   // Disallow control characters
   // eslint-disable-next-line no-control-regex
   const hasControlChars = /[\x00-\x1F\x7F]/.test(displayName);
@@ -254,7 +254,7 @@ export function getBioStorageArgs(bio: string): ProfileStorageArgs {
  * Prepare transaction arguments for updating display name
  * This is a convenience wrapper around getProfileMetadataStorageArgs
  *
- * @param displayName - The display name (max 14 characters)
+ * @param displayName - The display name (max 25 characters)
  * @returns Arguments for Storage.put()
  */
 export function getDisplayNameStorageArgs(

@@ -479,17 +479,17 @@ describe("utils", () => {
       expect(isValidDisplayName("Hello World!")).toBe(true);
     });
 
-    it("should return true for display names at max length (14 chars)", () => {
-      expect(isValidDisplayName("a".repeat(14))).toBe(true);
+    it("should return true for display names at max length (25 chars)", () => {
+      expect(isValidDisplayName("a".repeat(25))).toBe(true);
     });
 
     it("should return false for empty string", () => {
       expect(isValidDisplayName("")).toBe(false);
     });
 
-    it("should return false for display names over 14 characters", () => {
-      expect(isValidDisplayName("a".repeat(15))).toBe(false);
-      expect(isValidDisplayName("This Is Too Long")).toBe(false);
+    it("should return false for display names over 25 characters", () => {
+      expect(isValidDisplayName("a".repeat(26))).toBe(false);
+      expect(isValidDisplayName("This Display Name Is Way Too Long")).toBe(false);
     });
 
     it("should return false for display names with control characters", () => {

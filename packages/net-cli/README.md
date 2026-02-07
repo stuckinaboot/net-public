@@ -841,3 +841,108 @@ The CLI handles various error scenarios:
 - Storage read errors
 
 If a transaction fails mid-upload, you can safely retry the command - it will only upload missing chunks.
+
+#### Bazaar Command
+
+NFT Bazaar operations — list, buy, sell, and trade NFTs via Seaport.
+
+**Available Subcommands:**
+
+- `bazaar list-listings` - List active NFT listings
+- `bazaar list-offers` - List active collection offers
+- `bazaar list-sales` - List recent sales
+- `bazaar owned-nfts` - List NFTs owned by an address
+- `bazaar create-listing` - Create an NFT listing
+- `bazaar create-offer` - Create a collection offer
+- `bazaar submit-listing` - Submit a signed listing
+- `bazaar submit-offer` - Submit a signed offer
+- `bazaar buy-listing` - Buy an NFT listing
+- `bazaar accept-offer` - Accept a collection offer
+
+##### Read Commands
+
+```bash
+# List active listings (--nft-address optional for cross-collection)
+netp bazaar list-listings [--nft-address <address>] --chain-id 8453 [--json]
+
+# List collection offers
+netp bazaar list-offers --nft-address <address> --chain-id 8453 [--json]
+
+# List recent sales
+netp bazaar list-sales --nft-address <address> --chain-id 8453 [--json]
+
+# Check NFTs owned by an address
+netp bazaar owned-nfts --nft-address <address> --owner <address> --chain-id 8453 [--json]
+```
+
+##### Create Commands (Dual Mode)
+
+Create commands support two modes: with `--private-key` for full flow (approve + sign + submit), or without for EIP-712 output (external signing).
+
+```bash
+# Full flow with private key
+netp bazaar create-listing \
+  --nft-address <address> --token-id <id> --price <eth> \
+  --chain-id 8453 --private-key 0x...
+
+# Keyless: outputs EIP-712 data + approval txs for external signing
+netp bazaar create-listing \
+  --nft-address <address> --token-id <id> --price <eth> \
+  --offerer <address> --chain-id 8453
+
+# Same pattern for offers
+netp bazaar create-offer \
+  --nft-address <address> --price <eth> \
+  --chain-id 8453 --private-key 0x...
+```
+
+##### Submit Commands
+
+Follow-up to keyless create commands:
+
+```bash
+netp bazaar submit-listing \
+  --order-data <path> --signature <sig> \
+  --chain-id 8453 [--private-key 0x... | --encode-only]
+
+netp bazaar submit-offer \
+  --order-data <path> --signature <sig> \
+  --chain-id 8453 [--private-key 0x... | --encode-only]
+```
+
+##### Fulfillment Commands
+
+```bash
+# Buy a listing
+netp bazaar buy-listing \
+  --order-hash <hash> --nft-address <address> \
+  --chain-id 8453 [--private-key 0x... | --buyer <address> --encode-only]
+
+# Accept an offer (sell your NFT)
+netp bazaar accept-offer \
+  --order-hash <hash> --nft-address <address> --token-id <id> \
+  --chain-id 8453 [--private-key 0x... | --seller <address> --encode-only]
+```
+
+##### Encode-Only Mode
+
+All write commands support `--encode-only` for agent integration:
+
+```bash
+netp bazaar buy-listing \
+  --order-hash 0x... --nft-address 0x... \
+  --buyer 0xAgentWallet --chain-id 8453 --encode-only
+```
+
+Output:
+```json
+{
+  "approvals": [],
+  "fulfillment": {
+    "to": "0x...",
+    "data": "0x...",
+    "chainId": 8453,
+    "value": "10000000000000"
+  }
+}
+```

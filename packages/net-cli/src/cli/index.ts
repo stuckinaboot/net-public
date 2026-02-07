@@ -18,6 +18,7 @@ import { registerChainsCommand } from "../commands/chains";
 import { registerInfoCommand } from "../commands/info";
 import { registerTokenCommand } from "../commands/token";
 import { registerProfileCommand } from "../commands/profile";
+import { registerBazaarCommand } from "../commands/bazaar";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../../package.json");
@@ -36,5 +37,6 @@ registerChainsCommand(program);
 registerInfoCommand(program);
 registerTokenCommand(program);
 registerProfileCommand(program);
+registerBazaarCommand(program);
 
 program.parse();

@@ -19,6 +19,10 @@ Net Bazaar is a decentralized bazaar built on Net Protocol. All orders are store
 - **Read collection offers**: Get valid offers for any NFT in a collection
 - **Read ERC20 offers**: Get valid offers for ERC20 tokens
 - **Cancel orders**: Prepare transactions to cancel your listings or offers
+- **Create listings**: Prepare and sign Seaport orders for NFT listings
+- **Create offers**: Prepare and sign collection offers
+- **Fulfill orders**: Buy listings or accept offers
+- **Query ownership**: Check which tokens an address owns on-chain
 
 This package provides both React hooks (for UI) and a client class (for non-React code).
 
@@ -114,6 +118,41 @@ const erc20Offers = await client.getErc20Offers({
 // Cancel a listing
 const cancelTx = client.prepareCancelListing(listing);
 // Use with wagmi's useWriteContract or viem's writeContract
+
+// Create a listing (prepare EIP-712 data + approvals)
+const prepared = await client.prepareCreateListing({
+  nftAddress: "0x...",
+  tokenId: "42",
+  priceWei: 100000000000000n, // 0.0001 ETH
+  offerer: "0x...",
+});
+// prepared.eip712 contains the typed data to sign
+// prepared.approvals contains approval txs to send first
+
+// Submit a signed listing on-chain
+const submitTx = client.prepareSubmitListing(
+  prepared.eip712.orderParameters,
+  prepared.eip712.counter,
+  signature
+);
+
+// Fulfill a listing (buy an NFT)
+const fulfillment = await client.prepareFulfillListing(listing, buyerAddress);
+// fulfillment.approvals + fulfillment.fulfillment contain the txs
+
+// Fulfill a collection offer (sell your NFT)
+const offerFulfillment = await client.prepareFulfillCollectionOffer(offer, tokenId, sellerAddress);
+
+// Get token IDs owned by an address
+const tokenIds = await client.getOwnedTokens({
+  nftAddress: "0x...",
+  ownerAddress: "0x...",
+  startTokenId: 0n,
+  endTokenId: 10000n,
+});
+
+// Get recent sales
+const sales = await client.getSales({ nftAddress: "0x..." });
 ```
 
 ## API Reference

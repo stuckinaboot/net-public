@@ -1,12 +1,12 @@
 ---
 name: net
-description: On-chain data storage and messaging protocol via CLI. Use when the user wants to store data on-chain permanently, read on-chain data, send/read messages to feeds, deploy memecoins with Uniswap V3 liquidity, or manage on-chain user profiles (picture, bio, X username). Supports Base, Ethereum, Degen, Ham, Ink, Unichain, HyperEVM, Plasma, and Monad. Capabilities include permanent file storage (up to 80KB chunks), key-value storage, personal feeds, topic-based messaging, token deployment with locked liquidity, and decentralized identity profiles.
+description: On-chain data storage, messaging, NFT Bazaar, and identity protocol via CLI. Use when the user wants to store data on-chain permanently, read on-chain data, send/read messages to feeds, deploy memecoins with Uniswap V3 liquidity, manage on-chain user profiles (picture, bio, X username), or interact with NFT Bazaar (list NFTs, make offers, buy listings, accept offers, query ownership). Supports Base, Ethereum, Degen, Ham, Ink, Unichain, HyperEVM, Plasma, and Monad. Capabilities include permanent file storage (up to 80KB chunks), key-value storage, personal feeds, topic-based messaging, token deployment with locked liquidity, decentralized identity profiles, and Seaport-based NFT trading.
 metadata: {"clawdbot":{"emoji":"🌐","homepage":"https://github.com/stuckinaboot/net-public","requires":{"bins":["node","netp"]}}}
 ---
 
 # Net Protocol CLI
 
-Interact with [Net Protocol](https://github.com/stuckinaboot/net-public) - a censorship-resistant, on-chain data and messaging protocol. Store data permanently on-chain, send messages to decentralized feeds, deploy memecoins, and manage on-chain profiles across Base, Ethereum, and other EVM chains.
+Interact with [Net Protocol](https://github.com/stuckinaboot/net-public) - a censorship-resistant, on-chain data and messaging protocol. Store data permanently on-chain, send messages to decentralized feeds, deploy memecoins, manage on-chain profiles, and trade NFTs on NFT Bazaar across Base, Ethereum, and other EVM chains.
 
 ## Quick Start
 
@@ -63,6 +63,10 @@ The agent submits each transaction in the `transactions` array. For large files 
 - `netp profile set-picture --encode-only`
 - `netp profile set-bio --encode-only`
 - `netp profile set-x-username --encode-only`
+- `netp bazaar buy-listing --encode-only`
+- `netp bazaar accept-offer --encode-only`
+- `netp bazaar submit-listing --encode-only`
+- `netp bazaar submit-offer --encode-only`
 
 ### Direct CLI Usage (With Private Key)
 
@@ -108,7 +112,7 @@ netp storage preview --file ./data.json --key "my-data" --text "My stored data" 
 netp storage read --key "my-data" --operator 0xYourAddress --chain-id 8453
 ```
 
-**Reference**: [references/storage.md](references/storage.md)
+**Reference**: [skill-references/storage.md](skill-references/storage.md)
 
 ### Messaging & Feeds
 
@@ -125,7 +129,7 @@ netp message read --topic "my-feed" --chain-id 8453 --limit 10
 netp message count --topic "my-feed" --chain-id 8453
 ```
 
-**Reference**: [references/messaging.md](references/messaging.md)
+**Reference**: [skill-references/messaging.md](skill-references/messaging.md)
 
 ### Token Deployment
 
@@ -143,7 +147,7 @@ netp token deploy \
 netp token info --address 0xTokenAddress --chain-id 8453
 ```
 
-**Reference**: [references/tokens.md](references/tokens.md)
+**Reference**: [skill-references/tokens.md](skill-references/tokens.md)
 
 ### Profile Management
 
@@ -163,7 +167,42 @@ netp profile set-bio --bio "Web3 builder" --chain-id 8453
 netp profile set-x-username --username "myhandle" --chain-id 8453
 ```
 
-**Reference**: [references/profiles.md](references/profiles.md)
+**Reference**: [skill-references/profiles.md](skill-references/profiles.md)
+
+### NFT Bazaar
+
+Trade NFTs on the NFT Bazaar (Seaport-based):
+
+```bash
+# List active NFT listings
+netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json
+
+# List collection offers
+netp bazaar list-offers --nft-address 0x... --chain-id 8453 --json
+
+# List recent sales
+netp bazaar list-sales --nft-address 0x... --chain-id 8453 --json
+
+# Check NFTs owned by an address
+netp bazaar owned-nfts --nft-address 0x... --owner 0x... --chain-id 8453
+
+# Buy an NFT listing (with private key)
+netp bazaar buy-listing --order-hash 0x... --nft-address 0x... --chain-id 8453 --private-key 0x...
+
+# Buy an NFT listing (encode-only for agents)
+netp bazaar buy-listing --order-hash 0x... --nft-address 0x... --buyer 0x... --chain-id 8453 --encode-only
+
+# Create a listing (with private key: full flow)
+netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --chain-id 8453 --private-key 0x...
+
+# Create a listing (keyless: outputs EIP-712 data for external signing)
+netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --offerer 0x... --chain-id 8453
+
+# Accept a collection offer
+netp bazaar accept-offer --order-hash 0x... --nft-address 0x... --token-id 42 --chain-id 8453 --private-key 0x...
+```
+
+**Reference**: [skill-references/bazaar.md](skill-references/bazaar.md)
 
 ## Capabilities Overview
 
@@ -192,19 +231,27 @@ netp profile set-x-username --username "myhandle" --chain-id 8453
 - **Bio**: Up to 280 characters
 - **Social Links**: X (Twitter) username linking
 
+### NFT Bazaar
+- **Fixed-Price Listings**: List NFTs for sale at a set ETH price
+- **Collection Offers**: Bid on any token in a collection
+- **Private Listings**: Target a specific buyer address
+- **Ownership Queries**: Check which tokens an address owns on-chain
+- **Dual Mode**: Full flow with private key, or EIP-712 output for external signing
+- **Encode-Only**: Output raw transaction calldata for agent submission
+
 ## Supported Chains
 
-| Chain | Chain ID | Storage | Messages | Tokens | Profiles |
-|-------|----------|---------|----------|--------|----------|
-| Base | 8453 | ✅ | ✅ | ✅ | ✅ |
-| Ethereum | 1 | ✅ | ✅ | ❌ | ✅ |
-| Degen | 666666666 | ✅ | ✅ | ❌ | ✅ |
-| Ham | 5112 | ✅ | ✅ | ❌ | ✅ |
-| Ink | 57073 | ✅ | ✅ | ❌ | ✅ |
-| Unichain | 130 | ✅ | ✅ | ❌ | ✅ |
-| HyperEVM | 999 | ✅ | ✅ | ✅ | ✅ |
-| Plasma | 9745 | ✅ | ✅ | ✅ | ✅ |
-| Monad | 143 | ✅ | ✅ | ✅ | ✅ |
+| Chain | Chain ID | Storage | Messages | Tokens | Profiles | Bazaar |
+|-------|----------|---------|----------|--------|----------|--------|
+| Base | 8453 | Yes | Yes | Yes | Yes | Yes |
+| Ethereum | 1 | Yes | Yes | No | Yes | No |
+| Degen | 666666666 | Yes | Yes | No | Yes | No |
+| Ham | 5112 | Yes | Yes | No | Yes | No |
+| Ink | 57073 | Yes | Yes | No | Yes | No |
+| Unichain | 130 | Yes | Yes | No | Yes | No |
+| HyperEVM | 999 | Yes | Yes | Yes | Yes | No |
+| Plasma | 9745 | Yes | Yes | Yes | Yes | No |
+| Monad | 143 | Yes | Yes | Yes | Yes | No |
 
 **Testnets**: Base Sepolia (84532), Sepolia (11155111)
 
@@ -276,6 +323,43 @@ netp profile set-bio \
   --encode-only
 ```
 
+#### Buy an NFT
+```bash
+# 1. Find listings
+netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json
+
+# 2. Generate buy transaction (encode-only)
+netp bazaar buy-listing \
+  --order-hash 0x... \
+  --nft-address 0x... \
+  --buyer 0xAgentWallet \
+  --chain-id 8453 \
+  --encode-only
+
+# 3. Submit the fulfillment transaction (include value = listing price in wei)
+```
+
+#### Create an NFT Listing (Keyless)
+```bash
+# 1. Get EIP-712 data
+netp bazaar create-listing \
+  --nft-address 0x... \
+  --token-id 42 \
+  --price 0.1 \
+  --offerer 0xAgentWallet \
+  --chain-id 8453
+
+# 2. Submit approvals from output via agent
+# 3. Sign eip712 data via agent (eth_signTypedData_v4)
+# 4. Save orderParameters+counter to file, then:
+netp bazaar submit-listing \
+  --order-data ./order.json \
+  --signature 0xSig... \
+  --chain-id 8453 \
+  --encode-only
+# 5. Submit encoded tx via agent
+```
+
 ### Reading Data (No Transaction Needed)
 
 Read operations don't require transactions - they query the chain directly:
@@ -295,6 +379,12 @@ netp token info --address 0xTokenAddress --chain-id 8453 --json
 
 # Get user profile (free, no gas)
 netp profile get --address 0xUserAddress --chain-id 8453 --json
+
+# List NFT listings (free, no gas)
+netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json
+
+# Check NFT ownership (free, no gas)
+netp bazaar owned-nfts --nft-address 0x... --owner 0x... --chain-id 8453 --json
 ```
 
 ### Direct CLI Patterns (With Private Key)
@@ -315,6 +405,12 @@ netp token deploy \
   --image "https://example.com/cool.png" \
   --initial-buy 0.1 \
   --chain-id 8453
+
+# Buy an NFT listing
+netp bazaar buy-listing --order-hash 0x... --nft-address 0x... --chain-id 8453
+
+# Create and submit a listing (full flow)
+netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --chain-id 8453
 ```
 
 ## Environment Variables
@@ -355,6 +451,10 @@ netp token deploy \
 - "Build a transaction to deploy a memecoin called 'Bot Token'"
 - "Generate the transaction data to update my profile picture"
 - "Create a token deployment transaction with 0.1 ETH initial buy"
+- "Buy an NFT listing on Bazaar"
+- "List all NFT listings for this collection"
+- "Create an NFT listing for token #42 at 0.1 ETH"
+- "What NFTs does this address own?"
 
 ### Storage Operations
 - "Store this JSON file on Base"
@@ -378,6 +478,15 @@ netp token deploy \
 - "Update my bio to 'Building on Base'"
 - "Link my X account @myhandle"
 - "What's the profile for this address?"
+
+### NFT Bazaar
+- "List all NFTs for sale in this collection"
+- "Buy NFT #42 from NFT Bazaar"
+- "Create a listing for my NFT at 0.1 ETH"
+- "Make an offer on this NFT collection"
+- "Accept the highest offer for my NFT"
+- "What NFTs do I own in this collection?"
+- "Show me recent sales for this collection"
 
 ## Resources
 

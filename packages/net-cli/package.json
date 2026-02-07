@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
@@ -26,6 +26,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@net-protocol/bazaar": "file:../net-bazaar",
     "@net-protocol/core": "file:../net-core",
     "@net-protocol/netr": "file:../net-netr",
     "@net-protocol/profiles": "file:../net-profiles",

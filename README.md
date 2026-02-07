@@ -267,6 +267,14 @@ This repository includes a [Claude Code](https://claude.ai/claude-code) plugin t
 
 ### Installation
 
+The quickest way to get started:
+
+```bash
+npx skills install stuckinaboot/net-public
+```
+
+Alternatively, you can install via the plugin marketplace:
+
 1. Add the marketplace:
    ```
    /plugin marketplace add stuckinaboot/net-public

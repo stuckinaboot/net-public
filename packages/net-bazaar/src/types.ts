@@ -358,4 +358,74 @@ export interface WriteTransactionConfig {
   args: readonly unknown[];
   /** Contract ABI */
   abi: readonly unknown[];
+  /** Native currency value to send (in wei) */
+  value?: bigint;
+}
+
+/**
+ * Prepared fulfillment with optional approvals and the Seaport call
+ */
+export interface PreparedFulfillment {
+  /** ERC721/ERC20 approve txs (empty if not needed) */
+  approvals: WriteTransactionConfig[];
+  /** The Seaport fulfillOrder or fulfillAdvancedOrder call */
+  fulfillment: WriteTransactionConfig;
+}
+
+/**
+ * EIP-712 typed data for signing a Seaport order
+ */
+export interface EIP712OrderData {
+  domain: {
+    name: string;
+    version: string;
+    chainId: number;
+    verifyingContract: `0x${string}`;
+  };
+  types: Record<string, Array<{ name: string; type: string }>>;
+  primaryType: string;
+  /** OrderComponents message (without totalOriginalConsiderationItems, with counter) */
+  message: Record<string, unknown>;
+  /** Full order parameters for step 2 submission */
+  orderParameters: SeaportOrderParameters;
+  /** The counter used in the order */
+  counter: bigint;
+}
+
+/**
+ * Prepared order with EIP-712 data for signing and maker approvals
+ */
+export interface PreparedOrder {
+  /** EIP-712 typed data for the caller to sign */
+  eip712: EIP712OrderData;
+  /** Maker approvals needed (e.g., NFT/ERC20/WETH approve for Seaport) */
+  approvals: WriteTransactionConfig[];
+}
+
+/**
+ * Parameters for creating an ERC20 offer (buying ERC20 tokens with WETH)
+ */
+export interface CreateErc20OfferParams {
+  /** ERC20 token address to buy */
+  tokenAddress: `0x${string}`;
+  /** Amount of tokens to buy */
+  tokenAmount: bigint;
+  /** Total price in wei (WETH) */
+  priceWei: bigint;
+  /** Expiration timestamp in seconds (defaults to 24h from now) */
+  expirationDate?: number;
+}
+
+/**
+ * Parameters for creating an ERC20 listing (selling ERC20 tokens for native currency)
+ */
+export interface CreateErc20ListingParams {
+  /** ERC20 token address to sell */
+  tokenAddress: `0x${string}`;
+  /** Amount of tokens to sell */
+  tokenAmount: bigint;
+  /** Total price in wei (native currency) */
+  priceWei: bigint;
+  /** Expiration timestamp in seconds (defaults to 24h from now) */
+  expirationDate?: number;
 }

@@ -6,7 +6,7 @@
  * - Preparing transactions for creating/canceling listings and offers
  */
 
-import { PublicClient, createPublicClient, defineChain, http } from "viem";
+import { PublicClient, createPublicClient, defineChain, http, type Abi } from "viem";
 import { readContract } from "viem/actions";
 import { NetClient, NetMessage } from "@net-protocol/core";
 import {
@@ -91,6 +91,27 @@ import {
   buildEIP712OrderData,
   buildSubmitOrderTx,
 } from "../utils/orderCreation";
+
+// ERC721TokenOwnerRangeHelper contract (deployed via CREATE2, same address on all chains)
+const ERC721_TOKEN_OWNER_RANGE_HELPER_ADDRESS = "0x00000000f4ec2016d6e856b0cb14d635949bfd3f" as const;
+
+const ERC721_TOKEN_OWNER_RANGE_HELPER_ABI = [
+  {
+    inputs: [
+      { name: "nftContract", type: "address" },
+      { name: "user", type: "address" },
+      { name: "startTokenId", type: "uint256" },
+      { name: "endTokenId", type: "uint256" },
+    ],
+    name: "getOwnedTokensInRange",
+    outputs: [{ name: "", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
+// Batch size for owned token queries (matches website)
+const OWNED_TOKENS_BATCH_SIZE = 5000n;
 
 // Default RPC URLs for chains (same as @net-protocol/core)
 const CHAIN_RPC_URLS: Record<number, string[]> = {
@@ -1354,5 +1375,52 @@ export class BazaarClient {
       counter,
       signature
     );
+  }
+
+  // ─── Owned Tokens Query ─────────────────────────────────────────────
+
+  /**
+   * Get token IDs owned by an address for an ERC721 collection.
+   *
+   * Uses the on-chain ERC721TokenOwnerRangeHelper contract, batching
+   * large ranges into 5000-token chunks to avoid RPC limits.
+   */
+  async getOwnedTokens(params: {
+    nftAddress: `0x${string}`;
+    ownerAddress: `0x${string}`;
+    startTokenId?: bigint;
+    endTokenId?: bigint;
+  }): Promise<bigint[]> {
+    const { nftAddress, ownerAddress } = params;
+    const startTokenId = params.startTokenId ?? 0n;
+    const endTokenId = params.endTokenId ?? 10000n;
+
+    const ownedTokens: bigint[] = [];
+    let current = startTokenId;
+
+    while (current < endTokenId) {
+      const batchEnd = current + OWNED_TOKENS_BATCH_SIZE < endTokenId
+        ? current + OWNED_TOKENS_BATCH_SIZE
+        : endTokenId;
+
+      try {
+        const result = await readContract(this.client, {
+          address: ERC721_TOKEN_OWNER_RANGE_HELPER_ADDRESS,
+          abi: ERC721_TOKEN_OWNER_RANGE_HELPER_ABI as unknown as Abi,
+          functionName: "getOwnedTokensInRange",
+          args: [nftAddress, ownerAddress, current, batchEnd],
+        }) as bigint[];
+
+        for (const tokenId of result) {
+          ownedTokens.push(tokenId);
+        }
+      } catch {
+        // Batch failed (e.g. RPC timeout or gas limit), skip it
+      }
+
+      current = batchEnd;
+    }
+
+    return ownedTokens;
   }
 }

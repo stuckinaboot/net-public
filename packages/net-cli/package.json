@@ -26,6 +26,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@net-protocol/bazaar": "file:../net-bazaar",
     "@net-protocol/core": "file:../net-core",
     "@net-protocol/netr": "file:../net-netr",
     "@net-protocol/profiles": "file:../net-profiles",

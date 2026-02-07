@@ -1,12 +1,12 @@
 ---
 name: net
-description: On-chain data storage, messaging, NFT marketplace, and identity protocol via CLI. Use when the user wants to store data on-chain permanently, read on-chain data, send/read messages to feeds, deploy memecoins with Uniswap V3 liquidity, manage on-chain user profiles (picture, bio, X username), or interact with the Bazaar NFT marketplace (list NFTs, make offers, buy listings, accept offers, query ownership). Supports Base, Ethereum, Degen, Ham, Ink, Unichain, HyperEVM, Plasma, and Monad. Capabilities include permanent file storage (up to 80KB chunks), key-value storage, personal feeds, topic-based messaging, token deployment with locked liquidity, decentralized identity profiles, and Seaport-based NFT trading.
+description: On-chain data storage, messaging, NFT Bazaar, and identity protocol via CLI. Use when the user wants to store data on-chain permanently, read on-chain data, send/read messages to feeds, deploy memecoins with Uniswap V3 liquidity, manage on-chain user profiles (picture, bio, X username), or interact with NFT Bazaar (list NFTs, make offers, buy listings, accept offers, query ownership). Supports Base, Ethereum, Degen, Ham, Ink, Unichain, HyperEVM, Plasma, and Monad. Capabilities include permanent file storage (up to 80KB chunks), key-value storage, personal feeds, topic-based messaging, token deployment with locked liquidity, decentralized identity profiles, and Seaport-based NFT trading.
 metadata: {"clawdbot":{"emoji":"🌐","homepage":"https://github.com/stuckinaboot/net-public","requires":{"bins":["node","netp"]}}}
 ---
 
 # Net Protocol CLI
 
-Interact with [Net Protocol](https://github.com/stuckinaboot/net-public) - a censorship-resistant, on-chain data and messaging protocol. Store data permanently on-chain, send messages to decentralized feeds, deploy memecoins, manage on-chain profiles, and trade NFTs on the Bazaar marketplace across Base, Ethereum, and other EVM chains.
+Interact with [Net Protocol](https://github.com/stuckinaboot/net-public) - a censorship-resistant, on-chain data and messaging protocol. Store data permanently on-chain, send messages to decentralized feeds, deploy memecoins, manage on-chain profiles, and trade NFTs on NFT Bazaar across Base, Ethereum, and other EVM chains.
 
 ## Quick Start
 
@@ -169,9 +169,9 @@ netp profile set-x-username --username "myhandle" --chain-id 8453
 
 **Reference**: [skill-references/profiles.md](skill-references/profiles.md)
 
-### Bazaar NFT Marketplace
+### NFT Bazaar
 
-Trade NFTs on the Bazaar marketplace (Seaport-based):
+Trade NFTs on the NFT Bazaar (Seaport-based):
 
 ```bash
 # List active NFT listings
@@ -231,7 +231,7 @@ netp bazaar accept-offer --order-hash 0x... --nft-address 0x... --token-id 42 --
 - **Bio**: Up to 280 characters
 - **Social Links**: X (Twitter) username linking
 
-### Bazaar NFT Marketplace
+### NFT Bazaar
 - **Fixed-Price Listings**: List NFTs for sale at a set ETH price
 - **Collection Offers**: Bid on any token in a collection
 - **Private Listings**: Target a specific buyer address
@@ -479,9 +479,9 @@ netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --chain
 - "Link my X account @myhandle"
 - "What's the profile for this address?"
 
-### Bazaar NFT Marketplace
+### NFT Bazaar
 - "List all NFTs for sale in this collection"
-- "Buy NFT #42 from the marketplace"
+- "Buy NFT #42 from NFT Bazaar"
 - "Create a listing for my NFT at 0.1 ETH"
 - "Make an offer on this NFT collection"
 - "Accept the highest offer for my NFT"

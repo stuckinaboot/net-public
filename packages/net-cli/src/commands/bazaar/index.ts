@@ -29,7 +29,7 @@ const privateKeyOption = [
 export function registerBazaarCommand(program: Command): void {
   const bazaarCommand = program
     .command("bazaar")
-    .description("Bazaar NFT marketplace operations");
+    .description("Bazaar NFT trading operations");
 
   const listListingsCommand = new Command("list-listings")
     .description("List active NFT listings")

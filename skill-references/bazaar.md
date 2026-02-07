@@ -1,10 +1,10 @@
 # Net Bazaar Reference
 
-Buy, sell, and trade NFTs on the Bazaar marketplace using Net Protocol's Seaport-based exchange.
+Buy, sell, and trade NFTs on NFT Bazaar using Net Protocol's Seaport-based exchange.
 
 ## Overview
 
-Bazaar is an NFT marketplace built on Seaport (v1.6). It supports:
+NFT Bazaar is built on Seaport (v1.6). It supports:
 - Fixed-price NFT listings
 - Collection offers (bid on any token in a collection)
 - Private listings (targeted to a specific buyer)

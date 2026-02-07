@@ -60,26 +60,35 @@ function getNativeConsiderationValue(params: SeaportOrderParameters): bigint {
 }
 
 /**
- * Build a fulfillOrder transaction for an NFT listing (buyer pays native currency for NFT).
+ * Build a fulfillAdvancedOrder transaction for an NFT listing (buyer pays native currency for NFT).
+ *
+ * Uses fulfillAdvancedOrder (instead of fulfillOrder) to support both standard and
+ * private listings — private listings use a restricted zone that requires the
+ * advanced order path.
  *
  * @param submission - Decoded Seaport submission from the listing's messageData
+ * @param recipient - Address to receive the NFT
  * @param seaportAddress - Seaport contract address
  * @returns WriteTransactionConfig with value set to the native currency payment
  */
 export function buildFulfillListingTx(
   submission: SeaportSubmission,
+  recipient: `0x${string}`,
   seaportAddress: `0x${string}`
 ): WriteTransactionConfig {
-  const order = {
+  const advancedOrder = {
     parameters: formatOrderParameters(submission.parameters),
+    numerator: BigInt(1),
+    denominator: BigInt(1),
     signature: submission.signature,
+    extraData: "0x" as `0x${string}`,
   };
 
   return {
     to: seaportAddress,
-    functionName: "fulfillOrder",
-    args: [order, ZERO_BYTES32],
-    abi: SEAPORT_FULFILL_ORDER_ABI,
+    functionName: "fulfillAdvancedOrder",
+    args: [advancedOrder, [], ZERO_BYTES32, recipient],
+    abi: SEAPORT_FULFILL_ADVANCED_ORDER_ABI,
     value: getNativeConsiderationValue(submission.parameters),
   };
 }
@@ -156,26 +165,33 @@ export function buildFulfillErc20OfferTx(
 }
 
 /**
- * Build a fulfillOrder transaction for an ERC20 listing (buyer pays native currency for ERC20 tokens).
+ * Build a fulfillAdvancedOrder transaction for an ERC20 listing (buyer pays native currency for ERC20 tokens).
+ *
+ * Uses fulfillAdvancedOrder to support both standard and private listings.
  *
  * @param submission - Decoded Seaport submission from the listing's messageData
+ * @param recipient - Address to receive the ERC20 tokens
  * @param seaportAddress - Seaport contract address
  * @returns WriteTransactionConfig with value set to the native currency payment
  */
 export function buildFulfillErc20ListingTx(
   submission: SeaportSubmission,
+  recipient: `0x${string}`,
   seaportAddress: `0x${string}`
 ): WriteTransactionConfig {
-  const order = {
+  const advancedOrder = {
     parameters: formatOrderParameters(submission.parameters),
+    numerator: BigInt(1),
+    denominator: BigInt(1),
     signature: submission.signature,
+    extraData: "0x" as `0x${string}`,
   };
 
   return {
     to: seaportAddress,
-    functionName: "fulfillOrder",
-    args: [order, ZERO_BYTES32],
-    abi: SEAPORT_FULFILL_ORDER_ABI,
+    functionName: "fulfillAdvancedOrder",
+    args: [advancedOrder, [], ZERO_BYTES32, recipient],
+    abi: SEAPORT_FULFILL_ADVANCED_ORDER_ABI,
     value: getNativeConsiderationValue(submission.parameters),
   };
 }

@@ -1026,7 +1026,7 @@ export class BazaarClient {
    * Prepare a fulfillment for an NFT listing (buy an NFT).
    *
    * Returns approval transactions (if the listing requires ERC20 payment) and
-   * the Seaport `fulfillOrder` transaction with the correct native currency value.
+   * the Seaport `fulfillAdvancedOrder` transaction with the correct native currency value.
    */
   async prepareFulfillListing(
     listing: Listing,
@@ -1034,7 +1034,7 @@ export class BazaarClient {
   ): Promise<PreparedFulfillment> {
     const submission = decodeSeaportSubmission(listing.messageData);
     const seaportAddress = getSeaportAddress(this.chainId);
-    const fulfillment = buildFulfillListingTx(submission, seaportAddress);
+    const fulfillment = buildFulfillListingTx(submission, fulfillerAddress, seaportAddress);
 
     // NFT listings paid in native currency don't need ERC20 approvals from the buyer
     return { approvals: [], fulfillment };
@@ -1110,7 +1110,7 @@ export class BazaarClient {
   /**
    * Prepare a fulfillment for an ERC20 listing (buy ERC20 tokens with native currency).
    *
-   * Returns the Seaport `fulfillOrder` transaction with the correct native currency value.
+   * Returns the Seaport `fulfillAdvancedOrder` transaction with the correct native currency value.
    * No approvals needed since the buyer pays in native currency.
    */
   async prepareFulfillErc20Listing(
@@ -1119,7 +1119,7 @@ export class BazaarClient {
   ): Promise<PreparedFulfillment> {
     const submission = decodeSeaportSubmission(listing.messageData);
     const seaportAddress = getSeaportAddress(this.chainId);
-    const fulfillment = buildFulfillErc20ListingTx(submission, seaportAddress);
+    const fulfillment = buildFulfillErc20ListingTx(submission, fulfillerAddress, seaportAddress);
 
     return { approvals: [], fulfillment };
   }

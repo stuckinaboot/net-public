@@ -62,14 +62,16 @@ function createSubmission(overrides: Partial<{
 }
 
 describe("buildFulfillListingTx", () => {
-  it("builds a fulfillOrder tx with native value for NFT listing", () => {
+  it("builds a fulfillAdvancedOrder tx with native value for NFT listing", () => {
     const submission = createSubmission({});
-    const tx = buildFulfillListingTx(submission, SEAPORT_ADDRESS);
+    const tx = buildFulfillListingTx(submission, FULFILLER, SEAPORT_ADDRESS);
 
     expect(tx.to).toBe(SEAPORT_ADDRESS);
-    expect(tx.functionName).toBe("fulfillOrder");
+    expect(tx.functionName).toBe("fulfillAdvancedOrder");
     expect(tx.value).toBe(BigInt("1000000000000000000"));
-    expect(tx.args).toHaveLength(2);
+    expect(tx.args).toHaveLength(4);
+    // args: [advancedOrder, criteriaResolvers, fulfillerConduitKey, recipient]
+    expect(tx.args[3]).toBe(FULFILLER);
   });
 
   it("sums multiple native consideration items", () => {
@@ -94,7 +96,7 @@ describe("buildFulfillListingTx", () => {
       ],
     });
 
-    const tx = buildFulfillListingTx(submission, SEAPORT_ADDRESS);
+    const tx = buildFulfillListingTx(submission, FULFILLER, SEAPORT_ADDRESS);
     expect(tx.value).toBe(BigInt("1000000000000000000"));
   });
 });
@@ -180,7 +182,7 @@ describe("buildFulfillErc20OfferTx", () => {
 });
 
 describe("buildFulfillErc20ListingTx", () => {
-  it("builds a fulfillOrder tx with native value for ERC20 listing", () => {
+  it("builds a fulfillAdvancedOrder tx with native value for ERC20 listing", () => {
     const submission = createSubmission({
       offer: [
         {
@@ -203,10 +205,10 @@ describe("buildFulfillErc20ListingTx", () => {
       ],
     });
 
-    const tx = buildFulfillErc20ListingTx(submission, SEAPORT_ADDRESS);
+    const tx = buildFulfillErc20ListingTx(submission, FULFILLER, SEAPORT_ADDRESS);
 
     expect(tx.to).toBe(SEAPORT_ADDRESS);
-    expect(tx.functionName).toBe("fulfillOrder");
+    expect(tx.functionName).toBe("fulfillAdvancedOrder");
     expect(tx.value).toBe(BigInt("500000000000000000"));
   });
 });
@@ -253,9 +255,9 @@ describe("fulfillment roundtrip with encoded data", () => {
     const decoded = decodeSeaportSubmission(encoded);
 
     // Build fulfillment from decoded data
-    const tx = buildFulfillListingTx(decoded, SEAPORT_ADDRESS);
+    const tx = buildFulfillListingTx(decoded, FULFILLER, SEAPORT_ADDRESS);
 
-    expect(tx.functionName).toBe("fulfillOrder");
+    expect(tx.functionName).toBe("fulfillAdvancedOrder");
     expect(tx.value).toBe(BigInt("1000000000000000000"));
     expect(tx.to).toBe(SEAPORT_ADDRESS);
   });

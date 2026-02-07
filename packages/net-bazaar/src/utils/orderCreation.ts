@@ -2,6 +2,7 @@
  * Order creation utilities for building EIP-712 typed data and Bazaar submit transactions
  */
 
+import { keccak256, toBytes } from "viem";
 import {
   SeaportOrderParameters,
   EIP712OrderData,
@@ -164,9 +165,8 @@ export function buildListingOrderComponents(
 
   if (params.targetFulfiller) {
     zone = NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS;
-    // zoneHash is keccak256(targetFulfiller) - but we pass it as the raw padded address
-    // The zone contract checks msg.sender matches. The zoneHash is just the padded address.
-    zoneHash = `0x000000000000000000000000${params.targetFulfiller.slice(2).toLowerCase()}` as `0x${string}`;
+    // zoneHash is keccak256 of the raw address bytes (20 bytes)
+    zoneHash = keccak256(toBytes(params.targetFulfiller));
   } else {
     zone = NET_SEAPORT_ZONE_ADDRESS;
     zoneHash = ZERO_BYTES32;
@@ -378,7 +378,8 @@ export function buildErc20ListingOrderComponents(
 
   if (params.targetFulfiller) {
     zone = NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS;
-    zoneHash = `0x000000000000000000000000${params.targetFulfiller.slice(2).toLowerCase()}` as `0x${string}`;
+    // zoneHash is keccak256 of the raw address bytes (20 bytes)
+    zoneHash = keccak256(toBytes(params.targetFulfiller));
   } else {
     zone = NET_SEAPORT_ZONE_ADDRESS;
     zoneHash = ZERO_BYTES32;

@@ -147,7 +147,7 @@ describe("buildListingOrderComponents", () => {
 
     expect(orderParameters.zone.toLowerCase()).toBe(NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS.toLowerCase());
     expect(orderParameters.zoneHash).toBe(
-      "0x000000000000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "0x5ab9a75647463db7d9263bfdf0f9b455fd5a2ff89f446d3dfa3dfe67cae5649d"
     );
   });
 });

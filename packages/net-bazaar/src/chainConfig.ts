@@ -196,6 +196,21 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     },
     currencySymbol: "monad",
   },
+
+  // MegaETH
+  4326: {
+    bazaarAddress: DEFAULT_BAZAAR_ADDRESS,
+    collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
+    seaportAddress: DEFAULT_SEAPORT_ADDRESS,
+    feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
+    nftFeeBps: DEFAULT_NFT_FEE_BPS,
+    wrappedNativeCurrency: {
+      address: "0x4200000000000000000000000000000000000006",
+      name: "Wrapped Ether",
+      symbol: "WETH",
+    },
+    currencySymbol: "eth",
+  },
 };
 
 /**

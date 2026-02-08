@@ -104,6 +104,14 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
     nativeCurrency: { name: "Monad", symbol: "MONAD", decimals: 18 },
     blockExplorer: { name: "Monad Scan", url: "https://monadscan.com/" },
   },
+  // MegaETH
+  4326: {
+    name: "MegaETH",
+    rpcUrls: ["https://mainnet.megaeth.com/rpc"],
+    netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    blockExplorer: { name: "MegaETH Explorer", url: "https://mega.etherscan.com" },
+  },
   // Base Sepolia (testnet)
   84532: {
     name: "Base Sepolia",

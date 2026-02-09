@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/core",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Core Net protocol SDK for interacting with Net smart contracts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

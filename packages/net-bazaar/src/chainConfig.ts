@@ -199,8 +199,10 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
 
   // MegaETH
   4326: {
-    bazaarAddress: DEFAULT_BAZAAR_ADDRESS,
-    collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
+    bazaarAddress: "0x000000058f3ade587388daf827174d0e6fc97595",
+    collectionOffersAddress: "0x0000000f9c45efcff0f78d8b54aa6a40092d66dc",
+    erc20OffersAddress: "0x0000000e23a89aa06f317306aa1ae231d3503082",
+    erc20BazaarAddress: "0x00000006557e3629e2fc50bbad0c002b27cac492",
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
     nftFeeBps: DEFAULT_NFT_FEE_BPS,

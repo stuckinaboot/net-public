@@ -204,7 +204,7 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     erc20OffersAddress: "0x0000000e23a89aa06f317306aa1ae231d3503082",
     erc20BazaarAddress: "0x00000006557e3629e2fc50bbad0c002b27cac492",
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
-    feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
+    feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
     nftFeeBps: DEFAULT_NFT_FEE_BPS,
     wrappedNativeCurrency: {
       address: "0x4200000000000000000000000000000000000006",

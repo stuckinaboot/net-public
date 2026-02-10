@@ -42,6 +42,17 @@ export interface ProfileSetBioOptions {
 }
 
 /**
+ * Options for profile set-token-address command (write)
+ */
+export interface ProfileSetTokenAddressOptions {
+  tokenAddress: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+/**
  * Options for profile set-canvas command (write)
  */
 export interface ProfileSetCanvasOptions {

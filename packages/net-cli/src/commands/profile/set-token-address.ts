@@ -6,33 +6,30 @@ import { base } from "viem/chains";
 import { getChainRpcUrls } from "@net-protocol/core";
 import {
   getProfileMetadataStorageArgs,
-  isValidXUsername,
+  isValidTokenAddress,
   STORAGE_CONTRACT,
 } from "@net-protocol/profiles";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { encodeTransaction } from "../../shared/encode";
 import { readExistingMetadata } from "./utils";
-import type { ProfileSetUsernameOptions } from "./types";
+import type { ProfileSetTokenAddressOptions } from "./types";
 
 /**
- * Execute the profile set-username command
+ * Execute the profile set-token-address command
  */
-export async function executeProfileSetUsername(
-  options: ProfileSetUsernameOptions
+export async function executeProfileSetTokenAddress(
+  options: ProfileSetTokenAddressOptions
 ): Promise<void> {
-  // Validate username
-  if (!isValidXUsername(options.username)) {
+  // Validate token address
+  if (!isValidTokenAddress(options.tokenAddress)) {
     exitWithError(
-      `Invalid X username: "${options.username}". Usernames must be 1-15 characters, alphanumeric and underscores only.`
+      `Invalid token address: "${options.tokenAddress}". Must be a valid EVM address (0x-prefixed, 40 hex characters).`
     );
   }
 
-  // Normalize username (strip @ if present for storage)
-  const usernameForStorage = options.username.startsWith("@")
-    ? options.username.slice(1)
-    : options.username;
-  const displayUsername = `@${usernameForStorage}`;
+  // Store as lowercase
+  const normalizedAddress = options.tokenAddress.toLowerCase();
 
   // Handle encode-only mode (no private key required)
   if (options.encodeOnly) {
@@ -41,7 +38,7 @@ export async function executeProfileSetUsername(
       rpcUrl: options.rpcUrl,
     });
     const storageArgs = getProfileMetadataStorageArgs({
-      x_username: usernameForStorage,
+      token_address: normalizedAddress,
     });
     const encoded = encodeTransaction(
       {
@@ -80,8 +77,8 @@ export async function executeProfileSetUsername(
       transport: http(rpcUrls[0]),
     }).extend(publicActions);
 
-    console.log(chalk.blue(`Setting X username...`));
-    console.log(chalk.gray(`   Username: ${displayUsername}`));
+    console.log(chalk.blue(`Setting profile token address...`));
+    console.log(chalk.gray(`   Token Address: ${normalizedAddress}`));
     console.log(chalk.gray(`   Address: ${account.address}`));
 
     // Read existing metadata to preserve other fields
@@ -96,12 +93,12 @@ export async function executeProfileSetUsername(
       storageClient
     );
 
-    // Merge: update x_username, preserve other fields
+    // Merge: update token_address, preserve other fields
     const storageArgs = getProfileMetadataStorageArgs({
-      x_username: usernameForStorage,
+      token_address: normalizedAddress,
+      x_username: existing.x_username,
       bio: existing.bio,
       display_name: existing.display_name,
-      token_address: existing.token_address,
     });
 
     // Submit transaction
@@ -120,7 +117,7 @@ export async function executeProfileSetUsername(
     if (receipt.status === "success") {
       console.log(
         chalk.green(
-          `\nX username updated successfully!\n  Transaction: ${hash}\n  Username: ${displayUsername}`
+          `\nToken address updated successfully!\n  Transaction: ${hash}\n  Token Address: ${normalizedAddress}`
         )
       );
     } else {
@@ -128,7 +125,7 @@ export async function executeProfileSetUsername(
     }
   } catch (error) {
     exitWithError(
-      `Failed to set X username: ${
+      `Failed to set token address: ${
         error instanceof Error ? error.message : String(error)
       }`
     );

@@ -85,12 +85,14 @@ export function useBasicUserProfileMetadata({
   const xUsername = profileMetadata?.x_username;
   const bio = profileMetadata?.bio;
   const displayName = profileMetadata?.display_name;
+  const tokenAddress = profileMetadata?.token_address;
 
   return {
     profilePicture: profilePicture || undefined,
     xUsername: xUsername || undefined,
     bio: bio || undefined,
     displayName: displayName || undefined,
+    tokenAddress: tokenAddress || undefined,
     isLoading,
   };
 }

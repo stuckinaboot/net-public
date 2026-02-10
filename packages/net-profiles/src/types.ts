@@ -5,6 +5,7 @@ export interface ProfileMetadata {
   x_username?: string;
   bio?: string;
   display_name?: string;
+  token_address?: string;
 }
 
 /**
@@ -25,6 +26,7 @@ export interface BasicUserProfileMetadata {
   xUsername?: string;
   bio?: string;
   displayName?: string;
+  tokenAddress?: string;
   forwardedTo?: string;
   isLoading: boolean;
 }
@@ -56,6 +58,7 @@ export interface UserProfile {
   xUsername?: string;
   bio?: string;
   displayName?: string;
+  tokenAddress?: string;
   canvas?: string;
   forwardedTo?: string;
 }

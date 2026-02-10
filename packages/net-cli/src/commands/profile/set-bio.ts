@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { StorageClient } from "@net-protocol/storage";
 import { createWalletClient, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
@@ -11,6 +12,7 @@ import {
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { encodeTransaction } from "../../shared/encode";
+import { readExistingMetadata } from "./utils";
 import type { ProfileSetBioOptions } from "./types";
 
 /**
@@ -26,15 +28,13 @@ export async function executeProfileSetBio(
     );
   }
 
-  // Get storage args
-  const storageArgs = getProfileMetadataStorageArgs({ bio: options.bio });
-
   // Handle encode-only mode (no private key required)
   if (options.encodeOnly) {
     const readOnlyOptions = parseReadOnlyOptions({
       chainId: options.chainId,
       rpcUrl: options.rpcUrl,
     });
+    const storageArgs = getProfileMetadataStorageArgs({ bio: options.bio });
     const encoded = encodeTransaction(
       {
         to: STORAGE_CONTRACT.address,
@@ -75,6 +75,26 @@ export async function executeProfileSetBio(
     console.log(chalk.blue(`Setting profile bio...`));
     console.log(chalk.gray(`   Bio: ${options.bio}`));
     console.log(chalk.gray(`   Address: ${account.address}`));
+
+    // Read existing metadata to preserve other fields
+    const storageClient = new StorageClient({
+      chainId: commonOptions.chainId,
+      overrides: commonOptions.rpcUrl
+        ? { rpcUrls: [commonOptions.rpcUrl] }
+        : undefined,
+    });
+    const existing = await readExistingMetadata(
+      account.address,
+      storageClient
+    );
+
+    // Merge: update bio, preserve other fields
+    const storageArgs = getProfileMetadataStorageArgs({
+      bio: options.bio,
+      x_username: existing.x_username,
+      display_name: existing.display_name,
+      token_address: existing.token_address,
+    });
 
     // Submit transaction
     const hash = await client.writeContract({

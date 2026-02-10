@@ -70,6 +70,22 @@ vi.mock("../../../shared/encode", () => ({
   }),
 }));
 
+// Mock @net-protocol/storage (StorageClient used for read-then-write)
+vi.mock("@net-protocol/storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@net-protocol/storage")>();
+  return {
+    ...actual,
+    StorageClient: vi.fn().mockImplementation(() => ({
+      readStorageData: vi.fn().mockResolvedValue({ data: null }),
+    })),
+  };
+});
+
+// Mock profile utils (readExistingMetadata)
+vi.mock("../../../commands/profile/utils", () => ({
+  readExistingMetadata: vi.fn().mockResolvedValue({}),
+}));
+
 // Mock console.log
 const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 

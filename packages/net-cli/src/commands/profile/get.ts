@@ -47,9 +47,10 @@ export async function executeProfileGet(
       }
     }
 
-    // Fetch profile metadata (X username, bio)
+    // Fetch profile metadata (X username, bio, token address)
     let xUsername: string | undefined;
     let bio: string | undefined;
+    let tokenAddress: string | undefined;
     try {
       const metadataResult = await client.readStorageData({
         key: PROFILE_METADATA_STORAGE_KEY,
@@ -59,6 +60,7 @@ export async function executeProfileGet(
         const metadata = parseProfileMetadata(metadataResult.data);
         xUsername = metadata?.x_username;
         bio = metadata?.bio;
+        tokenAddress = metadata?.token_address;
       }
     } catch (error) {
       // Not found is okay
@@ -93,7 +95,7 @@ export async function executeProfileGet(
       }
     }
 
-    const hasProfile = profilePicture || xUsername || bio || canvasSize;
+    const hasProfile = profilePicture || xUsername || bio || tokenAddress || canvasSize;
 
     if (options.json) {
       const output = {
@@ -102,6 +104,7 @@ export async function executeProfileGet(
         profilePicture: profilePicture || null,
         xUsername: xUsername || null,
         bio: bio || null,
+        tokenAddress: tokenAddress || null,
         canvas: canvasSize
           ? { size: canvasSize, isDataUri: canvasIsDataUri }
           : null,
@@ -127,6 +130,11 @@ export async function executeProfileGet(
     );
     console.log(
       `  ${chalk.cyan("Bio:")} ${bio || chalk.gray("(not set)")}`
+    );
+    console.log(
+      `  ${chalk.cyan("Token Address:")} ${
+        tokenAddress || chalk.gray("(not set)")
+      }`
     );
     console.log(
       `  ${chalk.cyan("Canvas:")} ${

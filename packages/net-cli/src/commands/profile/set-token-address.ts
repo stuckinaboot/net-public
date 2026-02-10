@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { StorageClient } from "@net-protocol/storage";
 import { createWalletClient, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
@@ -11,6 +12,7 @@ import {
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { encodeTransaction } from "../../shared/encode";
+import { readExistingMetadata } from "./utils";
 import type { ProfileSetTokenAddressOptions } from "./types";
 
 /**
@@ -29,16 +31,14 @@ export async function executeProfileSetTokenAddress(
   // Store as lowercase
   const normalizedAddress = options.tokenAddress.toLowerCase();
 
-  // Get storage args
-  const storageArgs = getProfileMetadataStorageArgs({
-    token_address: normalizedAddress,
-  });
-
   // Handle encode-only mode (no private key required)
   if (options.encodeOnly) {
     const readOnlyOptions = parseReadOnlyOptions({
       chainId: options.chainId,
       rpcUrl: options.rpcUrl,
+    });
+    const storageArgs = getProfileMetadataStorageArgs({
+      token_address: normalizedAddress,
     });
     const encoded = encodeTransaction(
       {
@@ -80,6 +80,26 @@ export async function executeProfileSetTokenAddress(
     console.log(chalk.blue(`Setting profile token address...`));
     console.log(chalk.gray(`   Token Address: ${normalizedAddress}`));
     console.log(chalk.gray(`   Address: ${account.address}`));
+
+    // Read existing metadata to preserve other fields
+    const storageClient = new StorageClient({
+      chainId: commonOptions.chainId,
+      overrides: commonOptions.rpcUrl
+        ? { rpcUrls: [commonOptions.rpcUrl] }
+        : undefined,
+    });
+    const existing = await readExistingMetadata(
+      account.address,
+      storageClient
+    );
+
+    // Merge: update token_address, preserve other fields
+    const storageArgs = getProfileMetadataStorageArgs({
+      token_address: normalizedAddress,
+      x_username: existing.x_username,
+      bio: existing.bio,
+      display_name: existing.display_name,
+    });
 
     // Submit transaction
     const hash = await client.writeContract({

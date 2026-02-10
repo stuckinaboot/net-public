@@ -3,6 +3,7 @@ import { executeProfileGet } from "./get";
 import { executeProfileSetPicture } from "./set-picture";
 import { executeProfileSetUsername } from "./set-username";
 import { executeProfileSetBio } from "./set-bio";
+import { executeProfileSetTokenAddress } from "./set-token-address";
 import { executeProfileSetCanvas } from "./set-canvas";
 import { executeProfileGetCanvas } from "./get-canvas";
 
@@ -134,6 +135,40 @@ export function registerProfileCommand(program: Command): void {
       });
     });
 
+  // Set-token-address subcommand (write)
+  const setTokenAddressCommand = new Command("set-token-address")
+    .description("Set your profile token address (ERC-20 token that represents you)")
+    .requiredOption(
+      "--token-address <address>",
+      "ERC-20 token contract address (0x-prefixed)"
+    )
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option(
+      "--encode-only",
+      "Output transaction data as JSON instead of executing"
+    )
+    .action(async (options) => {
+      await executeProfileSetTokenAddress({
+        tokenAddress: options.tokenAddress,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
   // Set-canvas subcommand (write)
   const setCanvasCommand = new Command("set-canvas")
     .description("Set your profile canvas (HTML content)")
@@ -196,6 +231,7 @@ export function registerProfileCommand(program: Command): void {
   profileCommand.addCommand(setPictureCommand);
   profileCommand.addCommand(setUsernameCommand);
   profileCommand.addCommand(setBioCommand);
+  profileCommand.addCommand(setTokenAddressCommand);
   profileCommand.addCommand(setCanvasCommand);
   profileCommand.addCommand(getCanvasCommand);
 }

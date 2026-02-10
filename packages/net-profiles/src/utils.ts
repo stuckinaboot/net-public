@@ -178,10 +178,19 @@ export function parseProfileMetadata(
         ? parsed.display_name
         : undefined;
 
+    // Extract token address if present (stored as lowercase)
+    const token_address =
+      parsed?.token_address &&
+      typeof parsed.token_address === "string" &&
+      parsed.token_address.length > 0
+        ? parsed.token_address.toLowerCase()
+        : undefined;
+
     return {
       x_username: usernameWithoutAt,
       bio,
       display_name,
+      token_address,
     };
   } catch {
     return undefined;
@@ -261,4 +270,28 @@ export function getDisplayNameStorageArgs(
   displayName: string
 ): ProfileStorageArgs {
   return getProfileMetadataStorageArgs({ display_name: displayName });
+}
+
+/**
+ * Prepare transaction arguments for updating token address
+ * This is a convenience wrapper around getProfileMetadataStorageArgs
+ *
+ * @param tokenAddress - The ERC-20 token contract address (stored as lowercase)
+ * @returns Arguments for Storage.put()
+ */
+export function getTokenAddressStorageArgs(
+  tokenAddress: string
+): ProfileStorageArgs {
+  return getProfileMetadataStorageArgs({
+    token_address: tokenAddress.toLowerCase(),
+  });
+}
+
+/**
+ * Validate that a string is a valid EVM token address
+ * Returns true if valid (0x-prefixed, 40 hex characters)
+ */
+export function isValidTokenAddress(address: string): boolean {
+  if (!address) return false;
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
 }

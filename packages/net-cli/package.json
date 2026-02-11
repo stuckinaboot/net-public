@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {

@@ -9,6 +9,8 @@ export default defineConfig({
       "@net-protocol/relay": path.resolve(__dirname, "../net-relay/src"),
       "@net-protocol/netr": path.resolve(__dirname, "../net-netr/src"),
       "@net-protocol/profiles": path.resolve(__dirname, "../net-profiles/src"),
+      "@net-protocol/feeds": path.resolve(__dirname, "../net-feeds/src"),
+      "@net-protocol/bazaar": path.resolve(__dirname, "../net-bazaar/src"),
     },
   },
   test: {

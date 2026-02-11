@@ -4,6 +4,16 @@
     "module": "ESNext",
     "lib": ["ES2022"],
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@net-protocol/core": ["../net-core/src"],
+      "@net-protocol/feeds": ["../net-feeds/src"],
+      "@net-protocol/storage": ["../net-storage/src"],
+      "@net-protocol/profiles": ["../net-profiles/src"],
+      "@net-protocol/relay": ["../net-relay/src"],
+      "@net-protocol/netr": ["../net-netr/src"],
+      "@net-protocol/bazaar": ["../net-bazaar/src"]
+    },
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

@@ -19,6 +19,7 @@ import { registerInfoCommand } from "../commands/info";
 import { registerTokenCommand } from "../commands/token";
 import { registerProfileCommand } from "../commands/profile";
 import { registerBazaarCommand } from "../commands/bazaar";
+import { registerFeedCommand } from "../commands/feed";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../../package.json");
@@ -38,5 +39,6 @@ registerInfoCommand(program);
 registerTokenCommand(program);
 registerProfileCommand(program);
 registerBazaarCommand(program);
+registerFeedCommand(program);
 
 program.parse();

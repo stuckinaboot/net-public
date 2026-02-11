@@ -32,8 +32,8 @@ Net Storage supports three storage patterns for different file sizes:
 
 ### XML Storage
 
-**Best for**: Large files (> 20KB) or files containing XML references  
-**How it works**: Splits large files into 80KB pieces, stores each using ChunkedStorage (compressed and chunked into 20KB pieces), maintains references as XML metadata  
+**Best for**: Large files (> 20KB) or files containing XML references
+**How it works**: Splits large files into 80KB pieces (configurable via `chunkSize`), stores each using ChunkedStorage (compressed and chunked into 20KB pieces), maintains references as XML metadata
 **Use cases**: Videos, large images, datasets, any large file
 
 ## What can you do with this package?
@@ -228,6 +228,7 @@ import {
   fileToDataUri,
   detectFileTypeFromBase64,
   base64ToDataUri,
+  OPTIMAL_CHUNK_SIZE,
 } from "@net-protocol/storage";
 
 // Generate storage key bytes
@@ -242,8 +243,11 @@ const assembled = assembleChunks(chunks);
 // Parse XML references
 const references = parseNetReferences('<net k="hash" v="0.0.1" />');
 
-// Process data for XML storage
-const result = processDataForStorage(data, operatorAddress);
+// Process data for XML storage (default 80KB chunk size)
+const result = processDataForStorage(data, operatorAddress, storageKey);
+
+// Process with custom chunk size (40KB)
+const result2 = processDataForStorage(data, operatorAddress, storageKey, 40000);
 ```
 
 ### File Utilities
@@ -297,6 +301,11 @@ const dataUri = base64ToDataUri(base64Data);
 - `getForOperatorAndKey(params)` - Get storage by operator and key
 - `readStorageData(params)` - Read with XML resolution
 - `readChunkedStorage(params)` - Read chunked storage with decompression
+- `prepareXmlStorage(params)` - Prepare XML storage transactions (supports optional `chunkSize`)
+
+### Constants
+
+- `OPTIMAL_CHUNK_SIZE` - Default chunk size for XML storage (80000 bytes)
 
 ## Storage Types
 

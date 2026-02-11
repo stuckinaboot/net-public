@@ -12,6 +12,7 @@ export interface StorageEncodeOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  chunkSize?: number;
 }
 
 interface EncodedStorageResult {
@@ -64,6 +65,7 @@ export async function encodeStorageUpload(
         operatorAddress,
         storageKey: options.storageKey,
         filename: options.text,
+        chunkSize: options.chunkSize,
       });
 
     const encodedTransactions = transactionConfigs.map((config) =>

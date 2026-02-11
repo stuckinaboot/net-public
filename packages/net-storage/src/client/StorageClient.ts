@@ -684,6 +684,7 @@ export class StorageClient {
     filename?: string;
     useChunkedStorageBackend?: boolean; // Default: true
     keyFormat?: "raw" | "bytes32";
+    chunkSize?: number; // Size of each data chunk before compression (default: 80KB)
   }): {
     transactionConfigs: WriteTransactionConfig[];
     topLevelHash: string;
@@ -693,7 +694,8 @@ export class StorageClient {
     const result = processDataForStorage(
       params.data,
       params.operatorAddress,
-      params.storageKey
+      params.storageKey,
+      params.chunkSize
     );
 
     if (!result.valid) {

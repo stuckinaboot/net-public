@@ -80,6 +80,7 @@ export interface UploadOptions {
   privateKey: `0x${string}`;
   chainId: number;
   rpcUrl?: string;
+  chunkSize?: number; // Size of each data chunk in bytes before compression (default: 80KB)
 }
 
 /**
@@ -178,6 +179,7 @@ export interface PrepareXmlStorageTransactionsParams {
   text: string;
   content: string;
   operatorAddress: string;
+  chunkSize?: number;
 }
 
 /**

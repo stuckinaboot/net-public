@@ -28,6 +28,7 @@ export {
   generateXmlMetadataWithSource,
   validateDataSize,
   computeTopLevelHash,
+  OPTIMAL_CHUNK_SIZE,
 } from "./utils/writingUtils";
 export {
   fileToDataUri,

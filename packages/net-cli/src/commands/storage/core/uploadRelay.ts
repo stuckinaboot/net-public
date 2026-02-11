@@ -168,6 +168,7 @@ export async function uploadFileWithRelay(
     storageKey: options.storageKey,
     filename: options.text,
     useChunkedStorageBackend: true,
+    chunkSize: options.chunkSize,
   });
 
   const chunkTxs = chunkPrepareResult.transactionConfigs.slice(1); // Skip metadata, get chunks

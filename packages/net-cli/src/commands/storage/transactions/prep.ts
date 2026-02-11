@@ -50,7 +50,7 @@ export function prepareNormalStorageTransaction(
 export function prepareXmlStorageTransactions(
   params: PrepareXmlStorageTransactionsParams
 ): TransactionWithId[] {
-  const { storageClient, storageKey, text, content, operatorAddress } = params;
+  const { storageClient, storageKey, text, content, operatorAddress, chunkSize } = params;
   const storageKeyBytes = getStorageKeyBytes(storageKey) as `0x${string}`;
 
   // Use StorageClient.prepareXmlStorage() from net-public
@@ -62,6 +62,7 @@ export function prepareXmlStorageTransactions(
     storageKey: storageKey, // Pass as string, not bytes32
     filename: text,
     useChunkedStorageBackend: true, // Use ChunkedStorage backend (default)
+    chunkSize,
   });
 
   // Map WriteTransactionConfig[] to TransactionWithId[]

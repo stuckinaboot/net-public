@@ -7,6 +7,11 @@ export default defineConfig({
     "profile/index": "src/commands/profile/index.ts",
   },
   format: ["esm"],
+  dts: {
+    compilerOptions: {
+      composite: false,
+    },
+  },
   splitting: false,
   sourcemap: true,
   clean: true,

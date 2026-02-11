@@ -1,15 +1,24 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
     "netp": "./dist/cli/index.mjs"
   },
   "exports": {
-    ".": "./dist/cli/index.mjs",
-    "./feed": "./dist/feed/index.mjs",
-    "./profile": "./dist/profile/index.mjs"
+    ".": {
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.mjs"
+    },
+    "./feed": {
+      "types": "./dist/feed/index.d.ts",
+      "import": "./dist/feed/index.mjs"
+    },
+    "./profile": {
+      "types": "./dist/profile/index.d.ts",
+      "import": "./dist/profile/index.mjs"
+    }
   },
   "files": [
     "dist",

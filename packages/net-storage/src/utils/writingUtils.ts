@@ -2,7 +2,7 @@ import { keccak256HashString } from "@net-protocol/core";
 
 // Constants from ChunkedStorage.sol
 const MAX_CHUNKS = 255;
-const OPTIMAL_CHUNK_SIZE = 80 * 1000;
+export const OPTIMAL_CHUNK_SIZE = 80 * 1000;
 
 /**
  * Split data into chunks of specified size
@@ -88,7 +88,8 @@ export function computeTopLevelHash(chunkHashes: string[]): string {
 export function processDataForStorage(
   data: string,
   operatorAddress: string,
-  storageKey?: string
+  storageKey?: string,
+  chunkSize?: number
 ): {
   chunks: string[];
   chunkHashes: string[];
@@ -98,7 +99,7 @@ export function processDataForStorage(
   error?: string;
 } {
   // 1. Chunk the data
-  const chunks = chunkData(data);
+  const chunks = chunkData(data, chunkSize);
 
   // 2. Validate size
   const validation = validateDataSize(chunks);

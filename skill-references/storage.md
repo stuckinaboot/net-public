@@ -20,7 +20,7 @@ netp storage upload \
 ```
 
 ### XML Chunked Storage (>20KB)
-Larger files are automatically chunked into 80KB segments using XML format.
+Larger files are automatically chunked into 80KB segments (configurable via `--chunk-size`) using XML format.
 
 ```bash
 # CLI handles chunking automatically
@@ -28,6 +28,14 @@ netp storage upload \
   --file large-file.json \
   --key "big-data" \
   --text "Large dataset" \
+  --chain-id 8453
+
+# Custom chunk size (40KB instead of default 80KB)
+netp storage upload \
+  --file large-file.json \
+  --key "big-data" \
+  --text "Large dataset" \
+  --chunk-size 40000 \
   --chain-id 8453
 ```
 
@@ -45,6 +53,7 @@ netp storage upload \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
+  [--chunk-size <bytes>] \
   [--encode-only]
 ```
 
@@ -57,6 +66,7 @@ netp storage upload \
 | `--private-key` | No | Wallet key (prefer `NET_PRIVATE_KEY` env var) |
 | `--chain-id` | No | Target chain (default from `NET_CHAIN_ID`) |
 | `--rpc-url` | No | Custom RPC endpoint |
+| `--chunk-size` | No | Size of each XML chunk in bytes (default: 80000) |
 | `--encode-only` | No | Output transaction JSON without executing |
 
 **Example Output (Direct Execution):**

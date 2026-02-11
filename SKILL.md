@@ -109,6 +109,9 @@ Store files and data permanently on-chain:
 # Upload a file
 netp storage upload --file ./data.json --key "my-data" --text "My stored data" --chain-id 8453
 
+# Upload with custom chunk size (default is 80KB)
+netp storage upload --file ./large-file.bin --key "my-data" --text "Large file" --chunk-size 40000 --chain-id 8453
+
 # Preview upload (dry run)
 netp storage preview --file ./data.json --key "my-data" --text "My stored data" --chain-id 8453
 
@@ -246,7 +249,7 @@ netp bazaar accept-offer --order-hash 0x... --nft-address 0x... --token-id 42 --
 ## Capabilities Overview
 
 ### On-Chain Storage
-- **File Upload**: Store files up to 20KB in single transaction, larger files chunked to 80KB
+- **File Upload**: Store files up to 20KB in single transaction, larger files chunked to 80KB (configurable via `--chunk-size`)
 - **Key-Value Storage**: Store data by key, retrieve by key + operator address
 - **Idempotent Uploads**: Safe to retry - CLI checks what's already stored
 - **Preview Mode**: See transaction count before committing

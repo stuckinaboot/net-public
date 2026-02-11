@@ -7,6 +7,7 @@ import { previewFile } from "./core/preview";
 import { executeStorageRead } from "./core/read";
 import { encodeStorageUpload } from "./core/encode";
 import { generateStorageUrl } from "./utils";
+import { OPTIMAL_CHUNK_SIZE } from "@net-protocol/storage";
 import type { UploadOptions } from "./types";
 import type { UploadWithRelayOptions } from "./relay/types";
 
@@ -42,6 +43,11 @@ export function registerStorageCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--chunk-size <bytes>",
+      `Max chunk size in bytes for splitting large files (default: ${OPTIMAL_CHUNK_SIZE})`,
+      (value) => parseInt(value, 10)
+    )
     .action(async (options) => {
       // Handle encode-only mode
       if (options.encodeOnly) {
@@ -53,6 +59,7 @@ export function registerStorageCommand(program: Command): void {
             privateKey: options.privateKey,
             chainId: options.chainId,
             rpcUrl: options.rpcUrl,
+            chunkSize: options.chunkSize,
           });
           console.log(JSON.stringify(result, null, 2));
           process.exit(0);
@@ -86,6 +93,7 @@ export function registerStorageCommand(program: Command): void {
         privateKey: commonOptions.privateKey,
         chainId: commonOptions.chainId,
         rpcUrl: commonOptions.rpcUrl,
+        chunkSize: options.chunkSize,
       };
 
       try {
@@ -174,6 +182,11 @@ export function registerStorageCommand(program: Command): void {
       "--rpc-url <url>",
       "Custom RPC URL (can also be set via NET_RPC_URL env var)"
     )
+    .option(
+      "--chunk-size <bytes>",
+      `Max chunk size in bytes for splitting large files (default: ${OPTIMAL_CHUNK_SIZE})`,
+      (value) => parseInt(value, 10)
+    )
     .action(async (options) => {
       // Parse common options (private-key, chain-id, rpc-url)
       const commonOptions = parseCommonOptions({
@@ -189,6 +202,7 @@ export function registerStorageCommand(program: Command): void {
         privateKey: commonOptions.privateKey,
         chainId: commonOptions.chainId,
         rpcUrl: commonOptions.rpcUrl,
+        chunkSize: options.chunkSize,
       };
 
       try {
@@ -293,6 +307,11 @@ export function registerStorageCommand(program: Command): void {
       "--rpc-url <url>",
       "Custom RPC URL (can also be set via NET_RPC_URL env var)"
     )
+    .option(
+      "--chunk-size <bytes>",
+      `Max chunk size in bytes for splitting large files (default: ${OPTIMAL_CHUNK_SIZE})`,
+      (value) => parseInt(value, 10)
+    )
     .action(async (options) => {
       // Parse common options (private-key, chain-id, rpc-url)
       const commonOptions = parseCommonOptions({
@@ -322,6 +341,7 @@ export function registerStorageCommand(program: Command): void {
         rpcUrl: commonOptions.rpcUrl,
         apiUrl: options.apiUrl,
         secretKey,
+        chunkSize: options.chunkSize,
       };
 
       try {

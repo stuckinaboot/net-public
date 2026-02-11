@@ -89,6 +89,7 @@ export async function previewFile(
       text: options.text,
       content: fileContent,
       operatorAddress,
+      chunkSize: options.chunkSize,
     });
     // No need to extract chunkedHashes - filterXmlStorageTransactions derives them internally
   } else {

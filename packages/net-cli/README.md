@@ -364,6 +364,7 @@ Profile operations for managing your Net Protocol profile.
 - `profile set-picture` - Set your profile picture URL
 - `profile set-x-username` - Set your X (Twitter) username
 - `profile set-bio` - Set your profile bio
+- `profile set-token-address` - Set your profile token address (ERC-20 token)
 - `profile set-canvas` - Set your profile canvas (HTML content)
 - `profile get-canvas` - Get profile canvas for an address
 
@@ -511,6 +512,42 @@ netp profile set-bio \
 # Encode-only
 netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+##### Profile Set Token Address
+
+Set an ERC-20 token address that represents you on your profile.
+
+```bash
+netp profile set-token-address \
+  --token-address <address> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Profile Set Token Address Arguments:**
+
+- `--token-address` (required): ERC-20 token contract address (0x-prefixed, 40 hex characters)
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Example:**
+
+```bash
+# Set token address
+netp profile set-token-address \
+  --token-address 0x1234567890abcdef1234567890abcdef12345678 \
+  --chain-id 8453
+
+# Encode-only (get transaction data without executing)
+netp profile set-token-address \
+  --token-address 0x1234567890abcdef1234567890abcdef12345678 \
   --chain-id 8453 \
   --encode-only
 ```
@@ -695,6 +732,7 @@ src/
 │   │   ├── get.ts        # Profile get logic
 │   │   ├── set-picture.ts    # Set profile picture
 │   │   ├── set-username.ts   # Set X username
+│   │   ├── set-token-address.ts  # Set token address
 │   │   └── types.ts      # Profile-specific types
 │   ├── message/          # Message command module
 │   └── token/            # Token command module

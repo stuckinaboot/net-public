@@ -63,6 +63,7 @@ The agent submits each transaction in the `transactions` array. For large files 
 - `netp profile set-picture --encode-only`
 - `netp profile set-bio --encode-only`
 - `netp profile set-x-username --encode-only`
+- `netp profile set-token-address --encode-only`
 - `netp bazaar buy-listing --encode-only`
 - `netp bazaar accept-offer --encode-only`
 - `netp bazaar submit-listing --encode-only`
@@ -165,6 +166,9 @@ netp profile set-bio --bio "Web3 builder" --chain-id 8453
 
 # Set X (Twitter) username
 netp profile set-x-username --username "myhandle" --chain-id 8453
+
+# Set token address (ERC-20 token that represents you)
+netp profile set-token-address --token-address 0xTokenAddress --chain-id 8453
 ```
 
 **Reference**: [skill-references/profiles.md](skill-references/profiles.md)
@@ -230,6 +234,7 @@ netp bazaar accept-offer --order-hash 0x... --nft-address 0x... --token-id 42 --
 - **Profile Picture**: Store avatar URL on-chain
 - **Bio**: Up to 280 characters
 - **Social Links**: X (Twitter) username linking
+- **Token Address**: Associate an ERC-20 token with your profile
 
 ### NFT Bazaar
 - **Fixed-Price Listings**: List NFTs for sale at a set ETH price
@@ -319,6 +324,12 @@ netp profile set-picture \
 # Generate transaction to set bio
 netp profile set-bio \
   --bio "Automated trading bot" \
+  --chain-id 8453 \
+  --encode-only
+
+# Generate transaction to set token address
+netp profile set-token-address \
+  --token-address 0xYourTokenAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -477,6 +488,7 @@ netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --chain
 - "Set my profile picture to this URL"
 - "Update my bio to 'Building on Base'"
 - "Link my X account @myhandle"
+- "Set my profile token address to 0x..."
 - "What's the profile for this address?"
 
 ### NFT Bazaar

@@ -8,6 +8,7 @@ Net Profiles provide on-chain identity storage for:
 - Profile pictures (avatar URLs)
 - Bio/description text
 - Social links (X/Twitter username)
+- Token address (ERC-20 token that represents you)
 - Canvas (custom HTML profile page)
 
 All profile data is stored on-chain, making it portable and decentralized.
@@ -167,6 +168,41 @@ netp profile set-x-username --username "myhandle" --chain-id 8453
 netp profile set-x-username --username "@myhandle" --chain-id 8453
 ```
 
+### Set Token Address
+
+Associate an ERC-20 token contract address with your profile:
+
+```bash
+netp profile set-token-address \
+  --token-address <address> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--token-address` | Yes | ERC-20 token contract address (0x-prefixed) |
+| `--private-key` | No | Wallet key (prefer env var) |
+| `--chain-id` | No | Target chain |
+| `--encode-only` | No | Output transaction JSON |
+
+**Notes:**
+- Token address is stored as lowercase
+- Must be a valid EVM address (0x-prefixed, 40 hex characters)
+- Preserves existing profile metadata (bio, X username, display name) when updating
+
+**Examples:**
+```bash
+# Set token address
+netp profile set-token-address --token-address 0x1234... --chain-id 8453
+
+# Encode-only (for agents)
+netp profile set-token-address --token-address 0x1234... --chain-id 8453 --encode-only
+```
+
 ### Set Canvas
 
 Set a custom HTML profile canvas (max 60KB):
@@ -299,6 +335,14 @@ netp profile set-x-username \
   --encode-only
 ```
 
+### Set Token Address
+```bash
+netp profile set-token-address \
+  --token-address 0xYourTokenAddress \
+  --chain-id 8453 \
+  --encode-only
+```
+
 ### Set Canvas
 ```bash
 netp profile set-canvas \
@@ -324,6 +368,7 @@ Profile data is stored on-chain via Net Storage:
 netp profile set-picture --url "https://example.com/avatar.png" --chain-id 8453
 netp profile set-bio --bio "Blockchain enthusiast and developer" --chain-id 8453
 netp profile set-x-username --username "blockchaindev" --chain-id 8453
+netp profile set-token-address --token-address 0xYourTokenAddress --chain-id 8453
 netp profile set-canvas --file ./my-profile.html --chain-id 8453
 ```
 
@@ -387,6 +432,7 @@ Profile updates are on-chain transactions:
 - Set picture: ~0.00001-0.0001 ETH
 - Set bio: ~0.00001-0.0001 ETH
 - Set X username: ~0.00001-0.0001 ETH
+- Set token address: ~0.00001-0.0001 ETH
 - Set canvas: ~0.0001-0.001 ETH (depends on size)
 
 ## Error Handling

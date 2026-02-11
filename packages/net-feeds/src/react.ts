@@ -6,6 +6,11 @@ export { useComments } from "./hooks/useComments";
 export { useFeedRegistry, useIsFeedRegistered } from "./hooks/useFeedRegistry";
 export { useRegisteredFeeds } from "./hooks/useRegisteredFeeds";
 export {
+  useAgentRegistry,
+  useIsAgentRegistered,
+} from "./hooks/useAgentRegistry";
+export { useRegisteredAgents } from "./hooks/useRegisteredAgents";
+export {
   useFeedMessageCountBatch,
   type UseFeedMessageCountBatchOptions,
 } from "./hooks/useFeedMessageCountBatch";
@@ -25,4 +30,8 @@ export type {
   UseRegisteredFeedsOptions,
   RegisteredFeed,
   PrepareRegisterFeedOptions,
+  UseAgentRegistryOptions,
+  UseIsAgentRegisteredOptions,
+  UseRegisteredAgentsOptions,
+  RegisteredAgent,
 } from "./types";

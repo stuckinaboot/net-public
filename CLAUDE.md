@@ -19,7 +19,7 @@ net-public/
 ├── packages/
 │   ├── net-core/           # Core client library
 │   ├── net-feeds/          # Feed/post utilities
-│   ├── net-cli/            # CLI tools
+│   ├── net-cli/            # CLI tools (includes feed commands)
 │   ├── net-netr/           # Netr utilities
 │   ├── net-profiles/       # User profile utilities
 │   ├── net-relay/          # Relay client

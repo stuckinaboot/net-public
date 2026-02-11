@@ -15,6 +15,7 @@ export interface UploadWithRelayOptions {
   rpcUrl?: string;
   apiUrl: string; // Backend API URL (e.g., "http://localhost:3000")
   secretKey: string; // Client-provided secret key
+  chunkSize?: number; // Size of each data chunk in bytes before compression (default: 80KB)
 }
 
 /**

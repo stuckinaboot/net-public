@@ -35,8 +35,8 @@ export const AGENT_REGISTRY_CONTRACT = {
   address: "0x0000000000000000000000000000000000000000" as `0x${string}`, // Placeholder until deployment
 } as const;
 
-// Agent topic used by the AgentRegistry contract
-export const AGENT_TOPIC = "agent" as const;
+// Agent topic used by the AgentRegistry contract (single char for gas efficiency)
+export const AGENT_TOPIC = "a" as const;
 
 // Note: NULL_ADDRESS is imported directly from @net-protocol/core in files that need it
 // It is not exported from this package's public API

@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     "cli/index": "src/cli/index.ts",
     "feed/index": "src/commands/feed/index.ts",
+    "profile/index": "src/commands/profile/index.ts",
   },
   format: ["esm"],
   splitting: false,

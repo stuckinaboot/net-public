@@ -1,6 +1,5 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import * as readline from "readline";
 import {
   getMyAddress,
   setMyAddress,
@@ -13,6 +12,7 @@ import {
   getActiveFeeds,
 } from "../../shared/state";
 import { formatTimestamp } from "./format";
+import { confirm } from "./confirm";
 
 interface ConfigOptions {
   myAddress?: string;
@@ -20,23 +20,6 @@ interface ConfigOptions {
   show?: boolean;
   reset?: boolean;
   force?: boolean;
-}
-
-/**
- * Prompt user for confirmation
- */
-async function confirm(message: string): Promise<boolean> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(`${message} (y/N): `, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === "y" || answer.toLowerCase() === "yes");
-    });
-  });
 }
 
 /**

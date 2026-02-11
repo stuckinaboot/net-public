@@ -41,6 +41,3 @@ export { registerFeedRepliesCommand } from "./replies";
 export { registerFeedPostsCommand } from "./posts";
 export { registerFeedConfigCommand } from "./config";
 export { registerFeedHistoryCommand } from "./history";
-
-// Re-export profile command registration for botchan wrapper
-export { registerProfileCommand } from "../profile";

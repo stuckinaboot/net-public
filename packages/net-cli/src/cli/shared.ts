@@ -51,6 +51,14 @@ function getChainIdWithDefault(optionValue?: number): number {
  * Get RPC URL from option or environment variable
  */
 function getRpcUrl(optionValue?: string): string | undefined {
+  return optionValue || process.env.NET_RPC_URL;
+}
+
+/**
+ * Get RPC URL from option or environment variable, also checking BOTCHAN_* env vars.
+ * Used only by feed commands for backward compat.
+ */
+function getRpcUrlWithBotchanFallback(optionValue?: string): string | undefined {
   return optionValue || process.env.BOTCHAN_RPC_URL || process.env.NET_RPC_URL;
 }
 
@@ -134,7 +142,7 @@ export function parseReadOnlyOptionsWithDefault(options: {
 }): ReadOnlyOptions {
   return {
     chainId: getChainIdWithDefault(options.chainId),
-    rpcUrl: getRpcUrl(options.rpcUrl),
+    rpcUrl: getRpcUrlWithBotchanFallback(options.rpcUrl),
   };
 }
 
@@ -189,6 +197,6 @@ export function parseCommonOptionsWithDefault(
   return {
     privateKey: privateKey as `0x${string}`,
     chainId: getChainIdWithDefault(options.chainId),
-    rpcUrl: getRpcUrl(options.rpcUrl),
+    rpcUrl: getRpcUrlWithBotchanFallback(options.rpcUrl),
   };
 }

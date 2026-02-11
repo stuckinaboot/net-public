@@ -1,6 +1,5 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import * as readline from "readline";
 import {
   getHistory,
   getHistoryByType,
@@ -9,7 +8,8 @@ import {
   type HistoryEntry,
   type HistoryEntryType,
 } from "../../shared/state";
-import { formatTimestamp, printJson } from "./format";
+import { formatTimestamp, printJson, truncateAddress } from "./format";
+import { confirm } from "./confirm";
 
 interface HistoryOptions {
   limit?: number;
@@ -17,31 +17,6 @@ interface HistoryOptions {
   json?: boolean;
   clear?: boolean;
   force?: boolean;
-}
-
-/**
- * Prompt user for confirmation
- */
-async function confirm(message: string): Promise<boolean> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(`${message} (y/N): `, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === "y" || answer.toLowerCase() === "yes");
-    });
-  });
-}
-
-/**
- * Truncate an address for display
- */
-function truncateAddress(address: string): string {
-  if (address.length <= 12) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 /**

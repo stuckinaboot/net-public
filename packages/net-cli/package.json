@@ -8,7 +8,8 @@
   },
   "exports": {
     ".": "./dist/cli/index.mjs",
-    "./feed": "./dist/feed/index.mjs"
+    "./feed": "./dist/feed/index.mjs",
+    "./profile": "./dist/profile/index.mjs"
   },
   "files": [
     "dist",

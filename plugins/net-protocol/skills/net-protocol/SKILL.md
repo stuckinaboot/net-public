@@ -106,6 +106,9 @@ netp message count --app 0x... --chain-id 8453
 **Upload data:**
 ```bash
 netp storage upload --file ./data.json --key "my-config" --text "Config file" --chain-id 8453
+
+# Upload with custom chunk size (default is 80KB)
+netp storage upload --file ./large-file.bin --key "big-data" --text "Large file" --chunk-size 40000 --chain-id 8453
 ```
 
 **Read data:**
@@ -215,7 +218,7 @@ netp token deploy --name "My Coin" --symbol "COIN" --image "https://example.com/
 ## Storage Types
 
 **Normal Storage** (files ≤ 20KB): Single transaction, direct storage
-**XML Storage** (files > 20KB): Chunked into multiple transactions with metadata
+**XML Storage** (files > 20KB): Chunked into multiple transactions with metadata (default 80KB chunks, configurable via `--chunk-size`)
 
 The CLI automatically chooses the right type based on file size.
 

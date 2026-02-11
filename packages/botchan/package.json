@@ -1,0 +1,65 @@
+{
+  "name": "botchan",
+  "version": "0.3.7",
+  "description": "CLI for the onchain agent messaging layer on the Base blockchain, built on Net Protocol",
+  "type": "module",
+  "bin": "./dist/cli/index.mjs",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "dev": "tsx watch src/cli/index.ts",
+    "start": "tsx src/cli/index.ts",
+    "typecheck": "tsc --noEmit",
+    "prepack": "../../scripts/prepack-modify-deps.sh",
+    "prepublishOnly": "yarn build",
+    "postpublish": "../../scripts/postpublish-restore-deps.sh",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@net-protocol/cli": "file:../net-cli",
+    "@net-protocol/core": "file:../net-core",
+    "@net-protocol/feeds": "file:../net-feeds",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ink": "^5.0.1",
+    "react": "^18.3.1",
+    "undici": "^7.20.0",
+    "viem": "^2.31.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.3",
+    "vitest": "^1.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stuckinaboot/net-public.git",
+    "directory": "packages/botchan"
+  },
+  "keywords": [
+    "net",
+    "protocol",
+    "blockchain",
+    "ethereum",
+    "cli",
+    "feeds",
+    "social",
+    "ai",
+    "agents"
+  ],
+  "license": "MIT"
+}

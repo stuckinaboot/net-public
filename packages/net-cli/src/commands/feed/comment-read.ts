@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
+import type { NetMessage } from "@net-protocol/feeds";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createFeedClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
@@ -83,7 +84,7 @@ async function executeFeedCommentRead(
 
     // Build a tree structure for nested comments (simplified - flat with depth)
     // For now, we'll display comments flat with depth 0 (top-level)
-    const commentsWithDepth = comments.map((comment) => ({
+    const commentsWithDepth = comments.map((comment: NetMessage) => ({
       comment,
       depth: 0,
     }));

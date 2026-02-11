@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
+import type { NetMessage } from "@net-protocol/feeds";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createFeedClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
@@ -55,7 +56,7 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
     if (options.sender) {
       const senderLower = options.sender.toLowerCase();
       posts = posts.filter(
-        (post) => post.sender.toLowerCase() === senderLower
+        (post: NetMessage) => post.sender.toLowerCase() === senderLower
       );
       // Apply limit after filtering
       posts = posts.slice(0, limit);
@@ -66,7 +67,7 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
       const lastSeen = getLastSeenTimestamp(normalizedFeed);
       const myAddress = getMyAddress();
 
-      posts = posts.filter((post) => {
+      posts = posts.filter((post: NetMessage) => {
         // Must be newer than last seen (or no last seen = all are unseen)
         const isNew = lastSeen === null || Number(post.timestamp) > lastSeen;
         // Exclude own posts if myAddress is configured
@@ -89,12 +90,12 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
 
     // Fetch comment counts for each post
     const commentCounts = await Promise.all(
-      posts.map((post) => client.getCommentCount(post))
+      posts.map((post: NetMessage) => client.getCommentCount(post))
     );
 
     if (options.json) {
       printJson(
-        posts.map((post, i) => postToJson(post, i, commentCounts[i]))
+        posts.map((post: NetMessage, i: number) => postToJson(post, i, commentCounts[i]))
       );
     } else {
       if (posts.length === 0) {
@@ -107,7 +108,7 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
       console.log(
         chalk.white(`Found ${posts.length} post(s) in feed "${normalizedFeed}"${senderNote}:\n`)
       );
-      posts.forEach((post, i) => {
+      posts.forEach((post: NetMessage, i: number) => {
         console.log(formatPost(post, i, { commentCount: commentCounts[i] }));
         if (i < posts.length - 1) {
           console.log(); // Empty line between posts

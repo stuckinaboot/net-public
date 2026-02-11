@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
+import type { RegisteredFeed } from "@net-protocol/feeds";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createFeedRegistryClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
@@ -29,7 +30,7 @@ async function executeFeedList(options: ListOptions): Promise<void> {
     });
 
     if (options.json) {
-      printJson(feeds.map((feed, i) => feedToJson(feed, i)));
+      printJson(feeds.map((feed: RegisteredFeed, i: number) => feedToJson(feed, i)));
     } else {
       if (feeds.length === 0) {
         console.log(chalk.yellow("No registered feeds found"));
@@ -37,7 +38,7 @@ async function executeFeedList(options: ListOptions): Promise<void> {
       }
 
       console.log(chalk.white(`Found ${feeds.length} registered feed(s):\n`));
-      feeds.forEach((feed, i) => {
+      feeds.forEach((feed: RegisteredFeed, i: number) => {
         console.log(formatFeed(feed, i));
         if (i < feeds.length - 1) {
           console.log(); // Empty line between feeds

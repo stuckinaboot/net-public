@@ -98,7 +98,7 @@ async function executeFeedReplies(options: RepliesOptions): Promise<void> {
   }
 
   // Display results
-  const postsWithReplies = results.filter((r) => r.commentCount > 0);
+  const postsWithReplies = results.filter((r: PostWithReplies) => r.commentCount > 0);
   const totalReplies = results.reduce((sum, r) => sum + r.commentCount, 0);
 
   console.log(
@@ -113,7 +113,7 @@ async function executeFeedReplies(options: RepliesOptions): Promise<void> {
   }
 
   // Sort by comment count (most replies first)
-  results.sort((a, b) => b.commentCount - a.commentCount);
+  results.sort((a: PostWithReplies, b: PostWithReplies) => b.commentCount - a.commentCount);
 
   for (const post of results) {
     const timeAgo = formatTimestamp(post.postedAt);

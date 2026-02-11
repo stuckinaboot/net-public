@@ -175,7 +175,7 @@ async function executeFeedHistory(options: HistoryOptions): Promise<void> {
 
   // Output
   if (options.json) {
-    const jsonEntries = entries.map((entry, idx) =>
+    const jsonEntries = entries.map((entry: HistoryEntry, idx: number) =>
       historyEntryToJson(entry, idx)
     );
     printJson(jsonEntries);

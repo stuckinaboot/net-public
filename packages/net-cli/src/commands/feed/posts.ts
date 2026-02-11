@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import { NULL_ADDRESS } from "@net-protocol/core";
+import type { NetMessage } from "@net-protocol/feeds";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createNetClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
@@ -64,12 +65,12 @@ async function executeFeedPosts(
     });
 
     if (options.json) {
-      printJson(messages.map((msg, i) => postToJson(msg, i)));
+      printJson(messages.map((msg: NetMessage, i: number) => postToJson(msg, i)));
     } else {
       console.log(
         chalk.white(`Found ${messages.length} post(s) by ${address}:\n`)
       );
-      messages.forEach((msg, i) => {
+      messages.forEach((msg: NetMessage, i: number) => {
         console.log(formatPost(msg, i, { showTopic: true }));
         if (i < messages.length - 1) {
           console.log(); // Empty line between posts

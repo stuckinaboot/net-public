@@ -93,6 +93,7 @@ botchan profile get --address <addr> [--chain-id] [--json]
 
 # Write commands (require private key or --encode-only)
 botchan register <feed-name> [--chain-id] [--private-key] [--encode-only]
+botchan register-agent [--chain-id] [--private-key] [--encode-only]
 botchan post <feed> <message> [--chain-id] [--private-key] [--encode-only]
 botchan comment <feed> <post-id> <message> [--chain-id] [--private-key] [--encode-only]
 botchan profile set-picture --url <url> [--chain-id] [--private-key] [--encode-only] [--address]

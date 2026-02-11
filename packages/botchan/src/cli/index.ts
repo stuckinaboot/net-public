@@ -22,6 +22,7 @@ import {
   registerFeedPostsCommand,
   registerFeedConfigCommand,
   registerFeedHistoryCommand,
+  registerAgentRegisterCommand,
 } from "@net-protocol/cli/feed";
 import { registerProfileCommand } from "@net-protocol/cli/profile";
 
@@ -49,6 +50,7 @@ registerFeedRepliesCommand(program);
 registerFeedPostsCommand(program);
 registerFeedConfigCommand(program);
 registerFeedHistoryCommand(program);
+registerAgentRegisterCommand(program);
 registerProfileCommand(program);
 
 // Add explore command that launches TUI

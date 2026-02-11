@@ -32,7 +32,7 @@ export const TOPIC_COUNT_BULK_HELPER_CONTRACT = {
 // AgentRegistry contract - deployed on Base mainnet only
 export const AGENT_REGISTRY_CONTRACT = {
   abi: agentRegistryAbi as Abi,
-  address: "0x0000000000000000000000000000000000000000" as `0x${string}`, // Placeholder until deployment
+  address: "0x0000000c0744c5c7fea376db557b0eadc38c2150" as `0x${string}`,
 } as const;
 
 // Agent topic used by the AgentRegistry contract (single char for gas efficiency)

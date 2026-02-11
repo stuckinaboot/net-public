@@ -43,7 +43,8 @@ netp storage upload \
   --text <description> \
   [--private-key <0x...>] \
   --chain-id <8453|1|...> \
-  [--rpc-url <custom-rpc>]
+  [--rpc-url <custom-rpc>] \
+  [--chunk-size <bytes>]
 ```
 
 **Storage Upload Arguments:**
@@ -54,6 +55,7 @@ netp storage upload \
 - `--private-key` (optional): Private key (0x-prefixed hex, 66 characters). Can also be set via `NET_PRIVATE_KEY` or `PRIVATE_KEY` environment variable
 - `--chain-id` (optional): Chain ID (8453 for Base, 1 for Ethereum, etc.). Can also be set via `NET_CHAIN_ID` environment variable
 - `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--chunk-size` (optional): Size of each XML chunk in bytes (default: 80000). Controls how large files are split for XML storage
 
 **Examples:**
 
@@ -80,6 +82,14 @@ netp storage upload \
 # NET_CHAIN_ID=8453
 # NET_RPC_URL=https://base-mainnet.public.blastapi.io  # optional
 netp storage upload --file ./example.txt --key "my-file" --text "Example file"
+
+# Custom chunk size (40KB instead of default 80KB)
+netp storage upload \
+  --file ./large-file.bin \
+  --key "my-file" \
+  --text "Large file" \
+  --chunk-size 40000 \
+  --chain-id 8453
 ```
 
 ##### Storage Preview
@@ -93,7 +103,8 @@ netp storage preview \
   --text <description> \
   [--private-key <0x...>] \
   --chain-id <8453|1|...> \
-  [--rpc-url <custom-rpc>]
+  [--rpc-url <custom-rpc>] \
+  [--chunk-size <bytes>]
 ```
 
 **Storage Preview Arguments:**
@@ -675,7 +686,7 @@ For files up to 20KB, the tool uses normal storage:
 
 For files larger than 20KB or containing XML references, the tool uses XML storage:
 
-- Breaks file into 80KB XML chunks
+- Breaks file into 80KB XML chunks (configurable via `--chunk-size`)
 - Each XML chunk is stored in ChunkedStorage (compressed and chunked into 20KB pieces)
 - XML metadata references all chunks
 - Multiple sequential transactions (metadata first, then chunks)

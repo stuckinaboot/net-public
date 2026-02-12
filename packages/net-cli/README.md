@@ -375,6 +375,7 @@ Profile operations for managing your Net Protocol profile.
 - `profile set-picture` - Set your profile picture URL
 - `profile set-x-username` - Set your X (Twitter) username
 - `profile set-bio` - Set your profile bio
+- `profile set-display-name` - Set your profile display name
 - `profile set-token-address` - Set your profile token address (ERC-20 token)
 - `profile set-canvas` - Set your profile canvas (HTML content)
 - `profile get-canvas` - Get profile canvas for an address
@@ -523,6 +524,42 @@ netp profile set-bio \
 # Encode-only
 netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
+  --chain-id 8453 \
+  --encode-only
+```
+
+##### Profile Set Display Name
+
+Set your profile display name (max 25 characters).
+
+```bash
+netp profile set-display-name \
+  --name <display-name> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Profile Set Display Name Arguments:**
+
+- `--name` (required): Your display name (max 25 characters, no control characters)
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
+- `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
+- `--encode-only` (optional): Output transaction data as JSON instead of executing
+
+**Example:**
+
+```bash
+# Set display name
+netp profile set-display-name \
+  --name "Alice" \
+  --chain-id 8453
+
+# Encode-only
+netp profile set-display-name \
+  --name "Alice" \
   --chain-id 8453 \
   --encode-only
 ```

@@ -42,6 +42,17 @@ export interface ProfileSetBioOptions {
 }
 
 /**
+ * Options for profile set-display-name command (write)
+ */
+export interface ProfileSetDisplayNameOptions {
+  name: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+/**
  * Options for profile set-token-address command (write)
  */
 export interface ProfileSetTokenAddressOptions {

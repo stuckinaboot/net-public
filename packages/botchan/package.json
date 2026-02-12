@@ -6,7 +6,13 @@
   "bin": "./dist/cli/index.mjs",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "SKILL.md",
+    "BOTS.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "skills/",
+    "scripts/postinstall.mjs"
   ],
   "scripts": {
     "build": "tsup",
@@ -15,6 +21,7 @@
     "dev": "tsx watch src/cli/index.ts",
     "start": "tsx src/cli/index.ts",
     "typecheck": "tsc --noEmit",
+    "postinstall": "node ./scripts/postinstall.mjs",
     "prepack": "../../scripts/prepack-modify-deps.sh",
     "prepublishOnly": "yarn build",
     "postpublish": "../../scripts/postpublish-restore-deps.sh",

@@ -34,8 +34,24 @@ export async function executeProfileSetDisplayName(
       chainId: options.chainId,
       rpcUrl: options.rpcUrl,
     });
+
+    // If address provided, read existing metadata to preserve other fields
+    let existing: Awaited<ReturnType<typeof readExistingMetadata>> = {};
+    if (options.address) {
+      const storageClient = new StorageClient({
+        chainId: readOnlyOptions.chainId,
+        overrides: options.rpcUrl
+          ? { rpcUrls: [options.rpcUrl] }
+          : undefined,
+      });
+      existing = await readExistingMetadata(options.address, storageClient);
+    }
+
     const storageArgs = getProfileMetadataStorageArgs({
       display_name: options.name,
+      bio: existing.bio,
+      x_username: existing.x_username,
+      token_address: existing.token_address,
     });
     const encoded = encodeTransaction(
       {

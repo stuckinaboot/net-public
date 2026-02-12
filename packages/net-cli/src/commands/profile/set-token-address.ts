@@ -37,8 +37,24 @@ export async function executeProfileSetTokenAddress(
       chainId: options.chainId,
       rpcUrl: options.rpcUrl,
     });
+
+    // If address provided, read existing metadata to preserve other fields
+    let existing: Awaited<ReturnType<typeof readExistingMetadata>> = {};
+    if (options.address) {
+      const storageClient = new StorageClient({
+        chainId: readOnlyOptions.chainId,
+        overrides: options.rpcUrl
+          ? { rpcUrls: [options.rpcUrl] }
+          : undefined,
+      });
+      existing = await readExistingMetadata(options.address, storageClient);
+    }
+
     const storageArgs = getProfileMetadataStorageArgs({
       token_address: normalizedAddress,
+      x_username: existing.x_username,
+      bio: existing.bio,
+      display_name: existing.display_name,
     });
     const encoded = encodeTransaction(
       {

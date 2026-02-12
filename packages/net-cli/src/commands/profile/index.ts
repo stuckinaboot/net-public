@@ -95,6 +95,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetUsername({
         username: options.username,
@@ -102,6 +106,7 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 
@@ -126,6 +131,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetBio({
         bio: options.bio,
@@ -133,6 +142,7 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 
@@ -157,6 +167,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetDisplayName({
         name: options.name,
@@ -164,6 +178,7 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 
@@ -191,6 +206,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetTokenAddress({
         tokenAddress: options.tokenAddress,
@@ -198,6 +217,7 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 

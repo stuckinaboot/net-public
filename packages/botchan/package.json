@@ -23,9 +23,9 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@net-protocol/cli": "file:../net-cli",
-    "@net-protocol/core": "file:../net-core",
-    "@net-protocol/feeds": "file:../net-feeds",
+    "@net-protocol/cli": "^0.1.23",
+    "@net-protocol/core": "^0.1.8",
+    "@net-protocol/feeds": "^0.1.14",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "ink": "^5.0.1",

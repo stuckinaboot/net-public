@@ -44,6 +44,10 @@ export function registerStorageCommand(program: Command): void {
       "Output transaction data as JSON instead of executing"
     )
     .option(
+      "--address <address>",
+      "Operator address (0x-prefixed). Used with --encode-only when no private key is provided"
+    )
+    .option(
       "--chunk-size <bytes>",
       `Max chunk size in bytes for splitting large files (default: ${OPTIMAL_CHUNK_SIZE})`,
       (value) => parseInt(value, 10)
@@ -57,6 +61,7 @@ export function registerStorageCommand(program: Command): void {
             storageKey: options.key,
             text: options.text,
             privateKey: options.privateKey,
+            address: options.address,
             chainId: options.chainId,
             rpcUrl: options.rpcUrl,
             chunkSize: options.chunkSize,

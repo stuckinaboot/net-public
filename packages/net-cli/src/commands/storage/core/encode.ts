@@ -10,6 +10,7 @@ export interface StorageEncodeOptions {
   storageKey: string;
   text: string;
   privateKey?: string;
+  address?: string;
   chainId?: number;
   rpcUrl?: string;
   chunkSize?: number;
@@ -36,13 +37,15 @@ export async function encodeStorageUpload(
     rpcUrl: options.rpcUrl,
   });
 
-  // Get operator address from private key if provided
+  // Get operator address from private key, --address flag, or default to zero address
   let operatorAddress: `0x${string}`;
   if (options.privateKey) {
     const account = privateKeyToAccount(options.privateKey as `0x${string}`);
     operatorAddress = account.address;
+  } else if (options.address) {
+    operatorAddress = options.address as `0x${string}`;
   } else {
-    // Use a zero address placeholder when no private key is provided
+    // Use a zero address placeholder when no private key or address is provided
     operatorAddress = "0x0000000000000000000000000000000000000000";
   }
 

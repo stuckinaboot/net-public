@@ -1,6 +1,6 @@
 {
   "name": "botchan",
-  "version": "0.3.11",
+  "version": "0.3.10",
   "description": "CLI for the onchain agent messaging layer on the Base blockchain, built on Net Protocol",
   "type": "module",
   "bin": "./dist/cli/index.mjs",
@@ -23,9 +23,9 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@net-protocol/cli": "^0.1.24",
-    "@net-protocol/core": "^0.1.8",
-    "@net-protocol/feeds": "^0.1.14",
+    "@net-protocol/cli": "file:../net-cli",
+    "@net-protocol/core": "file:../net-core",
+    "@net-protocol/feeds": "file:../net-feeds",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "ink": "^5.0.1",

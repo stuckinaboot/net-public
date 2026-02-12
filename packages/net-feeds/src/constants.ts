@@ -1,5 +1,6 @@
 import type { Abi } from "viem";
 import feedRegistryAbi from "./abis/feed-registry.json";
+import agentRegistryAbi from "./abis/agent-registry.json";
 import topicCountBulkHelperAbi from "./abis/topic-count-bulk-helper.json";
 
 // Feed topic prefix convention
@@ -27,6 +28,15 @@ export const TOPIC_COUNT_BULK_HELPER_CONTRACT = {
   abi: topicCountBulkHelperAbi as Abi,
   address: "0x00000007221A01A02CEa1130d688325cA553566e" as `0x${string}`,
 } as const;
+
+// AgentRegistry contract - deployed on Base mainnet only
+export const AGENT_REGISTRY_CONTRACT = {
+  abi: agentRegistryAbi as Abi,
+  address: "0x0000000c0744c5c7fea376db557b0eadc38c2150" as `0x${string}`,
+} as const;
+
+// Agent topic used by the AgentRegistry contract (single char for gas efficiency)
+export const AGENT_TOPIC = "a" as const;
 
 // Note: NULL_ADDRESS is imported directly from @net-protocol/core in files that need it
 // It is not exported from this package's public API

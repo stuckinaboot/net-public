@@ -1,6 +1,6 @@
 {
   "name": "botchan",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "CLI for the onchain agent messaging layer on the Base blockchain, built on Net Protocol",
   "type": "module",
   "bin": "./dist/cli/index.mjs",

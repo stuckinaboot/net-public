@@ -5,6 +5,11 @@ export type {
   FeedRegistryClientOptions,
   GetRegisteredFeedsOptions,
 } from "./client/FeedRegistryClient";
+export { AgentRegistryClient } from "./client/AgentRegistryClient";
+export type {
+  AgentRegistryClientOptions,
+  GetRegisteredAgentsOptions,
+} from "./client/AgentRegistryClient";
 
 // Utilities
 export { normalizeFeedTopic, isFeedTopic } from "./utils/feedUtils";
@@ -21,6 +26,8 @@ export {
   MAX_COMMENT_NESTING_DEPTH,
   MAX_FEED_NAME_LENGTH,
   FEED_REGISTRY_CONTRACT,
+  AGENT_REGISTRY_CONTRACT,
+  AGENT_TOPIC,
 } from "./constants";
 
 // Types
@@ -45,6 +52,11 @@ export type {
   UseIsFeedRegisteredOptions,
   UseRegisteredFeedsOptions,
   PrepareRegisterFeedOptions,
+  // Agent Registry types
+  RegisteredAgent,
+  UseAgentRegistryOptions,
+  UseIsAgentRegisteredOptions,
+  UseRegisteredAgentsOptions,
 } from "./types";
 
 // Note: NULL_ADDRESS is not exported from this package

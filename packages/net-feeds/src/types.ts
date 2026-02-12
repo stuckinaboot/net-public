@@ -164,3 +164,40 @@ export type PrepareRegisterFeedOptions = {
   feedName: string;
 };
 
+// ============ Agent Registry Types ============
+
+/**
+ * A registered agent from the AgentRegistry contract
+ */
+export type RegisteredAgent = {
+  /** The agent's address */
+  address: `0x${string}`;
+  /** Timestamp when the agent was registered */
+  timestamp: number;
+};
+
+/**
+ * Options for the useAgentRegistry hook
+ */
+export type UseAgentRegistryOptions = {
+  chainId: number;
+};
+
+/**
+ * Options for checking if an agent is registered
+ */
+export type UseIsAgentRegisteredOptions = {
+  chainId: number;
+  agentAddress: `0x${string}`;
+  enabled?: boolean;
+};
+
+/**
+ * Options for the useRegisteredAgents hook
+ */
+export type UseRegisteredAgentsOptions = {
+  chainId: number;
+  maxAgents?: number; // Defaults to 100 if not provided
+  enabled?: boolean; // Defaults to true if not provided
+};
+

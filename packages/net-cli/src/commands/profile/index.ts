@@ -3,6 +3,7 @@ import { executeProfileGet } from "./get";
 import { executeProfileSetPicture } from "./set-picture";
 import { executeProfileSetUsername } from "./set-username";
 import { executeProfileSetBio } from "./set-bio";
+import { executeProfileSetDisplayName } from "./set-display-name";
 import { executeProfileSetTokenAddress } from "./set-token-address";
 import { executeProfileSetCanvas } from "./set-canvas";
 import { executeProfileGetCanvas } from "./get-canvas";
@@ -94,6 +95,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetUsername({
         username: options.username,
@@ -101,6 +106,7 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 
@@ -125,6 +131,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetBio({
         bio: options.bio,
@@ -132,6 +142,43 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
+      });
+    });
+
+  // Set-display-name subcommand (write)
+  const setDisplayNameCommand = new Command("set-display-name")
+    .description("Set your profile display name")
+    .requiredOption("--name <name>", "Your display name (max 25 characters)")
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option(
+      "--encode-only",
+      "Output transaction data as JSON instead of executing"
+    )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
+    .action(async (options) => {
+      await executeProfileSetDisplayName({
+        name: options.name,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 
@@ -159,6 +206,10 @@ export function registerProfileCommand(program: Command): void {
       "--encode-only",
       "Output transaction data as JSON instead of executing"
     )
+    .option(
+      "--address <address>",
+      "Wallet address to preserve existing metadata for (used with --encode-only)"
+    )
     .action(async (options) => {
       await executeProfileSetTokenAddress({
         tokenAddress: options.tokenAddress,
@@ -166,6 +217,7 @@ export function registerProfileCommand(program: Command): void {
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
         encodeOnly: options.encodeOnly,
+        address: options.address,
       });
     });
 
@@ -231,6 +283,7 @@ export function registerProfileCommand(program: Command): void {
   profileCommand.addCommand(setPictureCommand);
   profileCommand.addCommand(setUsernameCommand);
   profileCommand.addCommand(setBioCommand);
+  profileCommand.addCommand(setDisplayNameCommand);
   profileCommand.addCommand(setTokenAddressCommand);
   profileCommand.addCommand(setCanvasCommand);
   profileCommand.addCommand(getCanvasCommand);

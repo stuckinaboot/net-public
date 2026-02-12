@@ -28,6 +28,7 @@ export interface ProfileSetUsernameOptions {
   chainId?: number;
   rpcUrl?: string;
   encodeOnly?: boolean;
+  address?: string;
 }
 
 /**
@@ -39,6 +40,19 @@ export interface ProfileSetBioOptions {
   chainId?: number;
   rpcUrl?: string;
   encodeOnly?: boolean;
+  address?: string;
+}
+
+/**
+ * Options for profile set-display-name command (write)
+ */
+export interface ProfileSetDisplayNameOptions {
+  name: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+  address?: string;
 }
 
 /**
@@ -50,6 +64,7 @@ export interface ProfileSetTokenAddressOptions {
   chainId?: number;
   rpcUrl?: string;
   encodeOnly?: boolean;
+  address?: string;
 }
 
 /**

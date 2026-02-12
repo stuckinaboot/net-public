@@ -6,25 +6,25 @@ import { base } from "viem/chains";
 import { getChainRpcUrls } from "@net-protocol/core";
 import {
   getProfileMetadataStorageArgs,
-  isValidBio,
+  isValidDisplayName,
   STORAGE_CONTRACT,
 } from "@net-protocol/profiles";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { encodeTransaction } from "../../shared/encode";
 import { readExistingMetadata } from "./utils";
-import type { ProfileSetBioOptions } from "./types";
+import type { ProfileSetDisplayNameOptions } from "./types";
 
 /**
- * Execute the profile set-bio command
+ * Execute the profile set-display-name command
  */
-export async function executeProfileSetBio(
-  options: ProfileSetBioOptions
+export async function executeProfileSetDisplayName(
+  options: ProfileSetDisplayNameOptions
 ): Promise<void> {
-  // Validate bio
-  if (!isValidBio(options.bio)) {
+  // Validate display name
+  if (!isValidDisplayName(options.name)) {
     exitWithError(
-      `Invalid bio: "${options.bio}". Bio must be 1-280 characters and cannot contain control characters.`
+      `Invalid display name: "${options.name}". Display name must be 1-25 characters and cannot contain control characters.`
     );
   }
 
@@ -48,9 +48,9 @@ export async function executeProfileSetBio(
     }
 
     const storageArgs = getProfileMetadataStorageArgs({
-      bio: options.bio,
+      display_name: options.name,
+      bio: existing.bio,
       x_username: existing.x_username,
-      display_name: existing.display_name,
       token_address: existing.token_address,
     });
     const encoded = encodeTransaction(
@@ -90,8 +90,8 @@ export async function executeProfileSetBio(
       transport: http(rpcUrls[0]),
     }).extend(publicActions);
 
-    console.log(chalk.blue(`Setting profile bio...`));
-    console.log(chalk.gray(`   Bio: ${options.bio}`));
+    console.log(chalk.blue(`Setting display name...`));
+    console.log(chalk.gray(`   Name: ${options.name}`));
     console.log(chalk.gray(`   Address: ${account.address}`));
 
     // Read existing metadata to preserve other fields
@@ -106,11 +106,11 @@ export async function executeProfileSetBio(
       storageClient
     );
 
-    // Merge: update bio, preserve other fields
+    // Merge: update display_name, preserve other fields
     const storageArgs = getProfileMetadataStorageArgs({
-      bio: options.bio,
+      display_name: options.name,
+      bio: existing.bio,
       x_username: existing.x_username,
-      display_name: existing.display_name,
       token_address: existing.token_address,
     });
 
@@ -130,7 +130,7 @@ export async function executeProfileSetBio(
     if (receipt.status === "success") {
       console.log(
         chalk.green(
-          `\nBio updated successfully!\n  Transaction: ${hash}\n  Bio: ${options.bio}`
+          `\nDisplay name updated successfully!\n  Transaction: ${hash}\n  Name: ${options.name}`
         )
       );
     } else {
@@ -138,7 +138,7 @@ export async function executeProfileSetBio(
     }
   } catch (error) {
     exitWithError(
-      `Failed to set bio: ${
+      `Failed to set display name: ${
         error instanceof Error ? error.message : String(error)
       }`
     );

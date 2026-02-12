@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
@@ -42,7 +42,7 @@
   "dependencies": {
     "@net-protocol/bazaar": "^0.1.12",
     "@net-protocol/core": "^0.1.8",
-    "@net-protocol/feeds": "^0.1.12",
+    "@net-protocol/feeds": "^0.1.14",
     "@net-protocol/netr": "^0.1.3",
     "@net-protocol/profiles": "^0.1.4",
     "@net-protocol/relay": "^0.1.3",

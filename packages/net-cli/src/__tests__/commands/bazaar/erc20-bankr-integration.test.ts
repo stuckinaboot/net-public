@@ -362,5 +362,146 @@ describe.skipIf(!BANKR_API_KEY)(
         expect(typeof listing.price).toBe("number");
       }
     }, 60_000);
+
+    // ── 6. Full round-trip: create listing → query → fulfill ────────
+
+    it("should create an ERC20 listing, query it back, and fulfill it on-chain", async ({
+      skip,
+    }) => {
+      if (!canReachBankr) skip();
+
+      const bazaarClient = new BazaarClient({ chainId: CHAIN_ID });
+
+      // Use $1 USDC (6 decimals → 1_000_000) with a tiny ETH price.
+      // Self-fulfillment means the wallet pays itself — net cost is just gas.
+      const tokenAmount = BigInt(1_000_000); // 1 USDC
+      const priceWei = BigInt("100000000000000"); // 0.0001 ETH
+
+      // ── Step 1: Create the listing ──────────────────────────────────
+
+      const prepared = await bazaarClient.prepareCreateErc20Listing({
+        tokenAddress: TOKEN_ADDRESS,
+        tokenAmount,
+        priceWei,
+        offerer: walletAddress,
+      });
+
+      // Submit approval txs if needed
+      for (const approval of prepared.approvals) {
+        const calldata = encodeFunctionData({
+          abi: approval.abi,
+          functionName: approval.functionName,
+          args: approval.args,
+        });
+
+        const approvalResult = await bankrSubmit({
+          transaction: {
+            to: approval.to,
+            chainId: CHAIN_ID,
+            value: (approval.value ?? 0n).toString(),
+            data: calldata,
+          },
+          description: `Approve ${approval.functionName} for Seaport`,
+          waitForConfirmation: true,
+        });
+
+        expect(approvalResult.success).toBe(true);
+      }
+
+      // Sign the order
+      const signResult = await bankrSign({
+        signatureType: "eth_signTypedData_v4",
+        typedData: toJsonSafe({
+          domain: prepared.eip712.domain,
+          types: prepared.eip712.types,
+          primaryType: prepared.eip712.primaryType,
+          message: prepared.eip712.message,
+        }),
+      });
+
+      expect(signResult.success).toBe(true);
+      const signature = signResult.signature as `0x${string}`;
+
+      // Submit listing on-chain (Bazaar contract stores Net message + validates on Seaport)
+      const submitTx = bazaarClient.prepareSubmitErc20Listing(
+        prepared.eip712.orderParameters,
+        prepared.eip712.counter,
+        signature
+      );
+
+      const submitCalldata = encodeFunctionData({
+        abi: submitTx.abi,
+        functionName: submitTx.functionName,
+        args: submitTx.args,
+      });
+
+      const listingResult = await bankrSubmit({
+        transaction: {
+          to: submitTx.to,
+          chainId: CHAIN_ID,
+          value: (submitTx.value ?? 0n).toString(),
+          data: submitCalldata,
+        },
+        description: "Submit ERC-20 listing to Bazaar",
+        waitForConfirmation: true,
+      });
+
+      expect(listingResult.success).toBe(true);
+      expect(listingResult.transactionHash).toMatch(/^0x[a-fA-F0-9]{64}$/);
+
+      // ── Step 2: Query the listing back ──────────────────────────────
+
+      const listings = await bazaarClient.getErc20Listings({
+        tokenAddress: TOKEN_ADDRESS,
+      });
+
+      // Find our listing by maker address
+      const ourListing = listings.find(
+        (l) => l.maker.toLowerCase() === walletAddress.toLowerCase()
+      );
+
+      if (!ourListing) {
+        console.warn(
+          "Listing not found in query results — wallet may not hold enough of the token. Skipping fulfillment."
+        );
+        skip();
+      }
+
+      expect(ourListing.orderHash).toMatch(/^0x/);
+      expect(ourListing.tokenAddress.toLowerCase()).toBe(
+        TOKEN_ADDRESS.toLowerCase()
+      );
+
+      // ── Step 3: Fulfill the listing (self-fulfill) ──────────────────
+
+      const fulfillment = await bazaarClient.prepareFulfillErc20Listing(
+        ourListing,
+        walletAddress
+      );
+
+      // No approvals needed — buyer pays native ETH
+      expect(fulfillment.approvals).toHaveLength(0);
+
+      const fulfillCalldata = encodeFunctionData({
+        abi: fulfillment.fulfillment.abi,
+        functionName: fulfillment.fulfillment.functionName,
+        args: fulfillment.fulfillment.args,
+      });
+
+      const fulfillResult = await bankrSubmit({
+        transaction: {
+          to: fulfillment.fulfillment.to,
+          chainId: CHAIN_ID,
+          value: (fulfillment.fulfillment.value ?? 0n).toString(),
+          data: fulfillCalldata,
+        },
+        description: "Fulfill ERC-20 listing (buy)",
+        waitForConfirmation: true,
+      });
+
+      expect(fulfillResult.success).toBe(true);
+      expect(fulfillResult.transactionHash).toMatch(/^0x[a-fA-F0-9]{64}$/);
+      expect(fulfillResult.status).toBe("success");
+    }, 180_000);
   }
 );

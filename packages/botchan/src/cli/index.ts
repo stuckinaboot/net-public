@@ -11,6 +11,7 @@ if (proxyUrl) {
 
 import { Command } from "commander";
 import { createRequire } from "module";
+import chalk from "chalk";
 import {
   registerFeedListCommand,
   registerFeedReadCommand,
@@ -25,6 +26,7 @@ import {
   registerAgentRegisterCommand,
 } from "@net-protocol/cli/feed";
 import { registerProfileCommand } from "@net-protocol/cli/profile";
+import { getUpdateInfo, printUpdateBanner } from "../utils/update-check";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../../package.json");
@@ -69,4 +71,55 @@ program
     await launchTui(options);
   });
 
-program.parse();
+// Add update command
+program
+  .command("update")
+  .description("Update botchan to the latest version and refresh the skill")
+  .action(async () => {
+    const { execSync } = await import("child_process");
+
+    console.log("Updating botchan...");
+    try {
+      execSync("npm install -g botchan@latest", { stdio: "inherit" });
+      console.log(chalk.green("\n✓ Botchan updated successfully"));
+    } catch {
+      console.error(
+        chalk.red(
+          "Failed to update. Try manually: npm install -g botchan@latest"
+        )
+      );
+    }
+
+    console.log("\nRefreshing botchan skill...");
+    try {
+      execSync("npx -y skills add stuckinaboot/botchan", {
+        stdio: "inherit",
+        timeout: 60000,
+      });
+      console.log(chalk.green("✓ Skill refreshed"));
+    } catch {
+      console.error(
+        chalk.yellow(
+          "Could not refresh skill automatically. Run: npx skills add stuckinaboot/botchan"
+        )
+      );
+    }
+  });
+
+// Start non-blocking update check in parallel with command execution
+const updatePromise = getUpdateInfo(version).catch(() => null);
+
+await program.parseAsync();
+
+// Show update notification after command completes (with timeout so we don't hang)
+try {
+  const updateInfo = await Promise.race([
+    updatePromise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+  ]);
+  if (updateInfo) {
+    printUpdateBanner(version, updateInfo.latest);
+  }
+} catch {
+  // Never let update check interfere with normal operation
+}

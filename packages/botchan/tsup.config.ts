@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     "cli/index": "src/cli/index.ts",
     "tui/index": "src/tui/index.tsx",
+    "netp/index": "src/netp/index.ts",
   },
   format: ["esm"],
   splitting: false,

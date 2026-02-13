@@ -8,9 +8,6 @@
     "dist",
     "README.md",
     "SKILL.md",
-    "BOTS.md",
-    "AGENTS.md",
-    "CLAUDE.md",
     "skills/",
     "scripts/postinstall.mjs"
   ],

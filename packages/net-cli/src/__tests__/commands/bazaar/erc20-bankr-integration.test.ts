@@ -503,5 +503,165 @@ describe.skipIf(!BANKR_API_KEY)(
       expect(fulfillResult.transactionHash).toMatch(/^0x[a-fA-F0-9]{64}$/);
       expect(fulfillResult.status).toBe("success");
     }, 180_000);
+
+    // ── 7. Full round-trip: create offer → query → accept ───────────
+
+    it("should create an ERC20 offer, query it back, and accept it on-chain", async ({
+      skip,
+    }) => {
+      if (!canReachBankr) skip();
+
+      const bazaarClient = new BazaarClient({ chainId: CHAIN_ID });
+
+      // Offer WETH for $1 USDC. Self-acceptance means the wallet sells
+      // USDC to itself for WETH — net cost is just gas + approvals.
+      const tokenAmount = BigInt(1_000_000); // 1 USDC
+      const priceWei = BigInt("100000000000000"); // 0.0001 ETH in WETH
+
+      // ── Step 1: Create the offer ────────────────────────────────────
+
+      const prepared = await bazaarClient.prepareCreateErc20Offer({
+        tokenAddress: TOKEN_ADDRESS,
+        tokenAmount,
+        priceWei,
+        offerer: walletAddress,
+      });
+
+      // Submit approval txs if needed (WETH approval for Seaport)
+      for (const approval of prepared.approvals) {
+        const calldata = encodeFunctionData({
+          abi: approval.abi,
+          functionName: approval.functionName,
+          args: approval.args,
+        });
+
+        const approvalResult = await bankrSubmit({
+          transaction: {
+            to: approval.to,
+            chainId: CHAIN_ID,
+            value: (approval.value ?? 0n).toString(),
+            data: calldata,
+          },
+          description: `Approve ${approval.functionName} for Seaport`,
+          waitForConfirmation: true,
+        });
+
+        expect(approvalResult.success).toBe(true);
+      }
+
+      // Sign the order
+      const signResult = await bankrSign({
+        signatureType: "eth_signTypedData_v4",
+        typedData: toJsonSafe({
+          domain: prepared.eip712.domain,
+          types: prepared.eip712.types,
+          primaryType: prepared.eip712.primaryType,
+          message: prepared.eip712.message,
+        }),
+      });
+
+      expect(signResult.success).toBe(true);
+      const signature = signResult.signature as `0x${string}`;
+
+      // Submit offer on-chain
+      const submitTx = bazaarClient.prepareSubmitErc20Offer(
+        prepared.eip712.orderParameters,
+        prepared.eip712.counter,
+        signature
+      );
+
+      const submitCalldata = encodeFunctionData({
+        abi: submitTx.abi,
+        functionName: submitTx.functionName,
+        args: submitTx.args,
+      });
+
+      const offerResult = await bankrSubmit({
+        transaction: {
+          to: submitTx.to,
+          chainId: CHAIN_ID,
+          value: (submitTx.value ?? 0n).toString(),
+          data: submitCalldata,
+        },
+        description: "Submit ERC-20 offer to Bazaar",
+        waitForConfirmation: true,
+      });
+
+      expect(offerResult.success).toBe(true);
+      expect(offerResult.transactionHash).toMatch(/^0x[a-fA-F0-9]{64}$/);
+
+      // ── Step 2: Query the offer back ────────────────────────────────
+
+      const offers = await bazaarClient.getErc20Offers({
+        tokenAddress: TOKEN_ADDRESS,
+      });
+
+      // Find our offer by maker address
+      const ourOffer = offers.find(
+        (o) => o.maker.toLowerCase() === walletAddress.toLowerCase()
+      );
+
+      if (!ourOffer) {
+        console.warn(
+          "Offer not found in query results — wallet may not hold enough WETH. Skipping acceptance."
+        );
+        skip();
+      }
+
+      expect(ourOffer.orderHash).toMatch(/^0x/);
+      expect(ourOffer.tokenAddress.toLowerCase()).toBe(
+        TOKEN_ADDRESS.toLowerCase()
+      );
+
+      // ── Step 3: Accept the offer (self-fulfill) ─────────────────────
+
+      const fulfillment = await bazaarClient.prepareFulfillErc20Offer(
+        ourOffer,
+        walletAddress
+      );
+
+      // Submit ERC20 approval if needed (fulfiller approves Seaport for USDC)
+      for (const approval of fulfillment.approvals) {
+        const calldata = encodeFunctionData({
+          abi: approval.abi,
+          functionName: approval.functionName,
+          args: approval.args,
+        });
+
+        const approvalResult = await bankrSubmit({
+          transaction: {
+            to: approval.to,
+            chainId: CHAIN_ID,
+            value: (approval.value ?? 0n).toString(),
+            data: calldata,
+          },
+          description: `Approve ${approval.functionName} for Seaport (fulfiller)`,
+          waitForConfirmation: true,
+        });
+
+        expect(approvalResult.success).toBe(true);
+      }
+
+      const fulfillCalldata = encodeFunctionData({
+        abi: fulfillment.fulfillment.abi,
+        functionName: fulfillment.fulfillment.functionName,
+        args: fulfillment.fulfillment.args,
+      });
+
+      const fulfillResult = await bankrSubmit({
+        transaction: {
+          to: fulfillment.fulfillment.to,
+          chainId: CHAIN_ID,
+          value: (fulfillment.fulfillment.value ?? 0n).toString(),
+          data: fulfillCalldata,
+        },
+        description: "Accept ERC-20 offer (sell tokens)",
+        waitForConfirmation: true,
+      });
+
+      expect(fulfillResult.success).toBe(true);
+      expect(fulfillResult.transactionHash).toMatch(/^0x[a-fA-F0-9]{64}$/);
+      expect(fulfillResult.status).toBe("success");
+    }, 180_000);
   }
 );

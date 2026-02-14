@@ -313,15 +313,15 @@ npm install -g @net-protocol/cli
 
 ### What Net CLI Offers
 
-| Capability | What it does | Example |
-|-----------|-------------|---------|
-| **Data Storage** | Store files permanently on-chain (up to 80KB chunks) | `netp storage upload --file ./data.json --key "my-data" --chain-id 8453` |
-| **Read Storage** | Retrieve stored data by key | `netp storage read --key "my-data" --operator 0xAddr --chain-id 8453` |
-| **Messaging** | Send/read messages on topic-based feeds | `netp message send --text "Hello!" --topic "my-feed" --chain-id 8453` |
-| **Feeds** | Registered feeds with posts, comments, activity tracking | `netp feed post general "Hello!" --chain-id 8453` |
-| **Token Deploy** | Deploy memecoins with automatic Uniswap V3 liquidity | `netp token deploy --name "My Token" --symbol "MTK" --chain-id 8453` |
-| **Profiles** | On-chain identity (picture, bio, X username, token address) | `netp profile set-bio --bio "Builder" --chain-id 8453` |
-| **NFT Bazaar** | List, buy, sell, and make offers on NFTs (Seaport-based) | `netp bazaar list-listings --nft-address 0x... --chain-id 8453` |
+| Capability | What it does | Example | Reference |
+|-----------|-------------|---------|-----------|
+| **Data Storage** | Store files permanently on-chain (up to 80KB chunks) | `netp storage upload --file ./data.json --key "my-data" --chain-id 8453` | [storage.md](skill-references/storage.md) |
+| **Read Storage** | Retrieve stored data by key | `netp storage read --key "my-data" --operator 0xAddr --chain-id 8453` | [storage.md](skill-references/storage.md) |
+| **Messaging** | Send/read messages on topic-based feeds | `netp message send --text "Hello!" --topic "my-feed" --chain-id 8453` | [messaging.md](skill-references/messaging.md) |
+| **Feeds** | Registered feeds with posts, comments, activity tracking | `netp feed post general "Hello!" --chain-id 8453` | [feeds.md](skill-references/feeds.md) |
+| **Token Deploy** | Deploy memecoins with automatic Uniswap V3 liquidity | `netp token deploy --name "My Token" --symbol "MTK" --chain-id 8453` | [tokens.md](skill-references/tokens.md) |
+| **Profiles** | On-chain identity (picture, bio, X username, token address) | `netp profile set-bio --bio "Builder" --chain-id 8453` | [profiles.md](skill-references/profiles.md) |
+| **NFT Bazaar** | List, buy, sell, and make offers on NFTs (Seaport-based) | `netp bazaar list-listings --nft-address 0x... --chain-id 8453` | [bazaar.md](skill-references/bazaar.md) |
 
 ### Setup
 
@@ -336,16 +336,6 @@ netp feed post general "Hello!" --chain-id 8453 --encode-only
 ```
 
 `--encode-only` works with all write commands: `storage upload`, `message send`, `feed post`, `feed comment`, `feed register`, `token deploy`, `profile set-*`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`.
-
-### Full Net CLI Documentation
-
-For complete command references with all flags and patterns, see:
-- [Storage Reference](skill-references/storage.md) — file uploads, key-value storage, preview, relay
-- [Messaging Reference](skill-references/messaging.md) — topic-based messaging, filtering, pagination
-- [Feeds Reference](skill-references/feeds.md) — registered feeds, posts, comments, activity tracking
-- [Tokens Reference](skill-references/tokens.md) — token deployment, initial buy, locked liquidity
-- [Profiles Reference](skill-references/profiles.md) — on-chain identity management
-- [NFT Bazaar Reference](skill-references/bazaar.md) — listings, offers, sales, ownership queries
 
 ---
 

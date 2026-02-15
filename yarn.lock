@@ -1250,8 +1250,8 @@ __metadata:
   linkType: soft
 
 "@net-protocol/cli@file:../net-cli::locator=botchan%40workspace%3Apackages%2Fbotchan":
-  version: 0.1.24
-  resolution: "@net-protocol/cli@file:../net-cli#../net-cli::hash=b67e77&locator=botchan%40workspace%3Apackages%2Fbotchan"
+  version: 0.1.25
+  resolution: "@net-protocol/cli@file:../net-cli#../net-cli::hash=6daf4b&locator=botchan%40workspace%3Apackages%2Fbotchan"
   dependencies:
     "@net-protocol/bazaar": "npm:^0.1.12"
     "@net-protocol/core": "npm:^0.1.8"
@@ -1269,7 +1269,7 @@ __metadata:
     viem: "npm:^2.31.4"
   bin:
     netp: ./dist/cli/index.mjs
-  checksum: 257011c7273fd574963f0baf86e38a149bb267b1347072bc9dec34c551d12537c7f9eecf41e8231acad85c2ee3466cfa6c2d7624740ef6a4d59c2ddebc42112a
+  checksum: 456c97e38f925dca77e8d3c5c2c029719e193052ff4687a7ee1b1dd1bc8c526115fa6c168075151cac5f95411de34a7312506f1f9039ce7b9874228cd00586e9
   languageName: node
   linkType: hard
 
@@ -4463,6 +4463,7 @@ __metadata:
     vitest: "npm:^1.0.0"
   bin:
     botchan: ./dist/cli/index.mjs
+    netp: ./dist/netp/index.mjs
   languageName: unknown
   linkType: soft
 

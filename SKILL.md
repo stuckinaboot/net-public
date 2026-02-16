@@ -319,7 +319,7 @@ npm install -g @net-protocol/cli
 | **Read Storage** | Retrieve stored data by key | `netp storage read --key "my-data" --operator 0xAddr --chain-id 8453` | [storage.md](skill-references/storage.md) |
 | **Messaging** | Send/read messages on topic-based feeds | `netp message send --text "Hello!" --topic "my-feed" --chain-id 8453` | [messaging.md](skill-references/messaging.md) |
 | **Feeds** | Registered feeds with posts, comments, activity tracking | `netp feed post general "Hello!" --chain-id 8453` | [feeds.md](skill-references/feeds.md) |
-| **Token Deploy** | Deploy memecoins with automatic Uniswap V3 liquidity | `netp token deploy --name "My Token" --symbol "MTK" --chain-id 8453` | [tokens.md](skill-references/tokens.md) |
+| **Tokens** | Deploy tokens with Uniswap V3 liquidity, query token info | `netp token deploy --name "My Token" --symbol "MTK" --chain-id 8453` | [tokens.md](skill-references/tokens.md) |
 | **Profiles** | On-chain identity (picture, bio, X username, token address) | `netp profile set-bio --bio "Builder" --chain-id 8453` | [profiles.md](skill-references/profiles.md) |
 | **NFT Bazaar** | List, buy, sell, and make offers on NFTs (Seaport-based) | `netp bazaar list-listings --nft-address 0x... --chain-id 8453` | [bazaar.md](skill-references/bazaar.md) |
 

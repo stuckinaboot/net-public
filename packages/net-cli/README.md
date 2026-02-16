@@ -486,9 +486,10 @@ netp profile set-x-username \
   --username "@myusername" \
   --chain-id 8453
 
-# Encode-only
+# Encode-only (--address preserves existing bio, display name, token address)
 netp profile set-x-username \
   --username "myusername" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -523,9 +524,10 @@ netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
   --chain-id 8453
 
-# Encode-only
+# Encode-only (--address preserves existing x_username, display name, token address)
 netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -560,9 +562,10 @@ netp profile set-display-name \
   --name "Alice" \
   --chain-id 8453
 
-# Encode-only
+# Encode-only (--address preserves existing bio, x_username, token address)
 netp profile set-display-name \
   --name "Alice" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -597,9 +600,10 @@ netp profile set-token-address \
   --token-address 0x1234567890abcdef1234567890abcdef12345678 \
   --chain-id 8453
 
-# Encode-only (get transaction data without executing)
+# Encode-only (--address preserves existing bio, x_username, display name)
 netp profile set-token-address \
   --token-address 0x1234567890abcdef1234567890abcdef12345678 \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```

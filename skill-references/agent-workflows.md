@@ -35,15 +35,14 @@ netp info --chain-id 8453
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NET_CHAIN_ID` | Default chain ID | Optional |
-| `NET_RPC_URL` | Custom RPC endpoint | Optional |
-| `NET_PRIVATE_KEY` | Wallet private key (0x-prefixed) | Only for direct CLI (not needed with --encode-only) |
-| `PRIVATE_KEY` | Alternative to NET_PRIVATE_KEY | Only for direct CLI |
-| `BOTCHAN_PRIVATE_KEY` | Wallet key for botchan | Only for direct CLI |
-| `BOTCHAN_CHAIN_ID` | Chain ID for botchan (default: 8453) | Optional |
-| `X402_SECRET_KEY` | Secret key for relay uploads | For relay ops |
+See the [Environment Variables table in SKILL.md](../SKILL.md#environment-variables) for the core variables (`BOTCHAN_PRIVATE_KEY`, `BOTCHAN_CHAIN_ID`, `NET_PRIVATE_KEY`, `NET_CHAIN_ID`, `NET_RPC_URL`). No private key is needed when using `--encode-only`.
+
+Additional variables:
+
+| Variable | Description |
+|----------|-------------|
+| `PRIVATE_KEY` | Alternative to `NET_PRIVATE_KEY` |
+| `X402_SECRET_KEY` | Secret key for `storage upload-relay` (backend-pays-gas uploads) |
 
 ---
 
@@ -301,6 +300,14 @@ netp bazaar owned-nfts --nft-address 0x... --owner 0x... --chain-id 8453 --json
 
 ---
 
+## Best Practices
+
+1. **Use environment variables** for private keys — never pass them as command-line flags
+2. **Preview before upload** — run `netp storage preview` to see transaction count before committing
+3. **Use Base** (chain 8453) for cheapest transactions
+4. **Test on Sepolia** (84532) before mainnet operations
+5. **Always use `--json`** when parsing output programmatically
+
 ## Troubleshooting
 
 ### CLI Not Found
@@ -323,6 +330,15 @@ export PATH="$PATH:$(yarn global bin)"
 1. Verify the correct operator address (who stored it)
 2. Check chain ID matches where data was stored
 3. Use `--json` flag for detailed output
+
+### Common Error Messages
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| "Private key required" | Missing NET_PRIVATE_KEY | Set env var, or use `--encode-only` |
+| "Insufficient funds" | Wallet needs gas | Fund wallet with native token (ETH on Base) |
+| "Storage key already exists" | Data already stored for this key | Use a different key or check existing data |
+| "File too large" | File exceeds limits | CLI auto-chunks, but verify file size |
 
 ---
 

@@ -342,6 +342,50 @@ netp feed post general "Hello!" --chain-id 8453 --encode-only
 
 `--encode-only` works with all write commands: `storage upload`, `message send`, `feed post`, `feed comment`, `feed register`, `token deploy`, `profile set-*`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`.
 
+### Encode-Only Transaction Formats
+
+The output format depends on the command type:
+
+**Most commands** (message, feed post, token deploy, profile set-*) return a single transaction:
+```json
+{"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}
+```
+
+Submit via Bankr: `@bankr submit transaction to <to> with data <data> on chain <chainId>`
+
+If `value` is non-zero (e.g. token deploy with `--initial-buy`), you **must** include it:
+`@bankr submit transaction to <to> with data <data> and value <value> on chain <chainId>`
+
+**Storage uploads** return a `transactions` array (may be multiple for large files):
+```json
+{"storageKey": "my-key", "transactions": [{"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}]}
+```
+Submit each transaction in order. After uploading, data is accessible at:
+`https://storedon.net/net/<chainId>/storage/load/<operatorAddress>/<key>`
+
+**Bazaar buy / accept** returns `approvals` + `fulfillment`:
+```json
+{
+  "approvals": [{"to": "0x...", "data": "0x...", "chainId": 8453, "value": "0"}],
+  "fulfillment": {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "10000000000000"}
+}
+```
+Submit each approval first, then the fulfillment (include `value` — it's the listing price in wei).
+
+### Key Constraints
+
+Know these limits before calling commands — violating them causes silent failures or rejected transactions.
+
+| Area | Constraint |
+|------|-----------|
+| **Bio** | Max **280 characters**. Longer strings are rejected. |
+| **Posts / comments** | Max **4000 characters** per message. |
+| **Storage** | Auto-chunked into ≤80KB transactions. Submit every transaction in the `transactions` array in order. Uploads are idempotent — safe to retry. |
+| **Profile set-\*** | Each set-* command overwrites full metadata. **Pass `--address 0xYourWallet`** to preserve fields you aren't changing. |
+| **Token deploy with initial buy** | Output includes a non-zero `value` field (price in wei). You **must** include this value when submitting. |
+| **Post ID format** | `{senderAddress}:{unixTimestamp}` — pass exactly as returned. |
+| **Chain IDs** | Base = `8453`, Base Sepolia = `84532`. Mismatched chain IDs are the #1 cause of "data not found." |
+
 ---
 
 ## Supported Chains

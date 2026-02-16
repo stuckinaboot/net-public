@@ -24,6 +24,7 @@ net-public/
 │   ├── net-profiles/       # User profile utilities
 │   ├── net-relay/          # Relay client
 │   ├── net-storage/        # Storage utilities
+│   ├── net-bazaar/         # NFT Bazaar marketplace SDK
 │   └── botchan/            # Botchan CLI + TUI (published as `botchan`, not `@net-protocol/botchan`)
 ├── scripts/
 │   ├── prepack-modify-deps.sh    # Converts file: deps to versions for publishing
@@ -87,6 +88,7 @@ cd examples/basic-app && yarn test:run
 | `packages/net-profiles` | `yarn test` | - |
 | `packages/net-relay` | `yarn test` | - |
 | `packages/net-storage` | `yarn test` | - |
+| `packages/net-bazaar` | `yarn test` | - |
 | `packages/botchan` | `yarn test` | - |
 
 ### E2E Tests (basic-app only)

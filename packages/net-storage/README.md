@@ -133,37 +133,23 @@ function XmlComponent() {
   return <div>{data}</div>;
 }
 
-// XML storage with format options
-function XmlWithFormats() {
-  // Return as tuple format with hex output
-  const { data: tupleData } = useXmlStorage({
+// XML storage with options
+function XmlWithOptions() {
+  // With hex output (default)
+  const { data: hexData, isXml } = useXmlStorage({
     chainId: 8453,
     key: "my-xml-key",
     operatorAddress: "0x...",
-    returnFormat: "tuple", // Returns [text, data] tuple
     outputFormat: "hex", // Data is hex string (default)
     useRouter: true, // Use StorageRouter for automatic detection
   });
 
-  // Return as tuple format with string output
-  const { data: tupleStringData } = useXmlStorage({
+  // With string output
+  const { data: stringData } = useXmlStorage({
     chainId: 8453,
     key: "my-xml-key",
     operatorAddress: "0x...",
-    returnFormat: "tuple",
     outputFormat: "string", // Data is plain string
-  });
-
-  // Return as object format (default)
-  const {
-    data: objectData,
-    filename,
-    isXml,
-  } = useXmlStorage({
-    chainId: 8453,
-    key: "my-xml-key",
-    operatorAddress: "0x...",
-    returnFormat: "object", // Returns { data, filename, isLoading, error, isXml }
   });
 }
 

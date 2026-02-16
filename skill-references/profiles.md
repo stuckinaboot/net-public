@@ -108,7 +108,8 @@ netp profile set-bio \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
-  [--encode-only]
+  [--encode-only] \
+  [--address <address>]
 ```
 
 **Parameters:**
@@ -118,6 +119,7 @@ netp profile set-bio \
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
+| `--address` | No | Wallet address to preserve existing metadata for (used with --encode-only) |
 
 **Constraints:**
 - Maximum 280 characters
@@ -143,7 +145,8 @@ netp profile set-x-username \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
-  [--encode-only]
+  [--encode-only] \
+  [--address <address>]
 ```
 
 **Parameters:**
@@ -153,6 +156,7 @@ netp profile set-x-username \
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
+| `--address` | No | Wallet address to preserve existing metadata for (used with --encode-only) |
 
 **Notes:**
 - Username stored without @ prefix
@@ -178,7 +182,8 @@ netp profile set-token-address \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
-  [--encode-only]
+  [--encode-only] \
+  [--address <address>]
 ```
 
 **Parameters:**
@@ -188,6 +193,7 @@ netp profile set-token-address \
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
+| `--address` | No | Wallet address to preserve existing metadata for (used with --encode-only) |
 
 **Notes:**
 - Token address is stored as lowercase

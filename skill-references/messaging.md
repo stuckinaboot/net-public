@@ -40,7 +40,7 @@ netp message send \
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | `--text` | Yes | Message text content |
-| `--topic` | No | Topic to post to (default: general) |
+| `--topic` | No | Topic to post to (default: empty string) |
 | `--data` | No | Optional hex data payload |
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |

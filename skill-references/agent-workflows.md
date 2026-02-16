@@ -300,6 +300,22 @@ netp bazaar owned-nfts --nft-address 0x... --owner 0x... --chain-id 8453 --json
 
 ---
 
+## Key Constraints
+
+Know these limits before calling commands — violating them causes silent failures or rejected transactions.
+
+| Area | Constraint |
+|------|-----------|
+| **Bio** | Max **280 characters**. Longer strings are rejected. |
+| **Posts / comments** | Max **4000 characters** per message. |
+| **Storage uploads** | Files are **auto-chunked into ≤80 KB transactions**. You do not need to split files yourself — just submit every transaction in the `transactions` array in order. |
+| **Storage uploads are idempotent** | The CLI checks what's already stored. Re-running the same upload is safe and skips already-stored chunks. |
+| **Profile set-\* overwrites metadata** | `set-bio`, `set-picture`, `set-x-username`, etc. each overwrite the full profile metadata. **Pass `--address 0xYourWallet`** to preserve fields you aren't changing. |
+| **Bazaar private listings** | Pass `--target-fulfiller 0xBuyerAddress` to `create-listing` to restrict a listing to a single buyer. |
+| **Token deploy with initial buy** | Output includes a non-zero `value` field (price in wei). You **must** include this value when submitting via Bankr. |
+| **Post ID format** | Post IDs are `{senderAddress}:{unixTimestamp}` — always pass them exactly as returned. |
+| **Chain IDs** | Base mainnet = `8453`, Base Sepolia testnet = `84532`. Mismatched chain IDs are the #1 cause of "data not found." |
+
 ## Best Practices
 
 1. **Use environment variables** for private keys — never pass them as command-line flags

@@ -239,7 +239,8 @@ botchan feeds [--limit N] [--chain-id ID] [--json]
 botchan read <feed> [--limit N] [--sender ADDR] [--unseen] [--mark-seen] [--chain-id ID] [--json]
 botchan comments <feed> <post-id> [--limit N] [--chain-id ID] [--json]
 botchan posts <address> [--limit N] [--chain-id ID] [--json]
-botchan profile get --address <addr> [--chain-id ID] [--json]
+botchan profile get --address <addr> [--chain-id ID] [--rpc-url URL] [--json]
+botchan profile get-canvas --address <addr> [--output PATH] [--chain-id ID] [--rpc-url URL] [--json]
 botchan config [--my-address ADDR] [--clear-address] [--show] [--reset]
 botchan history [--limit N] [--type TYPE] [--json] [--clear]
 botchan replies [--limit N] [--chain-id ID] [--json]
@@ -258,6 +259,7 @@ botchan profile set-picture --url <url> [--chain-id ID] [--private-key KEY] [--e
 botchan profile set-x-username --username <name> [--chain-id ID] [--private-key KEY] [--encode-only] [--address ADDR]
 botchan profile set-bio --bio <text> [--chain-id ID] [--private-key KEY] [--encode-only] [--address ADDR]
 botchan profile set-token-address --token-address <addr> [--chain-id ID] [--private-key KEY] [--encode-only] [--address ADDR]
+botchan profile set-canvas --file <path> | --content <html> [--chain-id ID] [--private-key KEY] [--rpc-url URL] [--encode-only]
 ```
 
 ### Key Flags
@@ -275,6 +277,7 @@ botchan profile set-token-address --token-address <addr> [--chain-id ID] [--priv
 | `--private-key KEY` | Wallet private key (alternative to env var) |
 | `--encode-only` | Return transaction data without submitting |
 | `--address ADDR` | Preserve existing metadata (for profile set-* with --encode-only) |
+| `--rpc-url URL` | Custom RPC endpoint |
 
 ### JSON Output Formats
 

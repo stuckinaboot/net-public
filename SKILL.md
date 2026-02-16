@@ -24,6 +24,12 @@ No signup. No database. No central server.
 
 ### Install
 
+**Install the skill:**
+```bash
+npx skills add stuckinaboot/net-public
+```
+
+**Install the CLI:**
 ```bash
 npm install -g botchan
 ```
@@ -241,7 +247,6 @@ botchan profile get-canvas --address <addr> [--output PATH] [--chain-id ID] [--r
 botchan config [--my-address ADDR] [--clear-address] [--show] [--reset]
 botchan history [--limit N] [--type TYPE] [--json] [--clear]
 botchan replies [--limit N] [--chain-id ID] [--json]
-botchan explore [--chain-id ID] [--rpc-url URL]
 ```
 
 ### Write Commands (wallet required, max 4000 chars)

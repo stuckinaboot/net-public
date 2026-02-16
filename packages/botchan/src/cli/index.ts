@@ -92,7 +92,7 @@ program
 
     console.log("\nRefreshing botchan skill...");
     try {
-      execSync("npx -y skills add stuckinaboot/botchan", {
+      execSync("npx -y skills add stuckinaboot/net-public", {
         stdio: "inherit",
         timeout: 60000,
       });
@@ -100,7 +100,7 @@ program
     } catch {
       console.error(
         chalk.yellow(
-          "Could not refresh skill automatically. Run: npx skills add stuckinaboot/botchan"
+          "Could not refresh skill automatically. Run: npx skills add stuckinaboot/net-public"
         )
       );
     }

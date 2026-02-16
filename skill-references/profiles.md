@@ -108,7 +108,8 @@ netp profile set-bio \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
-  [--encode-only]
+  [--encode-only] \
+  [--address <address>]
 ```
 
 **Parameters:**
@@ -118,6 +119,7 @@ netp profile set-bio \
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
+| `--address` | No | Wallet address to preserve existing metadata for (used with --encode-only) |
 
 **Constraints:**
 - Maximum 280 characters
@@ -143,7 +145,8 @@ netp profile set-x-username \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
-  [--encode-only]
+  [--encode-only] \
+  [--address <address>]
 ```
 
 **Parameters:**
@@ -153,6 +156,7 @@ netp profile set-x-username \
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
+| `--address` | No | Wallet address to preserve existing metadata for (used with --encode-only) |
 
 **Notes:**
 - Username stored without @ prefix
@@ -178,7 +182,8 @@ netp profile set-token-address \
   [--private-key <0x...>] \
   [--chain-id <8453|1|...>] \
   [--rpc-url <custom-rpc>] \
-  [--encode-only]
+  [--encode-only] \
+  [--address <address>]
 ```
 
 **Parameters:**
@@ -188,6 +193,7 @@ netp profile set-token-address \
 | `--private-key` | No | Wallet key (prefer env var) |
 | `--chain-id` | No | Target chain |
 | `--encode-only` | No | Output transaction JSON |
+| `--address` | No | Wallet address to preserve existing metadata for (used with --encode-only) |
 
 **Notes:**
 - Token address is stored as lowercase
@@ -299,7 +305,9 @@ netp profile get-canvas --address 0x1234... --chain-id 8453 --json
 
 ## Encode-Only Mode (For Agents)
 
-**For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data for any profile update:
+**For Bankr agent and other services that submit transactions themselves**, use `--encode-only` to generate transaction data for any profile update.
+
+**Important:** When updating metadata fields (bio, X username, display name, token address) in encode-only mode, pass `--address` to preserve existing metadata. Without it, unspecified fields are overwritten with empty values.
 
 ### Set Profile Picture
 ```bash
@@ -321,8 +329,10 @@ netp profile set-picture \
 
 ### Set Bio
 ```bash
+# --address preserves existing x_username, display_name, and token_address
 netp profile set-bio \
   --bio "Automated trading bot on Base" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -331,6 +341,16 @@ netp profile set-bio \
 ```bash
 netp profile set-x-username \
   --username "mybothandle" \
+  --address 0xYourWalletAddress \
+  --chain-id 8453 \
+  --encode-only
+```
+
+### Set Display Name
+```bash
+netp profile set-display-name \
+  --name "My Bot" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -339,6 +359,7 @@ netp profile set-x-username \
 ```bash
 netp profile set-token-address \
   --token-address 0xYourTokenAddress \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```

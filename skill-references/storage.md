@@ -75,7 +75,7 @@ Uploading to Net Storage...
 Storage type: normal
 Chunks needed: 1
 ✓ Upload complete
-Storage URL: net://8453/0xOperator/my-key
+Storage URL: https://storedon.net/net/8453/storage/load/0xOperator/my-key
 ```
 
 ### Encode-Only Mode (For Agents)
@@ -154,7 +154,7 @@ Already stored: 1
 Need to store: 2
 Transactions: 2
 Operator: 0xYourAddress
-Storage URL: net://8453/0xYourAddress/my-key
+Storage URL: https://storedon.net/net/8453/storage/load/0xYourAddress/my-key
 ```
 
 ### Read
@@ -236,10 +236,10 @@ For chunked uploads, only missing chunks are uploaded on retry.
 Data is addressable via Net Storage URLs:
 
 ```
-net://<chainId>/<operatorAddress>/<key>
+https://storedon.net/net/<chainId>/storage/load/<operatorAddress>/<key>
 ```
 
-Example: `net://8453/0x1234.../my-config`
+Example: `https://storedon.net/net/8453/storage/load/0x1234.../my-config`
 
 ## Use Cases
 

@@ -472,6 +472,7 @@ netp profile set-x-username \
 - `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
 - `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
 - `--encode-only` (optional): Output transaction data as JSON instead of executing
+- `--address` (optional): Wallet address to preserve existing metadata for (used with --encode-only)
 
 **Example:**
 
@@ -485,9 +486,10 @@ netp profile set-x-username \
   --username "@myusername" \
   --chain-id 8453
 
-# Encode-only
+# Encode-only (--address preserves existing bio, display name, token address)
 netp profile set-x-username \
   --username "myusername" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -512,6 +514,7 @@ netp profile set-bio \
 - `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
 - `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
 - `--encode-only` (optional): Output transaction data as JSON instead of executing
+- `--address` (optional): Wallet address to preserve existing metadata for (used with --encode-only)
 
 **Example:**
 
@@ -521,9 +524,10 @@ netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
   --chain-id 8453
 
-# Encode-only
+# Encode-only (--address preserves existing x_username, display name, token address)
 netp profile set-bio \
   --bio "Building cool stuff on Net Protocol" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -548,6 +552,7 @@ netp profile set-display-name \
 - `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
 - `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
 - `--encode-only` (optional): Output transaction data as JSON instead of executing
+- `--address` (optional): Wallet address to preserve existing metadata for (used with --encode-only)
 
 **Example:**
 
@@ -557,9 +562,10 @@ netp profile set-display-name \
   --name "Alice" \
   --chain-id 8453
 
-# Encode-only
+# Encode-only (--address preserves existing bio, x_username, token address)
 netp profile set-display-name \
   --name "Alice" \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -584,6 +590,7 @@ netp profile set-token-address \
 - `--chain-id` (optional): Chain ID. Can also be set via `NET_CHAIN_ID` environment variable
 - `--rpc-url` (optional): Custom RPC URL. Can also be set via `NET_RPC_URL` environment variable
 - `--encode-only` (optional): Output transaction data as JSON instead of executing
+- `--address` (optional): Wallet address to preserve existing metadata for (used with --encode-only)
 
 **Example:**
 
@@ -593,9 +600,10 @@ netp profile set-token-address \
   --token-address 0x1234567890abcdef1234567890abcdef12345678 \
   --chain-id 8453
 
-# Encode-only (get transaction data without executing)
+# Encode-only (--address preserves existing bio, x_username, display name)
 netp profile set-token-address \
   --token-address 0x1234567890abcdef1234567890abcdef12345678 \
+  --address 0xYourWalletAddress \
   --chain-id 8453 \
   --encode-only
 ```
@@ -778,12 +786,20 @@ src/
 │   ├── profile/          # Profile command module
 │   │   ├── index.ts      # Profile command definition
 │   │   ├── get.ts        # Profile get logic
-│   │   ├── set-picture.ts    # Set profile picture
-│   │   ├── set-username.ts   # Set X username
+│   │   ├── set-picture.ts        # Set profile picture
+│   │   ├── set-username.ts       # Set X username
+│   │   ├── set-bio.ts            # Set profile bio
+│   │   ├── set-display-name.ts   # Set display name
 │   │   ├── set-token-address.ts  # Set token address
+│   │   ├── set-canvas.ts         # Set profile canvas
+│   │   ├── get-canvas.ts         # Get profile canvas
 │   │   └── types.ts      # Profile-specific types
+│   ├── feed/             # Feed command module
 │   ├── message/          # Message command module
-│   └── token/            # Token command module
+│   ├── token/            # Token command module
+│   ├── bazaar/           # NFT Bazaar command module
+│   ├── chains/           # Chains listing command
+│   └── info/             # Contract info command
 └── shared/               # Shared utilities across commands
     └── types.ts          # Common types (CommonOptions, etc.)
 ```

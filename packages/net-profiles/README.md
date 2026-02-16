@@ -104,6 +104,7 @@ function UpdateProfile() {
 | X Username | Your X (Twitter) handle | Stored without @ prefix (e.g., `myusername`) |
 | Bio | Short profile bio | Max 280 characters |
 | Display Name | User-chosen display name | Max 25 characters |
+| Token Address | ERC-20 token that represents you | Valid EVM address (0x-prefixed) |
 | Canvas | Custom HTML profile page | For advanced customization |
 
 ## Storage Keys
@@ -111,7 +112,8 @@ function UpdateProfile() {
 | Key | Description | Data Format |
 |-----|-------------|-------------|
 | `PROFILE_PICTURE_STORAGE_KEY` | Profile picture URL | Plain string (URL) |
-| `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle", bio: "...", display_name: "..." }` |
+| `PROFILE_X_USERNAME_STORAGE_KEY` | X username (legacy, prefer metadata) | Plain string |
+| `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle", bio: "...", display_name: "...", token_address: "0x..." }` |
 | `PROFILE_CANVAS_STORAGE_KEY` | Custom HTML canvas | HTML string |
 
 ## API Reference
@@ -121,7 +123,7 @@ function UpdateProfile() {
 - `useProfilePicture({ chainId, userAddress })` - Fetch profile picture URL
 - `useProfileXUsername({ chainId, userAddress })` - Fetch X username
 - `useProfileCanvas({ chainId, userAddress })` - Fetch canvas HTML
-- `useBasicUserProfileMetadata({ chainId, userAddress })` - Batch fetch picture & username
+- `useBasicUserProfileMetadata({ chainId, userAddress })` - Batch fetch picture, username, bio, display name, and token address
 
 ### Utilities (from `@net-protocol/profiles`)
 
@@ -136,6 +138,8 @@ function UpdateProfile() {
 - `isValidXUsername(username)` - Validate X username format
 - `isValidBio(bio)` - Validate bio format (max 280 chars, no control chars)
 - `isValidDisplayName(displayName)` - Validate display name format (max 25 chars, no control chars)
+- `getTokenAddressStorageArgs(tokenAddress)` - Prepare token address update args
+- `isValidTokenAddress(address)` - Validate EVM token address format
 
 ## Dependencies
 

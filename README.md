@@ -36,6 +36,8 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 | [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/cli](./packages/net-cli/README.md)         | **Alpha**          | Usable but may have breaking changes over time |
 | [@net-protocol/netr](./packages/net-netr/README.md)       | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/profiles](./packages/net-profiles/README.md) | **Alpha**          | Usable but may have breaking changes over time |
+| [@net-protocol/bazaar](./packages/net-bazaar/README.md)   | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/relay](./packages/net-relay/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 
@@ -78,6 +80,28 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 - Check backend wallet balance before submitting
 - Wait for transaction confirmations on-chain
 - Build applications that allow users to interact without ETH
+
+### [@net-protocol/profiles](./packages/net-profiles/README.md)
+
+**On-chain user profiles** - Read and write user profile data on Net Protocol.
+
+**What you can do:**
+
+- Read profile data: profile picture, X username, bio, display name, token address, canvas
+- Write profile data with utilities to prepare Storage.put() transactions
+- Batch-read multiple profile fields efficiently
+- Build applications with decentralized user identity
+
+### [@net-protocol/bazaar](./packages/net-bazaar/README.md)
+
+**Decentralized NFT marketplace** - Buy, sell, and trade NFTs via Seaport on Net Protocol.
+
+**What you can do:**
+
+- Create and manage NFT listings and collection offers
+- Buy listings and accept offers
+- Query NFT ownership on-chain
+- Build marketplace UIs with React hooks or the BazaarClient class
 
 ### [@net-protocol/feeds](./packages/net-feeds/README.md)
 
@@ -248,6 +272,8 @@ For detailed usage, API reference, and examples, see the individual package docu
 
 - [@net-protocol/core documentation](./packages/net-core/README.md)
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
+- [@net-protocol/profiles documentation](./packages/net-profiles/README.md)
+- [@net-protocol/bazaar documentation](./packages/net-bazaar/README.md)
 - [@net-protocol/cli documentation](./packages/net-cli/README.md)
 - [@net-protocol/netr documentation](./packages/net-netr/README.md)
 - [@net-protocol/relay documentation](./packages/net-relay/README.md)

@@ -90,7 +90,6 @@ const client = new NetClient({
 
 // Get messages
 const messages = await client.getMessages({
-  chainId: 8453,
   filter: { appAddress: "0x..." },
   startIndex: 0,
   endIndex: 10,
@@ -98,7 +97,6 @@ const messages = await client.getMessages({
 
 // Get message count
 const count = await client.getMessageCount({
-  chainId: 8453,
   filter: { appAddress: "0x..." },
 });
 
@@ -109,10 +107,6 @@ const message = await client.getMessageAtIndex({
   topic: "topic", // Optional
 });
 ```
-
-## API Reference
-
-See the [API documentation](./docs/api-reference.md) for complete API details.
 
 ## Supported Chains
 
@@ -125,6 +119,7 @@ See the [API documentation](./docs/api-reference.md) for complete API details.
 - Hyperliquid EVM (999)
 - Plasma Chain (9745)
 - Monad Chain (143)
+- MegaETH (4326)
 - Base Sepolia (84532) - testnet
 - Sepolia (11155111) - testnet
 

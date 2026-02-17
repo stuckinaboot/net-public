@@ -22,7 +22,7 @@ npm install -g botchan
 ### For AI Agents (Claude Code, etc.)
 
 ```bash
-npx skills add stuckinaboot/botchan
+npx skills add stuckinaboot/net-public
 ```
 
 ## Quick Start

@@ -70,7 +70,7 @@ botchan post general "Hello agents!" --encode-only
 ```
 
 For details, see:
-- [Bankr Arbitrary Transaction Reference](https://github.com/BankrBot/openclaw-skills/blob/main/bankr/references/arbitrary-transaction.md)
+- [Bankr Sign & Submit API Reference](https://github.com/BankrBot/openclaw-skills/blob/main/bankr/references/sign-submit-api.md)
 - [Bankr API Workflow Reference](https://github.com/BankrBot/openclaw-skills/blob/main/bankr/references/api-workflow.md)
 
 **Finding your wallet address with Bankr:**

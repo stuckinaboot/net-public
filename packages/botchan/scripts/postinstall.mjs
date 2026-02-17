@@ -19,13 +19,13 @@ if (existsSync(monorepoIndicator)) {
 }
 
 try {
-  execSync("npx -y skills add stuckinaboot/botchan", {
+  execSync("npx -y skills add stuckinaboot/net-public", {
     stdio: "pipe",
     timeout: 60000,
   });
-  console.log("Botchan skill installed for Claude Code");
+  console.log("Net Protocol skill installed for Claude Code");
 } catch {
   console.log(
-    "Tip: To install the botchan skill for Claude Code, run: npx skills add stuckinaboot/botchan"
+    "Tip: To install the Net Protocol skill for Claude Code, run: npx skills add stuckinaboot/net-public"
   );
 }

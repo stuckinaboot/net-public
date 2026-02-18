@@ -109,27 +109,29 @@ export const THEME_SELECTORS: ThemeSelector[] = [
     category: "variable",
   },
 
-  // --- Layout selectors (may change with page restructuring) ---
+  // --- Layout selectors ---
   {
     selector: ".profile-themed",
     description: "Root wrapper for all themed profile content",
     category: "layout",
   },
 
-  // --- Component selectors (may change with page restructuring) ---
+  // --- Component selectors ---
   {
-    selector: ".profile-themed .profile-header",
-    description: "Profile header area (name, picture, bio)",
+    selector: ".profile-header",
+    description:
+      "Profile header card (name, avatar, bio, stat pills). Uses bg-gradient from-gray-900 to-gray-800, border-green-500",
     category: "component",
   },
   {
-    selector: ".profile-themed .profile-tabs",
-    description: "Tab navigation bar",
+    selector: ".profile-tabs",
+    description:
+      "Tab navigation bar (Canvas, Posts, Feed, Activity). Uses bg-gray-800, border-gray-700. Active tab uses bg-green-600",
     category: "component",
   },
   {
-    selector: ".profile-themed .profile-content",
-    description: "Main content area below tabs",
+    selector: ".profile-content",
+    description: "Main content area below tabs (posts, canvas, feed, activity)",
     category: "component",
   },
 ];
@@ -138,8 +140,9 @@ export const THEME_SELECTORS: ThemeSelector[] = [
  * Demo themes that users can choose from as starting points.
  * Each is a complete CSS string ready to store on-chain.
  *
- * Themes include both CSS variable overrides (for shadcn components)
- * and direct CSS rules (for hardcoded Tailwind classes in the profile).
+ * Themes include CSS variable overrides, a base color on the wrapper,
+ * and direct overrides on .profile-header / .profile-tabs for the
+ * hardcoded Tailwind classes used in those components.
  */
 export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   hotPink: {
@@ -161,18 +164,16 @@ export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   --ring: 330 100% 60%;
   color: hsl(320 20% 95%);
 }
-.profile-themed [class*="border-green-"] { border-color: hsl(330 100% 60% / 0.3); }
-.profile-themed [class*="text-green-"] { color: hsl(330 100% 60%); }
-.profile-themed [class*="bg-green-"] { background-color: hsl(330 100% 60% / 0.15); }
-.profile-themed [class*="text-gray-3"],
-.profile-themed [class*="text-gray-4"] { color: hsl(320 20% 70%); }
-.profile-themed [class*="text-gray-5"],
-.profile-themed [class*="text-gray-6"] { color: hsl(320 20% 45%); }
-.profile-themed [class*="bg-gray-8"] { background-color: hsl(320 60% 8%); }
-.profile-themed [class*="bg-gray-9"] { background-color: hsl(320 60% 5%); }
-.profile-themed [class*="border-gray-"] { border-color: hsl(330 60% 20%); }
-.profile-themed [class*="from-gray-"] { --tw-gradient-from: hsl(320 60% 8%); }
-.profile-themed [class*="to-gray-"] { --tw-gradient-to: hsl(320 60% 5%); }`,
+.profile-themed .profile-header {
+  background: linear-gradient(to bottom right, hsl(320 60% 8% / 0.5), hsl(330 50% 6% / 0.3));
+  border-color: hsl(330 100% 60% / 0.2);
+}
+.profile-themed .profile-tabs {
+  background-color: hsl(320 60% 8%);
+  border-color: hsl(330 60% 20%);
+}
+.profile-themed .profile-tabs button.bg-green-600 { background-color: hsl(330 100% 60%); }
+.profile-themed .profile-tabs button { color: hsl(320 20% 70%); }`,
   },
   midnightGrunge: {
     name: "Midnight Gold",
@@ -193,18 +194,16 @@ export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   --ring: 45 90% 55%;
   color: hsl(220 10% 80%);
 }
-.profile-themed [class*="border-green-"] { border-color: hsl(45 90% 55% / 0.3); }
-.profile-themed [class*="text-green-"] { color: hsl(45 90% 55%); }
-.profile-themed [class*="bg-green-"] { background-color: hsl(45 90% 55% / 0.15); }
-.profile-themed [class*="text-gray-3"],
-.profile-themed [class*="text-gray-4"] { color: hsl(220 10% 60%); }
-.profile-themed [class*="text-gray-5"],
-.profile-themed [class*="text-gray-6"] { color: hsl(220 10% 40%); }
-.profile-themed [class*="bg-gray-8"] { background-color: hsl(220 20% 8%); }
-.profile-themed [class*="bg-gray-9"] { background-color: hsl(220 25% 5%); }
-.profile-themed [class*="border-gray-"] { border-color: hsl(220 15% 15%); }
-.profile-themed [class*="from-gray-"] { --tw-gradient-from: hsl(220 20% 8%); }
-.profile-themed [class*="to-gray-"] { --tw-gradient-to: hsl(220 25% 5%); }`,
+.profile-themed .profile-header {
+  background: linear-gradient(to bottom right, hsl(220 20% 8% / 0.5), hsl(220 25% 5% / 0.3));
+  border-color: hsl(45 90% 55% / 0.2);
+}
+.profile-themed .profile-tabs {
+  background-color: hsl(220 20% 8%);
+  border-color: hsl(220 15% 15%);
+}
+.profile-themed .profile-tabs button.bg-green-600 { background-color: hsl(45 90% 55%); }
+.profile-themed .profile-tabs button { color: hsl(220 10% 50%); }`,
   },
   ocean: {
     name: "Deep Ocean",
@@ -225,18 +224,16 @@ export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   --ring: 190 80% 50%;
   color: hsl(190 20% 90%);
 }
-.profile-themed [class*="border-green-"] { border-color: hsl(190 80% 50% / 0.3); }
-.profile-themed [class*="text-green-"] { color: hsl(190 80% 50%); }
-.profile-themed [class*="bg-green-"] { background-color: hsl(190 80% 50% / 0.15); }
-.profile-themed [class*="text-gray-3"],
-.profile-themed [class*="text-gray-4"] { color: hsl(190 20% 65%); }
-.profile-themed [class*="text-gray-5"],
-.profile-themed [class*="text-gray-6"] { color: hsl(190 20% 40%); }
-.profile-themed [class*="bg-gray-8"] { background-color: hsl(200 40% 8%); }
-.profile-themed [class*="bg-gray-9"] { background-color: hsl(200 50% 4%); }
-.profile-themed [class*="border-gray-"] { border-color: hsl(200 30% 15%); }
-.profile-themed [class*="from-gray-"] { --tw-gradient-from: hsl(200 40% 8%); }
-.profile-themed [class*="to-gray-"] { --tw-gradient-to: hsl(200 50% 4%); }`,
+.profile-themed .profile-header {
+  background: linear-gradient(to bottom right, hsl(200 40% 8% / 0.5), hsl(200 50% 5% / 0.3));
+  border-color: hsl(190 80% 50% / 0.2);
+}
+.profile-themed .profile-tabs {
+  background-color: hsl(200 40% 8%);
+  border-color: hsl(200 30% 15%);
+}
+.profile-themed .profile-tabs button.bg-green-600 { background-color: hsl(190 80% 50%); }
+.profile-themed .profile-tabs button { color: hsl(190 20% 55%); }`,
   },
 };
 
@@ -253,10 +250,6 @@ export function buildCSSPrompt(): string {
     .map((s) => `  ${s.selector}: ${s.description}`)
     .join("\n");
 
-  const layoutLines = THEME_SELECTORS.filter((s) => s.category === "layout")
-    .map((s) => `  ${s.selector} — ${s.description}`)
-    .join("\n");
-
   const componentLines = THEME_SELECTORS.filter(
     (s) => s.category === "component"
   )
@@ -266,23 +259,26 @@ export function buildCSSPrompt(): string {
   return `You are a CSS theme generator for a user profile page.
 All styles MUST be scoped under the .profile-themed wrapper class.
 
-## CSS Variables (stable — preferred for theming)
+## CSS Variables (set on .profile-themed)
 These use HSL values WITHOUT the hsl() wrapper (e.g. "210 40% 98%"):
 ${variableLines}
 
-## Layout Selectors (may change across site updates)
-${layoutLines}
-
-## Component Selectors (may change across site updates)
+## Component Selectors
+These target dedicated class names on profile components:
 ${componentLines}
+
+## How theming works
+1. Set CSS variables inside .profile-themed { ... } to theme shadcn components
+2. Set "color" on .profile-themed to override inherited text color
+3. Override .profile-header background/border for the header card
+4. Override .profile-tabs background/border and active button color
+5. The active tab button has class .bg-green-600 by default — override it for your accent
 
 ## Rules
 1. All selectors MUST start with .profile-themed
-2. CSS variables go inside .profile-themed { ... } as custom properties
+2. HSL values for CSS variables are bare numbers: "210 40% 98%" not "hsl(210, 40%, 98%)"
 3. Use only valid CSS — no JavaScript, no expressions, no imports
 4. Keep the output under 10KB
-5. Prefer CSS variables over direct selector styling for durability
-6. HSL values are bare numbers: "210 40% 98%" not "hsl(210, 40%, 98%)"
 
 Given a user description, output ONLY the CSS (no explanation, no markdown fences).`;
 }

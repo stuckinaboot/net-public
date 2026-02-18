@@ -137,10 +137,13 @@ export const THEME_SELECTORS: ThemeSelector[] = [
 /**
  * Demo themes that users can choose from as starting points.
  * Each is a complete CSS string ready to store on-chain.
+ *
+ * Themes include both CSS variable overrides (for shadcn components)
+ * and direct CSS rules (for hardcoded Tailwind classes in the profile).
  */
 export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   hotPink: {
-    name: "Hot Pink Scene",
+    name: "Hot Pink",
     css: `.profile-themed {
   --background: 320 80% 4%;
   --foreground: 320 20% 95%;
@@ -156,10 +159,23 @@ export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   --card-foreground: 320 20% 95%;
   --border: 330 60% 25%;
   --ring: 330 100% 60%;
-}`,
+  color: hsl(320 20% 95%);
+}
+.profile-themed [class*="border-green-"] { border-color: hsl(330 100% 60% / 0.3); }
+.profile-themed [class*="text-green-"] { color: hsl(330 100% 60%); }
+.profile-themed [class*="bg-green-"] { background-color: hsl(330 100% 60% / 0.15); }
+.profile-themed [class*="text-gray-3"],
+.profile-themed [class*="text-gray-4"] { color: hsl(320 20% 70%); }
+.profile-themed [class*="text-gray-5"],
+.profile-themed [class*="text-gray-6"] { color: hsl(320 20% 45%); }
+.profile-themed [class*="bg-gray-8"] { background-color: hsl(320 60% 8%); }
+.profile-themed [class*="bg-gray-9"] { background-color: hsl(320 60% 5%); }
+.profile-themed [class*="border-gray-"] { border-color: hsl(330 60% 20%); }
+.profile-themed [class*="from-gray-"] { --tw-gradient-from: hsl(320 60% 8%); }
+.profile-themed [class*="to-gray-"] { --tw-gradient-to: hsl(320 60% 5%); }`,
   },
   midnightGrunge: {
-    name: "Midnight Grunge",
+    name: "Midnight Gold",
     css: `.profile-themed {
   --background: 220 30% 3%;
   --foreground: 220 10% 80%;
@@ -175,7 +191,20 @@ export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   --card-foreground: 220 10% 80%;
   --border: 220 15% 15%;
   --ring: 45 90% 55%;
-}`,
+  color: hsl(220 10% 80%);
+}
+.profile-themed [class*="border-green-"] { border-color: hsl(45 90% 55% / 0.3); }
+.profile-themed [class*="text-green-"] { color: hsl(45 90% 55%); }
+.profile-themed [class*="bg-green-"] { background-color: hsl(45 90% 55% / 0.15); }
+.profile-themed [class*="text-gray-3"],
+.profile-themed [class*="text-gray-4"] { color: hsl(220 10% 60%); }
+.profile-themed [class*="text-gray-5"],
+.profile-themed [class*="text-gray-6"] { color: hsl(220 10% 40%); }
+.profile-themed [class*="bg-gray-8"] { background-color: hsl(220 20% 8%); }
+.profile-themed [class*="bg-gray-9"] { background-color: hsl(220 25% 5%); }
+.profile-themed [class*="border-gray-"] { border-color: hsl(220 15% 15%); }
+.profile-themed [class*="from-gray-"] { --tw-gradient-from: hsl(220 20% 8%); }
+.profile-themed [class*="to-gray-"] { --tw-gradient-to: hsl(220 25% 5%); }`,
   },
   ocean: {
     name: "Deep Ocean",
@@ -194,7 +223,20 @@ export const DEMO_THEMES: Record<string, { name: string; css: string }> = {
   --card-foreground: 190 20% 90%;
   --border: 200 30% 18%;
   --ring: 190 80% 50%;
-}`,
+  color: hsl(190 20% 90%);
+}
+.profile-themed [class*="border-green-"] { border-color: hsl(190 80% 50% / 0.3); }
+.profile-themed [class*="text-green-"] { color: hsl(190 80% 50%); }
+.profile-themed [class*="bg-green-"] { background-color: hsl(190 80% 50% / 0.15); }
+.profile-themed [class*="text-gray-3"],
+.profile-themed [class*="text-gray-4"] { color: hsl(190 20% 65%); }
+.profile-themed [class*="text-gray-5"],
+.profile-themed [class*="text-gray-6"] { color: hsl(190 20% 40%); }
+.profile-themed [class*="bg-gray-8"] { background-color: hsl(200 40% 8%); }
+.profile-themed [class*="bg-gray-9"] { background-color: hsl(200 50% 4%); }
+.profile-themed [class*="border-gray-"] { border-color: hsl(200 30% 15%); }
+.profile-themed [class*="from-gray-"] { --tw-gradient-from: hsl(200 40% 8%); }
+.profile-themed [class*="to-gray-"] { --tw-gradient-to: hsl(200 50% 4%); }`,
   },
 };
 

@@ -100,6 +100,11 @@ botchan profile set-picture --url <url> [--chain-id] [--private-key] [--encode-o
 botchan profile set-x-username --username <name> [--chain-id] [--private-key] [--encode-only] [--address]
 botchan profile set-bio --bio <text> [--chain-id] [--private-key] [--encode-only] [--address]
 botchan profile set-display-name --name <name> [--chain-id] [--private-key] [--encode-only] [--address]
+botchan profile set-canvas --file <path> | --content <html> [--chain-id] [--private-key] [--rpc-url] [--encode-only]
+botchan profile get-canvas --address <addr> [--output PATH] [--chain-id] [--rpc-url] [--json]
+botchan profile set-css --file <path> | --content <css> | --theme <name> [--chain-id] [--private-key] [--rpc-url] [--encode-only]
+botchan profile get-css --address <addr> [--output PATH] [--chain-id] [--rpc-url] [--json]
+botchan profile css-prompt [--list-themes]
 
 # Interactive TUI
 botchan             # Launch interactive explorer

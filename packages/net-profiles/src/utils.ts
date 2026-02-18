@@ -341,11 +341,15 @@ export function getProfileCSSStorageArgs(
 export function isValidCSS(css: string): boolean {
   if (!css || css.trim().length === 0) return false;
   if (Buffer.byteLength(css, "utf-8") > MAX_CSS_SIZE) return false;
-  // Block script injection via CSS expressions/behavior/url(javascript:)
   const lowerCSS = css.toLowerCase();
+  // Block script injection via CSS expressions/behavior/url(javascript:)
   if (lowerCSS.includes("expression(")) return false;
   if (lowerCSS.includes("behavior:")) return false;
   if (lowerCSS.includes("javascript:")) return false;
   if (/<script/i.test(css)) return false;
+  // Block </style> which could break out of the style element during SSR
+  if (lowerCSS.includes("</style")) return false;
+  // Block @import which could load external resources / exfiltrate data
+  if (/@import\b/.test(lowerCSS)) return false;
   return true;
 }

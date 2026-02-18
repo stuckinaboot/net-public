@@ -5,6 +5,7 @@ import {
   PROFILE_PICTURE_STORAGE_KEY,
   PROFILE_METADATA_STORAGE_KEY,
   PROFILE_CANVAS_STORAGE_KEY,
+  PROFILE_CSS_STORAGE_KEY,
   parseProfileMetadata,
 } from "@net-protocol/profiles";
 import { parseReadOnlyOptions } from "../../cli/shared";
@@ -95,7 +96,25 @@ export async function executeProfileGet(
       }
     }
 
-    const hasProfile = profilePicture || xUsername || bio || tokenAddress || canvasSize;
+    // Fetch profile CSS
+    let cssSize: number | undefined;
+    try {
+      const cssResult = await client.readStorageData({
+        key: PROFILE_CSS_STORAGE_KEY,
+        operator: options.address,
+      });
+      if (cssResult.data) {
+        cssSize = cssResult.data.length;
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage !== "StoredDataNotFound") {
+        throw error;
+      }
+    }
+
+    const hasProfile = profilePicture || xUsername || bio || tokenAddress || canvasSize || cssSize;
 
     if (options.json) {
       const output = {
@@ -108,6 +127,7 @@ export async function executeProfileGet(
         canvas: canvasSize
           ? { size: canvasSize, isDataUri: canvasIsDataUri }
           : null,
+        css: cssSize ? { size: cssSize } : null,
         hasProfile,
       };
       console.log(JSON.stringify(output, null, 2));
@@ -141,6 +161,11 @@ export async function executeProfileGet(
         canvasSize
           ? `${canvasSize} bytes${canvasIsDataUri ? " (data URI)" : ""}`
           : chalk.gray("(not set)")
+      }`
+    );
+    console.log(
+      `  ${chalk.cyan("Custom CSS:")} ${
+        cssSize ? `${cssSize} bytes` : chalk.gray("(not set)")
       }`
     );
 

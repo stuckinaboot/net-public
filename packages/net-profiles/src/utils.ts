@@ -4,9 +4,11 @@ import {
   PROFILE_PICTURE_STORAGE_KEY,
   PROFILE_METADATA_STORAGE_KEY,
   PROFILE_CANVAS_STORAGE_KEY,
+  PROFILE_CSS_STORAGE_KEY,
   PROFILE_PICTURE_TOPIC,
   PROFILE_METADATA_TOPIC,
   PROFILE_CANVAS_TOPIC,
+  PROFILE_CSS_TOPIC,
 } from "./constants";
 import type { ProfileMetadata, ProfileStorageArgs } from "./types";
 
@@ -294,4 +296,56 @@ export function getTokenAddressStorageArgs(
 export function isValidTokenAddress(address: string): boolean {
   if (!address) return false;
   return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+/**
+ * Maximum CSS size in bytes (10KB — CSS should be small)
+ */
+export const MAX_CSS_SIZE = 10 * 1024;
+
+/**
+ * Prepare transaction arguments for updating profile custom CSS
+ *
+ * @param cssContent - CSS string to store
+ * @returns Arguments for Storage.put() - [bytesKey, topic, bytesValue]
+ *
+ * @example
+ * ```ts
+ * const args = getProfileCSSStorageArgs(".profile-themed { --primary: 210 40% 98%; }");
+ * writeContract({
+ *   abi: STORAGE_CONTRACT.abi,
+ *   address: STORAGE_CONTRACT.address,
+ *   functionName: "put",
+ *   args: [args.bytesKey, args.topic, args.bytesValue],
+ * });
+ * ```
+ */
+export function getProfileCSSStorageArgs(
+  cssContent: string
+): ProfileStorageArgs {
+  const { bytesKey, bytesValue } = getBytesArgsForStorage(
+    PROFILE_CSS_STORAGE_KEY,
+    cssContent
+  );
+  return {
+    bytesKey,
+    topic: PROFILE_CSS_TOPIC,
+    bytesValue,
+  };
+}
+
+/**
+ * Validate CSS content
+ * Returns true if valid (non-empty, within size limit, no script injection)
+ */
+export function isValidCSS(css: string): boolean {
+  if (!css || css.trim().length === 0) return false;
+  if (Buffer.byteLength(css, "utf-8") > MAX_CSS_SIZE) return false;
+  // Block script injection via CSS expressions/behavior/url(javascript:)
+  const lowerCSS = css.toLowerCase();
+  if (lowerCSS.includes("expression(")) return false;
+  if (lowerCSS.includes("behavior:")) return false;
+  if (lowerCSS.includes("javascript:")) return false;
+  if (/<script/i.test(css)) return false;
+  return true;
 }

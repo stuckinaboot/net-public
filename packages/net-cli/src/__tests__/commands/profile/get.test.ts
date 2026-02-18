@@ -47,9 +47,14 @@ import { executeProfileGet } from "../../../commands/profile/get";
 describe("executeProfileGet", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: no canvas
+    // Default: no canvas, no CSS
     mockReadChunkedStorage.mockRejectedValue(
       new Error("ChunkedStorage metadata not found")
+    );
+    // Default fallback: CSS readStorageData returns not found
+    // (specific tests override with mockResolvedValueOnce for picture/metadata)
+    mockReadStorageData.mockRejectedValue(
+      new Error("StoredDataNotFound")
     );
   });
 

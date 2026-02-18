@@ -89,3 +89,27 @@ export interface ProfileGetCanvasOptions {
   rpcUrl?: string;
   json?: boolean;
 }
+
+/**
+ * Options for profile set-css command (write)
+ */
+export interface ProfileSetCSSOptions {
+  file?: string;
+  content?: string;
+  theme?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+/**
+ * Options for profile get-css command (read-only)
+ */
+export interface ProfileGetCSSOptions {
+  address: string;
+  output?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  json?: boolean;
+}

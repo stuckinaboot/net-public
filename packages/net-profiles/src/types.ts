@@ -60,5 +60,6 @@ export interface UserProfile {
   displayName?: string;
   tokenAddress?: string;
   canvas?: string;
+  css?: string;
   forwardedTo?: string;
 }

@@ -7,6 +7,9 @@ import { executeProfileSetDisplayName } from "./set-display-name";
 import { executeProfileSetTokenAddress } from "./set-token-address";
 import { executeProfileSetCanvas } from "./set-canvas";
 import { executeProfileGetCanvas } from "./get-canvas";
+import { executeProfileSetCSS } from "./set-css";
+import { executeProfileGetCSS } from "./get-css";
+import { executeProfileCSSPrompt } from "./css-prompt";
 
 /**
  * Register the profile command with the commander program
@@ -279,6 +282,76 @@ export function registerProfileCommand(program: Command): void {
       });
     });
 
+  // Set-css subcommand (write)
+  const setCSSCommand = new Command("set-css")
+    .description("Set your profile custom CSS theme")
+    .option("--file <path>", "Path to CSS file")
+    .option("--content <css>", "CSS content (inline)")
+    .option("--theme <name>", "Use a built-in demo theme (e.g. hotPink, midnightGrunge, ocean)")
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option(
+      "--encode-only",
+      "Output transaction data as JSON instead of executing"
+    )
+    .action(async (options) => {
+      await executeProfileSetCSS({
+        file: options.file,
+        content: options.content,
+        theme: options.theme,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
+  // Get-css subcommand (read-only)
+  const getCSSCommand = new Command("get-css")
+    .description("Get profile custom CSS for an address")
+    .requiredOption("--address <address>", "Wallet address to get CSS for")
+    .option("--output <path>", "Write CSS content to file instead of stdout")
+    .option(
+      "--chain-id <id>",
+      "Chain ID. Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option(
+      "--rpc-url <url>",
+      "Custom RPC URL. Can also be set via NET_RPC_URL env var"
+    )
+    .option("--json", "Output in JSON format")
+    .action(async (options) => {
+      await executeProfileGetCSS({
+        address: options.address,
+        output: options.output,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        json: options.json,
+      });
+    });
+
+  // CSS-prompt subcommand (read-only, no chain interaction)
+  const cssPromptCommand = new Command("css-prompt")
+    .description("Print the AI prompt for generating profile CSS themes")
+    .option("--list-themes", "List available demo themes instead of the prompt")
+    .action(async (options) => {
+      await executeProfileCSSPrompt({
+        listThemes: options.listThemes,
+      });
+    });
+
   profileCommand.addCommand(getCommand);
   profileCommand.addCommand(setPictureCommand);
   profileCommand.addCommand(setUsernameCommand);
@@ -287,4 +360,7 @@ export function registerProfileCommand(program: Command): void {
   profileCommand.addCommand(setTokenAddressCommand);
   profileCommand.addCommand(setCanvasCommand);
   profileCommand.addCommand(getCanvasCommand);
+  profileCommand.addCommand(setCSSCommand);
+  profileCommand.addCommand(getCSSCommand);
+  profileCommand.addCommand(cssPromptCommand);
 }

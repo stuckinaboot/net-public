@@ -10,6 +10,7 @@ Net Profiles provide on-chain identity storage for:
 - Social links (X/Twitter username)
 - Token address (ERC-20 token that represents you)
 - Canvas (custom HTML profile page)
+- Custom CSS theme (profile color/style customization)
 
 All profile data is stored on-chain, making it portable and decentralized.
 
@@ -251,6 +252,125 @@ netp profile set-canvas --content "<html><body><h1>My Profile</h1></body></html>
 netp profile set-canvas --file ./canvas.html --chain-id 8453 --encode-only
 ```
 
+### Set CSS Theme
+
+Set a custom CSS theme for your profile (max 10KB):
+
+```bash
+netp profile set-css \
+  --file <path> | --content <css> | --theme <name> \
+  [--private-key <0x...>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--encode-only]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--file` | No* | Path to CSS file |
+| `--content` | No* | Inline CSS content |
+| `--theme` | No* | Built-in demo theme name |
+| `--private-key` | No | Wallet key (prefer env var) |
+| `--chain-id` | No | Target chain |
+| `--rpc-url` | No | Custom RPC endpoint |
+| `--encode-only` | No | Output transaction JSON |
+
+*Must provide exactly one of `--file`, `--content`, or `--theme`.
+
+**Notes:**
+- Maximum CSS size: 10KB
+- CSS is validated before storage (no script injection allowed)
+- Uses regular Net Storage (not chunked — CSS is small)
+- CSS targets the `.profile-themed` wrapper class on the profile page
+- Available CSS variables: `--background`, `--foreground`, `--primary`, `--card`, `--border`, etc. (HSL values without the `hsl()` wrapper)
+
+**Examples:**
+```bash
+# Set CSS from file
+netp profile set-css --file ./my-theme.css --chain-id 8453
+
+# Set CSS from inline content
+netp profile set-css --content ".profile-themed { --background: 0 0% 5%; --primary: 330 100% 60%; }" --chain-id 8453
+
+# Use a built-in demo theme
+netp profile set-css --theme hotPink --chain-id 8453
+
+# Encode-only (for agents)
+netp profile set-css --theme hotPink --chain-id 8453 --encode-only
+```
+
+### Get CSS Theme
+
+Retrieve a user's custom CSS theme:
+
+```bash
+netp profile get-css \
+  --address <wallet-address> \
+  [--output <path>] \
+  [--chain-id <8453|1|...>] \
+  [--rpc-url <custom-rpc>] \
+  [--json]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--address` | Yes | Wallet address to lookup |
+| `--output` | No | Write to file instead of stdout |
+| `--chain-id` | No | Chain to query (default from env) |
+| `--rpc-url` | No | Custom RPC endpoint |
+| `--json` | No | Output in JSON format |
+
+**Notes:**
+- Outputs CSS to stdout by default
+- JSON output includes metadata (has CSS flag, content length)
+
+**Examples:**
+```bash
+# Output CSS to stdout
+netp profile get-css --address 0x1234... --chain-id 8453
+
+# Save CSS to file
+netp profile get-css --address 0x1234... --output ./theme.css --chain-id 8453
+
+# JSON output with metadata
+netp profile get-css --address 0x1234... --chain-id 8453 --json
+```
+
+**JSON Output:**
+```json
+{
+  "address": "0x1234...",
+  "chainId": 8453,
+  "css": ".profile-themed { --background: 0 0% 5%; }",
+  "hasCSS": true,
+  "contentLength": 44
+}
+```
+
+### CSS Prompt
+
+Print the AI prompt for generating profile CSS themes, or list available demo themes:
+
+```bash
+netp profile css-prompt [--list-themes]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--list-themes` | No | List available demo theme names |
+
+**Examples:**
+```bash
+# Print the full AI prompt for CSS generation
+netp profile css-prompt
+
+# List available demo themes
+netp profile css-prompt --list-themes
+```
+
 ### Get Canvas
 
 Retrieve a user's profile canvas:
@@ -372,6 +492,20 @@ netp profile set-canvas \
   --encode-only
 ```
 
+### Set CSS Theme
+```bash
+netp profile set-css \
+  --theme hotPink \
+  --chain-id 8453 \
+  --encode-only
+
+# Or from file
+netp profile set-css \
+  --file ./my-theme.css \
+  --chain-id 8453 \
+  --encode-only
+```
+
 The agent submits these transactions through its own wallet infrastructure. No private key is required for the CLI when using `--encode-only`.
 
 ## Profile Data Storage
@@ -391,6 +525,7 @@ netp profile set-bio --bio "Blockchain enthusiast and developer" --chain-id 8453
 netp profile set-x-username --username "blockchaindev" --chain-id 8453
 netp profile set-token-address --token-address 0xYourTokenAddress --chain-id 8453
 netp profile set-canvas --file ./my-profile.html --chain-id 8453
+netp profile set-css --theme hotPink --chain-id 8453
 ```
 
 ### Update Profile Picture
@@ -455,6 +590,7 @@ Profile updates are on-chain transactions:
 - Set X username: ~0.00001-0.0001 ETH
 - Set token address: ~0.00001-0.0001 ETH
 - Set canvas: ~0.0001-0.001 ETH (depends on size)
+- Set CSS: ~0.00001-0.0001 ETH
 
 ## Error Handling
 
@@ -466,6 +602,9 @@ Profile updates are on-chain transactions:
 | "Profile not found" | No profile set | Profile fields are optional |
 | "File too large" | Canvas exceeds 60KB | Reduce canvas file size |
 | "No canvas found" | Address has no canvas | Canvas is optional |
+| "CSS too large" | CSS exceeds 10KB | Reduce CSS file size |
+| "Invalid CSS" | Disallowed patterns | Remove script injection patterns |
+| "No custom CSS found" | Address has no CSS | CSS is optional |
 
 ## Best Practices
 

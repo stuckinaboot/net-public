@@ -287,7 +287,7 @@ export function registerProfileCommand(program: Command): void {
     .description("Set your profile custom CSS theme")
     .option("--file <path>", "Path to CSS file")
     .option("--content <css>", "CSS content (inline)")
-    .option("--theme <name>", "Use a built-in demo theme (e.g. hotPink, midnightGrunge, ocean)")
+    .option("--theme <name>", "Use a built-in demo theme (run css-prompt --list-themes to see available)")
     .option(
       "--private-key <key>",
       "Private key (0x-prefixed hex, 66 characters). Can also be set via NET_PRIVATE_KEY env var"

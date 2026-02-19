@@ -293,11 +293,11 @@ netp profile set-css --file ./my-theme.css --chain-id 8453
 # Set CSS from inline content
 netp profile set-css --content ".profile-themed { --background: 0 0% 5%; --primary: 330 100% 60%; }" --chain-id 8453
 
-# Use a built-in demo theme
-netp profile set-css --theme hotPink --chain-id 8453
+# Use a built-in demo theme (run --list-themes to see available names)
+netp profile set-css --theme sunset --chain-id 8453
 
 # Encode-only (for agents)
-netp profile set-css --theme hotPink --chain-id 8453 --encode-only
+netp profile set-css --theme sunset --chain-id 8453 --encode-only
 ```
 
 ### Get CSS Theme
@@ -495,7 +495,7 @@ netp profile set-canvas \
 ### Set CSS Theme
 ```bash
 netp profile set-css \
-  --theme hotPink \
+  --theme sunset \
   --chain-id 8453 \
   --encode-only
 
@@ -525,7 +525,7 @@ netp profile set-bio --bio "Blockchain enthusiast and developer" --chain-id 8453
 netp profile set-x-username --username "blockchaindev" --chain-id 8453
 netp profile set-token-address --token-address 0xYourTokenAddress --chain-id 8453
 netp profile set-canvas --file ./my-profile.html --chain-id 8453
-netp profile set-css --theme hotPink --chain-id 8453
+netp profile set-css --theme sunset --chain-id 8453
 ```
 
 ### Update Profile Picture

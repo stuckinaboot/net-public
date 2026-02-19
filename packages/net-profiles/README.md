@@ -12,8 +12,9 @@ yarn add @net-protocol/profiles
 
 ## Features
 
-- **Read profile data**: Profile picture, X username, bio, canvas content
+- **Read profile data**: Profile picture, X username, bio, canvas content, custom CSS themes
 - **Write profile data**: Utilities to prepare Storage.put() transactions
+- **CSS theming**: Demo themes, AI prompt generation, CSS sanitization, and theme selector definitions
 - **Efficient batch reads**: `useBasicUserProfileMetadata` batches multiple reads
 - **Built on net-storage**: Uses the Net Storage SDK for underlying storage operations
 
@@ -106,6 +107,7 @@ function UpdateProfile() {
 | Display Name | User-chosen display name | Max 25 characters |
 | Token Address | ERC-20 token that represents you | Valid EVM address (0x-prefixed) |
 | Canvas | Custom HTML profile page | For advanced customization |
+| CSS Theme | Custom CSS for profile styling | Max 10KB, scoped under `.profile-themed` |
 
 ## Storage Keys
 
@@ -115,6 +117,7 @@ function UpdateProfile() {
 | `PROFILE_X_USERNAME_STORAGE_KEY` | X username (legacy, prefer metadata) | Plain string |
 | `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle", bio: "...", display_name: "...", token_address: "0x..." }` |
 | `PROFILE_CANVAS_STORAGE_KEY` | Custom HTML canvas | HTML string |
+| `PROFILE_CSS_STORAGE_KEY` | Custom CSS theme | CSS string (max 10KB) |
 
 ## API Reference
 
@@ -123,6 +126,7 @@ function UpdateProfile() {
 - `useProfilePicture({ chainId, userAddress })` - Fetch profile picture URL
 - `useProfileXUsername({ chainId, userAddress })` - Fetch X username
 - `useProfileCanvas({ chainId, userAddress })` - Fetch canvas HTML
+- `useProfileCSS({ chainId, userAddress })` - Fetch custom CSS theme
 - `useBasicUserProfileMetadata({ chainId, userAddress })` - Batch fetch picture, username, bio, display name, and token address
 
 ### Utilities (from `@net-protocol/profiles`)
@@ -140,6 +144,16 @@ function UpdateProfile() {
 - `isValidDisplayName(displayName)` - Validate display name format (max 25 chars, no control chars)
 - `getTokenAddressStorageArgs(tokenAddress)` - Prepare token address update args
 - `isValidTokenAddress(address)` - Validate EVM token address format
+- `getProfileCSSStorageArgs(css)` - Prepare CSS theme update args
+- `isValidCSS(css)` - Validate CSS (size limit, no script injection)
+- `sanitizeCSS(css)` - Strip dangerous patterns (`<script>`, `javascript:`, `expression()`, `behavior:`, `@import`, `</style>`)
+
+### Theme Utilities (from `@net-protocol/profiles`)
+
+- `THEME_SELECTORS` - Array of all themeable CSS selectors/variables with descriptions
+- `DEMO_THEMES` - Built-in demo themes (use `buildCSSPrompt()` or CLI `--list-themes` to discover names)
+- `buildCSSPrompt()` - Generate an AI prompt describing the full theming surface
+- `MAX_CSS_SIZE` - Maximum CSS size in bytes (10KB)
 
 ## Dependencies
 

@@ -254,7 +254,7 @@ netp profile set-canvas --file ./canvas.html --chain-id 8453 --encode-only
 
 ### Set CSS Theme
 
-Set a custom CSS theme for your profile (max 10KB):
+Set a custom CSS theme for your profile (max 15KB):
 
 ```bash
 netp profile set-css \
@@ -279,7 +279,7 @@ netp profile set-css \
 *Must provide exactly one of `--file`, `--content`, or `--theme`.
 
 **Notes:**
-- Maximum CSS size: 10KB
+- Maximum CSS size: 15KB
 - CSS is validated before storage (no script injection allowed)
 - Uses regular Net Storage (not chunked — CSS is small)
 - CSS targets the `.profile-themed` wrapper class on the profile page
@@ -602,7 +602,7 @@ Profile updates are on-chain transactions:
 | "Profile not found" | No profile set | Profile fields are optional |
 | "File too large" | Canvas exceeds 60KB | Reduce canvas file size |
 | "No canvas found" | Address has no canvas | Canvas is optional |
-| "CSS too large" | CSS exceeds 10KB | Reduce CSS file size |
+| "CSS too large" | CSS exceeds 15KB | Reduce CSS file size |
 | "Invalid CSS" | Disallowed patterns | Remove script injection patterns |
 | "No custom CSS found" | Address has no CSS | CSS is optional |
 

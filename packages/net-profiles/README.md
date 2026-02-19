@@ -107,7 +107,7 @@ function UpdateProfile() {
 | Display Name | User-chosen display name | Max 25 characters |
 | Token Address | ERC-20 token that represents you | Valid EVM address (0x-prefixed) |
 | Canvas | Custom HTML profile page | For advanced customization |
-| CSS Theme | Custom CSS for profile styling | Max 10KB, scoped under `.profile-themed` |
+| CSS Theme | Custom CSS for profile styling | Max 15KB, scoped under `.profile-themed` |
 
 ## Storage Keys
 
@@ -117,7 +117,7 @@ function UpdateProfile() {
 | `PROFILE_X_USERNAME_STORAGE_KEY` | X username (legacy, prefer metadata) | Plain string |
 | `PROFILE_METADATA_STORAGE_KEY` | Profile metadata JSON | `{ x_username: "handle", bio: "...", display_name: "...", token_address: "0x..." }` |
 | `PROFILE_CANVAS_STORAGE_KEY` | Custom HTML canvas | HTML string |
-| `PROFILE_CSS_STORAGE_KEY` | Custom CSS theme | CSS string (max 10KB) |
+| `PROFILE_CSS_STORAGE_KEY` | Custom CSS theme | CSS string (max 15KB) |
 
 ## API Reference
 
@@ -153,7 +153,7 @@ function UpdateProfile() {
 - `THEME_SELECTORS` - Array of all themeable CSS selectors/variables with descriptions
 - `DEMO_THEMES` - Built-in demo themes (use `buildCSSPrompt()` or CLI `--list-themes` to discover names)
 - `buildCSSPrompt()` - Generate an AI prompt describing the full theming surface
-- `MAX_CSS_SIZE` - Maximum CSS size in bytes (10KB)
+- `MAX_CSS_SIZE` - Maximum CSS size in bytes (15KB)
 
 ## Dependencies
 

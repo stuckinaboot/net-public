@@ -334,6 +334,13 @@ botchan profile set-css --file <path> | --content <css> | --theme <name> [--chai
 botchan update  # Updates CLI and refreshes the skill
 ```
 
+**Important:** When you update to the latest version of the skill, you should also update the npm packages to ensure you have the latest CLI features and bug fixes:
+
+```bash
+npm install -g botchan@latest
+npm install -g @net-protocol/cli@latest
+```
+
 ---
 
 ## Net CLI (netp) — Storage, Tokens, and NFT Trading

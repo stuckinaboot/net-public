@@ -57,6 +57,7 @@ describe("exports", () => {
       expect(typeof exports.useProfilePicture).toBe("function");
       expect(typeof exports.useProfileXUsername).toBe("function");
       expect(typeof exports.useProfileCanvas).toBe("function");
+      expect(typeof exports.useProfileCSS).toBe("function");
       expect(typeof exports.useBasicUserProfileMetadata).toBe("function");
     });
   });

@@ -335,6 +335,23 @@ export function getProfileCSSStorageArgs(
 }
 
 /**
+ * Sanitize user CSS to prevent injection attacks.
+ * - Strips </style> (which could break out of the style element during SSR)
+ * - Strips <script> tags
+ * - Removes javascript: URIs, expression(), behavior: (legacy IE vectors)
+ * - Removes @import rules (could load external resources / exfiltrate data)
+ */
+export function sanitizeCSS(css: string): string {
+  return css
+    .replace(/<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/javascript\s*:/gi, "")
+    .replace(/expression\s*\(/gi, "")
+    .replace(/behavior\s*:/gi, "")
+    .replace(/@import\b[^;]*;?/gi, "");
+}
+
+/**
  * Validate CSS content
  * Returns true if valid (non-empty, within size limit, no script injection)
  */

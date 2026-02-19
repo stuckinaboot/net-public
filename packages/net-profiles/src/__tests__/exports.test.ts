@@ -28,6 +28,17 @@ describe("exports", () => {
       expect(typeof exports.isValidUrl).toBe("function");
       expect(typeof exports.isValidXUsername).toBe("function");
       expect(typeof exports.isValidDisplayName).toBe("function");
+      expect(typeof exports.sanitizeCSS).toBe("function");
+    });
+
+    it("should export theme selectors, demo themes, and buildCSSPrompt", async () => {
+      const exports = await import("../index");
+
+      expect(exports.THEME_SELECTORS).toBeDefined();
+      expect(Array.isArray(exports.THEME_SELECTORS)).toBe(true);
+      expect(exports.DEMO_THEMES).toBeDefined();
+      expect(typeof exports.DEMO_THEMES).toBe("object");
+      expect(typeof exports.buildCSSPrompt).toBe("function");
     });
 
     it("should re-export STORAGE_CONTRACT from @net-protocol/storage", async () => {

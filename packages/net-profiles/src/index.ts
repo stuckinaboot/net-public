@@ -40,6 +40,7 @@ export {
   isValidDisplayName,
   isValidTokenAddress,
   isValidCSS,
+  sanitizeCSS,
   MAX_CSS_SIZE,
 } from "./utils";
 

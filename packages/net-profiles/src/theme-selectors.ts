@@ -456,7 +456,7 @@ ${variableLines}
 6. IMPORTANT: Do NOT use \`background\` shorthand with !important if you animate background-position — the shorthand locks background-position with !important and animations cannot override it. Use \`background-image\` instead.
 7. backdrop-filter, box-shadow, and gradients are supported
 8. Use valid CSS only — no JS, no expressions, no imports
-9. Keep under 10KB
+9. Keep under 15KB
 10. HSL values are bare: "210 40% 98%" not "hsl(210, 40%, 98%)"
 
 Output ONLY the CSS.`;

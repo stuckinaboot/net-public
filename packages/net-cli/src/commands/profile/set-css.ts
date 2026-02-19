@@ -59,7 +59,7 @@ export async function executeProfileSetCSS(
     const buffer = fs.readFileSync(filePath);
     if (buffer.length > MAX_CSS_SIZE) {
       exitWithError(
-        `File too large: ${buffer.length} bytes exceeds maximum of ${MAX_CSS_SIZE} bytes (10KB).`
+        `File too large: ${buffer.length} bytes exceeds maximum of ${MAX_CSS_SIZE} bytes (15KB).`
       );
     }
     cssContent = buffer.toString("utf-8");
@@ -68,7 +68,7 @@ export async function executeProfileSetCSS(
     const contentSize = Buffer.byteLength(cssContent, "utf-8");
     if (contentSize > MAX_CSS_SIZE) {
       exitWithError(
-        `Content too large: ${contentSize} bytes exceeds maximum of ${MAX_CSS_SIZE} bytes (10KB).`
+        `Content too large: ${contentSize} bytes exceeds maximum of ${MAX_CSS_SIZE} bytes (15KB).`
       );
     }
   }

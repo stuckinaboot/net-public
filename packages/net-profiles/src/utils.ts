@@ -299,9 +299,9 @@ export function isValidTokenAddress(address: string): boolean {
 }
 
 /**
- * Maximum CSS size in bytes (10KB — CSS should be small)
+ * Maximum CSS size in bytes (15KB — CSS should be small)
  */
-export const MAX_CSS_SIZE = 10 * 1024;
+export const MAX_CSS_SIZE = 15 * 1024;
 
 /**
  * Prepare transaction arguments for updating profile custom CSS

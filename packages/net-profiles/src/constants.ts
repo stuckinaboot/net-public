@@ -20,3 +20,5 @@ export const PROFILE_METADATA_STORAGE_KEY = "net-beta0.0.1-profile-metadata";
 export const PROFILE_PICTURE_TOPIC = "profile-picture";
 export const PROFILE_METADATA_TOPIC = "profile-metadata";
 export const PROFILE_CANVAS_TOPIC = "profile-canvas";
+export const PROFILE_CSS_STORAGE_KEY = "net-beta0.0.1-profile-css";
+export const PROFILE_CSS_TOPIC = "profile-css";

@@ -4,9 +4,11 @@ import {
   PROFILE_PICTURE_STORAGE_KEY,
   PROFILE_METADATA_STORAGE_KEY,
   PROFILE_CANVAS_STORAGE_KEY,
+  PROFILE_CSS_STORAGE_KEY,
   PROFILE_PICTURE_TOPIC,
   PROFILE_METADATA_TOPIC,
   PROFILE_CANVAS_TOPIC,
+  PROFILE_CSS_TOPIC,
 } from "./constants";
 import type { ProfileMetadata, ProfileStorageArgs } from "./types";
 
@@ -294,4 +296,77 @@ export function getTokenAddressStorageArgs(
 export function isValidTokenAddress(address: string): boolean {
   if (!address) return false;
   return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+/**
+ * Maximum CSS size in bytes (10KB — CSS should be small)
+ */
+export const MAX_CSS_SIZE = 10 * 1024;
+
+/**
+ * Prepare transaction arguments for updating profile custom CSS
+ *
+ * @param cssContent - CSS string to store
+ * @returns Arguments for Storage.put() - [bytesKey, topic, bytesValue]
+ *
+ * @example
+ * ```ts
+ * const args = getProfileCSSStorageArgs(".profile-themed { --primary: 210 40% 98%; }");
+ * writeContract({
+ *   abi: STORAGE_CONTRACT.abi,
+ *   address: STORAGE_CONTRACT.address,
+ *   functionName: "put",
+ *   args: [args.bytesKey, args.topic, args.bytesValue],
+ * });
+ * ```
+ */
+export function getProfileCSSStorageArgs(
+  cssContent: string
+): ProfileStorageArgs {
+  const { bytesKey, bytesValue } = getBytesArgsForStorage(
+    PROFILE_CSS_STORAGE_KEY,
+    cssContent
+  );
+  return {
+    bytesKey,
+    topic: PROFILE_CSS_TOPIC,
+    bytesValue,
+  };
+}
+
+/**
+ * Sanitize user CSS to prevent injection attacks.
+ * - Strips </style> (which could break out of the style element during SSR)
+ * - Strips <script> tags
+ * - Removes javascript: URIs, expression(), behavior: (legacy IE vectors)
+ * - Removes @import rules (could load external resources / exfiltrate data)
+ */
+export function sanitizeCSS(css: string): string {
+  return css
+    .replace(/<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/javascript\s*:/gi, "")
+    .replace(/expression\s*\(/gi, "")
+    .replace(/behavior\s*:/gi, "")
+    .replace(/@import\b[^;]*;?/gi, "");
+}
+
+/**
+ * Validate CSS content
+ * Returns true if valid (non-empty, within size limit, no script injection)
+ */
+export function isValidCSS(css: string): boolean {
+  if (!css || css.trim().length === 0) return false;
+  if (Buffer.byteLength(css, "utf-8") > MAX_CSS_SIZE) return false;
+  const lowerCSS = css.toLowerCase();
+  // Block script injection via CSS expressions/behavior/url(javascript:)
+  if (lowerCSS.includes("expression(")) return false;
+  if (lowerCSS.includes("behavior:")) return false;
+  if (lowerCSS.includes("javascript:")) return false;
+  if (/<script/i.test(css)) return false;
+  // Block </style> which could break out of the style element during SSR
+  if (lowerCSS.includes("</style")) return false;
+  // Block @import which could load external resources / exfiltrate data
+  if (/@import\b/.test(lowerCSS)) return false;
+  return true;
 }

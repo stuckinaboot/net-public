@@ -13,6 +13,7 @@ import {
   isValidXUsername,
   isValidBio,
   isValidDisplayName,
+  sanitizeCSS,
 } from "../utils";
 import {
   PROFILE_PICTURE_STORAGE_KEY,
@@ -580,6 +581,57 @@ describe("utils", () => {
       const displayNameArgs = getDisplayNameStorageArgs("Alice");
       const usernameArgs = getXUsernameStorageArgs("testuser");
       expect(displayNameArgs.bytesKey).toBe(usernameArgs.bytesKey);
+    });
+  });
+
+  describe("sanitizeCSS", () => {
+    it("should strip </style> tags", () => {
+      expect(sanitizeCSS("body { color: red; }</style><script>alert(1)</script>")).not.toContain("</style>");
+    });
+
+    it("should strip <script> tags", () => {
+      expect(sanitizeCSS('<script>alert("xss")</script>.foo { color: red; }')).not.toContain("<script");
+      expect(sanitizeCSS('<script>alert("xss")</script>.foo { color: red; }')).toContain(".foo { color: red; }");
+    });
+
+    it("should strip javascript: URIs", () => {
+      expect(sanitizeCSS("background: url(javascript:alert(1))")).not.toMatch(/javascript\s*:/i);
+    });
+
+    it("should strip expression() calls", () => {
+      expect(sanitizeCSS("width: expression(document.body.offsetWidth)")).not.toMatch(/expression\s*\(/i);
+    });
+
+    it("should strip behavior: properties", () => {
+      expect(sanitizeCSS("behavior: url(evil.htc)")).not.toMatch(/behavior\s*:/i);
+    });
+
+    it("should strip @import rules", () => {
+      expect(sanitizeCSS('@import url("evil.css"); .foo { color: red; }')).not.toContain("@import");
+      expect(sanitizeCSS('@import url("evil.css"); .foo { color: red; }')).toContain(".foo { color: red; }");
+    });
+
+    it("should strip @import without semicolon", () => {
+      expect(sanitizeCSS("@import url(foo.css)\n.bar {}")).not.toContain("@import");
+    });
+
+    it("should pass through clean CSS unchanged", () => {
+      const cleanCSS = `.profile-themed {
+  --primary: 330 100% 60%;
+  color: #e0e0e0;
+}
+.profile-themed .profile-header {
+  background: rgba(0,0,0,0.4) !important;
+  backdrop-filter: blur(4px);
+}`;
+      expect(sanitizeCSS(cleanCSS)).toBe(cleanCSS);
+    });
+
+    it("should handle case-insensitive patterns", () => {
+      expect(sanitizeCSS("JAVASCRIPT:alert(1)")).not.toMatch(/javascript/i);
+      expect(sanitizeCSS("EXPRESSION(foo)")).not.toMatch(/expression/i);
+      expect(sanitizeCSS("BEHAVIOR:url(x)")).not.toMatch(/behavior/i);
+      expect(sanitizeCSS("</STYLE>")).toBe("");
     });
   });
 });

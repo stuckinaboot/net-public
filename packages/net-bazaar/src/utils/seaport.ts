@@ -169,8 +169,24 @@ export function getTotalConsiderationAmount(parameters: SeaportOrderParameters):
 }
 
 /**
- * Format price from wei to display string
+ * Format price from wei to a display number.
  */
 export function formatPrice(priceWei: bigint): number {
   return parseFloat(formatEther(priceWei));
+}
+
+/**
+ * Compute price-per-token with full precision using scaled bigint arithmetic.
+ *
+ * Plain `priceWei / tokenAmount` is integer division; when the token amount
+ * (in raw units) exceeds the wei value the result truncates to 0.
+ * By scaling priceWei up by 10^18 before dividing, we keep 18 extra digits
+ * of precision, then `formatEther` converts the result back into a
+ * human-readable decimal string.
+ */
+export function formatPricePerToken(priceWei: bigint, tokenAmount: bigint, tokenDecimals: number = 18): string {
+  if (tokenAmount === 0n) return "0";
+  const scaled = priceWei * 10n ** BigInt(tokenDecimals);
+  const result = scaled / tokenAmount;
+  return formatEther(result);
 }

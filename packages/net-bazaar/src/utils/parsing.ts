@@ -3,13 +3,14 @@
  */
 
 import { NetMessage } from "@net-protocol/core";
-import { decodeAbiParameters, formatEther } from "viem";
+import { decodeAbiParameters } from "viem";
 import { Listing, CollectionOffer, Erc20Offer, Erc20Listing, Sale, SeaportOrderStatus, ItemType } from "../types";
 import {
   decodeSeaportSubmission,
   getSeaportOrderFromMessageData,
   getTotalConsiderationAmount,
   formatPrice,
+  formatPricePerToken,
 } from "./seaport";
 import { getCurrencySymbol, NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS, NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS } from "../chainConfig";
 
@@ -189,7 +190,8 @@ export function sortOffersByPrice(offers: CollectionOffer[]): CollectionOffer[] 
  */
 export function parseErc20OfferFromMessage(
   message: NetMessage,
-  chainId: number
+  chainId: number,
+  tokenDecimals: number = 18
 ): Erc20Offer | null {
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
@@ -234,7 +236,7 @@ export function parseErc20OfferFromMessage(
       priceWei,
       pricePerTokenWei,
       price: formatPrice(priceWei),
-      pricePerToken: formatPrice(pricePerTokenWei),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
       currency: getCurrencySymbol(chainId),
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
@@ -271,7 +273,8 @@ export function sortErc20OffersByPricePerToken(offers: Erc20Offer[]): Erc20Offer
  */
 export function parseErc20ListingFromMessage(
   message: NetMessage,
-  chainId: number
+  chainId: number,
+  tokenDecimals: number = 18
 ): Erc20Listing | null {
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
@@ -310,7 +313,7 @@ export function parseErc20ListingFromMessage(
       priceWei,
       pricePerTokenWei,
       price: formatPrice(priceWei),
-      pricePerToken: formatPrice(pricePerTokenWei),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
       currency: getCurrencySymbol(chainId),
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
@@ -424,7 +427,7 @@ export function parseSaleFromStoredData(
       amount: offerItem.amount,
       itemType: offerItem.itemType as ItemType,
       priceWei: totalConsideration,
-      price: parseFloat(formatEther(totalConsideration)),
+      price: formatPrice(totalConsideration),
       currency: getCurrencySymbol(chainId),
       timestamp: Number(timestamp),
       orderHash: zoneParameters.orderHash,

@@ -84,8 +84,8 @@ export interface Erc20Offer {
   pricePerTokenWei: bigint;
   /** Total price in native currency (formatted) */
   price: number;
-  /** Price per token in native currency (formatted) */
-  pricePerToken: number;
+  /** Price per token in native currency (formatted string for full decimal precision) */
+  pricePerToken: string;
   /** Currency symbol (e.g., "eth", "hype") */
   currency: string;
   /** Expiration timestamp in seconds */
@@ -116,8 +116,8 @@ export interface Erc20Listing {
   pricePerTokenWei: bigint;
   /** Total price in native currency (formatted) */
   price: number;
-  /** Price per token in native currency (formatted) */
-  pricePerToken: number;
+  /** Price per token in native currency (formatted string for full decimal precision) */
+  pricePerToken: string;
   /** Currency symbol (e.g., "eth", "hype") */
   currency: string;
   /** Expiration timestamp in seconds */

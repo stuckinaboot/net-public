@@ -30,7 +30,7 @@ describe("BazaarClient Integration", () => {
         expect(listing.nftAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
         expect(typeof listing.tokenId).toBe("string");
         expect(typeof listing.priceWei).toBe("bigint");
-        expect(typeof listing.price).toBe("string");
+        expect(typeof listing.price).toBe("number");
         expect(listing.orderStatus).toBe(SeaportOrderStatus.OPEN);
         expect(listing.expirationDate).toBeGreaterThan(Math.floor(Date.now() / 1000));
       }
@@ -67,7 +67,7 @@ describe("BazaarClient Integration", () => {
         expect(offer.maker).toMatch(/^0x[a-fA-F0-9]{40}$/);
         expect(offer.nftAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
         expect(typeof offer.priceWei).toBe("bigint");
-        expect(typeof offer.price).toBe("string");
+        expect(typeof offer.price).toBe("number");
         expect(offer.orderStatus).toBe(SeaportOrderStatus.OPEN);
       }
     }, 30000);

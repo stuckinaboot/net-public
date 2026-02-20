@@ -126,6 +126,20 @@ const CHAIN_RPC_URLS: Record<number, string[]> = {
   143: ["https://rpc3.monad.xyz"],
 };
 
+// ERC20 decimals ABI for on-chain lookup
+const ERC20_DECIMALS_ABI = [
+  {
+    type: "function",
+    name: "decimals",
+    inputs: [],
+    outputs: [{ type: "uint8", name: "" }],
+    stateMutability: "view",
+  },
+] as const;
+
+// Cache for token decimals (shared across BazaarClient instances)
+const tokenDecimalsCache = new Map<string, number>();
+
 export class BazaarClient {
   private chainId: number;
   private client: PublicClient;
@@ -171,6 +185,30 @@ export class BazaarClient {
       chainId: params.chainId,
       overrides: params.rpcUrl ? { rpcUrls: [params.rpcUrl] } : undefined,
     });
+  }
+
+  /**
+   * Fetch ERC20 token decimals with caching.
+   * Falls back to 18 if the on-chain call fails.
+   */
+  private async fetchTokenDecimals(tokenAddress: `0x${string}`): Promise<number> {
+    const cacheKey = `${this.chainId}:${tokenAddress.toLowerCase()}`;
+    const cached = tokenDecimalsCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
+    try {
+      const result = await readContract(this.client, {
+        address: tokenAddress,
+        abi: ERC20_DECIMALS_ABI,
+        functionName: "decimals",
+      });
+      const decimals = Number(result);
+      tokenDecimalsCache.set(cacheKey, decimals);
+      return decimals;
+    } catch {
+      console.warn(`[BazaarClient] Failed to fetch decimals for ${tokenAddress}, defaulting to 18`);
+      return 18;
+    }
   }
 
   /**
@@ -582,10 +620,13 @@ export class BazaarClient {
       return [];
     }
 
+    // Fetch token decimals for accurate price-per-token computation
+    const tokenDecimals = await this.fetchTokenDecimals(tokenAddress);
+
     // Parse messages into offers
     let offers: Erc20Offer[] = [];
     for (const message of messages) {
-      const offer = parseErc20OfferFromMessage(message, this.chainId);
+      const offer = parseErc20OfferFromMessage(message, this.chainId, tokenDecimals);
       if (!offer) continue;
 
       // Validate WETH token matches
@@ -732,10 +773,13 @@ export class BazaarClient {
     const { tokenAddress, excludeMaker } = options;
     const tag = `[BazaarClient.processErc20Listings chain=${this.chainId}]`;
 
+    // Fetch token decimals for accurate price-per-token computation
+    const tokenDecimals = await this.fetchTokenDecimals(tokenAddress);
+
     // Parse messages into listings
     let listings: Erc20Listing[] = [];
     for (const message of messages) {
-      const listing = parseErc20ListingFromMessage(message, this.chainId);
+      const listing = parseErc20ListingFromMessage(message, this.chainId, tokenDecimals);
       if (!listing) continue;
 
       // Validate the offer token matches the requested token

@@ -123,7 +123,7 @@ describe("parseSaleFromStoredData", () => {
     expect(sale!.amount).toBe(BigInt(1));
     expect(sale!.itemType).toBe(ItemType.ERC721);
     expect(sale!.priceWei).toBe(BigInt("1000000000000000000"));
-    expect(sale!.price).toBe("1");
+    expect(sale!.price).toBe(1);
     expect(sale!.currency).toBe("eth");
     expect(sale!.timestamp).toBe(1700000000);
     expect(sale!.orderHash).toBe(ORDER_HASH);
@@ -141,7 +141,7 @@ describe("parseSaleFromStoredData", () => {
     expect(sale!.itemType).toBe(ItemType.ERC20);
     expect(sale!.amount).toBe(BigInt("500000000000000000000"));
     expect(sale!.priceWei).toBe(BigInt("2000000000000000000"));
-    expect(sale!.price).toBe("2");
+    expect(sale!.price).toBe(2);
   });
 
   it("uses correct currency symbol for chain", () => {
@@ -197,7 +197,7 @@ describe("parseSaleFromStoredData", () => {
     expect(sale).not.toBeNull();
     // 0.75 + 0.25 = 1.0 ETH total
     expect(sale!.priceWei).toBe(BigInt("1000000000000000000"));
-    expect(sale!.price).toBe("1");
+    expect(sale!.price).toBe(1);
   });
 
   it("returns null for invalid data", () => {

@@ -190,7 +190,8 @@ export function sortOffersByPrice(offers: CollectionOffer[]): CollectionOffer[] 
  */
 export function parseErc20OfferFromMessage(
   message: NetMessage,
-  chainId: number
+  chainId: number,
+  tokenDecimals: number = 18
 ): Erc20Offer | null {
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
@@ -235,7 +236,7 @@ export function parseErc20OfferFromMessage(
       priceWei,
       pricePerTokenWei,
       price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
       currency: getCurrencySymbol(chainId),
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
@@ -272,7 +273,8 @@ export function sortErc20OffersByPricePerToken(offers: Erc20Offer[]): Erc20Offer
  */
 export function parseErc20ListingFromMessage(
   message: NetMessage,
-  chainId: number
+  chainId: number,
+  tokenDecimals: number = 18
 ): Erc20Listing | null {
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
@@ -311,7 +313,7 @@ export function parseErc20ListingFromMessage(
       priceWei,
       pricePerTokenWei,
       price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
       currency: getCurrencySymbol(chainId),
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later

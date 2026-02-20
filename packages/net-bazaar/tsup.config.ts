@@ -11,7 +11,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ["react", "wagmi", "viem", "@net-protocol/core", "@opensea/seaport-js", "ethers"],
+  external: ["react", "wagmi", "viem", "@net-protocol/core", "@net-protocol/storage", "@opensea/seaport-js", "ethers"],
   treeshake: true,
   outExtension({ format }) {
     return {

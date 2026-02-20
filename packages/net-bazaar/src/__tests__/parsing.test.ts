@@ -76,7 +76,7 @@ describe("parseListingFromMessage", () => {
     expect(listing!.nftAddress).toBe("0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa");
     expect(listing!.tokenId).toBe("42");
     expect(listing!.priceWei).toBe(BigInt("1000000000000000000"));
-    expect(listing!.price).toBe(1);
+    expect(listing!.price).toBe("1");
     expect(listing!.currency).toBe("eth");
     expect(listing!.targetFulfiller).toBeUndefined();
   });

@@ -3,13 +3,14 @@
  */
 
 import { NetMessage } from "@net-protocol/core";
-import { decodeAbiParameters, formatEther } from "viem";
+import { decodeAbiParameters } from "viem";
 import { Listing, CollectionOffer, Erc20Offer, Erc20Listing, Sale, SeaportOrderStatus, ItemType } from "../types";
 import {
   decodeSeaportSubmission,
   getSeaportOrderFromMessageData,
   getTotalConsiderationAmount,
   formatPrice,
+  formatPricePerToken,
 } from "./seaport";
 import { getCurrencySymbol, NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS, NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS } from "../chainConfig";
 
@@ -234,7 +235,7 @@ export function parseErc20OfferFromMessage(
       priceWei,
       pricePerTokenWei,
       price: formatPrice(priceWei),
-      pricePerToken: formatPrice(pricePerTokenWei),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount),
       currency: getCurrencySymbol(chainId),
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
@@ -310,7 +311,7 @@ export function parseErc20ListingFromMessage(
       priceWei,
       pricePerTokenWei,
       price: formatPrice(priceWei),
-      pricePerToken: formatPrice(pricePerTokenWei),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount),
       currency: getCurrencySymbol(chainId),
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
@@ -424,7 +425,7 @@ export function parseSaleFromStoredData(
       amount: offerItem.amount,
       itemType: offerItem.itemType as ItemType,
       priceWei: totalConsideration,
-      price: parseFloat(formatEther(totalConsideration)),
+      price: formatPrice(totalConsideration),
       currency: getCurrencySymbol(chainId),
       timestamp: Number(timestamp),
       orderHash: zoneParameters.orderHash,

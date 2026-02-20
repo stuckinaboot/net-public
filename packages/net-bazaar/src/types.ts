@@ -24,8 +24,8 @@ export interface Listing {
   tokenId: string;
   /** Price in wei */
   priceWei: bigint;
-  /** Price in native currency (formatted) */
-  price: number;
+  /** Price in native currency (formatted string for full decimal precision) */
+  price: string;
   /** Currency symbol (e.g., "eth", "degen") */
   currency: string;
   /** Expiration timestamp in seconds */
@@ -52,8 +52,8 @@ export interface CollectionOffer {
   nftAddress: `0x${string}`;
   /** Offer price in wei (WETH) */
   priceWei: bigint;
-  /** Offer price in native currency (formatted) */
-  price: number;
+  /** Offer price in native currency (formatted string for full decimal precision) */
+  price: string;
   /** Currency symbol */
   currency: string;
   /** Expiration timestamp in seconds */
@@ -82,10 +82,10 @@ export interface Erc20Offer {
   priceWei: bigint;
   /** Price per token in wei (priceWei / tokenAmount) */
   pricePerTokenWei: bigint;
-  /** Total price in native currency (formatted) */
-  price: number;
-  /** Price per token in native currency (formatted) */
-  pricePerToken: number;
+  /** Total price in native currency (formatted string for full decimal precision) */
+  price: string;
+  /** Price per token in native currency (formatted string for full decimal precision) */
+  pricePerToken: string;
   /** Currency symbol (e.g., "eth", "hype") */
   currency: string;
   /** Expiration timestamp in seconds */
@@ -114,10 +114,10 @@ export interface Erc20Listing {
   priceWei: bigint;
   /** Price per token in wei (priceWei / tokenAmount) */
   pricePerTokenWei: bigint;
-  /** Total price in native currency (formatted) */
-  price: number;
-  /** Price per token in native currency (formatted) */
-  pricePerToken: number;
+  /** Total price in native currency (formatted string for full decimal precision) */
+  price: string;
+  /** Price per token in native currency (formatted string for full decimal precision) */
+  pricePerToken: string;
   /** Currency symbol (e.g., "eth", "hype") */
   currency: string;
   /** Expiration timestamp in seconds */
@@ -326,8 +326,8 @@ export interface Sale {
   itemType: ItemType;
   /** Total price in wei */
   priceWei: bigint;
-  /** Total price in native currency (formatted) */
-  price: number;
+  /** Total price in native currency (formatted string for full decimal precision) */
+  price: string;
   /** Currency symbol (e.g., "eth", "degen") */
   currency: string;
   /** Sale timestamp in seconds */

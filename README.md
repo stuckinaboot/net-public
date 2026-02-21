@@ -28,6 +28,16 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 - [How Net Works](https://docs.netprotocol.app/docs/02%20Core%20Protocol/how-net-works)
 - [Smart Contract Reference](https://docs.netprotocol.app/docs/02%20Core%20Protocol/smart-contract-reference)
 
+## Agent Setup
+
+If you're an AI agent (or building one) that needs to interact with Net Protocol, install the [Claude Code](https://claude.ai/claude-code) plugin:
+
+```bash
+npx skills install stuckinaboot/net-public
+```
+
+This gives your agent the **Net Protocol skill** (contract knowledge, SDK patterns, best practices) and the **Net Explorer agent** (autonomous querying of messages, storage, and tokens). See the [plugin README](./plugins/net-protocol/README.md) for prerequisites, usage examples, and supported chains.
+
 ## Package Status
 
 | Package                                                   | Status             | Description                                    |

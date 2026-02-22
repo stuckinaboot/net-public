@@ -303,33 +303,37 @@ export function decodeUpvoteMessage(msg: {
     } else if (msg.topic.startsWith("app-") && msg.topic.endsWith("-first")) {
       const topicParts = msg.topic.split("-");
 
-      if (topicParts.length === 3 && topicParts[1] === "app") {
+      if (topicParts.length === 3) {
+        // "app-{addr}-first"
         return {
-          appAddress: topicParts[2],
+          appAddress: topicParts[1],
           messageType: "app-first" as const,
         };
-      } else if (topicParts.length === 5 && topicParts[3] === "strategy") {
+      } else if (topicParts.length === 5 && topicParts[2] === "strategy") {
+        // "app-{addr}-strategy-{strat}-first"
         return {
-          appAddress: topicParts[2],
-          strategyAddress: topicParts[4],
+          appAddress: topicParts[1],
+          strategyAddress: topicParts[3],
           messageType: "app-strategy-first" as const,
         };
-      } else if (topicParts.length === 6 && topicParts[3] === "user") {
+      } else if (topicParts.length === 5 && topicParts[2] === "user") {
+        // "app-{addr}-user-{user}-first"
         return {
-          appAddress: topicParts[2],
-          userAddress: topicParts[4],
+          appAddress: topicParts[1],
+          userAddress: topicParts[3],
           tokenAddress: msg.text,
           messageType: "app-user-first" as const,
         };
       } else if (
-        topicParts.length === 8 &&
-        topicParts[3] === "strategy" &&
-        topicParts[5] === "user"
+        topicParts.length === 7 &&
+        topicParts[2] === "strategy" &&
+        topicParts[4] === "user"
       ) {
+        // "app-{addr}-strategy-{strat}-user-{user}-first"
         return {
-          appAddress: topicParts[2],
-          strategyAddress: topicParts[4],
-          userAddress: topicParts[6],
+          appAddress: topicParts[1],
+          strategyAddress: topicParts[3],
+          userAddress: topicParts[5],
           tokenAddress: msg.text,
           messageType: "app-strategy-user-first" as const,
         };

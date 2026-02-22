@@ -9,6 +9,7 @@ import {
   isUniv234PoolsStrategy,
   isDynamicSplitStrategy,
   selectStrategy,
+  decodeUpvoteMessage,
 } from "../utils/strategyUtils";
 import {
   PURE_ALPHA_STRATEGY,
@@ -98,6 +99,75 @@ describe("strategyUtils", () => {
       expect(
         isPureAlphaStrategy(PURE_ALPHA_STRATEGY.address.toUpperCase())
       ).toBe(true);
+    });
+  });
+
+  describe("decodeUpvoteMessage", () => {
+    const appAddr = "0xaaaa";
+    const stratAddr = "0xbbbb";
+    const userAddr = "0xcccc";
+
+    it("should decode app-first topic", () => {
+      const result = decodeUpvoteMessage({
+        topic: `app-${appAddr}-first`,
+        data: "0x" as `0x${string}`,
+        text: "",
+      });
+      expect(result).toEqual({
+        appAddress: appAddr,
+        messageType: "app-first",
+      });
+    });
+
+    it("should decode app-strategy-first topic", () => {
+      const result = decodeUpvoteMessage({
+        topic: `app-${appAddr}-strategy-${stratAddr}-first`,
+        data: "0x" as `0x${string}`,
+        text: "",
+      });
+      expect(result).toEqual({
+        appAddress: appAddr,
+        strategyAddress: stratAddr,
+        messageType: "app-strategy-first",
+      });
+    });
+
+    it("should decode app-user-first topic", () => {
+      const result = decodeUpvoteMessage({
+        topic: `app-${appAddr}-user-${userAddr}-first`,
+        data: "0x" as `0x${string}`,
+        text: "tokenKey",
+      });
+      expect(result).toEqual({
+        appAddress: appAddr,
+        userAddress: userAddr,
+        tokenAddress: "tokenKey",
+        messageType: "app-user-first",
+      });
+    });
+
+    it("should decode app-strategy-user-first topic", () => {
+      const result = decodeUpvoteMessage({
+        topic: `app-${appAddr}-strategy-${stratAddr}-user-${userAddr}-first`,
+        data: "0x" as `0x${string}`,
+        text: "tokenKey",
+      });
+      expect(result).toEqual({
+        appAddress: appAddr,
+        strategyAddress: stratAddr,
+        userAddress: userAddr,
+        tokenAddress: "tokenKey",
+        messageType: "app-strategy-user-first",
+      });
+    });
+
+    it("should return null for unknown topic format", () => {
+      const result = decodeUpvoteMessage({
+        topic: "unknown-format",
+        data: "0x" as `0x${string}`,
+        text: "",
+      });
+      expect(result).toBeNull();
     });
   });
 

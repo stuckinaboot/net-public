@@ -5,6 +5,8 @@ import upvoteStorageAppAbi from "./abis/upvote-storage-app.json";
 import pureAlphaStrategyAbi from "./abis/pure-alpha-strategy.json";
 import univ234PoolsStrategyAbi from "./abis/univ234-pools-strategy.json";
 import dynamicSplitStrategyAbi from "./abis/dynamic-split-strategy.json";
+import multiVersionUniswapBulkPoolFinderAbi from "./abis/multi-version-uniswap-bulk-pool-finder.json";
+import multiVersionUniswapPoolInfoRetrieverAbi from "./abis/multi-version-uniswap-pool-info-retriever.json";
 
 // Score core contract (v2 strategy)
 export const SCORE_CONTRACT = {
@@ -58,3 +60,23 @@ export const LEGACY_UPVOTE_V2_ADDRESS =
 
 // Chains where the Score system is deployed
 export const SUPPORTED_SCORE_CHAINS = [8453] as const;
+
+// Pool discovery contracts
+export const MULTI_VERSION_UNISWAP_BULK_POOL_FINDER = {
+  address: "0xbc237dac4c74c170780fc12f353a258bdd31a8cf" as Address,
+  abi: multiVersionUniswapBulkPoolFinderAbi as Abi,
+} as const;
+
+export const MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER = {
+  address: "0x7A9EF0AC6F6a254cd570B05D62D094D3aa5067f1" as Address,
+  abi: multiVersionUniswapPoolInfoRetrieverAbi as Abi,
+} as const;
+
+// Common addresses
+export const WETH_ADDRESS =
+  "0x4200000000000000000000000000000000000006" as Address;
+export const NULL_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as Address;
+
+// Upvote pricing
+export const UPVOTE_PRICE_ETH = 0.000025;

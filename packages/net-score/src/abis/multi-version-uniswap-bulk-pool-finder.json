@@ -1,0 +1,142 @@
+[
+  {
+    "type": "function",
+    "name": "V2_FACTORY",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "V3_FACTORY",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "V4_POOL_MANAGER",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_checkV4PoolExternal",
+    "inputs": [
+      {
+        "name": "poolKey",
+        "type": "tuple",
+        "internalType": "struct PoolKey",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          { "name": "fee", "type": "uint24", "internalType": "uint24" },
+          { "name": "tickSpacing", "type": "int24", "internalType": "int24" },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
+      }
+    ],
+    "outputs": [{ "name": "exists", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPoolsMultiVersion",
+    "inputs": [
+      {
+        "name": "params",
+        "type": "tuple",
+        "internalType": "struct MultiVersionUniswapBulkPoolFinder.PoolFinderParams",
+        "components": [
+          {
+            "name": "tokenAs",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "tokenBs",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          { "name": "fees", "type": "uint24[]", "internalType": "uint24[]" },
+          {
+            "name": "v4TickSpacings",
+            "type": "int24[]",
+            "internalType": "int24[]"
+          },
+          {
+            "name": "v4Hooks",
+            "type": "address[]",
+            "internalType": "address[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "pools",
+        "type": "tuple[]",
+        "internalType": "struct MultiVersionUniswapBulkPoolFinder.PoolDiscovery[]",
+        "components": [
+          {
+            "name": "pairIndex",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          { "name": "version", "type": "uint8", "internalType": "uint8" },
+          {
+            "name": "poolAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "poolKey",
+            "type": "tuple",
+            "internalType": "struct PoolKey",
+            "components": [
+              {
+                "name": "currency0",
+                "type": "address",
+                "internalType": "Currency"
+              },
+              {
+                "name": "currency1",
+                "type": "address",
+                "internalType": "Currency"
+              },
+              { "name": "fee", "type": "uint24", "internalType": "uint24" },
+              {
+                "name": "tickSpacing",
+                "type": "int24",
+                "internalType": "int24"
+              },
+              {
+                "name": "hooks",
+                "type": "address",
+                "internalType": "contract IHooks"
+              }
+            ]
+          },
+          { "name": "fee", "type": "uint24", "internalType": "uint24" },
+          { "name": "tickSpacing", "type": "int24", "internalType": "int24" },
+          { "name": "hooks", "type": "address", "internalType": "address" }
+        ]
+      },
+      { "name": "count", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "view"
+  }
+]

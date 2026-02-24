@@ -60,6 +60,22 @@ export type DecodedUpvoteBlob = {
   decodedMetadata: DecodedStrategyMetadata;
 } | null;
 
+// --- Pool Discovery ---
+
+export type PoolDiscoveryResult = {
+  tokenAddress: string;
+  baseTokenAddress: string;
+  poolAddress: string | null;
+  price: number | null;
+  fee: number;
+  poolKey?: PoolKey;
+  balances?: {
+    baseTokenBalance: string;
+    token0Balance: string;
+    token1Balance: string;
+  };
+};
+
 // --- Client options ---
 
 export type ScoreClientOptions = {

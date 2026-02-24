@@ -40,6 +40,7 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 | [@net-protocol/bazaar](./packages/net-bazaar/README.md)   | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/relay](./packages/net-relay/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
+| [@net-protocol/score](./packages/net-score/README.md)     | **In Development** | Do not use yet. Will have breaking changes     |
 
 ## Packages
 
@@ -113,6 +114,18 @@ For complete Net Protocol documentation, visit [docs.netprotocol.app](https://do
 - Post to feeds (social media style)
 - Build decentralized social applications
 - Create community discussion forums
+
+### [@net-protocol/score](./packages/net-score/README.md)
+
+**On-chain scoring/upvoting** - Upvote tokens, storage entries, and feed posts with strategy-based voting.
+
+**What you can do:**
+
+- Read upvote counts for tokens, storage entries, and feed posts
+- Batch-read upvotes for multiple items in a single contract call
+- Query scores by strategy or app
+- Decode upvote messages and strategy metadata
+- Build applications with on-chain reputation and curation
 
 ### [@net-protocol/cli](./packages/net-cli/README.md)
 
@@ -278,6 +291,7 @@ For detailed usage, API reference, and examples, see the individual package docu
 - [@net-protocol/netr documentation](./packages/net-netr/README.md)
 - [@net-protocol/relay documentation](./packages/net-relay/README.md)
 - [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
+- [@net-protocol/score documentation](./packages/net-score/README.md)
 
 ## Examples
 

@@ -26,6 +26,11 @@ export {
   decodeUpvoteMessage,
 } from "./utils/strategyUtils";
 export { encodePoolKey } from "./utils/poolKeyUtils";
+export {
+  discoverPools,
+  discoverTokenPool,
+  calculatePriceFromSqrtPriceX96,
+} from "./utils/poolDiscovery";
 
 // Constants
 export {
@@ -39,6 +44,11 @@ export {
   LEGACY_UPVOTE_V1_ADDRESS,
   LEGACY_UPVOTE_V2_ADDRESS,
   SUPPORTED_SCORE_CHAINS,
+  MULTI_VERSION_UNISWAP_BULK_POOL_FINDER,
+  MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER,
+  WETH_ADDRESS,
+  NULL_ADDRESS,
+  UPVOTE_PRICE_ETH,
 } from "./constants";
 
 // Types
@@ -50,6 +60,7 @@ export type {
   PoolStrategyMetadata,
   DecodedStrategyMetadata,
   DecodedUpvoteBlob,
+  PoolDiscoveryResult,
   ScoreClientOptions,
   GetUpvotesOptions,
   GetUpvotesForItemsOptions,

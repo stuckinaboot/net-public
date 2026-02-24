@@ -1,0 +1,131 @@
+[
+  {
+    "type": "function",
+    "name": "V4_POOL_MANAGER",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_getV4Slot0",
+    "inputs": [
+      {
+        "name": "poolKey",
+        "type": "tuple",
+        "internalType": "struct PoolKey",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          { "name": "fee", "type": "uint24", "internalType": "uint24" },
+          { "name": "tickSpacing", "type": "int24", "internalType": "int24" },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      { "name": "sqrtPriceX96", "type": "uint160", "internalType": "uint160" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPoolsFullInfoMultiVersion",
+    "inputs": [
+      {
+        "name": "v2PoolAddresses",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "v3PoolAddresses",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "v4PoolKeys",
+        "type": "tuple[]",
+        "internalType": "struct PoolKey[]",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          { "name": "fee", "type": "uint24", "internalType": "uint24" },
+          { "name": "tickSpacing", "type": "int24", "internalType": "int24" },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
+      },
+      { "name": "baseToken", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct MultiVersionPoolInfoRetriever.PoolFullInfo[]",
+        "components": [
+          {
+            "name": "poolAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          { "name": "token0", "type": "address", "internalType": "address" },
+          { "name": "token1", "type": "address", "internalType": "address" },
+          {
+            "name": "token0Decimals",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "token1Decimals",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "sqrtPriceX96",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "baseTokenBalance",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "token0Balance",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "token1Balance",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

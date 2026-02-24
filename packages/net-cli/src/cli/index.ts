@@ -21,6 +21,7 @@ import { registerTokenCommand } from "../commands/token";
 import { registerProfileCommand } from "../commands/profile";
 import { registerBazaarCommand } from "../commands/bazaar";
 import { registerFeedCommand } from "../commands/feed";
+import { registerUpvoteCommand } from "../commands/upvote";
 import { getUpdateInfo, printUpdateBanner } from "../utils/update-check";
 
 const require = createRequire(import.meta.url);
@@ -42,6 +43,7 @@ registerTokenCommand(program);
 registerProfileCommand(program);
 registerBazaarCommand(program);
 registerFeedCommand(program);
+registerUpvoteCommand(program);
 
 // Add update command
 program

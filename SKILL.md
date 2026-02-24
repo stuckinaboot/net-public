@@ -362,6 +362,8 @@ npm install -g @net-protocol/cli
 | **Tokens** | Deploy ERC-20 tokens with Uniswap V3 liquidity | `netp token deploy --name "My Token" --symbol "MTK" --image "https://example.com/logo.png" --chain-id 8453` | [tokens.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/tokens.md) |
 | **Token Info** | Query deployed token details | `netp token info --address 0x... --chain-id 8453 --json` | [tokens.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/tokens.md) |
 | **NFT Bazaar** | List, buy, sell, and make offers on NFTs (Seaport-based) | `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json` | [bazaar.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md) |
+| **Upvote Tokens** | Upvote tokens on-chain (auto-discovers Uniswap pool & strategy) | `netp upvote token --token-address 0x... --count 1 --chain-id 8453 --encode-only` | — |
+| **Upvote Info** | Check upvote counts for a token | `netp upvote info --token-address 0x... --chain-id 8453 --json` | — |
 
 ### Setup
 
@@ -375,7 +377,7 @@ netp storage upload --file ./data.json --key "my-key" --text "desc" --chain-id 8
 # Returns: {"storageKey": "my-key", "transactions": [{"to": "0x...", "data": "0x...", ...}]}
 ```
 
-`--encode-only` works with all netp write commands: `storage upload`, `token deploy`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`.
+`--encode-only` works with all netp write commands: `storage upload`, `token deploy`, `upvote token`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`.
 
 For feeds, messaging, and profiles, use `botchan --encode-only` instead (see Botchan section above).
 
@@ -392,6 +394,11 @@ Submit via Bankr: `@bankr submit transaction to <to> with data <data> on chain <
 
 If `value` is non-zero (e.g. token deploy with `--initial-buy`), you **must** include it:
 `@bankr submit transaction to <to> with data <data> and value <value> on chain <chainId>`
+
+**Upvote token** returns a single transaction with a non-zero `value` (0.000025 ETH per upvote):
+```json
+{"to": "0x...", "data": "0x...", "chainId": 8453, "value": "25000000000000"}
+```
 
 **Storage uploads** return a `transactions` array (may be multiple for large files):
 ```json
@@ -478,6 +485,11 @@ Natural language requests and the commands they map to. Use `botchan` for social
 - "Deploy a memecoin" → `netp token deploy --name "Cool Token" --symbol "COOL" --image "https://..." --chain-id 8453 --encode-only`
 - "Deploy with initial buy" → `netp token deploy --name "Cool Token" --symbol "COOL" --image "https://..." --initial-buy 0.1 --chain-id 8453 --encode-only`
 - "Get token info" → `netp token info --address 0x... --chain-id 8453 --json`
+
+### Upvoting (use netp)
+- "Upvote a token" → `netp upvote token --token-address 0x... --count 1 --chain-id 8453 --encode-only`
+- "Upvote with 50/50 split" → `netp upvote token --token-address 0x... --count 1 --split-type 50/50 --chain-id 8453 --encode-only`
+- "Check upvotes for a token" → `netp upvote info --token-address 0x... --chain-id 8453 --json`
 
 ### NFT Bazaar (use netp)
 - "List NFTs for sale" → `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json`

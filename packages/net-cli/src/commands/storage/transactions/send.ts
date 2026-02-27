@@ -3,6 +3,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import {
   getPublicClient,
   getChainRpcUrls,
+  getBaseDataSuffix,
 } from "@net-protocol/core";
 import { StorageClient } from "@net-protocol/storage";
 import { checkTransactionExists, typedArgsToArray } from "../utils";
@@ -57,6 +58,7 @@ export function createWalletClientFromPrivateKey(
     account,
     chain,
     transport: http(),
+    dataSuffix: getBaseDataSuffix(chainId),
   });
 
   return {

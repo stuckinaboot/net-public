@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { encodeFunctionData, createWalletClient, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { NetrClient, isNetrSupportedChain } from "@net-protocol/netr";
-import { getChainRpcUrls } from "@net-protocol/core";
+import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import type { TokenDeployOptions } from "./types";
@@ -208,6 +208,7 @@ export async function executeTokenDeploy(
   const walletClient = createWalletClient({
     account,
     transport: http(rpcUrls[0]),
+    dataSuffix: getBaseDataSuffix(commonOptions.chainId),
   });
 
   if (options.initialBuy) {

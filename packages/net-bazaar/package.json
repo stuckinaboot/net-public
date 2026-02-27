@@ -45,7 +45,7 @@
     "@net-protocol/core": "^0.1.8",
     "@net-protocol/storage": "^0.1.11",
     "@opensea/seaport-js": "^4.0.4",
-    "viem": "^2.31.4"
+    "viem": "^2.45.0"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.0.0",

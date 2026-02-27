@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@net-protocol/core": "file:../net-core",
-    "viem": "^2.31.4"
+    "viem": "^2.45.0"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.0.0",

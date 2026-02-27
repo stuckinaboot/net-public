@@ -16,7 +16,12 @@ export function useRegisteredAgents({
   chainId,
   maxAgents = 100,
   enabled = true,
-}: UseRegisteredAgentsOptions) {
+}: UseRegisteredAgentsOptions): {
+  agents: RegisteredAgent[];
+  totalCount: number;
+  isLoading: boolean;
+  refetch: () => void;
+} {
   // Build filter for AgentRegistry app messages
   const filter = useMemo(
     () => ({

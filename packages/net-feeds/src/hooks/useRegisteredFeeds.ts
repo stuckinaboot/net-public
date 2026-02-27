@@ -36,7 +36,12 @@ export function useRegisteredFeeds({
   chainId,
   maxFeeds = 100,
   enabled = true,
-}: UseRegisteredFeedsOptions) {
+}: UseRegisteredFeedsOptions): {
+  feeds: RegisteredFeed[];
+  totalCount: number;
+  isLoading: boolean;
+  refetch: () => void;
+} {
   // Build filter for FeedRegistry app messages
   const filter = useMemo(
     () => ({

@@ -12,6 +12,10 @@ vi.mock("@x402/fetch", () => ({
   })),
 }));
 
+vi.mock("@x402/evm", () => ({
+  toClientEvmSigner: vi.fn((account: unknown) => account),
+}));
+
 vi.mock("@x402/evm/exact/client", () => ({
   registerExactEvmScheme: vi.fn(),
 }));

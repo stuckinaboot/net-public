@@ -55,6 +55,21 @@ export const NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS = "0x000000bC63761cbb0530563
  * Chain-specific bazaar configuration
  */
 const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
+  // Ethereum Mainnet
+  1: {
+    bazaarAddress: DEFAULT_BAZAAR_ADDRESS,
+    collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
+    seaportAddress: DEFAULT_SEAPORT_ADDRESS,
+    feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
+    nftFeeBps: DEFAULT_NFT_FEE_BPS,
+    wrappedNativeCurrency: {
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      name: "Wrapped Ether",
+      symbol: "WETH",
+    },
+    currencySymbol: "eth",
+  },
+
   // Base Mainnet
   8453: {
     bazaarAddress: "0x000000058f3ade587388daf827174d0e6fc97595",

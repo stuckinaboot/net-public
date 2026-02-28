@@ -3,7 +3,7 @@ import { readContract } from "viem/actions";
 import {
   MULTI_VERSION_UNISWAP_BULK_POOL_FINDER,
   MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER,
-  WETH_ADDRESS,
+  getWethAddress,
   NULL_ADDRESS,
 } from "../constants";
 import type { PoolKey, PoolDiscoveryResult } from "../types";
@@ -82,10 +82,10 @@ const LIQUIDITY_THRESHOLD_TO_CONSIDER_V2_V3_POOLS = 0.01 * 1e18;
 // Pure helper functions
 // ============================================================================
 
-export function normalizeTokenPairs(pairs: PairInput[]) {
+export function normalizeTokenPairs(pairs: PairInput[], wethAddress: Address) {
   return pairs.map((pair) => {
     const tokenA = pair.tokenAddress;
-    const tokenB = pair.baseTokenAddress || WETH_ADDRESS;
+    const tokenB = pair.baseTokenAddress || wethAddress;
 
     return {
       originalPair: pair,
@@ -109,7 +109,8 @@ function buildDiscoveryArgs(
 
 export function parsePoolDiscoveries(
   poolResults: readonly [RawPoolDiscovery[], bigint] | undefined,
-  pairs: PairInput[]
+  pairs: PairInput[],
+  wethAddress: Address
 ): Discoveries {
   if (!poolResults) {
     return {
@@ -158,7 +159,7 @@ export function parsePoolDiscoveries(
         v2PoolAddresses.push(poolAddressValue as Address);
         v2PoolAddressToPair[poolAddress] = {
           tokenAddress: pair.tokenAddress,
-          baseTokenAddress: pair.baseTokenAddress || WETH_ADDRESS,
+          baseTokenAddress: pair.baseTokenAddress || wethAddress,
           fee: feeNum,
         };
       }
@@ -173,7 +174,7 @@ export function parsePoolDiscoveries(
         v3PoolAddresses.push(poolAddressValue as Address);
         v3PoolAddressToPair[poolAddress] = {
           tokenAddress: pair.tokenAddress,
-          baseTokenAddress: pair.baseTokenAddress || WETH_ADDRESS,
+          baseTokenAddress: pair.baseTokenAddress || wethAddress,
           fee: feeNum,
         };
       }
@@ -184,7 +185,7 @@ export function parsePoolDiscoveries(
         v4PoolKeys.push(poolKey);
         v4PoolKeyToPair[poolKeyString] = {
           tokenAddress: pair.tokenAddress,
-          baseTokenAddress: pair.baseTokenAddress || WETH_ADDRESS,
+          baseTokenAddress: pair.baseTokenAddress || wethAddress,
           fee: feeNum,
         };
       }
@@ -364,10 +365,10 @@ function getWethBalanceWei(pool: {
   token0Balance: string;
   token1Balance: string;
   baseTokenBalance: string;
-}): number {
-  if (pool.token0?.toLowerCase() === WETH_ADDRESS.toLowerCase()) {
+}, wethAddress: Address): number {
+  if (pool.token0?.toLowerCase() === wethAddress.toLowerCase()) {
     return Number(pool.token0Balance);
-  } else if (pool.token1?.toLowerCase() === WETH_ADDRESS.toLowerCase()) {
+  } else if (pool.token1?.toLowerCase() === wethAddress.toLowerCase()) {
     return Number(pool.token1Balance);
   } else {
     return Number(pool.baseTokenBalance);
@@ -376,11 +377,12 @@ function getWethBalanceWei(pool: {
 
 function filterV2V3PoolsByLiquidity(
   pools: PoolWithMeta[],
-  threshold: number
+  threshold: number,
+  wethAddress: Address
 ): PoolWithMeta[] {
   return pools.filter((pool) => {
     if (!pool.poolAddress) return false;
-    const wethBalanceWei = getWethBalanceWei(pool);
+    const wethBalanceWei = getWethBalanceWei(pool, wethAddress);
     return wethBalanceWei >= threshold;
   });
 }
@@ -422,7 +424,8 @@ type PoolWithMeta = {
 };
 
 export function selectBestPoolPerPair(
-  allPools: PoolWithMeta[]
+  allPools: PoolWithMeta[],
+  wethAddress: Address
 ): PoolWithMeta[] {
   const poolsByPair: Record<string, PoolWithMeta[]> = {};
 
@@ -443,7 +446,8 @@ export function selectBestPoolPerPair(
     } else {
       const v2v3PoolsWithPreferredLiquidity = filterV2V3PoolsByLiquidity(
         group,
-        LIQUIDITY_THRESHOLD_TO_PREFER_V2_V3_POOLS
+        LIQUIDITY_THRESHOLD_TO_PREFER_V2_V3_POOLS,
+        wethAddress
       );
 
       if (v2v3PoolsWithPreferredLiquidity.length > 0) {
@@ -455,7 +459,8 @@ export function selectBestPoolPerPair(
         } else {
           const v2v3PoolsWithAcceptableLiquidity = filterV2V3PoolsByLiquidity(
             group,
-            LIQUIDITY_THRESHOLD_TO_CONSIDER_V2_V3_POOLS
+            LIQUIDITY_THRESHOLD_TO_CONSIDER_V2_V3_POOLS,
+            wethAddress
           );
           if (v2v3PoolsWithAcceptableLiquidity.length > 0) {
             best = selectBestV2V3PoolByFee(v2v3PoolsWithAcceptableLiquidity);
@@ -482,13 +487,17 @@ export function selectBestPoolPerPair(
 export async function discoverPools({
   publicClient,
   pairs,
+  chainId = 8453,
 }: {
   publicClient: PublicClient;
   pairs: { tokenAddress: string; baseTokenAddress?: string }[];
+  /** Chain ID used to resolve the WETH address. Defaults to Base (8453). */
+  chainId?: number;
 }): Promise<PoolDiscoveryResult[]> {
   if (pairs.length === 0) return [];
 
-  const normalizedPairs = normalizeTokenPairs(pairs);
+  const wethAddress = getWethAddress(chainId);
+  const normalizedPairs = normalizeTokenPairs(pairs, wethAddress);
   const discoveryArgs = buildDiscoveryArgs(normalizedPairs);
 
   // Step 1: Discover pools
@@ -499,7 +508,7 @@ export async function discoverPools({
     args: [discoveryArgs],
   })) as readonly [RawPoolDiscovery[], bigint];
 
-  const discoveries = parsePoolDiscoveries(poolResults, pairs);
+  const discoveries = parsePoolDiscoveries(poolResults, pairs, wethAddress);
 
   const totalPools =
     discoveries.v2PoolAddresses.length +
@@ -517,7 +526,7 @@ export async function discoverPools({
       discoveries.v2PoolAddresses,
       discoveries.v3PoolAddresses,
       discoveries.v4PoolKeys,
-      WETH_ADDRESS,
+      wethAddress,
     ],
   })) as PoolFullInfo[];
 
@@ -531,7 +540,7 @@ export async function discoverPools({
 
       return {
         tokenAddress: poolData.pair.tokenAddress,
-        baseTokenAddress: poolData.pair.baseTokenAddress || WETH_ADDRESS,
+        baseTokenAddress: poolData.pair.baseTokenAddress || wethAddress,
         poolAddress:
           poolData.version === 4 ? null : (info.poolAddress as Address),
         price: calculatePoolPrice(info, poolData.pair, poolData.version),
@@ -552,7 +561,7 @@ export async function discoverPools({
     .filter((p): p is NonNullable<typeof p> => p !== null) as PoolWithMeta[];
 
   // Step 4: Select best pool per pair
-  const bestPools = selectBestPoolPerPair(allPools);
+  const bestPools = selectBestPoolPerPair(allPools, wethAddress);
 
   return bestPools.map(
     (pool): PoolDiscoveryResult => ({
@@ -578,13 +587,17 @@ export async function discoverPools({
 export async function discoverTokenPool({
   publicClient,
   tokenAddress,
+  chainId = 8453,
 }: {
   publicClient: PublicClient;
   tokenAddress: string;
+  /** Chain ID used to resolve the WETH address. Defaults to Base (8453). */
+  chainId?: number;
 }): Promise<PoolDiscoveryResult | null> {
   const results = await discoverPools({
     publicClient,
     pairs: [{ tokenAddress }],
+    chainId,
   });
   return results[0] ?? null;
 }

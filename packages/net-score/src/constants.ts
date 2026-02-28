@@ -59,7 +59,7 @@ export const LEGACY_UPVOTE_V2_ADDRESS =
   "0x9027dcad0a3dca5835895e14fbc022a1e5ea909b" as Address;
 
 // Chains where the Score system is deployed
-export const SUPPORTED_SCORE_CHAINS = [8453] as const;
+export const SUPPORTED_SCORE_CHAINS = [8453, 1] as const;
 
 // Pool discovery contracts
 export const MULTI_VERSION_UNISWAP_BULK_POOL_FINDER = {
@@ -72,7 +72,25 @@ export const MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER = {
   abi: multiVersionUniswapPoolInfoRetrieverAbi as Abi,
 } as const;
 
+// WETH addresses by chain
+const WETH_BY_CHAIN: Record<number, Address> = {
+  8453: "0x4200000000000000000000000000000000000006", // Base (L2 predeploy)
+  1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // Ethereum mainnet
+};
+
+/**
+ * Get the WETH address for a given chain.
+ */
+export function getWethAddress(chainId: number): Address {
+  const addr = WETH_BY_CHAIN[chainId];
+  if (!addr) {
+    throw new Error(`Score: No WETH address for chain ${chainId}`);
+  }
+  return addr;
+}
+
 // Common addresses
+/** @deprecated Use getWethAddress(chainId) for multi-chain support */
 export const WETH_ADDRESS =
   "0x4200000000000000000000000000000000000006" as Address;
 export const NULL_ADDRESS =

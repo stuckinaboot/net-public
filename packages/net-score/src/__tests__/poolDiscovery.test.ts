@@ -6,13 +6,15 @@ import {
   constructPoolKey,
   calculatePriceFromSqrtPriceX96,
 } from "../utils/poolDiscovery";
-import { WETH_ADDRESS, NULL_ADDRESS } from "../constants";
+import { getWethAddress, NULL_ADDRESS } from "../constants";
+
+const WETH_ADDRESS = getWethAddress(8453);
 
 describe("normalizeTokenPairs", () => {
   it("should use WETH as default base token", () => {
     const result = normalizeTokenPairs([
       { tokenAddress: "0xaaaa000000000000000000000000000000000001" },
-    ]);
+    ], WETH_ADDRESS);
     expect(result).toHaveLength(1);
     expect(result[0].originalPair.tokenAddress).toBe(
       "0xaaaa000000000000000000000000000000000001"
@@ -25,7 +27,7 @@ describe("normalizeTokenPairs", () => {
   it("should lexicographically order token pairs", () => {
     const result = normalizeTokenPairs([
       { tokenAddress: "0xzzzz000000000000000000000000000000000001" },
-    ]);
+    ], WETH_ADDRESS);
     // tokenA should be the lower address
     expect(result[0].tokenA.toLowerCase() < result[0].tokenB.toLowerCase()).toBe(
       true
@@ -39,7 +41,7 @@ describe("normalizeTokenPairs", () => {
         tokenAddress: "0xaaaa000000000000000000000000000000000001",
         baseTokenAddress: baseToken,
       },
-    ]);
+    ], WETH_ADDRESS);
     const tokens = [result[0].tokenA, result[0].tokenB];
     expect(tokens).toContain(baseToken);
     expect(tokens).not.toContain(WETH_ADDRESS);
@@ -48,7 +50,7 @@ describe("normalizeTokenPairs", () => {
 
 describe("parsePoolDiscoveries", () => {
   it("should return empty discoveries when poolResults is undefined", () => {
-    const result = parsePoolDiscoveries(undefined, []);
+    const result = parsePoolDiscoveries(undefined, [], WETH_ADDRESS);
     expect(result.v2PoolAddresses).toHaveLength(0);
     expect(result.v3PoolAddresses).toHaveLength(0);
     expect(result.v4PoolKeys).toHaveLength(0);
@@ -76,7 +78,8 @@ describe("parsePoolDiscoveries", () => {
 
     const result = parsePoolDiscoveries(
       [discoveries, 1n] as const,
-      [{ tokenAddress: "0xaaaa000000000000000000000000000000000001" }]
+      [{ tokenAddress: "0xaaaa000000000000000000000000000000000001" }],
+      WETH_ADDRESS
     );
 
     expect(result.v2PoolAddresses).toHaveLength(1);
@@ -107,7 +110,8 @@ describe("parsePoolDiscoveries", () => {
 
     const result = parsePoolDiscoveries(
       [discoveries, 1n] as const,
-      [{ tokenAddress: "0xaaaa000000000000000000000000000000000001" }]
+      [{ tokenAddress: "0xaaaa000000000000000000000000000000000001" }],
+      WETH_ADDRESS
     );
 
     expect(result.v3PoolAddresses).toHaveLength(1);
@@ -151,7 +155,8 @@ describe("parsePoolDiscoveries", () => {
 
     const result = parsePoolDiscoveries(
       [discoveries, 2n] as const,
-      [{ tokenAddress: "0xaaaa000000000000000000000000000000000001" }]
+      [{ tokenAddress: "0xaaaa000000000000000000000000000000000001" }],
+      WETH_ADDRESS
     );
 
     expect(result.v3PoolAddresses).toHaveLength(1);
@@ -179,7 +184,7 @@ describe("selectBestPoolPerPair", () => {
       },
     ];
 
-    const result = selectBestPoolPerPair(pools);
+    const result = selectBestPoolPerPair(pools, WETH_ADDRESS);
     expect(result).toHaveLength(1);
     expect(result[0].poolAddress).toBe(
       "0x1111000000000000000000000000000000000001"
@@ -202,7 +207,7 @@ describe("selectBestPoolPerPair", () => {
       },
     ];
 
-    const result = selectBestPoolPerPair(pools);
+    const result = selectBestPoolPerPair(pools, WETH_ADDRESS);
     expect(result).toHaveLength(1);
     expect(result[0].poolAddress).toBe(
       "0x1111000000000000000000000000000000000001"
@@ -228,7 +233,7 @@ describe("selectBestPoolPerPair", () => {
       },
     ];
 
-    const result = selectBestPoolPerPair(pools);
+    const result = selectBestPoolPerPair(pools, WETH_ADDRESS);
     expect(result).toHaveLength(1);
     expect(result[0].poolAddress).toBeNull(); // V4 pool
   });

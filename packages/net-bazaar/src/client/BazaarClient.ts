@@ -115,6 +115,7 @@ const OWNED_TOKENS_BATCH_SIZE = 5000n;
 
 // Default RPC URLs for chains (same as @net-protocol/core)
 const CHAIN_RPC_URLS: Record<number, string[]> = {
+  1: ["https://eth.llamarpc.com", "https://rpc.ankr.com/eth"],
   8453: ["https://base-mainnet.public.blastapi.io", "https://mainnet.base.org"],
   84532: ["https://sepolia.base.org"],
   666666666: ["https://rpc.degen.tips"],

@@ -58,6 +58,7 @@ async function executeUpvoteToken(options: UpvoteTokenOptions): Promise<void> {
     poolResult = await discoverTokenPool({
       publicClient,
       tokenAddress,
+      chainId: readOnlyOptions.chainId,
     });
   } catch (error) {
     exitWithError(

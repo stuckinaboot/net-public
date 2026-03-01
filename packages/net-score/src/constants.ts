@@ -59,7 +59,7 @@ export const LEGACY_UPVOTE_V2_ADDRESS =
   "0x9027dcad0a3dca5835895e14fbc022a1e5ea909b" as Address;
 
 // Chains where the Score system is deployed
-export const SUPPORTED_SCORE_CHAINS = [8453, 1] as const;
+export const SUPPORTED_SCORE_CHAINS = [8453] as const;
 
 // Pool discovery contracts
 export const MULTI_VERSION_UNISWAP_BULK_POOL_FINDER = {

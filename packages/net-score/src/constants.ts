@@ -90,9 +90,6 @@ export function getWethAddress(chainId: number): Address {
 }
 
 // Common addresses
-/** @deprecated Use getWethAddress(chainId) for multi-chain support */
-export const WETH_ADDRESS =
-  "0x4200000000000000000000000000000000000006" as Address;
 export const NULL_ADDRESS =
   "0x0000000000000000000000000000000000000000" as Address;
 

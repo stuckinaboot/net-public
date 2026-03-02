@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { NetClient, getChainRpcUrls } from "@net-protocol/core";
+import { NetClient, getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { createNetClient } from "../../shared/client";
 import { encodeTransaction } from "../../shared/encode";
@@ -46,6 +46,7 @@ export async function executeSend(options: MessageSendOptions): Promise<void> {
   const walletClient = createWalletClient({
     account,
     transport: http(rpcUrls[0]),
+    dataSuffix: getBaseDataSuffix(commonOptions.chainId),
   });
 
   console.log(chalk.blue("Sending message..."));

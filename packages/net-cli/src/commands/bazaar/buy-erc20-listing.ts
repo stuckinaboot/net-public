@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { createWalletClient, http, encodeFunctionData } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { BazaarClient } from "@net-protocol/bazaar";
-import { getChainRpcUrls } from "@net-protocol/core";
+import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { encodeTransaction } from "../../shared/encode";
@@ -57,6 +57,7 @@ export async function executeBuyErc20Listing(options: BuyErc20ListingOptions): P
     const walletClient = createWalletClient({
       account,
       transport: http(rpcUrls[0]),
+      dataSuffix: getBaseDataSuffix(commonOptions.chainId),
     });
 
     // Send approval txs if any

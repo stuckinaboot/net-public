@@ -128,3 +128,31 @@ export type UseTokenUpvotesOptions = {
   tokenAddress: string;
   enabled?: boolean;
 };
+
+// --- User upvote hook options ---
+
+export type UseUserUpvotesGivenOptions = {
+  chainId: number;
+  userAddress: Address;
+  enabled?: boolean;
+};
+
+export type UseUserUpvotesReceivedOptions = {
+  chainId: number;
+  userAddress: Address;
+  enabled?: boolean;
+};
+
+export type UseUserUpvotesGivenPerTokenBatchOptions = {
+  chainId: number;
+  userAddress: Address;
+  tokenAddresses: Address[];
+  enabled?: boolean;
+};
+
+export type UseUserUpvotesReceivedPerTokenBatchOptions = {
+  chainId: number;
+  userAddress: Address;
+  tokenAddresses: Address[];
+  enabled?: boolean;
+};

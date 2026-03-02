@@ -66,6 +66,7 @@ vi.mock("@net-protocol/core", () => ({
   getChainRpcUrls: vi
     .fn()
     .mockReturnValue(["https://base-mainnet.public.blastapi.io"]),
+  getBaseDataSuffix: vi.fn().mockReturnValue(undefined),
 }));
 
 // Mock cli/shared

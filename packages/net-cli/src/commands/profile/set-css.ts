@@ -4,7 +4,7 @@ import * as path from "path";
 import { createWalletClient, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { getChainRpcUrls } from "@net-protocol/core";
+import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import {
   getProfileCSSStorageArgs,
   isValidCSS,
@@ -123,6 +123,7 @@ export async function executeProfileSetCSS(
       account,
       chain: base,
       transport: http(rpcUrls[0]),
+      dataSuffix: getBaseDataSuffix(commonOptions.chainId),
     }).extend(publicActions);
 
     console.log(chalk.blue(`Setting profile CSS...`));

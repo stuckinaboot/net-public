@@ -8,7 +8,7 @@ import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { http, createWalletClient } from "viem";
-import { getPublicClient, getChainRpcUrls } from "@net-protocol/core";
+import { getPublicClient, getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import type { Address, Hash } from "viem";
 import { filterXmlStorageTransactions } from "../transactions/filter";
 import { checkXmlMetadataExists } from "../storage/check";
@@ -95,6 +95,7 @@ export async function uploadFileWithRelay(
     account: userAccount,
     chain: publicClient.chain!,
     transport: http(rpcUrls[0]), // Use first RPC URL
+    dataSuffix: getBaseDataSuffix(options.chainId),
   });
 
   // 5. Setup x402 client

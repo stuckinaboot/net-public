@@ -3,7 +3,7 @@ import { StorageClient } from "@net-protocol/storage";
 import { createWalletClient, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { getChainRpcUrls } from "@net-protocol/core";
+import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import {
   getProfileMetadataStorageArgs,
   isValidTokenAddress,
@@ -91,6 +91,7 @@ export async function executeProfileSetTokenAddress(
       account,
       chain: base, // TODO: Support other chains
       transport: http(rpcUrls[0]),
+      dataSuffix: getBaseDataSuffix(commonOptions.chainId),
     }).extend(publicActions);
 
     console.log(chalk.blue(`Setting profile token address...`));

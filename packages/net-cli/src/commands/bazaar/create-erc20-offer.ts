@@ -7,7 +7,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { BazaarClient } from "@net-protocol/bazaar";
-import { getChainRpcUrls } from "@net-protocol/core";
+import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import type { CreateErc20OfferOptions } from "./types";
@@ -58,6 +58,7 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
     const walletClient = createWalletClient({
       account,
       transport: http(rpcUrls[0]),
+      dataSuffix: getBaseDataSuffix(commonOptions.chainId),
     });
 
     // Send approval txs if needed (WETH approval)

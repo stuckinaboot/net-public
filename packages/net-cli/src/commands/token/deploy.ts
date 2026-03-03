@@ -4,9 +4,9 @@ import { privateKeyToAccount } from "viem/accounts";
 import { NetrClient, isNetrSupportedChain } from "@net-protocol/netr";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
+import { encodeTransaction, type EncodedTransaction } from "../../shared/encode";
 import { exitWithError } from "../../shared/output";
 import type { TokenDeployOptions } from "./types";
-import type { EncodedTransaction } from "../../shared/types";
 
 interface EncodedDeployResult {
   predictedAddress: string;
@@ -91,22 +91,22 @@ async function executeEncodeOnly(options: TokenDeployOptions): Promise<void> {
     saltResult.salt
   );
 
-  // Encode the transaction
-  const calldata = encodeFunctionData({
-    abi: txConfig.abi,
-    functionName: txConfig.functionName,
-    args: txConfig.args,
-  });
+  // Encode the transaction (includes Base builder code suffix when on Base)
+  const encoded = encodeTransaction(
+    {
+      to: txConfig.address,
+      abi: txConfig.abi,
+      functionName: txConfig.functionName,
+      args: txConfig.args,
+      value: txConfig.value,
+    },
+    readOnlyOptions.chainId
+  );
 
   const result: EncodedDeployResult = {
     predictedAddress: saltResult.predictedAddress,
     salt: saltResult.salt,
-    transaction: {
-      to: txConfig.address,
-      data: calldata,
-      chainId: readOnlyOptions.chainId,
-      value: txConfig.value?.toString() ?? "0",
-    },
+    transaction: encoded,
     config: {
       name: options.name,
       symbol: options.symbol,

@@ -1,6 +1,22 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { encodeFunctionData } from "viem";
+
+// A realistic mock suffix (valid hex, like what Attribution.toDataSuffix would produce)
+const MOCK_BASE_DATA_SUFFIX = vi.hoisted(
+  () => "0x00000000000000000000000000626364307832" as `0x${string}`
+);
+
+// Mock @net-protocol/core to avoid ox/erc8021 resolution issue in tests
+vi.mock("@net-protocol/core", () => ({
+  BASE_BUILDER_CODE: "bc_d0x2dqkv",
+  BASE_CHAIN_ID: 8453,
+  BASE_DATA_SUFFIX: MOCK_BASE_DATA_SUFFIX,
+  getBaseDataSuffix: (chainId: number) =>
+    chainId === 8453 ? MOCK_BASE_DATA_SUFFIX : undefined,
+}));
+
+// Import after mocks
 import { encodeTransaction } from "../../shared/encode";
-import type { WriteTransactionConfig } from "@net-protocol/core";
 
 // Simple test ABI for a function like `setValue(uint256)`
 const TEST_ABI = [
@@ -19,9 +35,9 @@ const TEST_CHAIN_ID = 8453;
 
 describe("encodeTransaction", () => {
   it("should encode a transaction config into EncodedTransaction format", () => {
-    const config: WriteTransactionConfig = {
+    const config = {
       to: TEST_CONTRACT_ADDRESS,
-      functionName: "setValue",
+      functionName: "setValue" as const,
       args: [BigInt(42)],
       abi: TEST_ABI,
     };
@@ -31,14 +47,14 @@ describe("encodeTransaction", () => {
     expect(encoded.to).toBe(TEST_CONTRACT_ADDRESS);
     expect(encoded.chainId).toBe(TEST_CHAIN_ID);
     expect(encoded.value).toBe("0");
-    expect(encoded.data).toMatch(/^0x/); // Should be hex encoded
-    expect(encoded.data.length).toBeGreaterThan(2); // More than just "0x"
+    expect(encoded.data).toMatch(/^0x/);
+    expect(encoded.data.length).toBeGreaterThan(2);
   });
 
   it("should include value when provided in config", () => {
-    const config: WriteTransactionConfig = {
+    const config = {
       to: TEST_CONTRACT_ADDRESS,
-      functionName: "setValue",
+      functionName: "setValue" as const,
       args: [BigInt(42)],
       abi: TEST_ABI,
       value: BigInt(1000000000000000000), // 1 ETH in wei
@@ -50,9 +66,9 @@ describe("encodeTransaction", () => {
   });
 
   it("should default value to '0' when not provided", () => {
-    const config: WriteTransactionConfig = {
+    const config = {
       to: TEST_CONTRACT_ADDRESS,
-      functionName: "setValue",
+      functionName: "setValue" as const,
       args: [BigInt(42)],
       abi: TEST_ABI,
     };
@@ -62,26 +78,56 @@ describe("encodeTransaction", () => {
     expect(encoded.value).toBe("0");
   });
 
-  it("should correctly encode function data with arguments", () => {
-    const config: WriteTransactionConfig = {
+  it("should include Base builder code suffix for Base chain (8453)", () => {
+    const config = {
       to: TEST_CONTRACT_ADDRESS,
-      functionName: "setValue",
-      args: [BigInt(123)],
+      functionName: "setValue" as const,
+      args: [BigInt(42)],
       abi: TEST_ABI,
     };
 
-    const encoded = encodeTransaction(config, TEST_CHAIN_ID);
+    const rawCalldata = encodeFunctionData({
+      abi: TEST_ABI,
+      functionName: "setValue",
+      args: [BigInt(42)],
+    });
 
-    // The encoded data should contain the function selector (4 bytes)
-    // plus the encoded argument (32 bytes for uint256)
-    // Function selector for setValue(uint256) + padded 123
-    expect(encoded.data.length).toBe(2 + 8 + 64); // 0x + 4 bytes selector + 32 bytes arg
+    const encoded = encodeTransaction(config, 8453);
+
+    // Data should be longer than raw calldata (suffix appended)
+    expect(encoded.data.length).toBeGreaterThan(rawCalldata.length);
+    // Data should start with the raw calldata
+    expect(encoded.data.startsWith(rawCalldata)).toBe(true);
+    // The suffix should be appended (without its 0x prefix)
+    expect(encoded.data).toBe(
+      rawCalldata + MOCK_BASE_DATA_SUFFIX.slice(2)
+    );
+  });
+
+  it("should not include Base builder code suffix for non-Base chains", () => {
+    const config = {
+      to: TEST_CONTRACT_ADDRESS,
+      functionName: "setValue" as const,
+      args: [BigInt(42)],
+      abi: TEST_ABI,
+    };
+
+    const rawCalldata = encodeFunctionData({
+      abi: TEST_ABI,
+      functionName: "setValue",
+      args: [BigInt(42)],
+    });
+
+    const encoded = encodeTransaction(config, 1); // Ethereum mainnet
+
+    // On non-Base chains, data should be just the calldata
+    expect(encoded.data).toBe(rawCalldata);
   });
 
   it("should use the provided chainId", () => {
-    const config: WriteTransactionConfig = {
+    const config = {
       to: TEST_CONTRACT_ADDRESS,
-      functionName: "setValue",
+      functionName: "setValue" as const,
       args: [BigInt(42)],
       abi: TEST_ABI,
     };

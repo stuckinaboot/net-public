@@ -1,4 +1,5 @@
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, concat } from "viem";
+import { getBaseDataSuffix } from "@net-protocol/core";
 import type { WriteTransactionConfig } from "@net-protocol/core";
 import type { EncodedTransaction } from "./types";
 
@@ -18,9 +19,12 @@ export function encodeTransaction(
     args: config.args,
   });
 
+  const suffix = getBaseDataSuffix(chainId);
+  const data = suffix ? concat([calldata, suffix]) : calldata;
+
   return {
     to: config.to,
-    data: calldata,
+    data,
     chainId,
     value: config.value?.toString() ?? "0",
   };

@@ -7,6 +7,7 @@ import univ234PoolsStrategyAbi from "./abis/univ234-pools-strategy.json";
 import dynamicSplitStrategyAbi from "./abis/dynamic-split-strategy.json";
 import multiVersionUniswapBulkPoolFinderAbi from "./abis/multi-version-uniswap-bulk-pool-finder.json";
 import multiVersionUniswapPoolInfoRetrieverAbi from "./abis/multi-version-uniswap-pool-info-retriever.json";
+import userUpvoteAbi from "./abis/user-upvote.json";
 
 // Score core contract (v2 strategy)
 export const SCORE_CONTRACT = {
@@ -95,3 +96,9 @@ export const NULL_ADDRESS =
 
 // Upvote pricing
 export const UPVOTE_PRICE_ETH = 0.000025;
+
+// User upvote contract (standalone user-to-user upvote system, separate from Score)
+export const USER_UPVOTE_CONTRACT = {
+  address: "0xa4bc2c63dd0157692fd5f409389e5032e37d8895" as Address,
+  abi: userUpvoteAbi as Abi,
+} as const;

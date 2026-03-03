@@ -1,0 +1,459 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "_alphaToken", "type": "address", "internalType": "address" },
+      { "name": "_erc20TokenGatedChat", "type": "address", "internalType": "address" },
+      { "name": "_net", "type": "address", "internalType": "address" },
+      { "name": "_swapRouter", "type": "address", "internalType": "address" },
+      { "name": "_weth", "type": "address", "internalType": "address" },
+      { "name": "_upvotePrice", "type": "uint256", "internalType": "uint256" },
+      { "name": "_feeBps", "type": "uint256", "internalType": "uint256" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ALPHA_TOKEN",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ERC20_TOKEN_GATED_CHAT",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ETH_USDC_POOL",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_TOKENS_PER_USER",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "NET",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "SWAP_ROUTER",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UNISWAP_V3_FACTORY",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "WETH",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "addTokenToList",
+    "inputs": [
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "feeTier", "type": "uint24", "internalType": "uint24" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "feeBps",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTokenFeeTier",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint24", "internalType": "uint24" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTotalUpvotesPerToken",
+    "inputs": [
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserTokenCount",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserTokensInRange",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "startIndex", "type": "uint256", "internalType": "uint256" },
+      { "name": "endIndex", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct UserUpvoteContract.TokenInfo[]",
+        "components": [
+          { "name": "token", "type": "address", "internalType": "address" },
+          { "name": "feeTier", "type": "uint24", "internalType": "uint24" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserUpvotesGiven",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserUpvotesGivenPerToken",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserUpvotesGivenPerTokenBatch",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256[]", "internalType": "uint256[]" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserUpvotesReceived",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserUpvotesReceivedPerToken",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserUpvotesReceivedPerTokenBatch",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256[]", "internalType": "uint256[]" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isTokenInUserList",
+    "inputs": [
+      { "name": "user", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "removeTokenFromList",
+    "inputs": [
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "renounceOwnership",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setFeeBps",
+    "inputs": [
+      { "name": "newFeeBps", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setUpvotePrice",
+    "inputs": [
+      { "name": "newUpvotePrice", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "totalUpvotesPerToken",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      { "name": "newOwner", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "upvotePrice",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "upvoteUser",
+    "inputs": [
+      { "name": "userToUpvote", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "numUpvotes", "type": "uint256", "internalType": "uint256" },
+      { "name": "feeTier", "type": "uint24", "internalType": "uint24" }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "userTokenCount",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userTokenExists",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userTokenFeeTiers",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint24", "internalType": "uint24" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userTokenSeen",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userTokens",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "feeTier", "type": "uint24", "internalType": "uint24" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userUpvotesGiven",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userUpvotesGivenPerToken",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userUpvotesReceived",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "userUpvotesReceivedPerToken",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "withdrawErc20",
+    "inputs": [
+      { "name": "to", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      { "name": "previousOwner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "newOwner", "type": "address", "indexed": true, "internalType": "address" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TokenAddedToList",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "token", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "feeTier", "type": "uint24", "indexed": false, "internalType": "uint24" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TokenRemovedFromList",
+    "inputs": [
+      { "name": "user", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "token", "type": "address", "indexed": true, "internalType": "address" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UserUpvoted",
+    "inputs": [
+      { "name": "upvoter", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "upvotedUser", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "token", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "numUpvotes", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  { "type": "error", "name": "IncorrectEthSent", "inputs": [] },
+  { "type": "error", "name": "MaxTokensReached", "inputs": [] },
+  { "type": "error", "name": "NoAlphaToWithdraw", "inputs": [] },
+  {
+    "type": "error",
+    "name": "OwnableInvalidOwner",
+    "inputs": [{ "name": "owner", "type": "address", "internalType": "address" }]
+  },
+  {
+    "type": "error",
+    "name": "OwnableUnauthorizedAccount",
+    "inputs": [{ "name": "account", "type": "address", "internalType": "address" }]
+  },
+  {
+    "type": "error",
+    "name": "PoolNotFound",
+    "inputs": [
+      { "name": "tokenA", "type": "address", "internalType": "address" },
+      { "name": "tokenB", "type": "address", "internalType": "address" },
+      { "name": "feeTier", "type": "uint24", "internalType": "uint24" }
+    ]
+  },
+  { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },
+  {
+    "type": "error",
+    "name": "Slot0ReadFailed",
+    "inputs": [{ "name": "pool", "type": "address", "internalType": "address" }]
+  },
+  {
+    "type": "error",
+    "name": "StringsInsufficientHexLength",
+    "inputs": [
+      { "name": "value", "type": "uint256", "internalType": "uint256" },
+      { "name": "length", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  { "type": "error", "name": "TokenAlreadyInList", "inputs": [] },
+  { "type": "error", "name": "TokenNotInUserList", "inputs": [] },
+  { "type": "error", "name": "UserCannotUpvoteSelf", "inputs": [] },
+  { "type": "error", "name": "WithdrawFailed", "inputs": [] },
+  { "type": "error", "name": "ZeroUpvotes", "inputs": [] }
+]

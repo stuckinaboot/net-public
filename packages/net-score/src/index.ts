@@ -1,5 +1,6 @@
 // Client
 export { ScoreClient } from "./client/ScoreClient";
+export { UserUpvoteClient } from "./user-upvote/UserUpvoteClient";
 
 // Utilities
 export {
@@ -49,6 +50,7 @@ export {
   getWethAddress,
   NULL_ADDRESS,
   UPVOTE_PRICE_ETH,
+  USER_UPVOTE_CONTRACT,
 } from "./constants";
 
 // Types
@@ -69,4 +71,33 @@ export type {
   UseUpvotesOptions,
   UseUpvotesBatchOptions,
   UseTokenUpvotesOptions,
+  UseUserUpvotesGivenOptions,
+  UseUserUpvotesReceivedOptions,
+  UseUserUpvotesGivenPerTokenBatchOptions,
+  UseUserUpvotesReceivedPerTokenBatchOptions,
+  UseUpvoteUserOptions,
+  UseUpvotePriceOptions,
 } from "./types";
+
+// User upvote utilities
+export {
+  parseUserUpvoteMessage,
+  extractTokenAddressesFromMessages,
+  validateUserUpvoteMessage,
+  calculatePriceInUsdc,
+  calculateUserTokenBalance,
+  validateUpvoteParams,
+  calculateUpvoteCost,
+  buildUserUpvote,
+  buildUserUpvoteReceived,
+} from "./user-upvote/userUpvoteUtils";
+
+// User upvote types
+export type {
+  ParsedUserUpvoteMessage,
+  TokenAddressExtraction,
+  UserUpvote,
+  UserUpvoteReceived,
+  UserUpvoteClientOptions,
+  UserUpvoteNetMessage,
+} from "./user-upvote/types";

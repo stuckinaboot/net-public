@@ -1,7 +1,8 @@
-import { type Address, type PublicClient } from "viem";
+import { type Address, type PublicClient, type WalletClient } from "viem";
 import { readContract } from "viem/actions";
-import { getPublicClient } from "@net-protocol/core";
-import { USER_UPVOTE_CONTRACT } from "../constants";
+import { getPublicClient, getBaseDataSuffix } from "@net-protocol/core";
+import { USER_UPVOTE_CONTRACT, NULL_ADDRESS } from "../constants";
+import { validateUpvoteParams, calculateUpvoteCost } from "./userUpvoteUtils";
 import type { UserUpvoteClientOptions } from "./types";
 
 /**
@@ -13,8 +14,10 @@ import type { UserUpvoteClientOptions } from "./types";
 export class UserUpvoteClient {
   private client: PublicClient;
   private contractAddress: Address;
+  private chainId: number;
 
   constructor(params: UserUpvoteClientOptions) {
+    this.chainId = params.chainId;
     this.client = getPublicClient({
       chainId: params.chainId,
       rpcUrl: params.overrides?.rpcUrls,
@@ -134,5 +137,53 @@ export class UserUpvoteClient {
       args: [user, token],
     });
     return data as boolean;
+  }
+
+  async getUpvotePrice(): Promise<bigint> {
+    const data = await readContract(this.client, {
+      address: this.contractAddress,
+      abi: USER_UPVOTE_CONTRACT.abi,
+      functionName: "upvotePrice",
+    });
+    return data as bigint;
+  }
+
+  async upvoteUser({
+    walletClient,
+    userToUpvote,
+    token = NULL_ADDRESS,
+    numUpvotes,
+    feeTier = 0,
+    value: providedValue,
+  }: {
+    walletClient: WalletClient;
+    userToUpvote: Address;
+    token?: Address;
+    numUpvotes: number;
+    feeTier?: number;
+    /** Pre-computed ETH value. When omitted, fetches upvotePrice from chain. */
+    value?: bigint;
+  }): Promise<`0x${string}`> {
+    const sender = walletClient.account?.address;
+    if (sender) {
+      const validation = validateUpvoteParams({ sender, userToUpvote, numUpvotes });
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+    }
+
+    const value = providedValue ?? calculateUpvoteCost(numUpvotes, await this.getUpvotePrice());
+
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: USER_UPVOTE_CONTRACT.abi,
+      functionName: "upvoteUser",
+      args: [userToUpvote, token, BigInt(numUpvotes), BigInt(feeTier)],
+      value,
+      chain: null,
+      dataSuffix: getBaseDataSuffix(this.chainId),
+    } as unknown as Parameters<typeof walletClient.writeContract>[0]);
+
+    return hash;
   }
 }

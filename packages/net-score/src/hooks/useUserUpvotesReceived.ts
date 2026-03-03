@@ -13,7 +13,7 @@ export function useUserUpvotesReceived({
     functionName: "getUserUpvotesReceived",
     args: [userAddress],
     chainId,
-    query: { enabled },
+    query: { enabled: enabled && !!userAddress },
   });
 
   return {

@@ -8,6 +8,8 @@ export { useUserUpvotesGiven } from "./hooks/useUserUpvotesGiven";
 export { useUserUpvotesReceived } from "./hooks/useUserUpvotesReceived";
 export { useUserUpvotesGivenPerTokenBatch } from "./hooks/useUserUpvotesGivenPerTokenBatch";
 export { useUserUpvotesReceivedPerTokenBatch } from "./hooks/useUserUpvotesReceivedPerTokenBatch";
+export { useUpvoteUser } from "./hooks/useUpvoteUser";
+export { useUpvotePrice } from "./hooks/useUpvotePrice";
 
 // Re-export utilities commonly needed with hooks
 export {
@@ -27,4 +29,6 @@ export type {
   UseUserUpvotesReceivedOptions,
   UseUserUpvotesGivenPerTokenBatchOptions,
   UseUserUpvotesReceivedPerTokenBatchOptions,
+  UseUpvoteUserOptions,
+  UseUpvotePriceOptions,
 } from "./types";

@@ -75,6 +75,8 @@ export type {
   UseUserUpvotesReceivedOptions,
   UseUserUpvotesGivenPerTokenBatchOptions,
   UseUserUpvotesReceivedPerTokenBatchOptions,
+  UseUpvoteUserOptions,
+  UseUpvotePriceOptions,
 } from "./types";
 
 // User upvote utilities
@@ -84,6 +86,10 @@ export {
   validateUserUpvoteMessage,
   calculatePriceInUsdc,
   calculateUserTokenBalance,
+  validateUpvoteParams,
+  calculateUpvoteCost,
+  buildUserUpvote,
+  buildUserUpvoteReceived,
 } from "./user-upvote/userUpvoteUtils";
 
 // User upvote types

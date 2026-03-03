@@ -6,7 +6,12 @@ import {
   validateUserUpvoteMessage,
   calculatePriceInUsdc,
   calculateUserTokenBalance,
+  validateUpvoteParams,
+  calculateUpvoteCost,
+  buildUserUpvote,
+  buildUserUpvoteReceived,
 } from "../user-upvote/userUpvoteUtils";
+import type { Address } from "viem";
 import type { UserUpvoteNetMessage } from "../user-upvote/types";
 
 function makeMessage(data: `0x${string}`): UserUpvoteNetMessage {
@@ -227,6 +232,190 @@ describe("userUpvoteUtils", () => {
     it("should default to 18 decimals", () => {
       const raw = BigInt(5e18);
       expect(calculateUserTokenBalance(raw)).toBeCloseTo(5, 5);
+    });
+  });
+
+  describe("validateUpvoteParams", () => {
+    const SENDER = "0x1111111111111111111111111111111111111111" as Address;
+    const OTHER = "0x2222222222222222222222222222222222222222" as Address;
+
+    it("should reject self-upvote", () => {
+      const result = validateUpvoteParams({
+        sender: SENDER,
+        userToUpvote: SENDER,
+        numUpvotes: 1,
+      });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("yourself");
+    });
+
+    it("should reject self-upvote case-insensitively", () => {
+      const result = validateUpvoteParams({
+        sender: "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" as Address,
+        userToUpvote: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Address,
+        numUpvotes: 1,
+      });
+      expect(result.valid).toBe(false);
+    });
+
+    it("should reject zero upvotes", () => {
+      const result = validateUpvoteParams({
+        sender: SENDER,
+        userToUpvote: OTHER,
+        numUpvotes: 0,
+      });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("greater than zero");
+    });
+
+    it("should reject negative upvotes", () => {
+      const result = validateUpvoteParams({
+        sender: SENDER,
+        userToUpvote: OTHER,
+        numUpvotes: -5,
+      });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("greater than zero");
+    });
+
+    it("should reject fractional upvotes", () => {
+      const result = validateUpvoteParams({
+        sender: SENDER,
+        userToUpvote: OTHER,
+        numUpvotes: 1.5,
+      });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("whole number");
+    });
+
+    it("should reject negative fractional upvotes with integer error", () => {
+      const result = validateUpvoteParams({
+        sender: SENDER,
+        userToUpvote: OTHER,
+        numUpvotes: -1.5,
+      });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("whole number");
+    });
+
+    it("should accept valid params", () => {
+      const result = validateUpvoteParams({
+        sender: SENDER,
+        userToUpvote: OTHER,
+        numUpvotes: 5,
+      });
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe("calculateUpvoteCost", () => {
+    it("should calculate cost for single upvote", () => {
+      const price = 25000000000000n; // 0.000025 ETH in wei
+      expect(calculateUpvoteCost(1, price)).toBe(25000000000000n);
+    });
+
+    it("should calculate cost for multiple upvotes", () => {
+      const price = 25000000000000n;
+      expect(calculateUpvoteCost(10, price)).toBe(250000000000000n);
+    });
+
+    it("should return 0 for zero upvotes", () => {
+      const price = 25000000000000n;
+      expect(calculateUpvoteCost(0, price)).toBe(0n);
+    });
+  });
+
+  describe("buildUserUpvote", () => {
+    it("should build enriched upvote with token info", () => {
+      const parsed = {
+        upvotedUserString: "alice.eth",
+        actualToken: TOKEN_A,
+        numUpvotes: 3,
+        tokenWethPrice: BigInt(1e18),
+        wethUsdcPrice: BigInt(3000e6),
+        alphaWethPrice: 0n,
+        userTokenBalance: BigInt(100e18),
+      };
+      const tokenInfo = { name: "Test Token", symbol: "TEST", decimals: 18 };
+      const result = buildUserUpvote(parsed, 1700000000, tokenInfo);
+
+      expect(result.tokenAddress).toBe(TOKEN_A);
+      expect(result.numUpvotes).toBe(3);
+      expect(result.timestamp).toBe(1700000000);
+      expect(result.priceInUsdc).toBeCloseTo(3000, 0);
+      expect(result.userTokenBalance).toBeCloseTo(100, 0);
+      expect(result.userTokenBalanceUsdValue).toBeCloseTo(300000, 0);
+      expect(result.upvotedUserAddress).toBe("alice.eth");
+      expect(result.tokenInfo).toEqual(tokenInfo);
+    });
+
+    it("should build upvote without token info (defaults to 18 decimals)", () => {
+      const parsed = {
+        upvotedUserString: "bob.eth",
+        actualToken: TOKEN_B,
+        numUpvotes: 1,
+        tokenWethPrice: 0n,
+        wethUsdcPrice: 0n,
+        alphaWethPrice: 0n,
+      };
+      const result = buildUserUpvote(parsed, 1700000000);
+
+      expect(result.tokenAddress).toBe(TOKEN_B);
+      expect(result.priceInUsdc).toBeUndefined();
+      expect(result.userTokenBalance).toBe(0);
+      expect(result.userTokenBalanceUsdValue).toBeUndefined();
+      expect(result.tokenInfo).toBeUndefined();
+    });
+  });
+
+  describe("buildUserUpvoteReceived", () => {
+    it("should build enriched received upvote with token info", () => {
+      const parsed = {
+        upvotedUserString: "alice.eth",
+        actualToken: TOKEN_A,
+        numUpvotes: 5,
+        tokenWethPrice: BigInt(1e18),
+        wethUsdcPrice: BigInt(2000e6),
+        alphaWethPrice: 0n,
+        userTokenBalance: BigInt(50e18),
+      };
+      const tokenInfo = { name: "Test Token", symbol: "TEST", decimals: 18 };
+      const result = buildUserUpvoteReceived(
+        parsed,
+        "0x3333333333333333333333333333333333333333",
+        1700000000,
+        tokenInfo
+      );
+
+      expect(result.upvoterAddress).toBe("0x3333333333333333333333333333333333333333");
+      expect(result.tokenAddress).toBe(TOKEN_A);
+      expect(result.numUpvotes).toBe(5);
+      expect(result.timestamp).toBe(1700000000);
+      expect(result.priceInUsdc).toBeCloseTo(2000, 0);
+      expect(result.userTokenBalance).toBeCloseTo(50, 0);
+      expect(result.tokenInfo).toEqual(tokenInfo);
+    });
+
+    it("should build received upvote without token info", () => {
+      const parsed = {
+        upvotedUserString: "bob.eth",
+        actualToken: TOKEN_B,
+        numUpvotes: 1,
+        tokenWethPrice: 0n,
+        wethUsdcPrice: 0n,
+        alphaWethPrice: 0n,
+      };
+      const result = buildUserUpvoteReceived(
+        parsed,
+        "0x4444444444444444444444444444444444444444",
+        1700000000
+      );
+
+      expect(result.upvoterAddress).toBe("0x4444444444444444444444444444444444444444");
+      expect(result.priceInUsdc).toBeUndefined();
+      expect(result.userTokenBalance).toBe(0);
+      expect(result.tokenInfo).toBeUndefined();
     });
   });
 });

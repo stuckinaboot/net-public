@@ -156,3 +156,14 @@ export type UseUserUpvotesReceivedPerTokenBatchOptions = {
   tokenAddresses: Address[];
   enabled?: boolean;
 };
+
+// --- Write hook options ---
+
+export type UseUpvoteUserOptions = {
+  chainId: number;
+};
+
+export type UseUpvotePriceOptions = {
+  chainId: number;
+  enabled?: boolean;
+};

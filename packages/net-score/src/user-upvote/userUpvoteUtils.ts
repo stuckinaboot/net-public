@@ -1,7 +1,9 @@
-import { decodeAbiParameters } from "viem";
+import { type Address, decodeAbiParameters, isAddressEqual } from "viem";
 import type {
   ParsedUserUpvoteMessage,
   TokenAddressExtraction,
+  UserUpvote,
+  UserUpvoteReceived,
   UserUpvoteNetMessage,
 } from "./types";
 
@@ -144,4 +146,90 @@ export function calculateUserTokenBalance(
   tokenDecimals: number = 18
 ): number {
   return Number(rawBalance) / Math.pow(10, tokenDecimals);
+}
+
+/**
+ * Client-side validation for upvote parameters.
+ * Mirrors contract-side errors for better UX before sending a transaction.
+ */
+export function validateUpvoteParams(params: {
+  sender: Address;
+  userToUpvote: Address;
+  numUpvotes: number;
+}): { valid: boolean; error?: string } {
+  if (isAddressEqual(params.sender, params.userToUpvote)) {
+    return { valid: false, error: "Cannot upvote yourself" };
+  }
+  if (!Number.isInteger(params.numUpvotes)) {
+    return { valid: false, error: "Number of upvotes must be a whole number" };
+  }
+  if (params.numUpvotes <= 0) {
+    return { valid: false, error: "Number of upvotes must be greater than zero" };
+  }
+  return { valid: true };
+}
+
+/**
+ * Calculate the total ETH cost for a given number of upvotes.
+ */
+export function calculateUpvoteCost(
+  numUpvotes: number,
+  upvotePrice: bigint
+): bigint {
+  return BigInt(numUpvotes) * upvotePrice;
+}
+
+function computeEnrichedFields(
+  parsed: ParsedUserUpvoteMessage,
+  tokenInfo?: { name: string; symbol: string; decimals: number }
+) {
+  const decimals = tokenInfo?.decimals ?? 18;
+  const priceInUsdc = calculatePriceInUsdc(parsed, decimals);
+  const userTokenBalance = parsed.userTokenBalance
+    ? calculateUserTokenBalance(parsed.userTokenBalance, decimals)
+    : 0;
+
+  const userTokenBalanceUsdValue =
+    priceInUsdc !== undefined && userTokenBalance > 0
+      ? priceInUsdc * userTokenBalance
+      : undefined;
+
+  return { priceInUsdc, userTokenBalance, userTokenBalanceUsdValue };
+}
+
+/**
+ * Build an enriched UserUpvote from a parsed message and optional token info.
+ */
+export function buildUserUpvote(
+  parsed: ParsedUserUpvoteMessage,
+  timestamp: number,
+  tokenInfo?: { name: string; symbol: string; decimals: number }
+): UserUpvote {
+  return {
+    tokenAddress: parsed.actualToken,
+    numUpvotes: parsed.numUpvotes,
+    timestamp,
+    ...computeEnrichedFields(parsed, tokenInfo),
+    upvotedUserAddress: parsed.upvotedUserString,
+    tokenInfo,
+  };
+}
+
+/**
+ * Build an enriched UserUpvoteReceived from a parsed message, upvoter address, and optional token info.
+ */
+export function buildUserUpvoteReceived(
+  parsed: ParsedUserUpvoteMessage,
+  upvoterAddress: string,
+  timestamp: number,
+  tokenInfo?: { name: string; symbol: string; decimals: number }
+): UserUpvoteReceived {
+  return {
+    upvoterAddress,
+    tokenAddress: parsed.actualToken,
+    numUpvotes: parsed.numUpvotes,
+    timestamp,
+    ...computeEnrichedFields(parsed, tokenInfo),
+    tokenInfo,
+  };
 }

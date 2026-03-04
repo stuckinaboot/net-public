@@ -60,18 +60,18 @@
     "wagmi": "^2.15.0"
   },
   "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
     "react": "^18.0.0",
-    "wagmi": "^2.15.0",
-    "@tanstack/react-query": "^5.0.0"
+    "wagmi": "^2.15.0"
   },
   "peerDependenciesMeta": {
+    "@tanstack/react-query": {
+      "optional": true
+    },
     "react": {
       "optional": true
     },
     "wagmi": {
-      "optional": true
-    },
-    "@tanstack/react-query": {
       "optional": true
     }
   },

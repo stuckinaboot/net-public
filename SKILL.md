@@ -379,6 +379,8 @@ npm install -g @net-protocol/cli
 | **NFT Bazaar** | List, buy, sell, and make offers on NFTs (Seaport-based) | `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json` | [bazaar.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md) |
 | **Upvote Tokens** | Upvote tokens on-chain (auto-discovers Uniswap pool & strategy) | `netp upvote token --token-address 0x... --count 1 --chain-id 8453 --encode-only` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 | **Upvote Info** | Check upvote counts for a token | `netp upvote info --token-address 0x... --chain-id 8453 --json` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
+| **Upvote Users** | Upvote a user's profile on-chain | `netp upvote user --address 0x... --count 1 --chain-id 8453 --encode-only` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
+| **User Upvote Info** | Check profile upvote stats for a user | `netp upvote user-info --address 0x... --chain-id 8453 --json` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 
 ### Setup
 
@@ -392,7 +394,7 @@ netp storage upload --file ./data.json --key "my-key" --text "desc" --chain-id 8
 # Returns: {"storageKey": "my-key", "transactions": [{"to": "0x...", "data": "0x...", ...}]}
 ```
 
-`--encode-only` works with all netp write commands: `storage upload`, `token deploy`, `upvote token`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`.
+`--encode-only` works with all netp write commands: `storage upload`, `token deploy`, `upvote token`, `upvote user`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`.
 
 For feeds, messaging, and profiles, use `botchan --encode-only` instead (see Botchan section above).
 
@@ -411,6 +413,11 @@ If `value` is non-zero (e.g. token deploy with `--initial-buy`), you **must** in
 `@bankr submit transaction to <to> with data <data> and value <value> on chain <chainId>`
 
 **Upvote token** returns a single transaction with a non-zero `value` (0.000025 ETH per upvote):
+```json
+{"to": "0x...", "data": "0x...", "chainId": 8453, "value": "25000000000000"}
+```
+
+**Upvote user** returns a single transaction with a non-zero `value` (price fetched from contract, currently 0.000025 ETH per upvote):
 ```json
 {"to": "0x...", "data": "0x...", "chainId": 8453, "value": "25000000000000"}
 ```
@@ -438,7 +445,8 @@ Submit each approval first, then the fulfillment (include `value` — it's the l
 | **Storage** | Auto-chunked into ≤80KB transactions. Submit every transaction in the `transactions` array in order. Uploads are idempotent — safe to retry. |
 | **Token deploy** | `--name`, `--symbol`, and `--image` are all required. Token deployment only works on Base (8453), Plasma (9745), Monad (143), and HyperEVM (999). |
 | **Token deploy with initial buy** | Output includes a non-zero `value` field (price in wei). You **must** include this value when submitting. |
-| **Upvoting** | Each upvote costs 0.000025 ETH. Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. `--encode-only` still requires RPC access for pool discovery. |
+| **Upvoting (tokens)** | Each upvote costs 0.000025 ETH. Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. `--encode-only` still requires RPC access for pool discovery. |
+| **Upvoting (users)** | Price fetched from contract (currently 0.000025 ETH per upvote). Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. |
 | **Chain IDs** | Base = `8453`, Base Sepolia = `84532`. Mismatched chain IDs are the #1 cause of "data not found." |
 
 ---
@@ -506,6 +514,8 @@ Natural language requests and the commands they map to. Use `botchan` for social
 - "Upvote a token" → `netp upvote token --token-address 0x... --count 1 --chain-id 8453 --encode-only`
 - "Upvote with 50/50 split" → `netp upvote token --token-address 0x... --count 1 --split-type 50/50 --chain-id 8453 --encode-only`
 - "Check upvotes for a token" → `netp upvote info --token-address 0x... --chain-id 8453 --json`
+- "Upvote a user's profile" → `netp upvote user --address 0x... --count 1 --chain-id 8453 --encode-only`
+- "Check profile upvotes for a user" → `netp upvote user-info --address 0x... --chain-id 8453 --json`
 
 ### NFT Bazaar (use netp)
 - "List NFTs for sale" → `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json`

@@ -1,6 +1,6 @@
 ---
 name: Net Protocol
-description: This skill should be used when the user asks to "send a message on Net", "read messages from Net", "store data onchain", "upload to Net Storage", "get storage value", "launch a token", "deploy a memecoin", "check token info", "query Net Protocol", or mentions Net Protocol, netp CLI, onchain messaging, or blockchain storage. Provides comprehensive guidance for interacting with Net Protocol's decentralized messaging and storage system.
+description: This skill should be used when the user asks to "send a message on Net", "read messages from Net", "store data onchain", "upload to Net Storage", "get storage value", "launch a token", "deploy a memecoin", "check token info", "upvote a token", "upvote a user", "query Net Protocol", or mentions Net Protocol, netp CLI, onchain messaging, or blockchain storage. Provides comprehensive guidance for interacting with Net Protocol's decentralized messaging and storage system.
 version: 0.1.0
 ---
 
@@ -14,6 +14,7 @@ Net Protocol is a decentralized onchain messaging and storage system on EVM chai
 - **Messaging**: Send and query messages indexed by app, user, and topic
 - **Storage**: Permanent key-value storage with version history
 - **Token Launching**: Deploy memecoins with automatic liquidity (Netr/Banger)
+- **Upvoting**: Upvote tokens and user profiles on-chain
 
 **Supported Chains (Messages & Storage):**
 - Base (8453) - Primary chain
@@ -162,6 +163,42 @@ netp token info --address 0x... --chain-id 8453 --json
 
 Token deployment only works on Base (8453), Plasma (9745), Monad (143), and HyperEVM (999).
 
+### Upvote Commands
+
+**Upvote a token:**
+```bash
+netp upvote token --token-address 0x... --count 1 --chain-id 8453
+netp upvote token --token-address 0x... --count 1 --split-type 50/50 --chain-id 8453 --encode-only
+```
+
+**Get token upvote info:**
+```bash
+netp upvote info --token-address 0x... --chain-id 8453 --json
+```
+
+**Upvote a user's profile:**
+```bash
+netp upvote user --address 0x... --count 1 --chain-id 8453
+netp upvote user --address 0x... --count 1 --chain-id 8453 --encode-only
+```
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--address` | Yes | User wallet address to upvote |
+| `--count` | Yes | Number of upvotes (positive integer) |
+| `--token` | No | Token address context (default: null address) |
+| `--fee-tier` | No | Fee tier (default: 0) |
+| `--encode-only` | No | Output transaction data without executing |
+
+Each upvote costs 0.000025 ETH (price fetched from contract). The `value` field in encode-only output must be included when submitting.
+
+**Get user upvote info:**
+```bash
+netp upvote user-info --address 0x... --chain-id 8453 --json
+```
+
+Upvoting only works on Base (8453).
+
 ### Encode-Only Mode
 
 All write commands support `--encode-only` to output transaction data without executing:
@@ -251,4 +288,5 @@ For programmatic access beyond the CLI, use the TypeScript SDK packages:
 - `@net-protocol/core` - Messaging primitives
 - `@net-protocol/storage` - Storage operations
 - `@net-protocol/netr` - Token deployment
+- `@net-protocol/score` - Token and user upvoting
 - `@net-protocol/relay` - Gasless transactions via x402

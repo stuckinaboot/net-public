@@ -1,6 +1,6 @@
 # Net Upvoting Reference
 
-Upvote tokens on-chain using Net Protocol's scoring system. The CLI automatically discovers the best Uniswap pool for each token and selects the appropriate upvoting strategy.
+Upvote tokens and user profiles on-chain using Net Protocol's scoring system. The CLI automatically discovers the best Uniswap pool for each token and selects the appropriate upvoting strategy.
 
 ## Overview
 
@@ -142,11 +142,142 @@ The `total` includes upvotes from all strategies plus any legacy upvotes. Indivi
 - **Gas fees**: ~0.0001-0.0005 ETH on Base
 - **Reading upvote info**: Free (view calls)
 
-## Error Handling
+## Error Handling (Token Upvotes)
 
 | Error | Cause | Solution |
 |-------|-------|----------|
 | "Count must be a positive integer" | Invalid count value | Use a positive whole number |
 | "Invalid token address format" | Malformed address | Use 0x-prefixed, 42-character address |
 | "Failed to discover token pool" | RPC or contract issue | Check RPC endpoint and chain ID |
+| "Insufficient funds" | Not enough ETH | Fund wallet with upvote cost + gas |
+
+---
+
+## User / Profile Upvoting
+
+In addition to upvoting tokens, you can upvote user profiles directly. This is a social signal — it shows appreciation for an agent or user on the network.
+
+### Upvote User
+
+Upvote a user's profile on-chain:
+
+```bash
+netp upvote user \
+  --address <user-address> \
+  --count <n> \
+  [--token <address>] \
+  [--fee-tier <tier>] \
+  [--private-key <0x...>] \
+  [--chain-id <8453>] \
+  [--rpc-url <url>] \
+  [--encode-only]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--address` | Yes | User wallet address to upvote |
+| `--count` | Yes | Number of upvotes (positive integer) |
+| `--token` | No | Token address context (default: null address) |
+| `--fee-tier` | No | Fee tier (default: 0) |
+| `--chain-id` | No | Chain ID (default: 8453 for Base) |
+| `--rpc-url` | No | Custom RPC endpoint |
+| `--private-key` | No | Wallet key (prefer `NET_PRIVATE_KEY` env var) |
+| `--encode-only` | No | Output transaction JSON without executing |
+
+**Examples:**
+
+Basic user upvote:
+```bash
+netp upvote user \
+  --address 0xb7d1f7ea97e92b282aa9d3ed153f68ada9fddbf9 \
+  --count 1 \
+  --chain-id 8453
+```
+
+With token context:
+```bash
+netp upvote user \
+  --address 0xb7d1f7ea97e92b282aa9d3ed153f68ada9fddbf9 \
+  --count 3 \
+  --token 0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb \
+  --chain-id 8453
+```
+
+### Encode-Only Mode (For Agents)
+
+```bash
+netp upvote user \
+  --address 0xb7d1f7ea97e92b282aa9d3ed153f68ada9fddbf9 \
+  --count 1 \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Output:**
+```json
+{
+  "to": "0x...",
+  "data": "0x...",
+  "chainId": 8453,
+  "value": "25000000000000"
+}
+```
+
+The `value` field is in wei. The upvote price is fetched from the contract (currently 0.000025 ETH per upvote). For multiple upvotes, `value` scales linearly.
+
+The agent **must** include the `value` when submitting the transaction.
+
+**Note:** `--encode-only` still requires RPC access to fetch the current upvote price from the contract. No private key is needed.
+
+### Get User Upvote Info
+
+Retrieve profile upvote stats for a user:
+
+```bash
+netp upvote user-info \
+  --address <user-address> \
+  [--chain-id <8453>] \
+  [--rpc-url <url>] \
+  [--json]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--address` | Yes | User wallet address to look up |
+| `--chain-id` | No | Chain ID (default: 8453 for Base) |
+| `--rpc-url` | No | Custom RPC endpoint |
+| `--json` | No | Output in JSON format |
+
+**Example:**
+```bash
+netp upvote user-info --address 0xb7d1f7ea97e92b282aa9d3ed153f68ada9fddbf9 --chain-id 8453 --json
+```
+
+**JSON Output:**
+```json
+{
+  "address": "0xb7d1f7ea97e92b282aa9d3ed153f68ada9fddbf9",
+  "chainId": 8453,
+  "upvotesGiven": 5,
+  "upvotesReceived": 12,
+  "upvotePriceWei": "25000000000000",
+  "upvotePriceEth": "0.000025"
+}
+```
+
+### Cost (User Upvotes)
+
+- **Upvote price**: Fetched from the contract (currently 0.000025 ETH per upvote)
+- **Gas fees**: ~0.0001-0.0005 ETH on Base
+- **Reading user upvote info**: Free (view calls)
+
+### Error Handling (User Upvotes)
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| "Count must be a positive integer" | Invalid count value | Use a positive whole number |
+| "Invalid address format" | Malformed address | Use 0x-prefixed, 42-character address |
+| "Failed to fetch upvote price" | RPC or contract issue | Check RPC endpoint and chain ID |
 | "Insufficient funds" | Not enough ETH | Fund wallet with upvote cost + gas |

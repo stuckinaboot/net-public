@@ -113,7 +113,7 @@ export function getStorageKeyBytes(
 export function extractStorageKeyFromMessageData(
   data: `0x${string}` | string | undefined
 ): string | null {
-  if (!data || data === "0x") return null;
+  if (!data || data === "0x" || !data.startsWith("0x")) return null;
   try {
     const decoded = hexToString(data as `0x${string}`);
     if (decoded.startsWith("netid-") || decoded.length <= 32) {

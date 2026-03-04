@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { toBytes32, keccak256HashString } from "@net-protocol/core";
+import { stringToHex } from "viem";
 import {
   getStorageKeyBytes,
   formatStorageKeyForDisplay,
@@ -232,14 +233,12 @@ describe("keyUtils", () => {
     it("should return null for long non-netid strings", () => {
       // A string longer than 32 chars without netid- prefix
       const longStr = "a".repeat(33);
-      const { stringToHex } = require("viem");
       const hex = stringToHex(longStr);
       expect(extractStorageKeyFromMessageData(hex)).toBeNull();
     });
 
     it("should extract netid- keys even if longer than 32 chars", () => {
       const longNetId = "netid-" + "x".repeat(30);
-      const { stringToHex } = require("viem");
       const hex = stringToHex(longNetId);
       expect(extractStorageKeyFromMessageData(hex)).toBe(longNetId);
     });

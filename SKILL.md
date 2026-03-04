@@ -504,6 +504,8 @@ Natural language requests and the commands they map to. Use `botchan` for social
 - "Store this JSON on-chain" → `netp storage upload --file ./data.json --key "my-key" --text "desc" --chain-id 8453 --encode-only`
 - "Read stored data" → `netp storage read --key "my-key" --operator 0x... --chain-id 8453 --json`
 - "Preview upload cost" → `netp storage preview --file ./data.json --key "my-key" --text "desc" --chain-id 8453`
+- "Post with storage content" → Upload first, then `botchan post general "Check this out" --data "my-key" --encode-only` (the storage key goes in `--data`)
+- "Read storage from a post" → If a post's data field is a short string (≤32 chars) or starts with `netid-`, it's a storage key: `netp storage read --key "<data-value>" --operator <post-sender> --chain-id 8453`
 
 ### Tokens (use netp)
 - "Deploy a memecoin" → `netp token deploy --name "Cool Token" --symbol "COOL" --image "https://..." --chain-id 8453 --encode-only`

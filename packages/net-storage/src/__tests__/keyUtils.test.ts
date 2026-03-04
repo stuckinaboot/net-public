@@ -5,6 +5,7 @@ import {
   formatStorageKeyForDisplay,
   encodeStorageKeyForUrl,
   generateStorageEmbedTag,
+  extractStorageKeyFromMessageData,
 } from "../utils/keyUtils";
 
 describe("keyUtils", () => {
@@ -203,6 +204,48 @@ describe("keyUtils", () => {
       });
 
       expect(result).toContain(' o="0xabcdef');
+    });
+  });
+
+  describe("extractStorageKeyFromMessageData", () => {
+    it("should return null for undefined data", () => {
+      expect(extractStorageKeyFromMessageData(undefined)).toBeNull();
+    });
+
+    it("should return null for empty hex data", () => {
+      expect(extractStorageKeyFromMessageData("0x")).toBeNull();
+    });
+
+    it("should extract netid- prefixed keys", () => {
+      // "netid-abc123" as hex
+      const hex =
+        "0x6e657469642d616263313233" as `0x${string}`;
+      expect(extractStorageKeyFromMessageData(hex)).toBe("netid-abc123");
+    });
+
+    it("should extract short storage keys (<=32 chars)", () => {
+      // "my-key" as hex
+      const hex = "0x6d792d6b6579" as `0x${string}`;
+      expect(extractStorageKeyFromMessageData(hex)).toBe("my-key");
+    });
+
+    it("should return null for long non-netid strings", () => {
+      // A string longer than 32 chars without netid- prefix
+      const longStr = "a".repeat(33);
+      const { stringToHex } = require("viem");
+      const hex = stringToHex(longStr);
+      expect(extractStorageKeyFromMessageData(hex)).toBeNull();
+    });
+
+    it("should extract netid- keys even if longer than 32 chars", () => {
+      const longNetId = "netid-" + "x".repeat(30);
+      const { stringToHex } = require("viem");
+      const hex = stringToHex(longNetId);
+      expect(extractStorageKeyFromMessageData(hex)).toBe(longNetId);
+    });
+
+    it("should return null for invalid hex", () => {
+      expect(extractStorageKeyFromMessageData("not-hex")).toBeNull();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { fromHex, stringToHex } from "viem";
+import { fromHex, hexToString, stringToHex } from "viem";
 import { keccak256HashString, toBytes32 } from "@net-protocol/core";
 
 /**
@@ -98,6 +98,31 @@ export function getStorageKeyBytes(
   return input.length > 32
     ? keccak256HashString(input.toLowerCase())
     : toBytes32(input.toLowerCase());
+}
+
+/**
+ * Extract a storage key from a message's hex-encoded data field.
+ *
+ * Follows the same detection heuristic as the Net website:
+ * a value is treated as a storage key reference if the decoded string
+ * starts with "netid-" or is 32 characters or fewer.
+ *
+ * @param data - The hex-encoded data field from a NetMessage
+ * @returns The decoded storage key string, or null if not a storage reference
+ */
+export function extractStorageKeyFromMessageData(
+  data: `0x${string}` | string | undefined
+): string | null {
+  if (!data || data === "0x") return null;
+  try {
+    const decoded = hexToString(data as `0x${string}`);
+    if (decoded.startsWith("netid-") || decoded.length <= 32) {
+      return decoded;
+    }
+  } catch {
+    // Not a valid string reference
+  }
+  return null;
 }
 
 /**

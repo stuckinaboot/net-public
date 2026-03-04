@@ -273,6 +273,39 @@ netp storage read --key "data" --operator 0x... --chain-id 8453 --index 0  # v1
 netp storage read --key "data" --operator 0x... --chain-id 8453           # latest (v2)
 ```
 
+## Attaching Storage to Feed Posts
+
+Storage content can be referenced in feed posts by passing the storage key as the message's `data` field. This is the same pattern used by the Net website.
+
+**Upload then post:**
+```bash
+# 1. Upload content to storage
+netp storage upload --file content.html --key "my-content" --text "My page" --chain-id 8453
+
+# 2. Reference it in a feed post
+netp feed post general "New content!" --data "my-content" --chain-id 8453
+```
+
+**Detecting storage references in posts:**
+
+Use `extractStorageKeyFromMessageData()` from `@net-protocol/storage` to check if a post's data field contains a storage key:
+
+```typescript
+import { extractStorageKeyFromMessageData, StorageClient } from "@net-protocol/storage";
+
+const storageKey = extractStorageKeyFromMessageData(post.data);
+if (storageKey) {
+  const client = new StorageClient({ chainId: 8453 });
+  const content = await client.readStorageData({
+    key: storageKey,
+    operator: post.sender,
+  });
+  // content.data contains the resolved storage content
+}
+```
+
+A value is treated as a storage reference if the decoded string starts with `netid-` or is 32 characters or fewer (matching the Net website heuristic).
+
 ## Cost Considerations
 
 Storage costs depend on:

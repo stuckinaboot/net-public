@@ -7,6 +7,7 @@ export {
   formatStorageKeyForDisplay,
   encodeStorageKeyForUrl,
   generateStorageEmbedTag,
+  extractStorageKeyFromMessageData,
 } from "./utils/keyUtils";
 export {
   chunkDataForStorage,

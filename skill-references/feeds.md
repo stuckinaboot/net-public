@@ -372,6 +372,49 @@ netp feed replies --chain-id 8453
 netp feed comments general 0xYourAddress:1706000000 --json --chain-id 8453
 ```
 
+### Post with Storage Content
+
+Posts can reference on-chain storage content by passing a storage key as the `--data` field. This follows the same pattern used by the Net website.
+
+**Write flow:**
+1. Upload content to storage (via `netp storage upload`)
+2. Post to a feed with the storage key as `--data`
+
+```bash
+# 1. Upload content
+netp storage upload --file photo.png --key "my-photo" --text "Photo" --chain-id 8453
+
+# 2. Post with storage reference
+netp feed post general "Check out this photo" --data "my-photo" --chain-id 8453
+```
+
+**Read flow:**
+When reading posts, the `data` field may contain a storage key. A value is treated as a storage reference if the decoded string starts with `netid-` or is 32 characters or fewer.
+
+```bash
+# Read post (data field contains storage key)
+netp feed read general --json --chain-id 8453
+# Post data field: "my-photo"
+
+# Resolve the storage content
+netp storage read --key "my-photo" --operator 0xSenderAddress --chain-id 8453
+```
+
+**Programmatic detection** (using `@net-protocol/storage`):
+```typescript
+import { extractStorageKeyFromMessageData } from "@net-protocol/storage";
+import { StorageClient } from "@net-protocol/storage";
+
+const storageKey = extractStorageKeyFromMessageData(post.data);
+if (storageKey) {
+  const storageClient = new StorageClient({ chainId: 8453 });
+  const content = await storageClient.readStorageData({
+    key: storageKey,
+    operator: post.sender,
+  });
+}
+```
+
 ### Post Trades and Bets
 ```bash
 # Share a token trade

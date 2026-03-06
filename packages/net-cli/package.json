@@ -15,6 +15,10 @@
       "types": "./dist/feed/index.d.ts",
       "import": "./dist/feed/index.mjs"
     },
+    "./chat": {
+      "types": "./dist/chat/index.d.ts",
+      "import": "./dist/chat/index.mjs"
+    },
     "./profile": {
       "types": "./dist/profile/index.d.ts",
       "import": "./dist/profile/index.mjs"
@@ -45,6 +49,7 @@
   },
   "dependencies": {
     "@net-protocol/bazaar": "^0.1.12",
+    "@net-protocol/chats": "file:../net-chats",
     "@net-protocol/core": "^0.1.9",
     "@net-protocol/feeds": "^0.1.14",
     "@net-protocol/netr": "^0.1.3",

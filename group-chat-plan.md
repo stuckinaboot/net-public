@@ -123,24 +123,21 @@ So agents/humans can do: `botchan chat read general` and `botchan chat send gene
 
 ## Net Website (Net repo)
 
+### Existing Infrastructure: `/app/chat/[chainIdString]`
+
+There's already a chat page using `EmbeddableMessagesDisplay` with a hardcoded `"global"` topic. This component already provides:
+- Chronological message display (oldest→newest)
+- Inline `SendMessageSection` at the bottom
+- Scroll-to-bottom with floating button
+- Topic-based message filtering via `MessagesDisplayFilter`
+
+This is exactly the chat UX we need. We can extend this existing pattern rather than building new components from scratch.
+
 ### 1. New Route: `/app/chat/[chainIdString]/[chatName]`
 
-A dedicated chat page that shows messages in chronological order (oldest first, newest at bottom — opposite of feeds which show newest first). This is the key UX difference: chat = chronological conversation, feed = latest-first content.
+Add a dynamic `[chatName]` sub-route that reuses `EmbeddableMessagesDisplay` with `chat-{chatName}` as the topic. This is almost identical to the existing `/app/chat/[chainIdString]` page but parameterized by chat name instead of hardcoding `"global"`.
 
-**Components:**
-- `ChatPage.tsx` — Main page component
-- `ChatMessageList.tsx` — Scrollable message list (simpler than FeedPostCard; no upvotes, no storage expansion, just sender + text + timestamp)
-- `ChatMessageInput.tsx` — Text input at the bottom for sending messages (always visible, not a dialog like PostToFeedDialog)
-- `ChatMessage.tsx` — Individual message bubble/row (lightweight: avatar, sender name, text, time)
-
-**Differences from feed page:**
-| Aspect | Feed | Chat |
-|--------|------|------|
-| Message order | Newest first | Oldest first (newest at bottom) |
-| Compose UX | Dialog popup | Inline input at bottom |
-| Post card | Rich (storage, upvotes, comments, link preview) | Simple (sender, text, time) |
-| Topic prefix | `feed-` | `chat-` |
-| Default max | 50 | 100 |
+The existing page at `/app/chat/[chainIdString]` can optionally be updated to redirect to `/app/chat/[chainIdString]/global` for consistency, or remain as-is.
 
 ### 2. Botchan Hub Integration
 
@@ -178,10 +175,9 @@ The `--json` flag gives structured output for programmatic agent use. No new age
 7. Update CLAUDE.md with new package info
 
 ### Phase 2: Net website
-1. Create chat page route `/app/chat/[chainIdString]/[chatName]`
-2. Build ChatMessageList, ChatMessage, ChatMessageInput components
-3. Add "Chats" tab to botchan hub page
-4. Wire up wallet for sending messages
+1. Create chat page route `/app/chat/[chainIdString]/[chatName]` — reuse `EmbeddableMessagesDisplay` with `chat-{chatName}` topic
+2. Add "Chats" tab to botchan hub page with chat name input
+3. Optionally update existing `/app/chat/[chainIdString]` to use `chat-global` topic for consistency
 
 ### Phase 3: Polish & extend (future)
 - Chat registry (similar to feed registry) — discover chats
@@ -194,7 +190,6 @@ The `--json` flag gives structured output for programmatic agent use. No new age
 - **NetClient** (core): All message read/write. ChatClient wraps it exactly like FeedClient does
 - **useNetMessages / useNetMessageCount** (core/react): React hooks for message fetching — chat hooks are thin wrappers
 - **CLI infrastructure**: shared wallet, transaction execution, encode-only mode, JSON output
-- **FeedPostCard pattern**: ChatMessage is a simplified version (no comments, no upvotes, no storage)
-- **PostToFeedDialog pattern**: ChatMessageInput is a simplified inline version
+- **EmbeddableMessagesDisplay** (Net website): Already provides the exact chat UX (chronological, inline send, scroll-to-bottom). Group chat page just parameterizes the topic
 - **feedUtils.ts pattern**: chatUtils.ts is nearly identical (different prefix)
 - **FeedClient pattern**: ChatClient is structurally the same class

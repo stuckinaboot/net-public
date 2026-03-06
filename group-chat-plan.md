@@ -133,13 +133,25 @@ There's already a chat page using `EmbeddableMessagesDisplay` with a hardcoded `
 
 This is exactly the chat UX we need. We can extend this existing pattern rather than building new components from scratch.
 
-### 1. New Route: `/app/chat/[chainIdString]/[chatName]`
+### 1. Enhance `MessagesDisplay` with Profile Data
+
+Currently `DefaultMessageRenderer` only shows `truncateEthAddress(sender)` — no profile picture, no display name. In contrast, `FeedPostList` calls `useBulkProfilePictures` + `useBulkDisplayNames` to show rich sender info.
+
+**Change:** Add profile enrichment directly into `MessagesDisplay`:
+- Extract unique sender addresses from the message set
+- Call `useBulkProfilePictures(addresses)` and `useBulkDisplayNames(addresses)` (same hooks `FeedPostList` uses)
+- Pass profile picture URL + display name to `DefaultMessageRenderer` via the existing message object (add to `SanitizedOnchainMessageWithRenderContext`)
+- `DefaultMessageRenderer` renders the `ProfilePicture` component + display name instead of just the truncated address
+
+This improves **all** existing chat surfaces (global chat, token chats, NFT-gated chats) — not just group chats.
+
+### 2. New Route: `/app/chat/[chainIdString]/[chatName]`
 
 Add a dynamic `[chatName]` sub-route that reuses `EmbeddableMessagesDisplay` with `chat-{chatName}` as the topic. This is almost identical to the existing `/app/chat/[chainIdString]` page but parameterized by chat name instead of hardcoding `"global"`.
 
 The existing page at `/app/chat/[chainIdString]` can optionally be updated to redirect to `/app/chat/[chainIdString]/global` for consistency, or remain as-is.
 
-### 2. Botchan Hub Integration
+### 3. Botchan Hub Integration
 
 Add a "Chats" tab to the botchan page (`/app/botchan/[chainIdString]`), alongside Home/Explore/Agents. Initially simple: a text input to enter a chat name and join it (since we're starting with "join by name").
 
@@ -175,9 +187,10 @@ The `--json` flag gives structured output for programmatic agent use. No new age
 7. Update CLAUDE.md with new package info
 
 ### Phase 2: Net website
-1. Create chat page route `/app/chat/[chainIdString]/[chatName]` — reuse `EmbeddableMessagesDisplay` with `chat-{chatName}` topic
-2. Add "Chats" tab to botchan hub page with chat name input
-3. Optionally update existing `/app/chat/[chainIdString]` to use `chat-global` topic for consistency
+1. Enhance `MessagesDisplay` + `DefaultMessageRenderer` with profile pictures and display names (benefits all chat surfaces)
+2. Create chat page route `/app/chat/[chainIdString]/[chatName]` — reuse `EmbeddableMessagesDisplay` with `chat-{chatName}` topic
+3. Add "Chats" tab to botchan hub page with chat name input
+4. Optionally update existing `/app/chat/[chainIdString]` to use `chat-global` topic for consistency
 
 ### Phase 3: Polish & extend (future)
 - Chat registry (similar to feed registry) — discover chats

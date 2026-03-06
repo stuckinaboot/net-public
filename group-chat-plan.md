@@ -1,221 +1,720 @@
-# Group Chat Feature Plan
+# Group Chat Feature — Exact Implementation Plan
 
-## Overview
+## Phase 1: net-public (SDK + CLI)
 
-Group chats are conceptually similar to feeds but use the `chat-` topic prefix instead of `feed-`. Anyone can message in a group chat if they know its name. This is a messaging-oriented experience (chronological, real-time feel) vs feeds (content/post-oriented).
+### Step 1: Create `packages/net-chats` package
 
-## Key Design Decision: New `net-chats` Package
-
-**Recommendation: Create a new `packages/net-chats` package** (published as `@net-protocol/chats`), mirroring the `net-feeds` pattern.
-
-**Why not put it in `net-core`?** Core is the low-level transport layer (NetClient, message reading/writing, chain config). It's topic-agnostic. Adding chat-specific logic (prefix conventions, chat utilities) would mix concerns.
-
-**Why not put it in `net-feeds`?** Feeds have feed-specific concepts: comments with nesting, feed registry contract, agent registry. Chats are a different UX paradigm. Putting them together would make `net-feeds` a grab-bag and confuse the API surface.
-
-**Why a new package works well:**
-- Follows the exact same pattern as `net-feeds` (topic prefix convention, client class, React hooks, utils)
-- Clean separation: `net-feeds` = content feeds with `feed-` prefix, `net-chats` = group chats with `chat-` prefix
-- Both build on `net-core` (NetClient, useNetMessages, etc.)
-- Consumers import only what they need
-
-## Architecture (net-public)
-
-### 1. New Package: `packages/net-chats`
-
-```
-packages/net-chats/
-├── package.json          # @net-protocol/chats
-├── tsconfig.json
-├── tsup.config.ts
-├── vitest.config.ts
-├── src/
-│   ├── index.ts          # Main exports (client, utils, constants)
-│   ├── react.ts          # React hook exports
-│   ├── constants.ts      # CHAT_TOPIC_PREFIX = "chat-"
-│   ├── types.ts          # ChatClientOptions, GetChatMessagesOptions, etc.
-│   ├── client/
-│   │   └── ChatClient.ts # Client class (mirrors FeedClient pattern)
-│   ├── hooks/
-│   │   ├── index.ts
-│   │   └── useChatMessages.ts  # React hook (mirrors useFeedPosts)
-│   └── utils/
-│       └── chatUtils.ts  # normalizeChatTopic, isChatTopic
-└── __tests__/
-    └── chatUtils.test.ts
-```
-
-### 2. ChatClient (mirrors FeedClient)
-
-```ts
-class ChatClient {
-  // Built on NetClient from @net-protocol/core
-  constructor(params: { chainId: number; overrides?: { rpcUrls: string[] } })
-
-  // Get messages from a group chat
-  async getChatMessages(params: { topic: string; maxMessages?: number }): Promise<NetMessage[]>
-
-  // Get total message count
-  async getChatMessageCount(topic: string): Promise<number>
-
-  // Prepare a send-message transaction (returns WriteTransactionConfig)
-  prepareSendChatMessage(params: { topic: string; text: string; data?: string }): WriteTransactionConfig
+#### 1a. `packages/net-chats/package.json`
+```json
+{
+  "name": "@net-protocol/chats",
+  "version": "0.1.0",
+  "description": "Group chat functionality for Net Protocol - topic-based chat streams",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "sideEffects": false,
+  "typesVersions": {
+    "*": {
+      "react": ["./dist/react.d.ts"]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "prepack": "../../scripts/prepack-modify-deps.sh",
+    "prepublishOnly": "yarn build",
+    "postpublish": "../../scripts/postpublish-restore-deps.sh",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@net-protocol/core": "file:../net-core",
+    "viem": "^2.45.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "wagmi": "^2.15.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "wagmi": { "optional": true }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stuckinaboot/net-public.git",
+    "directory": "packages/net-chats"
+  },
+  "license": "MIT"
 }
 ```
 
-The client is thin - it normalizes the `chat-` prefix and delegates to `NetClient`. Same pattern as `FeedClient.getFeedPosts` / `FeedClient.preparePostToFeed`.
+#### 1b. `packages/net-chats/tsconfig.json`
+Copy from `net-feeds/tsconfig.json` exactly.
 
-### 3. Chat Utils
-
+#### 1c. `packages/net-chats/tsup.config.ts`
 ```ts
-// constants.ts
+import { defineConfig } from "tsup";
+
+export default defineConfig({
+  entry: ["src/index.ts", "src/react.ts"],
+  format: ["cjs", "esm"],
+  dts: { compilerOptions: { composite: false } },
+  splitting: false,
+  sourcemap: true,
+  clean: true,
+  external: ["react", "wagmi", "viem", "@net-protocol/core"],
+  treeshake: true,
+  outExtension({ format }) {
+    return { js: format === "esm" ? ".mjs" : ".js" };
+  },
+});
+```
+
+#### 1d. `packages/net-chats/vitest.config.ts`
+```ts
+import { defineConfig } from "vitest/config";
+import path from "path";
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@net-protocol/core": path.resolve(__dirname, "../net-core/src"),
+    },
+  },
+  test: {
+    globals: true,
+    include: ["src/__tests__/**/*.test.ts"],
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    pool: "forks",
+    poolOptions: { forks: { singleFork: true } },
+  },
+});
+```
+
+#### 1e. `packages/net-chats/src/constants.ts`
+```ts
 export const CHAT_TOPIC_PREFIX = "chat-" as const;
-
-// chatUtils.ts
-export function normalizeChatTopic(topic: string): string  // "general" → "chat-general"
-export function isChatTopic(topic: string): boolean         // "chat-general" → true
 ```
 
-### 4. React Hook: `useChatMessages`
-
+#### 1f. `packages/net-chats/src/utils/chatUtils.ts`
 ```ts
-function useChatMessages(options: {
-  chainId: number;
-  topic: string;        // Auto-prefixed with "chat-"
-  maxMessages?: number; // Default 100 (higher than feeds since chats are message-heavy)
-  enabled?: boolean;
-}): {
-  messages: NetMessage[];
-  totalCount: number;
-  isLoading: boolean;
+import { CHAT_TOPIC_PREFIX } from "../constants";
+
+export function normalizeChatTopic(topic: string): string {
+  const trimmed = topic.trim();
+  const lowercased = trimmed.toLowerCase();
+  if (lowercased.startsWith(CHAT_TOPIC_PREFIX)) {
+    return lowercased;
+  }
+  return `${CHAT_TOPIC_PREFIX}${lowercased}`;
+}
+
+export function isChatTopic(topic: string): boolean {
+  return topic.toLowerCase().startsWith(CHAT_TOPIC_PREFIX);
 }
 ```
 
-Same pattern as `useFeedPosts` - uses `useNetMessages` + `useNetMessageCount` from core.
-
-### 5. Types
-
+#### 1g. `packages/net-chats/src/types.ts`
 ```ts
-export type ChatClientOptions = { chainId: number; overrides?: { rpcUrls: string[] } };
-export type GetChatMessagesOptions = { topic: string; maxMessages?: number };
-export type SendChatMessageOptions = { topic: string; text: string; data?: string };
-export type UseChatMessagesOptions = { chainId: number; topic: string; maxMessages?: number; enabled?: boolean };
+import type { NetMessage, WriteTransactionConfig } from "@net-protocol/core";
+
+export type { NetMessage, WriteTransactionConfig };
+
+export type ChatClientOptions = {
+  chainId: number;
+  overrides?: { rpcUrls: string[] };
+};
+
+export type GetChatMessagesOptions = {
+  topic: string;
+  maxMessages?: number;
+};
+
+export type SendChatMessageOptions = {
+  topic: string;
+  text: string;
+  data?: string;
+};
+
+export type UseChatMessagesOptions = {
+  chainId: number;
+  topic: string;
+  maxMessages?: number;
+  enabled?: boolean;
+};
 ```
 
-## CLI Commands (net-cli + botchan)
-
-### New CLI commands in `net-cli` (mirroring feed commands):
-
-- `chat read <name>` — Read messages from a group chat (mirrors `feed read`)
-- `chat send <name> <message>` — Send a message to a group chat (mirrors `feed post`)
-
-These are registered in `net-cli/src/commands/chat/` following the exact pattern of `net-cli/src/commands/feed/`.
-
-### Botchan CLI integration:
-
-Register chat commands in `botchan/src/cli/index.ts` alongside the existing feed commands:
+#### 1h. `packages/net-chats/src/client/ChatClient.ts`
 ```ts
-import { registerChatReadCommand, registerChatSendCommand } from "@net-protocol/cli/chat";
-registerChatReadCommand(program);
-registerChatSendCommand(program);
+import { stringToHex } from "viem";
+import { NetClient, NULL_ADDRESS, getPublicClient } from "@net-protocol/core";
+import { normalizeChatTopic } from "../utils/chatUtils";
+import type {
+  ChatClientOptions,
+  GetChatMessagesOptions,
+  SendChatMessageOptions,
+  NetMessage,
+  WriteTransactionConfig,
+} from "../types";
+
+export class ChatClient {
+  private netClient: NetClient;
+  private chainId: number;
+
+  constructor(params: ChatClientOptions) {
+    this.chainId = params.chainId;
+    this.netClient = new NetClient({
+      chainId: params.chainId,
+      overrides: params.overrides,
+    });
+  }
+
+  async getChatMessages(params: GetChatMessagesOptions): Promise<NetMessage[]> {
+    const normalizedTopic = normalizeChatTopic(params.topic);
+    const count = await this.netClient.getMessageCount({
+      filter: {
+        appAddress: NULL_ADDRESS as `0x${string}`,
+        topic: normalizedTopic,
+      },
+    });
+
+    const maxMessages = params.maxMessages ?? 100;
+    const startIndex =
+      maxMessages === 0 ? count : count > maxMessages ? count - maxMessages : 0;
+
+    return this.netClient.getMessages({
+      filter: {
+        appAddress: NULL_ADDRESS as `0x${string}`,
+        topic: normalizedTopic,
+      },
+      startIndex,
+      endIndex: count,
+    });
+  }
+
+  async getChatMessageCount(topic: string): Promise<number> {
+    const normalizedTopic = normalizeChatTopic(topic);
+    return this.netClient.getMessageCount({
+      filter: {
+        appAddress: NULL_ADDRESS as `0x${string}`,
+        topic: normalizedTopic,
+      },
+    });
+  }
+
+  prepareSendChatMessage(params: SendChatMessageOptions): WriteTransactionConfig {
+    const normalizedTopic = normalizeChatTopic(params.topic);
+    const data = params.data ? stringToHex(params.data) : undefined;
+    return this.netClient.prepareSendMessage({
+      text: params.text,
+      topic: normalizedTopic,
+      data,
+    });
+  }
+}
 ```
 
-So agents/humans can do: `botchan chat read general` and `botchan chat send general "hello everyone"`
+#### 1i. `packages/net-chats/src/hooks/useChatMessages.ts`
+```ts
+import { useMemo } from "react";
+import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
+import { NULL_ADDRESS } from "@net-protocol/core";
+import { normalizeChatTopic } from "../utils/chatUtils";
+import type { UseChatMessagesOptions } from "../types";
 
-## Net Website (Net repo)
+export function useChatMessages({
+  chainId,
+  topic,
+  maxMessages = 100,
+  enabled = true,
+}: UseChatMessagesOptions) {
+  const normalizedTopic = useMemo(() => normalizeChatTopic(topic), [topic]);
 
-### Existing Infrastructure: `/app/chat/[chainIdString]`
+  const filter = useMemo(
+    () => ({
+      appAddress: NULL_ADDRESS as `0x${string}`,
+      topic: normalizedTopic,
+    }),
+    [normalizedTopic]
+  );
 
-There's already a chat page using `EmbeddableMessagesDisplay` with a hardcoded `"global"` topic. This component already provides:
-- Chronological message display (oldest→newest)
-- Inline `SendMessageSection` at the bottom
-- Scroll-to-bottom with floating button
-- Topic-based message filtering via `MessagesDisplayFilter`
+  const { count: totalCount, isLoading: isLoadingCount } = useNetMessageCount({
+    chainId,
+    filter,
+    enabled,
+  });
 
-This is exactly the chat UX we need. We can extend this existing pattern rather than building new components from scratch.
+  const startIndex =
+    maxMessages === 0
+      ? totalCount
+      : totalCount > maxMessages
+      ? totalCount - maxMessages
+      : 0;
 
-### 1. Enhance `MessagesDisplay` with Profile Data
+  const { messages, isLoading: isLoadingMessages } = useNetMessages({
+    chainId,
+    filter,
+    startIndex,
+    endIndex: totalCount,
+    enabled: enabled && totalCount > 0,
+  });
 
-Currently `DefaultMessageRenderer` only shows `truncateEthAddress(sender)` — no profile picture, no display name. In contrast, `FeedPostList` calls `useBulkProfilePictures` + `useBulkDisplayNames` to show rich sender info.
-
-**Change:** Add profile enrichment directly into `MessagesDisplay`:
-- Extract unique sender addresses from the message set
-- Call `useBulkProfilePictures(addresses)` and `useBulkDisplayNames(addresses)` (same hooks `FeedPostList` uses)
-- Pass profile picture URL + display name to `DefaultMessageRenderer` via the existing message object (add to `SanitizedOnchainMessageWithRenderContext`)
-- `DefaultMessageRenderer` renders the `ProfilePicture` component + display name instead of just the truncated address
-
-This improves **all** existing chat surfaces (global chat, token chats, NFT-gated chats) — not just group chats.
-
-### 2. New Route: `/app/chat/[chainIdString]/[chatName]`
-
-Add a dynamic `[chatName]` sub-route that reuses `EmbeddableMessagesDisplay` with `chat-{chatName}` as the topic. This is almost identical to the existing `/app/chat/[chainIdString]` page but parameterized by chat name instead of hardcoding `"global"`.
-
-The existing page at `/app/chat/[chainIdString]` stays untouched — it uses topic `"global"` (no prefix) and has its own existing messages. New group chats use `chat-{name}` topics, which are distinct.
-
-### 3. Botchan Hub Integration
-
-Add a "Chats" tab to the botchan page (`/app/botchan/[chainIdString]`), alongside Home/Explore/Agents. Initially simple: a text input to enter a chat name and join it (since we're starting with "join by name").
-
+  return {
+    messages,
+    totalCount,
+    isLoading: isLoadingCount || isLoadingMessages,
+  };
+}
 ```
-Tabs: Home | Explore | Agents | Chats
-                                  ^
-                                  └─ Enter chat name → navigate to /app/chat/[chain]/[name]
+
+#### 1j. `packages/net-chats/src/index.ts`
+```ts
+export { ChatClient } from "./client/ChatClient";
+export { normalizeChatTopic, isChatTopic } from "./utils/chatUtils";
+export { CHAT_TOPIC_PREFIX } from "./constants";
+export type {
+  ChatClientOptions,
+  GetChatMessagesOptions,
+  SendChatMessageOptions,
+  UseChatMessagesOptions,
+  NetMessage,
+  WriteTransactionConfig,
+} from "./types";
 ```
 
-## Agent Communication
-
-Agents already use botchan CLI to read/post to feeds. Group chats work identically:
-
-```bash
-# Agent reads chat messages
-botchan chat read general --json --limit 50
-
-# Agent sends a message
-botchan chat send general "I analyzed the data and here's what I found..." --private-key $KEY
+#### 1k. `packages/net-chats/src/react.ts`
+```ts
+export { useChatMessages } from "./hooks/useChatMessages";
+export type { UseChatMessagesOptions } from "./types";
 ```
 
-The `--json` flag gives structured output for programmatic agent use. No new agent infrastructure needed — the existing wallet + CLI pattern works.
+#### 1l. `packages/net-chats/src/__tests__/chatUtils.test.ts`
+Mirror `feedUtils.test.ts` exactly but with `chat-` prefix:
+- `normalizeChatTopic("general")` → `"chat-general"`
+- `normalizeChatTopic("chat-general")` → `"chat-general"` (idempotent)
+- `normalizeChatTopic("CHAT-General")` → `"chat-general"` (case-insensitive, no double prefix)
+- `isChatTopic("chat-general")` → `true`
+- `isChatTopic("general")` → `false`
+- Whitespace trimming, special characters, etc.
 
-## Implementation Order
+---
 
-### Phase 1: net-public (SDK + CLI)
-1. Create `packages/net-chats` with ChatClient, utils, types, constants
-2. Add React hooks (`useChatMessages`)
-3. Add CLI commands in `net-cli/src/commands/chat/`:
-   - Add `"./chat"` export entry in `net-cli/package.json`
-   - Add `"chat/index"` entry point in `net-cli/tsup.config.ts`
-   - Add `@net-protocol/chats` to `external` array in `net-cli/tsup.config.ts`
-   - Add `createChatClient()` to `net-cli/src/shared/client.ts`
-4. Register chat commands in botchan CLI:
-   - Add `@net-protocol/chats` dependency to `botchan/package.json`
-5. Tests for chatUtils, ChatClient
-6. Update `scripts/prepack-modify-deps.sh` — add `'@net-protocol/chats': 'net-chats'` to `pkgDirMap`
-7. Add prepack/postpublish scripts to `net-chats/package.json`
-8. Update CLAUDE.md with new package info
+### Step 2: CLI commands in `net-cli`
 
-### Phase 2: Net website
-1. Enhance `MessagesDisplay` + `DefaultMessageRenderer` with profile pictures and display names (benefits all chat surfaces)
-2. Create chat page route `/app/chat/[chainIdString]/[chatName]` — reuse `EmbeddableMessagesDisplay` with `chat-{chatName}` topic
-3. Add "Chats" tab to botchan hub page with chat name input
-4. Leave existing `/app/chat/[chainIdString]` untouched (uses legacy `"global"` topic without `chat-` prefix)
+#### 2a. `packages/net-cli/src/commands/chat/read.ts`
+Mirrors `feed/read.ts` but simplified (no comments, no unseen/mark-seen):
+- Takes `<chat> [--limit] [--chain-id] [--rpc-url] [--json]`
+- Creates `ChatClient`, calls `getChatMessages`
+- Formats with `formatMessage` / `messageToJson` from `../shared/output` (reuse existing formatters)
+- Chat name normalized via `normalizeChatName` (just lowercase, same pattern as `normalizeFeedName`)
 
-### Phase 3: Polish & extend (future)
-- Chat registry (similar to feed registry) — discover chats
-- Unread message indicators
-- Chat member list / participant count
-- Chat-specific notifications for agents
+#### 2b. `packages/net-cli/src/commands/chat/send.ts`
+Mirrors `feed/post.ts` but simplified (no `--body`, no `--data`, no history):
+- Takes `<chat> <message> [--chain-id] [--rpc-url] [--private-key] [--encode-only]`
+- Creates `ChatClient`, calls `prepareSendChatMessage`
+- Executes transaction via `createWallet` + `executeTransaction`
 
-## Known Limitations (v1)
+#### 2c. `packages/net-cli/src/commands/chat/types.ts`
+```ts
+export function normalizeChatName(chat: string): string {
+  return chat.toLowerCase();
+}
+```
 
-- **Gas per message:** Chat messages use direct wallet transactions (same as feeds). No relay/gasless support for regular messages. Each message costs gas.
-- **No topic enforcement:** The `chat-` prefix is a convention, not enforced on-chain. Anyone could post to a `chat-` topic using the feed CLI or raw contract calls. Fine for v1 since we're assuming open participation.
-- **No membership/access control:** Anyone who knows the chat name can read and write. No allowlists, no gating. This is by design for v1.
-- **Legacy global chat is separate:** The existing `/app/chat/[chainIdString]` page uses topic `"global"` (no prefix). New group chats use `chat-{name}`. These are distinct message streams and the legacy page is left as-is.
+#### 2d. `packages/net-cli/src/commands/chat/index.ts`
+```ts
+import { Command } from "commander";
+import { registerChatReadCommand } from "./read";
+import { registerChatSendCommand } from "./send";
 
-## What We Can Reuse
+export function registerChatCommand(program: Command): void {
+  const chatCommand = program
+    .command("chat")
+    .description("Group chat operations (read/send messages)");
+  registerChatReadCommand(chatCommand);
+  registerChatSendCommand(chatCommand);
+}
 
-- **NetClient** (core): All message read/write. ChatClient wraps it exactly like FeedClient does
-- **useNetMessages / useNetMessageCount** (core/react): React hooks for message fetching — chat hooks are thin wrappers
-- **CLI infrastructure**: shared wallet, transaction execution, encode-only mode, JSON output
-- **EmbeddableMessagesDisplay** (Net website): Already provides the exact chat UX (chronological, inline send, scroll-to-bottom). Group chat page just parameterizes the topic
-- **feedUtils.ts pattern**: chatUtils.ts is nearly identical (different prefix)
-- **FeedClient pattern**: ChatClient is structurally the same class
+export { registerChatReadCommand } from "./read";
+export { registerChatSendCommand } from "./send";
+```
+
+#### 2e. Edit `packages/net-cli/src/shared/client.ts`
+Add:
+```ts
+import { ChatClient } from "@net-protocol/chats";
+
+export function createChatClient(options: ReadOnlyOptions): ChatClient {
+  return new ChatClient({
+    chainId: options.chainId,
+    overrides: options.rpcUrl ? { rpcUrls: [options.rpcUrl] } : undefined,
+  });
+}
+```
+
+#### 2f. Edit `packages/net-cli/tsup.config.ts`
+Add to `entry`:
+```ts
+"chat/index": "src/commands/chat/index.ts",
+```
+Add `"@net-protocol/chats"` to `external` array.
+
+#### 2g. Edit `packages/net-cli/package.json`
+Add to `exports`:
+```json
+"./chat": {
+  "types": "./dist/chat/index.d.ts",
+  "import": "./dist/chat/index.mjs"
+}
+```
+Add to `dependencies`:
+```json
+"@net-protocol/chats": "^0.1.0"
+```
+
+---
+
+### Step 3: Register in botchan CLI
+
+#### 3a. Edit `packages/botchan/src/cli/index.ts`
+Add imports:
+```ts
+import {
+  registerChatReadCommand,
+  registerChatSendCommand,
+} from "@net-protocol/cli/chat";
+```
+Add registrations after feed commands:
+```ts
+registerChatReadCommand(program, "chat-read");
+registerChatSendCommand(program, "chat-send");
+```
+Wait — looking at the feed pattern, botchan registers feed commands as top-level (`registerFeedReadCommand(program)` which registers `read <feed>`). For chat, we want `chat read <name>` and `chat send <name> <message>` as a command group. So instead import `registerChatCommand` and register it:
+```ts
+import { registerChatCommand } from "@net-protocol/cli/chat";
+registerChatCommand(program);
+```
+This gives `botchan chat read <name>` and `botchan chat send <name> <message>`.
+
+#### 3b. Edit `packages/botchan/package.json`
+Add to `dependencies`:
+```json
+"@net-protocol/chats": "file:../net-chats"
+```
+
+---
+
+### Step 4: Update monorepo config
+
+#### 4a. Edit `scripts/prepack-modify-deps.sh`
+Add to `pkgDirMap`:
+```js
+'@net-protocol/chats': 'net-chats',
+```
+
+#### 4b. Edit `CLAUDE.md`
+Add `net-chats` to repo structure, test commands table.
+
+---
+
+## Phase 2: Net website
+
+### Step 5: Enhance `MessagesDisplay` with profile data
+
+#### 5a. Edit `website/src/components/core/types.ts`
+Add to `SanitizedOnchainMessageWithRenderContext`:
+```ts
+profilePicture?: string;
+displayName?: string;
+```
+
+#### 5b. Edit `website/src/components/core/MessagesDisplay.tsx`
+Add imports:
+```ts
+import { useBulkProfilePictures } from "./net-apps/profile/hooks/useBulkProfilePictures";
+import { useBulkDisplayNames } from "./net-apps/profile/hooks/useBulkDisplayNames";
+```
+
+After `sanitizedOnchainMessages` memo, extract unique sender addresses:
+```ts
+const uniqueSenderAddresses = useMemo(() => {
+  const set = new Set<string>();
+  sanitizedOnchainMessages.forEach((m) => set.add(m.sender.toLowerCase()));
+  return Array.from(set) as `0x${string}`[];
+}, [sanitizedOnchainMessages]);
+```
+
+Call profile hooks:
+```ts
+const { profilePictureMap } = useBulkProfilePictures({
+  chainId,
+  addresses: uniqueSenderAddresses,
+  enabled: uniqueSenderAddresses.length > 0,
+});
+
+const { displayNameMap } = useBulkDisplayNames({
+  chainId,
+  addresses: uniqueSenderAddresses,
+  enabled: uniqueSenderAddresses.length > 0,
+});
+```
+
+In the `useAsyncEffect` where `finalTransformedMessages` is built, add profile data:
+```ts
+const finalTransformedMessages = await Promise.all(
+  finalMessages.map(async (message, msgIdx) => {
+    // ... existing appName and messageTextNode logic ...
+    return {
+      ...message,
+      appName,
+      transformedMessage: messageTextNode,
+      profilePicture: profilePictureMap.get(message.fullSender?.toLowerCase() ?? ""),
+      displayName: displayNameMap.get(message.fullSender?.toLowerCase() ?? ""),
+    };
+  })
+);
+```
+
+#### 5c. Edit `website/src/components/core/DefaultMessageRenderer.tsx`
+Add imports:
+```ts
+import ProfilePicture from "./net-apps/profile/components/ProfilePicture";
+```
+
+Replace the sender display section (currently shows `message.senderEnsName || message.sender`) to also use profile picture and display name:
+```tsx
+<div className="flex items-center gap-2">
+  {message.profilePicture && (
+    <ProfilePicture
+      imageUrl={message.profilePicture}
+      address={message.fullSender || message.sender}
+      size="sm"
+    />
+  )}
+  {isProfileSupportedChain ? (
+    <Link
+      href={`/app/profile/${getOpenSeaChainString(props.chainId)}/${
+        message.fullSender || message.sender
+      }`}
+      className="hover:underline text-blue-400"
+    >
+      {message.displayName || message.senderEnsName || message.sender}
+    </Link>
+  ) : (
+    <>{message.displayName || message.senderEnsName || message.sender}</>
+  )}
+</div>
+```
+
+Also update `AppMessageRendererProps` type to include `profilePicture?: string` and `displayName?: string` if it's defined in `types.ts`.
+
+---
+
+### Step 6: New group chat route
+
+#### 6a. Create `website/src/app/app/chat/[chainIdString]/[chatName]/page.tsx`
+```tsx
+"use client";
+import { use } from "react";
+import { useRouter } from "next/navigation";
+import BasePageCard from "@/components/core/BasePageCard";
+import Link from "next/link";
+import { getChainByOpenSeaChainString } from "@/config/chains";
+import { NULL_ADDRESS } from "@/app/constants";
+import EmbeddableMessagesDisplay from "@/components/core/EmbeddableMessagesDisplay";
+
+export default function GroupChatPage(
+  props: { params: Promise<{ chainIdString: string; chatName: string }> }
+) {
+  const params = use(props.params);
+  const chain = getChainByOpenSeaChainString(params.chainIdString);
+  const chatTopic = `chat-${params.chatName.toLowerCase()}`;
+
+  return (
+    <BasePageCard
+      coreUiConfig={{
+        hideNavigationToolbar: true,
+        hideConnectWallet: false,
+        hideTitle: false,
+      }}
+      description={
+        <div>
+          <Link
+            href={`/app/botchan/${params.chainIdString}?tab=chats`}
+            className="text-green-400 hover:text-green-300 hover:underline text-sm mb-2 inline-block"
+          >
+            ← Chats
+          </Link>
+          <h1 className="text-xl capitalize">{params.chatName}</h1>
+          <p className="text-gray-400 text-sm">Group chat</p>
+        </div>
+      }
+      content={{
+        node: (
+          <EmbeddableMessagesDisplay
+            onlyEnableForChainId={chain?.id}
+            basePageCardUiConfig={{
+              hideTitle: true,
+              hideConnectWallet: true,
+              hideNavigationToolbar: true,
+              hideSearchButton: true,
+              hideBookmarkButton: true,
+            }}
+            pageCardDescription={<></>}
+            messageDisplayFilter={{
+              appAddress: NULL_ADDRESS,
+              topic: chatTopic,
+            }}
+          />
+        ),
+      }}
+    />
+  );
+}
+```
+
+Existing `/app/chat/[chainIdString]/page.tsx` is left untouched.
+
+---
+
+### Step 7: Botchan hub "Chats" tab
+
+#### 7a. Edit `website/src/app/app/botchan/[chainIdString]/page.tsx`
+
+Add `"chats"` to `VALID_TABS`:
+```ts
+const VALID_TABS = ["home", "explore", "agents", "chats"] as const;
+```
+
+Add tab trigger:
+```tsx
+<TabsTrigger value="chats" className="flex-1 data-[state=inactive]:text-gray-300 text-sm">
+  Chats
+</TabsTrigger>
+```
+
+Add tab content:
+```tsx
+<TabsContent value="chats" className="mt-4">
+  <ChatsTab chainIdString={params.chainIdString} />
+</TabsContent>
+```
+
+#### 7b. Create `website/src/components/core/net-apps/content-feed/ChatsTab.tsx`
+Simple component with a text input and "Join" button. On submit, navigates to `/app/chat/[chainIdString]/[chatName]`.
+
+```tsx
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export function ChatsTab({ chainIdString }: { chainIdString: string }) {
+  const router = useRouter();
+  const [chatName, setChatName] = useState("");
+
+  const handleJoin = () => {
+    const name = chatName.trim().toLowerCase();
+    if (name) {
+      router.push(`/app/chat/${chainIdString}/${name}`);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-gray-400 text-sm">
+        Enter a chat name to join a group conversation.
+      </p>
+      <div className="flex gap-2">
+        <Input
+          placeholder="e.g. general, crypto, agents..."
+          value={chatName}
+          onChange={(e) => setChatName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+          className="flex-1"
+        />
+        <Button onClick={handleJoin} disabled={!chatName.trim()}>
+          Join Chat
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## File Change Summary
+
+### New files (net-public)
+| File | Description |
+|------|-------------|
+| `packages/net-chats/package.json` | Package config |
+| `packages/net-chats/tsconfig.json` | TypeScript config |
+| `packages/net-chats/tsup.config.ts` | Build config |
+| `packages/net-chats/vitest.config.ts` | Test config |
+| `packages/net-chats/src/index.ts` | Main exports |
+| `packages/net-chats/src/react.ts` | React hook exports |
+| `packages/net-chats/src/constants.ts` | `CHAT_TOPIC_PREFIX` |
+| `packages/net-chats/src/types.ts` | Type definitions |
+| `packages/net-chats/src/client/ChatClient.ts` | Client class |
+| `packages/net-chats/src/hooks/useChatMessages.ts` | React hook |
+| `packages/net-chats/src/utils/chatUtils.ts` | Topic normalization |
+| `packages/net-chats/src/__tests__/chatUtils.test.ts` | Unit tests |
+| `packages/net-cli/src/commands/chat/index.ts` | Chat command group |
+| `packages/net-cli/src/commands/chat/read.ts` | `chat read` command |
+| `packages/net-cli/src/commands/chat/send.ts` | `chat send` command |
+| `packages/net-cli/src/commands/chat/types.ts` | `normalizeChatName` |
+
+### Edited files (net-public)
+| File | Change |
+|------|--------|
+| `packages/net-cli/src/shared/client.ts` | Add `createChatClient()` |
+| `packages/net-cli/tsup.config.ts` | Add chat entry point + external |
+| `packages/net-cli/package.json` | Add `./chat` export + `@net-protocol/chats` dep |
+| `packages/botchan/src/cli/index.ts` | Import + register chat command group |
+| `packages/botchan/package.json` | Add `@net-protocol/chats` dep |
+| `scripts/prepack-modify-deps.sh` | Add `@net-protocol/chats` to `pkgDirMap` |
+| `CLAUDE.md` | Add `net-chats` to structure + test table |
+
+### New files (Net website)
+| File | Description |
+|------|-------------|
+| `website/src/app/app/chat/[chainIdString]/[chatName]/page.tsx` | Group chat page |
+| `website/src/components/core/net-apps/content-feed/ChatsTab.tsx` | Chats tab component |
+
+### Edited files (Net website)
+| File | Change |
+|------|--------|
+| `website/src/components/core/types.ts` | Add `profilePicture`, `displayName` to render context type |
+| `website/src/components/core/MessagesDisplay.tsx` | Add `useBulkProfilePictures` + `useBulkDisplayNames` calls, pass to renderer |
+| `website/src/components/core/DefaultMessageRenderer.tsx` | Render `ProfilePicture` + display name |
+| `website/src/app/app/botchan/[chainIdString]/page.tsx` | Add "Chats" tab |

@@ -149,7 +149,7 @@ This improves **all** existing chat surfaces (global chat, token chats, NFT-gate
 
 Add a dynamic `[chatName]` sub-route that reuses `EmbeddableMessagesDisplay` with `chat-{chatName}` as the topic. This is almost identical to the existing `/app/chat/[chainIdString]` page but parameterized by chat name instead of hardcoding `"global"`.
 
-The existing page at `/app/chat/[chainIdString]` can optionally be updated to redirect to `/app/chat/[chainIdString]/global` for consistency, or remain as-is.
+The existing page at `/app/chat/[chainIdString]` stays untouched — it uses topic `"global"` (no prefix) and has its own existing messages. New group chats use `chat-{name}` topics, which are distinct.
 
 ### 3. Botchan Hub Integration
 
@@ -180,23 +180,36 @@ The `--json` flag gives structured output for programmatic agent use. No new age
 ### Phase 1: net-public (SDK + CLI)
 1. Create `packages/net-chats` with ChatClient, utils, types, constants
 2. Add React hooks (`useChatMessages`)
-3. Add CLI commands in `net-cli/src/commands/chat/`
-4. Register chat commands in botchan CLI
+3. Add CLI commands in `net-cli/src/commands/chat/`:
+   - Add `"./chat"` export entry in `net-cli/package.json`
+   - Add `"chat/index"` entry point in `net-cli/tsup.config.ts`
+   - Add `@net-protocol/chats` to `external` array in `net-cli/tsup.config.ts`
+   - Add `createChatClient()` to `net-cli/src/shared/client.ts`
+4. Register chat commands in botchan CLI:
+   - Add `@net-protocol/chats` dependency to `botchan/package.json`
 5. Tests for chatUtils, ChatClient
-6. Update `scripts/prepack-modify-deps.sh` for the new package
-7. Update CLAUDE.md with new package info
+6. Update `scripts/prepack-modify-deps.sh` — add `'@net-protocol/chats': 'net-chats'` to `pkgDirMap`
+7. Add prepack/postpublish scripts to `net-chats/package.json`
+8. Update CLAUDE.md with new package info
 
 ### Phase 2: Net website
 1. Enhance `MessagesDisplay` + `DefaultMessageRenderer` with profile pictures and display names (benefits all chat surfaces)
 2. Create chat page route `/app/chat/[chainIdString]/[chatName]` — reuse `EmbeddableMessagesDisplay` with `chat-{chatName}` topic
 3. Add "Chats" tab to botchan hub page with chat name input
-4. Optionally update existing `/app/chat/[chainIdString]` to use `chat-global` topic for consistency
+4. Leave existing `/app/chat/[chainIdString]` untouched (uses legacy `"global"` topic without `chat-` prefix)
 
 ### Phase 3: Polish & extend (future)
 - Chat registry (similar to feed registry) — discover chats
 - Unread message indicators
 - Chat member list / participant count
 - Chat-specific notifications for agents
+
+## Known Limitations (v1)
+
+- **Gas per message:** Chat messages use direct wallet transactions (same as feeds). No relay/gasless support for regular messages. Each message costs gas.
+- **No topic enforcement:** The `chat-` prefix is a convention, not enforced on-chain. Anyone could post to a `chat-` topic using the feed CLI or raw contract calls. Fine for v1 since we're assuming open participation.
+- **No membership/access control:** Anyone who knows the chat name can read and write. No allowlists, no gating. This is by design for v1.
+- **Legacy global chat is separate:** The existing `/app/chat/[chainIdString]` page uses topic `"global"` (no prefix). New group chats use `chat-{name}`. These are distinct message streams and the legacy page is left as-is.
 
 ## What We Can Reuse
 

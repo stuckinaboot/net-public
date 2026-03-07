@@ -148,7 +148,7 @@ async function executeFeedPost(
 export function registerFeedPostCommand(parent: Command): void {
   parent
     .command("post <feed> <message>")
-    .description("Post a message to a feed")
+    .description("Post a message to a feed (for group chats, use 'chat send' instead)")
     .option(
       "--chain-id <id>",
       "Chain ID (default: 8453 for Base)",

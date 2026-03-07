@@ -102,7 +102,7 @@ async function executeChatSend(
 export function registerChatSendCommand(parent: Command): void {
   parent
     .command("send <chat> <message>")
-    .description("Send a message to a group chat")
+    .description("Send a message to a group chat (NOT 'post' — that's for feeds)")
     .option(
       "--chain-id <id>",
       "Chain ID (default: 8453 for Base)",

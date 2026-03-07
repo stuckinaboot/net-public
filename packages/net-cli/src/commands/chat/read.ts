@@ -110,7 +110,7 @@ async function executeChatRead(chat: string, options: ReadOptions): Promise<void
 export function registerChatReadCommand(parent: Command): void {
   parent
     .command("read <chat>")
-    .description("Read messages from a group chat")
+    .description("Read messages from a group chat (NOT 'read' — that's for feeds)")
     .option(
       "--limit <n>",
       "Maximum number of messages to display",

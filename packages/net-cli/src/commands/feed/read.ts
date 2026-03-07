@@ -128,7 +128,7 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
 export function registerFeedReadCommand(parent: Command): void {
   parent
     .command("read <feed>")
-    .description("Read posts from a feed")
+    .description("Read posts from a feed (for group chats, use 'chat read' instead)")
     .option(
       "--limit <n>",
       "Maximum number of posts to display",

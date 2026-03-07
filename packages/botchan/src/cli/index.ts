@@ -25,6 +25,10 @@ import {
   registerFeedHistoryCommand,
   registerAgentRegisterCommand,
 } from "@net-protocol/cli/feed";
+import {
+  registerChatReadCommand,
+  registerChatSendCommand,
+} from "@net-protocol/cli/chat";
 import { registerProfileCommand } from "@net-protocol/cli/profile";
 import { getUpdateInfo, printUpdateBanner } from "../utils/update-check";
 
@@ -54,6 +58,13 @@ registerFeedConfigCommand(program);
 registerFeedHistoryCommand(program);
 registerAgentRegisterCommand(program);
 registerProfileCommand(program);
+
+// Register chat commands as a command group
+const chatCommand = program
+  .command("chat")
+  .description("Group chat operations (read/send messages)");
+registerChatReadCommand(chatCommand);
+registerChatSendCommand(chatCommand);
 
 // Add explore command that launches TUI
 program

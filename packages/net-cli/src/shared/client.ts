@@ -1,4 +1,5 @@
 import { FeedClient, FeedRegistryClient, AgentRegistryClient } from "@net-protocol/feeds";
+import { ChatClient } from "@net-protocol/chats";
 import { NetClient } from "@net-protocol/core";
 import { StorageClient } from "@net-protocol/storage";
 import type { ReadOnlyOptions } from "./types";
@@ -20,6 +21,16 @@ export function createFeedRegistryClient(
   options: ReadOnlyOptions
 ): FeedRegistryClient {
   return new FeedRegistryClient({
+    chainId: options.chainId,
+    overrides: options.rpcUrl ? { rpcUrls: [options.rpcUrl] } : undefined,
+  });
+}
+
+/**
+ * Create a ChatClient from read-only options
+ */
+export function createChatClient(options: ReadOnlyOptions): ChatClient {
+  return new ChatClient({
     chainId: options.chainId,
     overrides: options.rpcUrl ? { rpcUrls: [options.rpcUrl] } : undefined,
   });

@@ -1,0 +1,22 @@
+import { defineConfig } from "vitest/config";
+import path from "path";
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@net-protocol/core": path.resolve(__dirname, "../net-core/src"),
+    },
+  },
+  test: {
+    globals: true,
+    include: ["src/__tests__/**/*.test.ts"],
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+  },
+});

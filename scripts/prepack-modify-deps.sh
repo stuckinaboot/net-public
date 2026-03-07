@@ -57,6 +57,7 @@ if [[ "$HAS_FILE_DEPS" == "true" ]]; then
       '@net-protocol/netr': 'net-netr',
       '@net-protocol/profiles': 'net-profiles',
       '@net-protocol/bazaar': 'net-bazaar',
+      '@net-protocol/chats': 'net-chats',
       '@net-protocol/cli': 'net-cli',
       '@net-protocol/score': 'net-score'
     };

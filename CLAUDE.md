@@ -19,6 +19,7 @@ net-public/
 ├── packages/
 │   ├── net-core/           # Core client library
 │   ├── net-feeds/          # Feed/post utilities
+│   ├── net-chats/          # Group chat utilities
 │   ├── net-cli/            # CLI tools (includes feed commands)
 │   ├── net-netr/           # Netr utilities
 │   ├── net-profiles/       # User profile utilities
@@ -84,6 +85,7 @@ cd examples/basic-app && yarn test:run
 | `examples/basic-app` | `yarn test:run` | `yarn test:e2e` |
 | `packages/net-core` | `yarn test` | - |
 | `packages/net-feeds` | `yarn test` | - |
+| `packages/net-chats` | `yarn test` | - |
 | `packages/net-cli` | `yarn test` | - |
 | `packages/net-netr` | `yarn test` | - |
 | `packages/net-profiles` | `yarn test` | - |

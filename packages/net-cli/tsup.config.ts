@@ -12,6 +12,7 @@ export default defineConfig({
   dts: {
     compilerOptions: {
       composite: false,
+      rootDir: "..",
     },
   },
   splitting: false,

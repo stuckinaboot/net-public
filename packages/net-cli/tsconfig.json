@@ -13,7 +13,8 @@
       "@net-protocol/relay": ["../net-relay/src"],
       "@net-protocol/netr": ["../net-netr/src"],
       "@net-protocol/bazaar": ["../net-bazaar/src"],
-      "@net-protocol/score": ["../net-score"]
+      "@net-protocol/chats": ["../net-chats/src"],
+      "@net-protocol/score": ["../net-score/src"]
     },
     "outDir": "./dist",
     "rootDir": "./src",

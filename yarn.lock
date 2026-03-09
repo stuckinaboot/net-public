@@ -1242,9 +1242,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/chats@file:../net-chats::locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3De2d8d6%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan":
+"@net-protocol/chats@file:../net-chats::locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3D1fa925%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan":
   version: 0.1.0
-  resolution: "@net-protocol/chats@file:../net-chats#../net-chats::hash=aa0c04&locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3De2d8d6%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan"
+  resolution: "@net-protocol/chats@file:../net-chats#../net-chats::hash=aa0c04&locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3D1fa925%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     viem: "npm:^2.45.0"
@@ -1318,8 +1318,8 @@ __metadata:
   linkType: soft
 
 "@net-protocol/cli@file:../net-cli::locator=botchan%40workspace%3Apackages%2Fbotchan":
-  version: 0.1.36
-  resolution: "@net-protocol/cli@file:../net-cli#../net-cli::hash=e2d8d6&locator=botchan%40workspace%3Apackages%2Fbotchan"
+  version: 0.1.37
+  resolution: "@net-protocol/cli@file:../net-cli#../net-cli::hash=1fa925&locator=botchan%40workspace%3Apackages%2Fbotchan"
   dependencies:
     "@net-protocol/bazaar": "npm:^0.1.12"
     "@net-protocol/chats": "file:../net-chats"
@@ -1339,7 +1339,7 @@ __metadata:
     viem: "npm:^2.45.0"
   bin:
     netp: ./dist/cli/index.mjs
-  checksum: 4e51c4847b281e2c3bc7b7329650c4a5406cbd5c5ad101b4a14bc8d186c44f101a20a222bbd5810c4a0a126b983bc1c3c066d9c1eb372023fe8c6cbea3249bf5
+  checksum: 2b358faf1589c5a41d3ebe23fc021cce61923f3ffd441af7d91c4f69a0502139610ba2f70c800dec2da405ee5ef9dae06e99bb6d782f38dc9ecfd9711f74bdba
   languageName: node
   linkType: hard
 
@@ -1374,9 +1374,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fchats%40file%3A..%2Fnet-chats%23..%2Fnet-chats%3A%3Ahash%3Daa0c04%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253De2d8d6%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fchats%40file%3A..%2Fnet-chats%23..%2Fnet-chats%3A%3Ahash%3Daa0c04%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253D1fa925%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan":
   version: 0.1.9
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=a95f40&locator=%40net-protocol%2Fchats%40file%3A..%2Fnet-chats%23..%2Fnet-chats%3A%3Ahash%3Daa0c04%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253De2d8d6%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=a95f40&locator=%40net-protocol%2Fchats%40file%3A..%2Fnet-chats%23..%2Fnet-chats%3A%3Ahash%3Daa0c04%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253D1fa925%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan"
   dependencies:
     ox: "npm:^0.13.2"
     viem: "npm:^2.45.0"
@@ -1536,9 +1536,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253De2d8d6%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253D1fa925%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan":
   version: 0.1.9
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=a95f40&locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253De2d8d6%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=a95f40&locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253D1fa925%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan"
   dependencies:
     ox: "npm:^0.13.2"
     viem: "npm:^2.45.0"
@@ -1626,9 +1626,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3Dd3c8b3%26locator%3D%2540net-protocol%252Fscore%2540file%253A..%252Fnet-score%2523..%252Fnet-score%253A%253Ahash%253D9170b4%2526locator%253D%252540net-protocol%25252Fcli%252540file%25253A..%25252Fnet-cli%252523..%25252Fnet-cli%25253A%25253Ahash%25253De2d8d6%252526locator%25253Dbotchan%25252540workspace%2525253Apackages%2525252Fbotchan":
+"@net-protocol/core@file:../net-core::locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3Dd3c8b3%26locator%3D%2540net-protocol%252Fscore%2540file%253A..%252Fnet-score%2523..%252Fnet-score%253A%253Ahash%253D9170b4%2526locator%253D%252540net-protocol%25252Fcli%252540file%25253A..%25252Fnet-cli%252523..%25252Fnet-cli%25253A%25253Ahash%25253D1fa925%252526locator%25253Dbotchan%25252540workspace%2525253Apackages%2525252Fbotchan":
   version: 0.1.9
-  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=a95f40&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3Dd3c8b3%26locator%3D%2540net-protocol%252Fscore%2540file%253A..%252Fnet-score%2523..%252Fnet-score%253A%253Ahash%253D9170b4%2526locator%253D%252540net-protocol%25252Fcli%252540file%25253A..%25252Fnet-cli%252523..%25252Fnet-cli%25253A%25253Ahash%25253De2d8d6%252526locator%25253Dbotchan%25252540workspace%2525253Apackages%2525252Fbotchan"
+  resolution: "@net-protocol/core@file:../net-core#../net-core::hash=a95f40&locator=%40net-protocol%2Fstorage%40file%3A..%2Fnet-storage%23..%2Fnet-storage%3A%3Ahash%3Dd3c8b3%26locator%3D%2540net-protocol%252Fscore%2540file%253A..%252Fnet-score%2523..%252Fnet-score%253A%253Ahash%253D9170b4%2526locator%253D%252540net-protocol%25252Fcli%252540file%25253A..%25252Fnet-cli%252523..%25252Fnet-cli%25253A%25253Ahash%25253D1fa925%252526locator%25253Dbotchan%25252540workspace%2525253Apackages%2525252Fbotchan"
   dependencies:
     ox: "npm:^0.13.2"
     viem: "npm:^2.45.0"
@@ -1854,9 +1854,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/score@file:../net-score::locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3De2d8d6%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan":
+"@net-protocol/score@file:../net-score::locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3D1fa925%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan":
   version: 0.1.4
-  resolution: "@net-protocol/score@file:../net-score#../net-score::hash=9170b4&locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3De2d8d6%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan"
+  resolution: "@net-protocol/score@file:../net-score#../net-score::hash=9170b4&locator=%40net-protocol%2Fcli%40file%3A..%2Fnet-cli%23..%2Fnet-cli%3A%3Ahash%3D1fa925%26locator%3Dbotchan%2540workspace%253Apackages%252Fbotchan"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     "@net-protocol/storage": "file:../net-storage"
@@ -1970,9 +1970,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253De2d8d6%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan":
+"@net-protocol/storage@file:../net-storage::locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253D1fa925%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan":
   version: 0.1.14
-  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=d3c8b3&locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253De2d8d6%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan"
+  resolution: "@net-protocol/storage@file:../net-storage#../net-storage::hash=d3c8b3&locator=%40net-protocol%2Fscore%40file%3A..%2Fnet-score%23..%2Fnet-score%3A%3Ahash%3D9170b4%26locator%3D%2540net-protocol%252Fcli%2540file%253A..%252Fnet-cli%2523..%252Fnet-cli%253A%253Ahash%253D1fa925%2526locator%253Dbotchan%252540workspace%25253Apackages%25252Fbotchan"
   dependencies:
     "@net-protocol/core": "file:../net-core"
     pako: "npm:^2.1.0"

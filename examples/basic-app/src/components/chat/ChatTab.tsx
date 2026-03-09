@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TopicSelector } from "./TopicSelector";
+import { FeaturedChats } from "./FeaturedChats";
 import { MessageList } from "./MessageList";
 import { SendMessage } from "./SendMessage";
 import { useWalletRequirement } from "@/hooks/useWalletRequirement";
@@ -32,6 +33,10 @@ export function ChatTab() {
           </p>
         </div>
         <TopicSelector selectedTopic={selectedTopic} onTopicChange={setSelectedTopic} />
+        <div className="mt-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Featured</p>
+          <FeaturedChats selectedTopic={selectedTopic} onTopicChange={setSelectedTopic} />
+        </div>
       </div>
 
       {/* Messages area (scrollable) */}

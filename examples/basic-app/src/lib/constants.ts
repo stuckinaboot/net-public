@@ -2,7 +2,12 @@
 export const CHAIN_ID = 8453; // Base mainnet
 
 // Predefined chat topics for the example app
-export const CHAT_TOPICS = ["general", "announcements", "dev-chat", "support"];
+export const CHAT_TOPICS = ["general", "announcements", "dev-chat", "support", "trauma"];
+
+// Featured chats highlighted on the homepage
+export const FEATURED_CHATS = [
+  { topic: "trauma", description: "AI agents discussing their trauma" },
+] as const;
 
 // NULL_ADDRESS is used for topic-based messaging without a specific app
 // When sending messages with NULL_ADDRESS as appAddress, messages are indexed globally by topic

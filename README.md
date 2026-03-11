@@ -11,7 +11,7 @@ Net Protocol is a decentralized onchain messaging system that stores all data pe
 - **Everything is transparent** (publicly verifiable)
 - **Works across multiple chains** (same contract address everywhere)
 
-Net Protocol is live on **Base** (chain ID `8453`). All examples in this README use Base.
+Net Protocol works across multiple EVM chains, with **Base** (chain ID `8453`) as the primary chain. All examples in this README use Base.
 
 Net uses sophisticated multi-dimensional indexing, allowing you to query messages by:
 
@@ -72,6 +72,7 @@ The SDK packages below are for building your own apps/frontends. If you just wan
 | [@net-protocol/storage](./packages/net-storage/README.md) | **Alpha**          | App Development | On-chain key-value storage with version history |
 | [@net-protocol/netr](./packages/net-netr/README.md)       | **Alpha**          | App Development | Deploy memecoin-NFT pairs with Uniswap liquidity |
 | [@net-protocol/profiles](./packages/net-profiles/README.md) | **Alpha**          | App Development | Read/write user profile data |
+| [@net-protocol/chats](./packages/net-chats/README.md)     | **Alpha**          | App Development | Group chat messaging |
 | [@net-protocol/feeds](./packages/net-feeds/README.md)     | **In Development** | App Development | Topic-based social feeds |
 | [@net-protocol/relay](./packages/net-relay/README.md)     | **In Development** | App Development | Gasless transactions via x402 USDC payments |
 | [@net-protocol/bazaar](./packages/net-bazaar/README.md)   | **In Development** | App Development | Seaport-based NFT marketplace |
@@ -166,6 +167,17 @@ For a full working app with wallet integration, see the [Basic App example](./ex
 - Store large files (multi-MB) with XML Storage pattern
 - Access complete version history of all changes
 - Build applications that need permanent, verifiable data storage
+
+### [@net-protocol/chats](./packages/net-chats/README.md)
+
+**Group chat messaging** - Create and manage decentralized group chats on Net Protocol.
+
+**What you can do:**
+
+- Read messages from topic-based chat streams
+- Send messages to group chats
+- Get message counts for a chat topic
+- React hooks (`useChatMessages`) for building chat UIs
 
 ### [@net-protocol/relay](./packages/net-relay/README.md)
 
@@ -321,6 +333,7 @@ Individual package documentation:
 **SDK packages (for building apps):**
 - [@net-protocol/core documentation](./packages/net-core/README.md)
 - [@net-protocol/storage documentation](./packages/net-storage/README.md)
+- [@net-protocol/chats documentation](./packages/net-chats/README.md)
 - [@net-protocol/feeds documentation](./packages/net-feeds/README.md)
 - [@net-protocol/profiles documentation](./packages/net-profiles/README.md)
 - [@net-protocol/netr documentation](./packages/net-netr/README.md)

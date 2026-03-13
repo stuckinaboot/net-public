@@ -1,6 +1,7 @@
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
+import { getChainRpcUrls } from "@net-protocol/core";
+import { getBaseDataSuffix } from "@net-protocol/core/internal";
 import type { WriteTransactionConfig } from "@net-protocol/core";
 
 /**

@@ -45,6 +45,9 @@ vi.mock("@net-protocol/netr", () => ({
 // Mock @net-protocol/core
 vi.mock("@net-protocol/core", () => ({
   getChainRpcUrls: vi.fn().mockReturnValue(["https://base-mainnet.public.blastapi.io"]),
+}));
+
+vi.mock("@net-protocol/core/internal", () => ({
   getBaseDataSuffix: vi.fn().mockReturnValue(undefined),
 }));
 

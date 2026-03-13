@@ -10,6 +10,9 @@ vi.mock("viem/actions", () => ({
 // Mock @net-protocol/core
 vi.mock("@net-protocol/core", () => ({
   getPublicClient: vi.fn(() => ({})),
+}));
+
+vi.mock("@net-protocol/core/internal", () => ({
   getBaseDataSuffix: vi.fn((chainId: number) =>
     chainId === 8453 ? "0xmocksuffix" : undefined
   ),

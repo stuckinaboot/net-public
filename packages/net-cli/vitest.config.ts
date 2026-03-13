@@ -4,6 +4,7 @@ import path from "path";
 export default defineConfig({
   resolve: {
     alias: {
+      "@net-protocol/core/internal": path.resolve(__dirname, "../net-core/src/internal"),
       "@net-protocol/core": path.resolve(__dirname, "../net-core/src"),
       "@net-protocol/storage": path.resolve(__dirname, "../net-storage/src"),
       "@net-protocol/relay": path.resolve(__dirname, "../net-relay/src"),

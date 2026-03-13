@@ -7,7 +7,8 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { BazaarClient } from "@net-protocol/bazaar";
-import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
+import { getChainRpcUrls } from "@net-protocol/core";
+import { getBaseDataSuffix } from "@net-protocol/core/internal";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import type { CreateErc20ListingOptions } from "./types";

@@ -1,6 +1,6 @@
 import { type Address } from "viem";
 import { useWriteContract } from "wagmi";
-import { getBaseDataSuffix } from "@net-protocol/core";
+import { getBaseDataSuffix } from "@net-protocol/core/internal";
 import { USER_UPVOTE_CONTRACT, NULL_ADDRESS } from "../constants";
 import type { UseUpvoteUserOptions } from "../types";
 

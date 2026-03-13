@@ -1,6 +1,7 @@
 import { type Address, type PublicClient, type WalletClient } from "viem";
 import { readContract } from "viem/actions";
-import { getPublicClient, getBaseDataSuffix } from "@net-protocol/core";
+import { getPublicClient } from "@net-protocol/core";
+import { getBaseDataSuffix } from "@net-protocol/core/internal";
 import { USER_UPVOTE_CONTRACT, NULL_ADDRESS } from "../constants";
 import { validateUpvoteParams, calculateUpvoteCost } from "./userUpvoteUtils";
 import type { UserUpvoteClientOptions } from "./types";

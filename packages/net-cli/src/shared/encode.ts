@@ -1,5 +1,5 @@
 import { encodeFunctionData, concat } from "viem";
-import { getBaseDataSuffix } from "@net-protocol/core";
+import { getBaseDataSuffix } from "@net-protocol/core/internal";
 import type { WriteTransactionConfig } from "@net-protocol/core";
 import type { EncodedTransaction } from "./types";
 

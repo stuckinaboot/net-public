@@ -6,8 +6,8 @@ const MOCK_BASE_DATA_SUFFIX = vi.hoisted(
   () => "0x00000000000000000000000000626364307832" as `0x${string}`
 );
 
-// Mock @net-protocol/core to avoid ox/erc8021 resolution issue in tests
-vi.mock("@net-protocol/core", () => ({
+// Mock @net-protocol/core/internal to avoid ox/erc8021 resolution issue in tests
+vi.mock("@net-protocol/core/internal", () => ({
   BASE_BUILDER_CODE: "bc_d0x2dqkv",
   BASE_CHAIN_ID: 8453,
   BASE_DATA_SUFFIX: MOCK_BASE_DATA_SUFFIX,

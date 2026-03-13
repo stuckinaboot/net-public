@@ -1,7 +1,8 @@
 import chalk from "chalk";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { NetClient, getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
+import { NetClient, getChainRpcUrls } from "@net-protocol/core";
+import { getBaseDataSuffix } from "@net-protocol/core/internal";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { createNetClient } from "../../shared/client";
 import { encodeTransaction } from "../../shared/encode";

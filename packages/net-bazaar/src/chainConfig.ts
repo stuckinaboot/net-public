@@ -61,7 +61,7 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
-    nftFeeBps: DEFAULT_NFT_FEE_BPS,
+    nftFeeBps: 0, // 0% on Ethereum Mainnet
     wrappedNativeCurrency: {
       address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       name: "Wrapped Ether",

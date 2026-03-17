@@ -91,7 +91,7 @@ describe("BazaarClient Integration", () => {
     });
 
     it("works for all supported chains", () => {
-      const supportedChains = [8453, 84532, 666666666, 5112, 57073, 130, 999, 9745, 143];
+      const supportedChains = [1, 8453, 84532, 666666666, 5112, 57073, 130, 999, 9745, 143];
 
       for (const chain of supportedChains) {
         expect(() => new BazaarClient({ chainId: chain })).not.toThrow();

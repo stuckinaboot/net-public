@@ -25,6 +25,10 @@ describe("chainConfig", () => {
       expect(isBazaarSupportedOnChain(8453)).toBe(true);
     });
 
+    it("returns true for Ethereum Mainnet", () => {
+      expect(isBazaarSupportedOnChain(1)).toBe(true);
+    });
+
     it("returns false for unsupported chain", () => {
       expect(isBazaarSupportedOnChain(99999)).toBe(false);
     });
@@ -36,6 +40,17 @@ describe("chainConfig", () => {
       expect(config).toBeDefined();
       expect(config?.bazaarAddress).toBe("0x000000058f3ade587388daf827174d0e6fc97595");
       expect(config?.nftFeeBps).toBe(0); // 0% on Base
+    });
+
+    it("returns config for Ethereum Mainnet with 0% fee", () => {
+      const config = getBazaarChainConfig(1);
+      expect(config).toBeDefined();
+      expect(config?.nftFeeBps).toBe(0);
+      expect(config?.wrappedNativeCurrency?.symbol).toBe("WETH");
+      expect(config?.wrappedNativeCurrency?.address).toBe(
+        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+      );
+      expect(config?.currencySymbol).toBe("eth");
     });
 
     it("returns undefined for unsupported chain", () => {

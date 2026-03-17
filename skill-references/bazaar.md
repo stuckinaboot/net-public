@@ -19,6 +19,7 @@ All commands support two modes:
 | Chain | Chain ID | Status |
 |-------|----------|--------|
 | Base | 8453 | Supported |
+| Ethereum | 1 | Supported |
 
 ## Commands
 

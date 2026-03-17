@@ -26,8 +26,10 @@ async function executeListAgents(options: ListAgentsOptions): Promise<void> {
 
   try {
     const limit = options.limit ?? 100;
-    const totalCount = await client.getRegisteredAgentCount();
-    const agents = await client.getRegisteredAgents({ maxAgents: limit });
+    const [totalCount, agents] = await Promise.all([
+      client.getRegisteredAgentCount(),
+      client.getRegisteredAgents({ maxAgents: limit }),
+    ]);
 
     if (options.json) {
       printJson({

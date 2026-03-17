@@ -42,10 +42,15 @@ describe("chainConfig", () => {
       expect(config?.nftFeeBps).toBe(0); // 0% on Base
     });
 
-    it("returns config for Ethereum Mainnet with 0% fee", () => {
+    it("returns config for Ethereum Mainnet with 0% fee and correct addresses", () => {
       const config = getBazaarChainConfig(1);
       expect(config).toBeDefined();
       expect(config?.nftFeeBps).toBe(0);
+      expect(config?.bazaarAddress).toBe("0x000000058f3ade587388daf827174d0e6fc97595");
+      expect(config?.collectionOffersAddress).toBe("0x0000000f9c45efcff0f78d8b54aa6a40092d66dc");
+      expect(config?.erc20OffersAddress).toBe("0x0000000e23a89aa06f317306aa1ae231d3503082");
+      expect(config?.erc20BazaarAddress).toBe("0x00000006557e3629e2fc50bbad0c002b27cac492");
+      expect(config?.feeCollectorAddress).toBe("0x66547ff4f7206e291F7BC157b54C026Fc6660961");
       expect(config?.wrappedNativeCurrency?.symbol).toBe("WETH");
       expect(config?.wrappedNativeCurrency?.address).toBe(
         "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"

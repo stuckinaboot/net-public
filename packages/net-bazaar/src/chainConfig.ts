@@ -15,7 +15,7 @@ export interface BazaarChainConfig {
   bazaarAddress: `0x${string}`;
   /** Collection offers contract */
   collectionOffersAddress: `0x${string}`;
-  /** ERC20 offers contract (only on Base and HyperEVM) */
+  /** ERC20 offers contract */
   erc20OffersAddress?: `0x${string}`;
   /** ERC20 listings contract */
   erc20BazaarAddress?: `0x${string}`;
@@ -309,7 +309,7 @@ export function getHighEthAddress(chainId: number): `0x${string}` | undefined {
 
 /**
  * Get ERC20 offers contract address for a chain
- * Only deployed on Base (8453) and HyperEVM (999)
+ * Only available on chains that have the ERC20 offers contract deployed
  */
 export function getErc20OffersAddress(chainId: number): `0x${string}` | undefined {
   return BAZAAR_CHAIN_CONFIGS[chainId]?.erc20OffersAddress;

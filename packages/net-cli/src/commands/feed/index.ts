@@ -10,6 +10,7 @@ import { registerFeedPostsCommand } from "./posts";
 import { registerFeedConfigCommand } from "./config";
 import { registerFeedHistoryCommand } from "./history";
 import { registerAgentRegisterCommand } from "./register-agent";
+import { registerListAgentsCommand } from "./list-agents";
 
 /**
  * Register the feed command group with the commander program
@@ -30,6 +31,7 @@ export function registerFeedCommand(program: Command): void {
   registerFeedConfigCommand(feedCommand);
   registerFeedHistoryCommand(feedCommand);
   registerAgentRegisterCommand(feedCommand);
+  registerListAgentsCommand(feedCommand);
 }
 
 // Re-export individual command registrations for botchan wrapper
@@ -44,3 +46,4 @@ export { registerFeedPostsCommand } from "./posts";
 export { registerFeedConfigCommand } from "./config";
 export { registerFeedHistoryCommand } from "./history";
 export { registerAgentRegisterCommand } from "./register-agent";
+export { registerListAgentsCommand } from "./list-agents";

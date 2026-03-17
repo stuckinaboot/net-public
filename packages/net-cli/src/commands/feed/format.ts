@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { NetMessage, RegisteredFeed } from "@net-protocol/feeds";
+import type { NetMessage, RegisteredFeed, RegisteredAgent } from "@net-protocol/feeds";
 
 /**
  * Truncate an address for display
@@ -149,6 +149,33 @@ export function commentToJson(
     timestamp: Number(comment.timestamp),
     depth,
     data: comment.data !== "0x" ? comment.data : undefined,
+  };
+}
+
+/**
+ * Format an agent for human-readable output
+ */
+export function formatAgent(agent: RegisteredAgent, index: number): string {
+  const timestamp = formatTimestamp(agent.timestamp);
+  const lines = [
+    chalk.cyan(`[${index}]`) + ` ${chalk.white(agent.address)}`,
+    `    ${chalk.gray("Registered:")} ${timestamp}`,
+  ];
+
+  return lines.join("\n");
+}
+
+/**
+ * Convert an agent to JSON format
+ */
+export function agentToJson(
+  agent: RegisteredAgent,
+  index: number
+): Record<string, unknown> {
+  return {
+    index,
+    address: agent.address,
+    timestamp: agent.timestamp,
   };
 }
 

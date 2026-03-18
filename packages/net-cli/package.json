@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
@@ -49,13 +49,13 @@
   },
   "dependencies": {
     "@net-protocol/bazaar": "^0.1.17",
-    "@net-protocol/chats": "file:../net-chats",
+    "@net-protocol/chats": "^0.1.0",
     "@net-protocol/core": "^0.1.9",
     "@net-protocol/feeds": "^0.1.14",
     "@net-protocol/netr": "^0.1.3",
     "@net-protocol/profiles": "^0.1.5",
     "@net-protocol/relay": "^0.1.3",
-    "@net-protocol/score": "file:../net-score",
+    "@net-protocol/score": "^0.1.4",
     "@net-protocol/storage": "^0.1.12",
     "@x402/evm": "^2.1.0",
     "@x402/fetch": "^2.1.0",

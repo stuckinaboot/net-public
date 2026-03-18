@@ -97,7 +97,7 @@ async function executeFeedVerifyClaim(
       });
 
       if (decoded.eventName === "MessageSent") {
-        const args = decoded.args as {
+        const args = decoded.args as unknown as {
           sender: `0x${string}`;
           topic: string;
           messageIndex: bigint;

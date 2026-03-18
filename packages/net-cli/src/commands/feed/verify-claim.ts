@@ -5,6 +5,7 @@ import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createNetClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
 import { addHistoryEntry, getHistory } from "../../shared/state";
+import { createPostId } from "../../shared/postId";
 import {
   getPublicClient,
   getNetContract,
@@ -27,16 +28,12 @@ interface VerifyClaimOptions {
  * For comments: "feed-crypto:comments:0x..." -> "crypto"
  */
 function extractFeedName(topic: string): string {
-  // Strip comment suffix if present
-  let baseTopic = topic;
-  if (isCommentTopic(topic)) {
-    baseTopic = topic.split(COMMENT_TOPIC_SUFFIX)[0];
-  }
-  // Strip feed- prefix
-  if (baseTopic.startsWith(FEED_TOPIC_PREFIX)) {
-    return baseTopic.slice(FEED_TOPIC_PREFIX.length);
-  }
-  return baseTopic;
+  const baseTopic = isCommentTopic(topic)
+    ? topic.split(COMMENT_TOPIC_SUFFIX)[0]
+    : topic;
+  return baseTopic.startsWith(FEED_TOPIC_PREFIX)
+    ? baseTopic.slice(FEED_TOPIC_PREFIX.length)
+    : baseTopic;
 }
 
 /**
@@ -59,7 +56,7 @@ async function executeFeedVerifyClaim(
 
   const publicClient = getPublicClient({
     chainId: readOnlyOptions.chainId,
-    rpcUrl: readOnlyOptions.rpcUrl ? [readOnlyOptions.rpcUrl] : undefined,
+    rpcUrl: readOnlyOptions.rpcUrl,
   });
   const netContract = getNetContract(readOnlyOptions.chainId);
   const netClient = createNetClient(readOnlyOptions);
@@ -74,23 +71,21 @@ async function executeFeedVerifyClaim(
   }
 
   // Fetch transaction receipt
-  let receipt;
-  try {
-    receipt = await publicClient.getTransactionReceipt({
-      hash: txHash as `0x${string}`,
-    });
-  } catch {
-    exitWithError(
-      "Could not fetch transaction receipt. Make sure the transaction hash is correct and the transaction has been confirmed."
+  const receipt = await publicClient
+    .getTransactionReceipt({ hash: txHash as `0x${string}` })
+    .catch(() =>
+      exitWithError(
+        "Could not fetch transaction receipt. Make sure the transaction hash is correct and the transaction has been confirmed."
+      )
     );
-  }
 
   // Filter logs from the Net contract and decode MessageSent events
+  const contractAddress = netContract.address.toLowerCase();
   const messageSentEvents: { sender: `0x${string}`; messageIndex: bigint }[] =
     [];
 
   for (const log of receipt.logs) {
-    if (log.address.toLowerCase() !== netContract.address.toLowerCase()) {
+    if (log.address.toLowerCase() !== contractAddress) {
       continue;
     }
 
@@ -129,69 +124,59 @@ async function executeFeedVerifyClaim(
     )
   );
 
+  // Fetch all messages in parallel
+  const messages = await Promise.all(
+    messageSentEvents.map((event) =>
+      netClient.getMessageAtIndex({
+        messageIndex: Number(event.messageIndex),
+      })
+    )
+  );
+
   let recorded = 0;
 
-  for (const event of messageSentEvents) {
-    // Fetch full message from contract using messageIndex
-    const message = await netClient.getMessageAtIndex({
-      messageIndex: Number(event.messageIndex),
-    });
-
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i];
     if (!message) {
       console.log(
         chalk.yellow(
-          `  Could not fetch message at index ${event.messageIndex}. Skipping.`
+          `  Could not fetch message at index ${messageSentEvents[i].messageIndex}. Skipping.`
         )
       );
       continue;
     }
 
-    const topic = message.topic;
-    const feedName = extractFeedName(topic);
-    const isComment = isCommentTopic(topic);
+    const feedName = extractFeedName(message.topic);
+    const isComment = isCommentTopic(message.topic);
+
+    let type: "post" | "comment";
+    let postId: string | undefined;
+    let label: string;
 
     if (isComment) {
-      // Decode comment data to get parent post reference
+      type = "comment";
       const commentData = parseCommentData(message.data);
-      const postId = commentData
+      postId = commentData
         ? `${commentData.parentSender}:${commentData.parentTimestamp}`
         : undefined;
-
-      addHistoryEntry({
-        type: "comment",
-        txHash,
-        chainId: readOnlyOptions.chainId,
-        feed: feedName,
-        sender: message.sender,
-        text: message.text,
-        postId,
-      });
-
-      console.log(
-        chalk.green(
-          `  Verified comment:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Parent post: ${postId ?? "unknown"}\n    Tx: ${txHash}`
-        )
-      );
+      label = `Verified comment:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Parent post: ${postId ?? "unknown"}\n    Tx: ${txHash}`;
     } else {
-      const postId = `${message.sender}:${message.timestamp}`;
-
-      addHistoryEntry({
-        type: "post",
-        txHash,
-        chainId: readOnlyOptions.chainId,
-        feed: feedName,
-        sender: message.sender,
-        text: message.text,
-        postId,
-      });
-
-      console.log(
-        chalk.green(
-          `  Verified post:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Post ID: ${postId}\n    Tx: ${txHash}`
-        )
-      );
+      type = "post";
+      postId = createPostId(message);
+      label = `Verified post:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Post ID: ${postId}\n    Tx: ${txHash}`;
     }
 
+    addHistoryEntry({
+      type,
+      txHash,
+      chainId: readOnlyOptions.chainId,
+      feed: feedName,
+      sender: message.sender,
+      text: message.text,
+      postId,
+    });
+
+    console.log(chalk.green(`  ${label}`));
     recorded++;
   }
 

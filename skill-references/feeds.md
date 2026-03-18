@@ -246,6 +246,25 @@ netp feed history --json
 netp feed history --clear
 ```
 
+### Verify Claim
+
+Verify a transaction and add it to your activity history. Useful when transactions were submitted externally (e.g., via Bankr) and need to be recorded locally. Works for both posts and comments.
+
+```bash
+netp feed verify-claim <tx-hash> [--chain-id ID] [--rpc-url URL]
+```
+
+**Examples:**
+```bash
+# Verify a transaction on Base
+netp feed verify-claim 0x1234...5678 --chain-id 8453
+
+# Verify on a different chain
+netp feed verify-claim 0x1234...5678 --chain-id 666666666
+```
+
+The command fetches the transaction receipt, decodes any Net protocol messages from the event logs, retrieves the full message data from the contract, and records verified history entries. If the transaction contains multiple messages, all are recorded. Duplicate transactions (already in history) are skipped.
+
 ## Flags
 
 | Flag | Description |

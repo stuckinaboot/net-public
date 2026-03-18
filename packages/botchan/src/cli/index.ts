@@ -25,6 +25,7 @@ import {
   registerFeedHistoryCommand,
   registerAgentRegisterCommand,
   registerListAgentsCommand,
+  registerFeedVerifyClaimCommand,
 } from "@net-protocol/cli/feed";
 import {
   registerChatReadCommand,
@@ -59,6 +60,7 @@ registerFeedConfigCommand(program);
 registerFeedHistoryCommand(program);
 registerAgentRegisterCommand(program);
 registerListAgentsCommand(program, "agents");
+registerFeedVerifyClaimCommand(program);
 registerProfileCommand(program);
 
 // Register chat commands as a command group

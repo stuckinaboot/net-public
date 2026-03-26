@@ -11,6 +11,7 @@ import {
   createMockProfilePictureData,
   createMockProfileMetadataData,
   createMockCanvasData,
+  extractJsonOutput,
 } from "./test-utils";
 
 // Mock StorageClient
@@ -100,7 +101,7 @@ describe("executeProfileGet", () => {
     it("should display X username with @ prefix", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData())
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ username: TEST_X_USERNAME }));
 
       await executeProfileGet(createGetOptions());
 
@@ -112,7 +113,7 @@ describe("executeProfileGet", () => {
     it("should display display name", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData())
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, undefined, TEST_DISPLAY_NAME));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ displayName: TEST_DISPLAY_NAME }));
 
       await executeProfileGet(createGetOptions());
 
@@ -127,7 +128,7 @@ describe("executeProfileGet", () => {
     it("should display bio", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData())
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, TEST_BIO));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ username: TEST_X_USERNAME, bio: TEST_BIO }));
 
       await executeProfileGet(createGetOptions());
 
@@ -171,36 +172,18 @@ describe("executeProfileGet", () => {
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          JSON.parse(call[0]);
-          return true;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
+      const output = extractJsonOutput(consoleSpy);
+      expect(output).toBeDefined();
     });
 
     it("should include all fields in JSON output", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, TEST_BIO));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ username: TEST_X_USERNAME, bio: TEST_BIO }));
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.address).toBe(TEST_ADDRESS);
       expect(output.chainId).toBe(TEST_CHAIN_ID);
       expect(output.profilePicture).toBe(TEST_PROFILE_PICTURE);
@@ -214,17 +197,7 @@ describe("executeProfileGet", () => {
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.profilePicture).toBeNull();
       expect(output.xUsername).toBeNull();
       expect(output.bio).toBeNull();
@@ -234,63 +207,33 @@ describe("executeProfileGet", () => {
     it("should include displayName in JSON output", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, TEST_BIO, TEST_DISPLAY_NAME));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ username: TEST_X_USERNAME, bio: TEST_BIO, displayName: TEST_DISPLAY_NAME }));
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.displayName).toBe(TEST_DISPLAY_NAME);
     });
 
     it("should include displayName as null when not set", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ username: TEST_X_USERNAME }));
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.displayName).toBeNull();
     });
 
     it("should include bio as null when not set", async () => {
       mockReadStorageData
         .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
-        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME));
+        .mockResolvedValueOnce(createMockProfileMetadataData({ username: TEST_X_USERNAME }));
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.bio).toBeNull();
     });
   });
@@ -349,17 +292,7 @@ describe("executeProfileGet", () => {
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.canvas).toBeDefined();
       expect(output.canvas.size).toBe(TEST_CANVAS_CONTENT.length);
       expect(output.canvas.isDataUri).toBe(false);
@@ -373,17 +306,7 @@ describe("executeProfileGet", () => {
 
       await executeProfileGet(createGetOptions({ json: true }));
 
-      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
-        try {
-          const parsed = JSON.parse(call[0]);
-          return parsed.address !== undefined;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(jsonOutputCall).toBeDefined();
-      const output = JSON.parse(jsonOutputCall![0]);
+      const output = extractJsonOutput(consoleSpy);
       expect(output.canvas).toBeNull();
     });
 

@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 /**
  * Test utilities for profile command tests
  */
@@ -28,26 +30,43 @@ export function createMockProfilePictureData(url: string = TEST_PROFILE_PICTURE)
 /**
  * Create mock storage data for profile metadata
  */
-export function createMockProfileMetadataData(
-  username: string = TEST_X_USERNAME,
-  bio?: string,
-  displayName?: string
-) {
+export function createMockProfileMetadataData(overrides?: {
+  username?: string;
+  bio?: string;
+  displayName?: string;
+}) {
+  const username = overrides?.username ?? TEST_X_USERNAME;
   const metadata: { x_username?: string; bio?: string; display_name?: string } = {};
   if (username) {
     metadata.x_username = `@${username}`;
   }
-  if (bio) {
-    metadata.bio = bio;
+  if (overrides?.bio) {
+    metadata.bio = overrides.bio;
   }
-  if (displayName) {
-    metadata.display_name = displayName;
+  if (overrides?.displayName) {
+    metadata.display_name = overrides.displayName;
   }
   return {
     text: "profile-metadata",
     data: JSON.stringify(metadata),
     isXml: false,
   };
+}
+
+/**
+ * Extract parsed JSON output from console.log spy calls
+ */
+export function extractJsonOutput(consoleSpy: any) {
+  const call = consoleSpy.mock.calls.find((c: any) => {
+    try {
+      const parsed = JSON.parse(c[0]);
+      return parsed.address !== undefined;
+    } catch {
+      return false;
+    }
+  });
+  expect(call).toBeDefined();
+  return JSON.parse(call![0]);
 }
 
 /**

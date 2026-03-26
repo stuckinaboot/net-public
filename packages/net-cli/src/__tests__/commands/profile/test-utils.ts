@@ -10,6 +10,7 @@ export const TEST_PRIVATE_KEY =
 export const TEST_PROFILE_PICTURE = "https://example.com/image.jpg";
 export const TEST_X_USERNAME = "testuser";
 export const TEST_BIO = "Hello, I'm a developer!";
+export const TEST_DISPLAY_NAME = "Test User";
 export const TEST_CANVAS_CONTENT = "<html><body><h1>My Canvas</h1></body></html>";
 export const TEST_CANVAS_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
@@ -29,14 +30,18 @@ export function createMockProfilePictureData(url: string = TEST_PROFILE_PICTURE)
  */
 export function createMockProfileMetadataData(
   username: string = TEST_X_USERNAME,
-  bio?: string
+  bio?: string,
+  displayName?: string
 ) {
-  const metadata: { x_username?: string; bio?: string } = {};
+  const metadata: { x_username?: string; bio?: string; display_name?: string } = {};
   if (username) {
     metadata.x_username = `@${username}`;
   }
   if (bio) {
     metadata.bio = bio;
+  }
+  if (displayName) {
+    metadata.display_name = displayName;
   }
   return {
     text: "profile-metadata",

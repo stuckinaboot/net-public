@@ -5,6 +5,7 @@ import {
   TEST_PROFILE_PICTURE,
   TEST_X_USERNAME,
   TEST_BIO,
+  TEST_DISPLAY_NAME,
   TEST_CANVAS_CONTENT,
   createGetOptions,
   createMockProfilePictureData,
@@ -105,6 +106,21 @@ describe("executeProfileGet", () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(`@${TEST_X_USERNAME}`)
+      );
+    });
+
+    it("should display display name", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData())
+        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, undefined, TEST_DISPLAY_NAME));
+
+      await executeProfileGet(createGetOptions());
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Display Name:")
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(TEST_DISPLAY_NAME)
       );
     });
 
@@ -213,6 +229,48 @@ describe("executeProfileGet", () => {
       expect(output.xUsername).toBeNull();
       expect(output.bio).toBeNull();
       expect(output.hasProfile).toBeFalsy();
+    });
+
+    it("should include displayName in JSON output", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
+        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME, TEST_BIO, TEST_DISPLAY_NAME));
+
+      await executeProfileGet(createGetOptions({ json: true }));
+
+      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
+        try {
+          const parsed = JSON.parse(call[0]);
+          return parsed.address !== undefined;
+        } catch {
+          return false;
+        }
+      });
+
+      expect(jsonOutputCall).toBeDefined();
+      const output = JSON.parse(jsonOutputCall![0]);
+      expect(output.displayName).toBe(TEST_DISPLAY_NAME);
+    });
+
+    it("should include displayName as null when not set", async () => {
+      mockReadStorageData
+        .mockResolvedValueOnce(createMockProfilePictureData(TEST_PROFILE_PICTURE))
+        .mockResolvedValueOnce(createMockProfileMetadataData(TEST_X_USERNAME));
+
+      await executeProfileGet(createGetOptions({ json: true }));
+
+      const jsonOutputCall = consoleSpy.mock.calls.find((call) => {
+        try {
+          const parsed = JSON.parse(call[0]);
+          return parsed.address !== undefined;
+        } catch {
+          return false;
+        }
+      });
+
+      expect(jsonOutputCall).toBeDefined();
+      const output = JSON.parse(jsonOutputCall![0]);
+      expect(output.displayName).toBeNull();
     });
 
     it("should include bio as null when not set", async () => {

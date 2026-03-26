@@ -48,9 +48,10 @@ export async function executeProfileGet(
       }
     }
 
-    // Fetch profile metadata (X username, bio, token address)
+    // Fetch profile metadata (X username, bio, display name, token address)
     let xUsername: string | undefined;
     let bio: string | undefined;
+    let displayName: string | undefined;
     let tokenAddress: string | undefined;
     try {
       const metadataResult = await client.readStorageData({
@@ -61,6 +62,7 @@ export async function executeProfileGet(
         const metadata = parseProfileMetadata(metadataResult.data);
         xUsername = metadata?.x_username;
         bio = metadata?.bio;
+        displayName = metadata?.display_name;
         tokenAddress = metadata?.token_address;
       }
     } catch (error) {
@@ -114,13 +116,14 @@ export async function executeProfileGet(
       }
     }
 
-    const hasProfile = profilePicture || xUsername || bio || tokenAddress || canvasSize || cssSize;
+    const hasProfile = profilePicture || xUsername || bio || displayName || tokenAddress || canvasSize || cssSize;
 
     if (options.json) {
       const output = {
         address: options.address,
         chainId: readOnlyOptions.chainId,
         profilePicture: profilePicture || null,
+        displayName: displayName || null,
         xUsername: xUsername || null,
         bio: bio || null,
         tokenAddress: tokenAddress || null,
@@ -138,6 +141,11 @@ export async function executeProfileGet(
     console.log(chalk.white.bold("\nProfile:\n"));
     console.log(`  ${chalk.cyan("Address:")} ${options.address}`);
     console.log(`  ${chalk.cyan("Chain ID:")} ${readOnlyOptions.chainId}`);
+    console.log(
+      `  ${chalk.cyan("Display Name:")} ${
+        displayName || chalk.gray("(not set)")
+      }`
+    );
     console.log(
       `  ${chalk.cyan("Profile Picture:")} ${
         profilePicture || chalk.gray("(not set)")

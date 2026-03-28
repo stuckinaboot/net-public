@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/feeds",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Feed functionality for Net Protocol - topic-based message streams",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -42,8 +42,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@net-protocol/core": "file:../net-core",
-    "viem": "^2.45.0"
+    "@net-protocol/core": "file:../net-core"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.0.0",
@@ -55,11 +54,13 @@
     "react-dom": "^18.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "viem": "^2.45.0",
     "vitest": "^1.0.0",
     "wagmi": "^2.15.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
+    "viem": "^2.31.4",
     "wagmi": "^2.15.0"
   },
   "peerDependenciesMeta": {

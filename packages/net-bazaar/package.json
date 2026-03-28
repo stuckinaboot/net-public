@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/bazaar",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "SDK for Net Bazaar - a decentralized bazaar storing all orders onchain via Seaport",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -44,8 +44,7 @@
   "dependencies": {
     "@net-protocol/core": "^0.1.9",
     "@net-protocol/storage": "^0.1.11",
-    "@opensea/seaport-js": "^4.0.4",
-    "viem": "^2.45.0"
+    "@opensea/seaport-js": "^4.0.4"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.0.0",
@@ -59,11 +58,13 @@
     "react-dom": "^18.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "viem": "^2.45.0",
     "vitest": "^1.0.0",
     "wagmi": "^2.15.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
+    "viem": "^2.31.4",
     "wagmi": "^2.15.0"
   },
   "peerDependenciesMeta": {

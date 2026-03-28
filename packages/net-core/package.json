@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/core",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Core Net protocol SDK for interacting with Net smart contracts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -42,8 +42,7 @@
     "test:record": "POLLY_RECORD=true vitest run"
   },
   "dependencies": {
-    "ox": "^0.13.2",
-    "viem": "^2.45.0"
+    "ox": "^0.13.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -51,10 +50,12 @@
     "@vitest/ui": "^1.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "viem": "^2.45.0",
     "vitest": "^1.0.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
+    "viem": "^2.31.4",
     "wagmi": "^2.15.0"
   },
   "peerDependenciesMeta": {

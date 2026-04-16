@@ -1,0 +1,76 @@
+import chalk from "chalk";
+import { Command } from "commander";
+import { createAuthenticatedClient } from "./shared";
+import { exitWithError } from "../../shared/output";
+
+interface ListOptions {
+  chainId?: number;
+  rpcUrl?: string;
+  privateKey?: string;
+  apiUrl?: string;
+  json?: boolean;
+  showHidden?: boolean;
+}
+
+async function executeList(options: ListOptions): Promise<void> {
+  try {
+    const { client, sessionToken } = await createAuthenticatedClient(options);
+
+    const result = await client.listAgents({ sessionToken });
+
+    if (!result.success) {
+      exitWithError(result.error || "Failed to list agents");
+    }
+
+    const agents = result.agents || [];
+    const visible = options.showHidden
+      ? agents
+      : agents.filter((a) => !a.config.hidden);
+
+    if (options.json) {
+      console.log(JSON.stringify(visible, null, 2));
+      return;
+    }
+
+    if (visible.length === 0) {
+      console.log(chalk.yellow("No agents found."));
+      return;
+    }
+
+    console.log(chalk.bold(`Agents (${visible.length}):\n`));
+
+    for (const agent of visible) {
+      const { config, walletAddress } = agent;
+      const schedule = config.runIntervalMinutes
+        ? `every ${config.runIntervalMinutes}m`
+        : "manual";
+      const hidden = config.hidden ? chalk.gray(" [hidden]") : "";
+
+      console.log(`  ${chalk.cyan(config.name)}${hidden}`);
+      console.log(`    ID:       ${config.id}`);
+      console.log(`    Wallet:   ${walletAddress}`);
+      console.log(`    Schedule: ${schedule}`);
+      console.log(`    Prompt:   ${config.systemPrompt.slice(0, 80)}${config.systemPrompt.length > 80 ? "..." : ""}`);
+      console.log();
+    }
+  } catch (error) {
+    exitWithError(
+      `Failed to list agents: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+export function registerAgentListCommand(parent: Command): void {
+  parent
+    .command("list")
+    .description("List your onchain agents")
+    .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
+    .option("--rpc-url <url>", "Custom RPC URL")
+    .option("--private-key <key>", "Private key (0x-prefixed)")
+    .option("--api-url <url>", "Net Protocol API URL")
+    .option("--json", "Output as JSON")
+    .option("--show-hidden", "Include hidden agents")
+    .action(async (options) => {
+      await executeList(options);
+    });
+}

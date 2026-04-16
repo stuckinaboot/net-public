@@ -59,11 +59,31 @@ async function executeDm(
       exitWithError(`Invalid agent address: ${agentAddress}`);
     }
 
-    // Validate topic-signature requires topic
+    // --topic-signature requires --topic (the topic the signature authorizes)
     if (options.topicSignature && !options.topic) {
       exitWithError(
         "--topic-signature requires --topic (the topic the signature authorizes)",
       );
+    }
+
+    // Session-token path can't sign topics locally, so it must bring its own
+    // --topic and --topic-signature. Catch this up-front with a clear message
+    // rather than falling through to a generic "signer required" error.
+    const usingSessionToken = !!(
+      options.sessionToken || process.env.NET_SESSION_TOKEN
+    );
+    if (usingSessionToken) {
+      if (!options.topic || !options.topicSignature) {
+        exitWithError(
+          "When using --session-token, you must also provide --topic and --topic-signature.\n" +
+            "  Obtain the signature with:\n" +
+            "    netp agent dm-auth-encode --agent-address <addr>  → produces { typedData, topic }\n" +
+            "    [sign .typedData with your external signer, e.g. Bankr /agent/sign]\n" +
+            "  Then:\n" +
+            "    netp agent dm <addr> <message> --session-token <token> --operator <addr> \\\n" +
+            "      --topic <topic> --topic-signature <sig>",
+        );
+      }
     }
 
     const auth = await resolveAuth(options);
@@ -318,14 +338,15 @@ async function executeDmAuthEncode(options: DmAuthEncodeOptions): Promise<void> 
       topic = generateAgentChatTopic(options.agentAddress! as Address);
     }
 
-    const typedData = buildConversationAuthTypedData({
+    // Returns { typedData: {...}, topic }.
+    // Pipe .typedData to Bankr /agent/sign; pass .topic + the resulting
+    // signature to `agent dm --topic ... --topic-signature ...`.
+    const result = buildConversationAuthTypedData({
       topic,
       chainId,
     });
 
-    // Include the topic in the output for convenience (user passes it back
-    // to `agent dm --topic ... --topic-signature ...`).
-    console.log(jsonStringify({ topic, ...typedData }));
+    console.log(jsonStringify(result));
   } catch (error) {
     exitWithError(
       `dm-auth-encode failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -337,8 +358,9 @@ export function registerAgentDmAuthEncodeCommand(parent: Command): void {
   parent
     .command("dm-auth-encode")
     .description(
-      "Emit the ConversationAuth EIP-712 typed data to sign externally. " +
-        "Pair with `agent dm --topic ... --topic-signature ...`.",
+      "Emit { typedData, topic } for external signing. " +
+        "Pipe .typedData to your signer, pass .topic + the resulting " +
+        "signature to `agent dm --topic ... --topic-signature ...`.",
     )
     .option(
       "--topic <topic>",

@@ -38,14 +38,15 @@ async function executeSessionEncode(options: SessionEncodeOptions): Promise<void
       chainId: options.chainId,
     });
 
-    const typedData = buildSessionTypedData({
+    // Returns { typedData: {...}, expiresAt: N }.
+    // Pipe .typedData to Bankr /agent/sign; pass .expiresAt to session-create.
+    const result = buildSessionTypedData({
       operatorAddress: options.operator as `0x${string}`,
       chainId,
       expiresIn: options.expiresIn,
     });
 
-    // Output is fully JSON-safe (bigints pre-stringified in builder).
-    console.log(jsonStringify(typedData));
+    console.log(jsonStringify(result));
   } catch (error) {
     exitWithError(
       `session-encode failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -57,8 +58,9 @@ export function registerAgentSessionEncodeCommand(parent: Command): void {
   parent
     .command("session-encode")
     .description(
-      "Emit the RelaySession EIP-712 typed data to sign externally " +
-        "(e.g., via Bankr). Pair with `agent session-create`.",
+      "Emit { typedData, expiresAt } for external signing (e.g., Bankr). " +
+        "Pipe .typedData to your signer, pass .expiresAt + the resulting " +
+        "signature to `agent session-create`.",
     )
     .requiredOption(
       "--operator <address>",

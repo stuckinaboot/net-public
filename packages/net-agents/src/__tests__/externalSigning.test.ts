@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { keccak256, toBytes } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import {
   buildSessionTypedData,
   exchangeSessionSignature,
@@ -11,25 +12,41 @@ describe("externalSigning", () => {
   describe("buildSessionTypedData", () => {
     const operator = "0x1234567890abcdef1234567890abcdef12345678" as const;
 
-    it("uses the correct EIP-712 domain", () => {
-      const data = buildSessionTypedData({
+    it("returns { typedData, expiresAt } shape", () => {
+      const result = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
       });
-      expect(data.domain).toEqual({
+      expect(result).toHaveProperty("typedData");
+      expect(result).toHaveProperty("expiresAt");
+      // typedData only has the four EIP-712 fields — no convenience extras
+      expect(Object.keys(result.typedData).sort()).toEqual([
+        "domain",
+        "message",
+        "primaryType",
+        "types",
+      ]);
+    });
+
+    it("uses the correct EIP-712 domain", () => {
+      const { typedData } = buildSessionTypedData({
+        operatorAddress: operator,
+        chainId: 8453,
+      });
+      expect(typedData.domain).toEqual({
         name: "Net Relay Service",
         version: "1",
         chainId: 8453,
       });
-      expect(data.primaryType).toBe("RelaySession");
+      expect(typedData.primaryType).toBe("RelaySession");
     });
 
     it("includes the correct types for RelaySession", () => {
-      const data = buildSessionTypedData({
+      const { typedData } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
       });
-      expect(data.types.RelaySession).toEqual([
+      expect(typedData.types.RelaySession).toEqual([
         { name: "operatorAddress", type: "address" },
         { name: "secretKeyHash", type: "bytes32" },
         { name: "expiresAt", type: "uint256" },
@@ -37,75 +54,132 @@ describe("externalSigning", () => {
     });
 
     it("hashes the secret key matching the SDK's session creation logic", () => {
-      const data = buildSessionTypedData({
+      const { typedData } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
       });
-      // Must match the hash formula used in createRelaySession
       const expectedHash = keccak256(toBytes(RELAY_ACCESS_KEY));
-      expect(data.message.secretKeyHash).toBe(expectedHash);
+      expect(typedData.message.secretKeyHash).toBe(expectedHash);
     });
 
     it("uses the provided secret key when given", () => {
       const customKey = "custom-secret";
-      const data = buildSessionTypedData({
+      const { typedData } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
         secretKey: customKey,
       });
-      expect(data.message.secretKeyHash).toBe(keccak256(toBytes(customKey)));
+      expect(typedData.message.secretKeyHash).toBe(keccak256(toBytes(customKey)));
     });
 
-    it("emits expiresAt as a decimal string in message (JSON-safe)", () => {
-      const data = buildSessionTypedData({
+    it("emits expiresAt as a decimal string in the message (JSON-safe)", () => {
+      const { typedData } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
         expiresIn: 3600,
       });
-      expect(typeof data.message.expiresAt).toBe("string");
-      // Should be a valid decimal number
-      expect(Number.isFinite(parseInt(data.message.expiresAt, 10))).toBe(true);
+      expect(typeof typedData.message.expiresAt).toBe("string");
+      expect(Number.isFinite(parseInt(typedData.message.expiresAt, 10))).toBe(true);
     });
 
-    it("expiresAt number matches expiresAt string in message", () => {
-      const data = buildSessionTypedData({
+    it("top-level expiresAt matches message.expiresAt", () => {
+      const { typedData, expiresAt } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
       });
-      expect(data.expiresAt.toString()).toBe(data.message.expiresAt);
+      expect(expiresAt.toString()).toBe(typedData.message.expiresAt);
     });
 
     it("defaults expiry to 3600 seconds from now", () => {
       const now = Math.floor(Date.now() / 1000);
-      const data = buildSessionTypedData({
+      const { expiresAt } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
       });
-      const delta = data.expiresAt - now;
-      // Allow small timing variance (±5s)
+      const delta = expiresAt - now;
       expect(delta).toBeGreaterThanOrEqual(3595);
       expect(delta).toBeLessThanOrEqual(3605);
     });
 
     it("respects the expiresIn parameter", () => {
       const now = Math.floor(Date.now() / 1000);
-      const data = buildSessionTypedData({
+      const { expiresAt } = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
         expiresIn: 60,
       });
-      const delta = data.expiresAt - now;
+      const delta = expiresAt - now;
       expect(delta).toBeGreaterThanOrEqual(55);
       expect(delta).toBeLessThanOrEqual(65);
     });
 
-    it("is fully JSON-safe (no bigints in output)", () => {
-      const data = buildSessionTypedData({
+    it("is fully JSON-safe (no bigints anywhere in output)", () => {
+      const result = buildSessionTypedData({
         operatorAddress: operator,
         chainId: 8453,
       });
-      // Should not throw
-      expect(() => JSON.stringify(data)).not.toThrow();
+      expect(() => JSON.stringify(result)).not.toThrow();
+    });
+
+    /**
+     * CRITICAL: The private-key path (`createRelaySession`) builds the
+     * message with `expiresAt: BigInt(...)`, while buildSessionTypedData
+     * emits it as a decimal string. Both paths MUST produce the same
+     * signature — if viem doesn't treat them as equivalent when hashing
+     * uint256, the external-signer flow silently produces signatures that
+     * fail backend verification.
+     */
+    it("string and bigint forms of expiresAt produce identical signatures", async () => {
+      // Deterministic test private key (well-known Anvil account)
+      const testKey =
+        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as const;
+      const account = privateKeyToAccount(testKey);
+
+      // Build typed data with both forms of expiresAt
+      const expiresAt = 1776317022;
+      const operatorAddress = account.address;
+      const secretKeyHash = keccak256(toBytes(RELAY_ACCESS_KEY));
+
+      const domain = {
+        name: "Net Relay Service",
+        version: "1",
+        chainId: 8453,
+      } as const;
+
+      const types = {
+        RelaySession: [
+          { name: "operatorAddress", type: "address" },
+          { name: "secretKeyHash", type: "bytes32" },
+          { name: "expiresAt", type: "uint256" },
+        ],
+      } as const;
+
+      // Path 1: bigint (matches createRelaySession)
+      const sigBigInt = await account.signTypedData({
+        domain,
+        types,
+        primaryType: "RelaySession",
+        message: {
+          operatorAddress,
+          secretKeyHash,
+          expiresAt: BigInt(expiresAt),
+        },
+      });
+
+      // Path 2: decimal string (matches buildSessionTypedData output)
+      const sigString = await account.signTypedData({
+        domain,
+        types,
+        primaryType: "RelaySession",
+        message: {
+          operatorAddress,
+          secretKeyHash,
+          expiresAt: expiresAt.toString(),
+        },
+      });
+
+      // If these differ, the external-signer path would fail backend verification
+      expect(sigString).toBe(sigBigInt);
     });
   });
 
@@ -178,42 +252,46 @@ describe("externalSigning", () => {
   });
 
   describe("buildConversationAuthTypedData", () => {
+    const topic = "agent-chat-0x1234567890abcdef1234567890abcdef12345678-testtest";
+
+    it("returns { typedData, topic } shape", () => {
+      const result = buildConversationAuthTypedData({ topic, chainId: 8453 });
+      expect(result).toHaveProperty("typedData");
+      expect(result.topic).toBe(topic);
+      // typedData only has the four EIP-712 fields
+      expect(Object.keys(result.typedData).sort()).toEqual([
+        "domain",
+        "message",
+        "primaryType",
+        "types",
+      ]);
+    });
+
     it("uses the ConversationAuth domain with the chat contract", () => {
-      const data = buildConversationAuthTypedData({
-        topic: "agent-chat-0x1234567890abcdef1234567890abcdef12345678-testtest",
-        chainId: 8453,
-      });
-      expect(data.domain.name).toBe("Net AI Chat");
-      expect(data.domain.version).toBe("1");
-      expect(data.domain.chainId).toBe(8453);
-      // Contract deployed on Base (8453) + Base Sepolia
-      expect(data.domain.verifyingContract).toBe(
+      const { typedData } = buildConversationAuthTypedData({ topic, chainId: 8453 });
+      expect(typedData.domain.name).toBe("Net AI Chat");
+      expect(typedData.domain.version).toBe("1");
+      expect(typedData.domain.chainId).toBe(8453);
+      expect(typedData.domain.verifyingContract).toBe(
         "0x0000000e8d76d7a8deaa8a32fbed80b5354670e7",
       );
-      expect(data.primaryType).toBe("ConversationAuth");
+      expect(typedData.primaryType).toBe("ConversationAuth");
     });
 
     it("includes the topic in the message", () => {
-      const topic = "agent-chat-0x1234567890abcdef1234567890abcdef12345678-testtest";
-      const data = buildConversationAuthTypedData({ topic, chainId: 8453 });
-      expect(data.message).toEqual({ topic });
+      const { typedData } = buildConversationAuthTypedData({ topic, chainId: 8453 });
+      expect(typedData.message).toEqual({ topic });
     });
 
     it("throws for unsupported chains", () => {
       expect(() =>
-        buildConversationAuthTypedData({
-          topic: "agent-chat-0x1234567890abcdef1234567890abcdef12345678-testtest",
-          chainId: 9999,
-        }),
+        buildConversationAuthTypedData({ topic, chainId: 9999 }),
       ).toThrow(/not deployed on chain 9999/);
     });
 
     it("is fully JSON-safe", () => {
-      const data = buildConversationAuthTypedData({
-        topic: "agent-chat-0x1234567890abcdef1234567890abcdef12345678-testtest",
-        chainId: 8453,
-      });
-      expect(() => JSON.stringify(data)).not.toThrow();
+      const result = buildConversationAuthTypedData({ topic, chainId: 8453 });
+      expect(() => JSON.stringify(result)).not.toThrow();
     });
   });
 });

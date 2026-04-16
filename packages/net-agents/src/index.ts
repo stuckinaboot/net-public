@@ -17,6 +17,8 @@ export {
 export type {
   SessionTypedData,
   ConversationAuthTypedData,
+  BuildSessionResult,
+  BuildConversationAuthResult,
 } from "./externalSigning";
 
 // Types

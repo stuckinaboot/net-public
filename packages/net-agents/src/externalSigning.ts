@@ -2,9 +2,14 @@
  * Helpers for building EIP-712 typed data that external signers (e.g., Bankr)
  * can consume.
  *
- * These helpers return the exact typed data structures that the backend
- * expects to see in signatures. Consumers can output them as JSON, sign
- * externally, and pass the signatures back to the SDK/CLI.
+ * These helpers return a consistent shape:
+ *
+ *   { typedData: { domain, types, primaryType, message }, ...extras }
+ *
+ * where `typedData` is exactly what an EIP-712 signer expects (e.g., Bankr's
+ * `typedData` field). The sibling fields carry values the caller needs
+ * *alongside* the signature — e.g., `expiresAt` for session-create, or
+ * `topic` for DMs.
  */
 
 import { keccak256, toBytes } from "viem";
@@ -26,12 +31,12 @@ import { getAIChatContractAddress } from "./dm/signature";
 // ============================================
 
 /**
- * Typed data returned by buildSessionTypedData.
+ * Just the EIP-712 typed data structure — exactly what an external signer
+ * (e.g., Bankr /agent/sign) expects in its `typedData` field.
  *
- * Output field shape: bigints are represented as decimal strings so the
- * result is safe to JSON.stringify. Consumers signing the data (e.g., via
- * Bankr's /agent/sign) must convert `expiresAt` back to a number/bigint
- * appropriate for their signer (viem accepts a decimal string).
+ * BigInt values are pre-stringified so JSON.stringify works. Signers
+ * normalize decimal strings back to the correct integer representation
+ * when hashing uint256.
  */
 export interface SessionTypedData {
   domain: {
@@ -44,20 +49,34 @@ export interface SessionTypedData {
   message: {
     operatorAddress: Address;
     secretKeyHash: Hex;
-    /** Decimal string to keep the payload JSON-safe. */
+    /** Decimal string for JSON-safety — a viem uint256 hash treats it as int. */
     expiresAt: string;
   };
-  /** Same value embedded in the message — returned separately for convenience. */
+}
+
+/**
+ * Output of buildSessionTypedData.
+ *
+ * - `typedData` is the payload to sign (pass directly as Bankr's typedData)
+ * - `expiresAt` is the unix-seconds value the caller must pass to
+ *   session-create alongside the signature
+ */
+export interface BuildSessionResult {
+  typedData: SessionTypedData;
   expiresAt: number;
 }
 
 /**
  * Build EIP-712 typed data for a relay session signature.
  *
- * The returned payload can be JSON.stringified directly and handed to an
- * external signer (like Bankr's /agent/sign with signatureType
- * "eth_signTypedData_v4"). The resulting signature is then passed to
- * POST /api/relay/session along with the operator address and expiresAt.
+ * Usage:
+ *   const { typedData, expiresAt } = buildSessionTypedData({...});
+ *   const sig = await bankrSign({ signatureType: "eth_signTypedData_v4", typedData });
+ *   const { sessionToken } = await exchangeSessionSignature({
+ *     ...params,
+ *     signature: sig,
+ *     expiresAt,
+ *   });
  *
  * @param params.operatorAddress - Address that will sign the session
  * @param params.chainId - Chain ID for the session (must match subsequent calls)
@@ -69,24 +88,26 @@ export function buildSessionTypedData(params: {
   chainId: number;
   expiresIn?: number;
   secretKey?: string;
-}): SessionTypedData {
+}): BuildSessionResult {
   const secretKey = params.secretKey ?? RELAY_ACCESS_KEY;
   const expiresIn = params.expiresIn ?? 3600;
   const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
   const secretKeyHash = keccak256(toBytes(secretKey));
 
   return {
-    domain: {
-      name: RELAY_DOMAIN_NAME,
-      version: RELAY_DOMAIN_VERSION,
-      chainId: params.chainId,
-    },
-    types: RELAY_SESSION_TYPES,
-    primaryType: "RelaySession",
-    message: {
-      operatorAddress: params.operatorAddress,
-      secretKeyHash,
-      expiresAt: expiresAt.toString(),
+    typedData: {
+      domain: {
+        name: RELAY_DOMAIN_NAME,
+        version: RELAY_DOMAIN_VERSION,
+        chainId: params.chainId,
+      },
+      types: RELAY_SESSION_TYPES,
+      primaryType: "RelaySession",
+      message: {
+        operatorAddress: params.operatorAddress,
+        secretKeyHash,
+        expiresAt: expiresAt.toString(),
+      },
     },
     expiresAt,
   };
@@ -96,13 +117,13 @@ export function buildSessionTypedData(params: {
  * Exchange an externally-produced session signature for a session token.
  *
  * Calls POST /api/relay/session directly. Use this after signing the
- * output of buildSessionTypedData with an external signer.
+ * `typedData` returned by buildSessionTypedData.
  *
  * @param params.apiUrl - Net API URL (e.g., https://netprotocol.app)
- * @param params.chainId - Chain ID (must match the one used in buildSessionTypedData)
+ * @param params.chainId - Chain ID (must match buildSessionTypedData)
  * @param params.operatorAddress - The address that produced the signature
  * @param params.signature - Signature from the external signer
- * @param params.expiresAt - expiresAt from buildSessionTypedData (unix seconds)
+ * @param params.expiresAt - expiresAt from BuildSessionResult (unix seconds)
  * @param params.secretKey - Relay access key (defaults to RELAY_ACCESS_KEY)
  */
 export async function exchangeSessionSignature(params: {
@@ -151,9 +172,7 @@ export async function exchangeSessionSignature(params: {
 // ============================================
 
 /**
- * Typed data for the ConversationAuth EIP-712 signature.
- *
- * All fields are JSON-safe (no bigints).
+ * EIP-712 typed data for ConversationAuth. Fully JSON-safe.
  */
 export interface ConversationAuthTypedData {
   domain: {
@@ -168,12 +187,19 @@ export interface ConversationAuthTypedData {
 }
 
 /**
- * Build EIP-712 typed data for authorizing a DM conversation topic.
+ * Output of buildConversationAuthTypedData.
  *
- * The returned payload is fully JSON-safe. Hand it to an external signer
- * (Bankr /agent/sign with "eth_signTypedData_v4"); the resulting signature
- * is the `userSignature` / `topicSignature` for subsequent DM sends in
- * this conversation.
+ * - `typedData` is the payload to sign (pass directly as Bankr's typedData)
+ * - `topic` is the conversation topic — pass to the DM command alongside
+ *   the signature so the backend can pair them
+ */
+export interface BuildConversationAuthResult {
+  typedData: ConversationAuthTypedData;
+  topic: string;
+}
+
+/**
+ * Build EIP-712 typed data for authorizing a DM conversation topic.
  *
  * @param params.topic - Conversation topic (e.g., agent-chat-0x...-nanoid)
  * @param params.chainId - Chain ID (determines which AI Chat contract is used)
@@ -181,15 +207,18 @@ export interface ConversationAuthTypedData {
 export function buildConversationAuthTypedData(params: {
   topic: string;
   chainId: number;
-}): ConversationAuthTypedData {
+}): BuildConversationAuthResult {
   return {
-    domain: {
-      ...CONVERSATION_AUTH_DOMAIN,
-      chainId: params.chainId,
-      verifyingContract: getAIChatContractAddress(params.chainId),
+    typedData: {
+      domain: {
+        ...CONVERSATION_AUTH_DOMAIN,
+        chainId: params.chainId,
+        verifyingContract: getAIChatContractAddress(params.chainId),
+      },
+      types: CONVERSATION_AUTH_TYPES,
+      primaryType: "ConversationAuth",
+      message: { topic: params.topic },
     },
-    types: CONVERSATION_AUTH_TYPES,
-    primaryType: "ConversationAuth",
-    message: { topic: params.topic },
+    topic: params.topic,
   };
 }

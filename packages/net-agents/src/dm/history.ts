@@ -11,12 +11,13 @@ import {
   NET_CONTRACT_ADDRESS,
   NET_MESSAGE_COUNT_BULK_HELPER_ADDRESS,
   CONVERSATION_INDEX_TOPIC,
+  DEFAULT_MAX_CONVERSATIONS,
+  DEFAULT_MAX_HISTORY_MESSAGES,
 } from "../constants";
 import { BULK_HELPER_ABI, NET_MESSAGE_ABI } from "../abis";
 import { getMessageType, isMessageEncrypted } from "./messageTypes";
 import type { ConversationInfo, ChatMessage } from "../types";
 
-// Raw response from the bulk helper contract
 interface TopicInfo {
   messageCount: bigint;
   lastMessageTimestamp: bigint;
@@ -25,26 +26,25 @@ interface TopicInfo {
 }
 
 /**
- * List all DM conversations for a user.
- *
- * Reads directly from the bulk helper contract (single RPC call),
- * same approach as the frontend's useConversationList hook.
+ * List DM conversations for a user via the bulk helper contract
+ * (single RPC call, same approach as the frontend).
  *
  * @param publicClient - viem PublicClient for the target chain
  * @param chatContractAddress - AI Chat contract address for the chain
  * @param userAddress - User's wallet address
- * @returns Array of conversations sorted by most recent first
+ * @param limit - Max conversations to fetch (default DEFAULT_MAX_CONVERSATIONS)
  */
 export async function listConversations(
   publicClient: PublicClient,
   chatContractAddress: Address,
   userAddress: Address,
+  limit: number = DEFAULT_MAX_CONVERSATIONS,
 ): Promise<ConversationInfo[]> {
   const data = await readContract(publicClient, {
     address: NET_MESSAGE_COUNT_BULK_HELPER_ADDRESS,
     abi: BULK_HELPER_ABI,
     functionName: "getConversationList",
-    args: [chatContractAddress, userAddress, CONVERSATION_INDEX_TOPIC, BigInt(100)],
+    args: [chatContractAddress, userAddress, CONVERSATION_INDEX_TOPIC, BigInt(limit)],
   });
 
   const [infos, topics] = data as [TopicInfo[], string[]];
@@ -62,41 +62,46 @@ export async function listConversations(
 }
 
 /**
- * Load conversation history from the chain.
+ * Load conversation history for a DM topic.
  *
- * Reads messages directly from the WillieNet contract,
- * same approach as the frontend's loadConversationHistory.
+ * When `limit` is provided, fetches only the most recent `limit` messages
+ * (saves RPC bandwidth for long conversations). Otherwise fetches up to
+ * DEFAULT_MAX_HISTORY_MESSAGES.
  *
  * @param publicClient - viem PublicClient for the target chain
  * @param chatContractAddress - AI Chat contract address for the chain
  * @param userAddress - User's wallet address
  * @param topic - Conversation topic
- * @returns Array of messages in chronological order
+ * @param limit - Max recent messages to fetch (default DEFAULT_MAX_HISTORY_MESSAGES)
  */
 export async function getConversationHistory(
   publicClient: PublicClient,
   chatContractAddress: Address,
   userAddress: Address,
   topic: string,
+  limit: number = DEFAULT_MAX_HISTORY_MESSAGES,
 ): Promise<ChatMessage[]> {
-  const messageCount = await readContract(publicClient, {
+  const messageCount = (await readContract(publicClient, {
     address: NET_CONTRACT_ADDRESS,
     abi: NET_MESSAGE_ABI,
     functionName: "getTotalMessagesForAppUserTopicCount",
     args: [chatContractAddress, userAddress, topic],
-  });
+  })) as bigint;
 
-  if (!messageCount || BigInt(messageCount as bigint) === BigInt(0)) {
+  if (!messageCount || messageCount === BigInt(0)) {
     return [];
   }
+
+  const total = Number(messageCount);
+  const startIndex = Math.max(0, total - limit);
 
   const rawMessages = await readContract(publicClient, {
     address: NET_CONTRACT_ADDRESS,
     abi: NET_MESSAGE_ABI,
     functionName: "getMessagesInRangeForAppUserTopic",
     args: [
-      BigInt(0),
-      messageCount as bigint,
+      BigInt(startIndex),
+      messageCount,
       chatContractAddress,
       userAddress,
       topic,

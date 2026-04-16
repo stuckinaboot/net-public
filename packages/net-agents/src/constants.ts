@@ -3,6 +3,7 @@
  */
 
 import type { Address } from "viem";
+import { NET_CONTRACT_ADDRESS as CORE_NET_CONTRACT_ADDRESS } from "@net-protocol/core";
 
 // ============================================
 // API URLs
@@ -20,8 +21,7 @@ export const NET_TESTNET_API_URL = "https://testnets.netprotocol.app";
 
 /**
  * Public access key used for relay wallet derivation.
- * This is NOT a secret — security comes from the server-side master key.
- * Same value used by the frontend and backend.
+ * Not actually secret — security comes from the server-side master key.
  */
 export const RELAY_ACCESS_KEY = "net-relay-public-access-key-v1";
 
@@ -29,9 +29,8 @@ export const RELAY_ACCESS_KEY = "net-relay-public-access-key-v1";
 // CONTRACT ADDRESSES
 // ============================================
 
-/** WillieNet messaging contract (same on all chains) */
-export const NET_CONTRACT_ADDRESS =
-  "0x00000000B24D62781dB359b07880a105cD0b64e6" as Address;
+/** Re-exported from @net-protocol/core for convenience. */
+export const NET_CONTRACT_ADDRESS = CORE_NET_CONTRACT_ADDRESS;
 
 /** Bulk helper contract for efficient conversation listing */
 export const NET_MESSAGE_COUNT_BULK_HELPER_ADDRESS =
@@ -47,13 +46,11 @@ export const AI_CHAT_CONTRACT: Record<number, Address> = {
 // EIP-712 CONVERSATION AUTH
 // ============================================
 
-/** EIP-712 domain for conversation authorization signatures */
 export const CONVERSATION_AUTH_DOMAIN = {
   name: "Net AI Chat",
   version: "1",
 } as const;
 
-/** EIP-712 types for conversation authorization */
 export const CONVERSATION_AUTH_TYPES = {
   ConversationAuth: [{ name: "topic", type: "string" }],
 } as const;
@@ -62,10 +59,8 @@ export const CONVERSATION_AUTH_TYPES = {
 // MESSAGE TYPE MARKERS
 // ============================================
 
-/** Message version byte */
 export const MESSAGE_VERSION = 0x01;
 
-/** Message type markers for the on-chain data field */
 export const MESSAGE_TYPES = {
   HUMAN: 0x00,
   AI: 0x01,
@@ -77,7 +72,7 @@ export const MESSAGE_TYPES = {
 // CONVERSATION INDEX
 // ============================================
 
-/** Topic used for efficient conversation discovery via bulk helper */
+/** Topic used by the bulk helper to enumerate a user's conversations. */
 export const CONVERSATION_INDEX_TOPIC = "_";
 
 // ============================================
@@ -98,3 +93,13 @@ export const AGENT_LIMITS = {
   minRunIntervalMinutes: 1,
   maxRunIntervalMinutes: 1440,
 } as const;
+
+// ============================================
+// DEFAULTS
+// ============================================
+
+/** Max conversations returned by listConversations when caller omits `limit`. */
+export const DEFAULT_MAX_CONVERSATIONS = 100;
+
+/** Max messages returned by getConversationHistory when caller omits `limit`. */
+export const DEFAULT_MAX_HISTORY_MESSAGES = 50;

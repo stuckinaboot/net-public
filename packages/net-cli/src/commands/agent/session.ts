@@ -1,14 +1,12 @@
 /**
- * Session management commands for the external-signer flow (e.g., Bankr).
+ * Session management commands for the external-signer flow (e.g. Bankr).
  *
- * The classic private-key flow handles session creation transparently.
- * These commands expose the underlying two-step flow so external signers
- * can plug in:
+ * The private-key flow creates sessions transparently via resolveAuth.
+ * These commands expose the two-step flow so external signers can plug in:
  *
- *   1. `session-encode --operator 0x...` → emits EIP-712 typed data + expiresAt
- *   2. sign the typed data externally (e.g., via Bankr /agent/sign)
- *   3. `session-create --operator 0x... --signature 0x... --expires-at N` →
- *      emits the sessionToken to use with subsequent commands
+ *   1. `session-encode --operator 0x...` → { typedData, expiresAt }
+ *   2. sign typedData externally (Bankr /agent/sign)
+ *   3. `session-create --signature 0x... --expires-at N` → { sessionToken }
  */
 
 import { Command } from "commander";
@@ -28,6 +26,14 @@ interface SessionEncodeOptions {
   expiresIn?: number;
 }
 
+interface SessionCreateOptions {
+  operator: string;
+  signature: string;
+  expiresAt: number;
+  chainId?: number;
+  apiUrl?: string;
+}
+
 async function executeSessionEncode(options: SessionEncodeOptions): Promise<void> {
   try {
     if (!isAddress(options.operator)) {
@@ -38,8 +44,6 @@ async function executeSessionEncode(options: SessionEncodeOptions): Promise<void
       chainId: options.chainId,
     });
 
-    // Returns { typedData: {...}, expiresAt: N }.
-    // Pipe .typedData to Bankr /agent/sign; pass .expiresAt to session-create.
     const result = buildSessionTypedData({
       operatorAddress: options.operator as `0x${string}`,
       chainId,
@@ -75,18 +79,6 @@ export function registerAgentSessionEncodeCommand(parent: Command): void {
     .action(async (options) => {
       await executeSessionEncode(options);
     });
-}
-
-// ============================================================
-// session-create
-// ============================================================
-
-interface SessionCreateOptions {
-  operator: string;
-  signature: string;
-  expiresAt: number;
-  chainId?: number;
-  apiUrl?: string;
 }
 
 async function executeSessionCreate(options: SessionCreateOptions): Promise<void> {

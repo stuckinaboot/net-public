@@ -225,15 +225,16 @@ export class AgentClient {
    * Reads directly from the chain (no backend call), same as the frontend.
    *
    * @param userAddress - User's wallet address
-   * @param publicClient - Optional custom PublicClient (defaults to chain's public client)
+   * @param opts.limit - Max conversations to fetch
+   * @param opts.publicClient - Optional custom PublicClient
    */
   async listConversations(
     userAddress: Address,
-    publicClient?: PublicClient,
+    opts?: { limit?: number; publicClient?: PublicClient },
   ): Promise<ConversationInfo[]> {
-    const client = publicClient ?? getPublicClient({ chainId: this.chainId });
+    const client = opts?.publicClient ?? getPublicClient({ chainId: this.chainId });
     const chatContract = getAIChatContractAddress(this.chainId);
-    return listConversations(client, chatContract, userAddress);
+    return listConversations(client, chatContract, userAddress, opts?.limit);
   }
 
   /**
@@ -243,16 +244,17 @@ export class AgentClient {
    *
    * @param userAddress - User's wallet address
    * @param topic - Conversation topic
-   * @param publicClient - Optional custom PublicClient
+   * @param opts.limit - Max recent messages to fetch
+   * @param opts.publicClient - Optional custom PublicClient
    */
   async getConversationHistory(
     userAddress: Address,
     topic: string,
-    publicClient?: PublicClient,
+    opts?: { limit?: number; publicClient?: PublicClient },
   ): Promise<ChatMessage[]> {
-    const client = publicClient ?? getPublicClient({ chainId: this.chainId });
+    const client = opts?.publicClient ?? getPublicClient({ chainId: this.chainId });
     const chatContract = getAIChatContractAddress(this.chainId);
-    return getConversationHistory(client, chatContract, userAddress, topic);
+    return getConversationHistory(client, chatContract, userAddress, topic, opts?.limit);
   }
 
   // ============================================

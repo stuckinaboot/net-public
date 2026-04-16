@@ -1,16 +1,15 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { resolveAuth, jsonStringify } from "./shared";
+import {
+  addAuthOptions,
+  jsonStringify,
+  parseRunMode,
+  resolveAuth,
+  type AgentAuthOptions,
+} from "./shared";
 import { exitWithError } from "../../shared/output";
-import type { AgentRunMode } from "@net-protocol/agents";
 
-interface RunOptions {
-  privateKey?: string;
-  sessionToken?: string;
-  operator?: string;
-  chainId?: number;
-  rpcUrl?: string;
-  apiUrl?: string;
+interface RunOptions extends AgentAuthOptions {
   mode?: string;
   json?: boolean;
 }
@@ -18,14 +17,9 @@ interface RunOptions {
 async function executeRun(agentId: string, options: RunOptions): Promise<void> {
   try {
     const auth = await resolveAuth(options);
-
-    const mode = (options.mode as AgentRunMode) || "auto";
-    if (!["auto", "feeds", "chats"].includes(mode)) {
-      exitWithError(`Invalid mode "${mode}". Must be: auto, feeds, or chats`);
-    }
+    const mode = parseRunMode(options.mode);
 
     console.log(chalk.blue(`Running agent ${agentId} (mode: ${mode})...`));
-
     const result = await auth.client.runAgent({
       sessionToken: auth.sessionToken,
       agentId,
@@ -48,11 +42,11 @@ async function executeRun(agentId: string, options: RunOptions): Promise<void> {
     }
 
     if (result.actions.length > 0) {
-      console.log(`  Actions:`);
+      console.log("  Actions:");
       for (const action of result.actions) {
-        console.log(
-          `    - ${action.type} in ${action.topic}: "${action.text.slice(0, 60)}${action.text.length > 60 ? "..." : ""}"`,
-        );
+        const textPreview =
+          action.text.length > 60 ? `${action.text.slice(0, 60)}...` : action.text;
+        console.log(`    - ${action.type} in ${action.topic}: "${textPreview}"`);
         console.log(`      tx: ${action.transactionHash}`);
       }
     }
@@ -79,24 +73,12 @@ async function executeRun(agentId: string, options: RunOptions): Promise<void> {
 }
 
 export function registerAgentRunCommand(parent: Command): void {
-  parent
+  const cmd = parent
     .command("run <agentId>")
     .description("Execute one agent cycle")
-    .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
-    .option("--rpc-url <url>", "Custom RPC URL")
-    .option("--private-key <key>", "Private key (0x-prefixed)")
-    .option(
-      "--session-token <token>",
-      "Pre-existing session token (alternative to --private-key)",
-    )
-    .option(
-      "--operator <address>",
-      "Operator address (required with --session-token)",
-    )
-    .option("--api-url <url>", "Net Protocol API URL")
     .option("--mode <mode>", "Run mode: auto, feeds, or chats (default: auto)")
-    .option("--json", "Output as JSON")
-    .action(async (agentId, options) => {
-      await executeRun(agentId, options);
-    });
+    .option("--json", "Output as JSON");
+  addAuthOptions(cmd).action(async (agentId, options) => {
+    await executeRun(agentId, options);
+  });
 }

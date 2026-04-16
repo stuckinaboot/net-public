@@ -1,21 +1,23 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { createAuthenticatedClient } from "./shared";
+import { resolveAuth } from "./shared";
 import { exitWithError } from "../../shared/output";
 
 interface HideOptions {
+  privateKey?: string;
+  sessionToken?: string;
+  operator?: string;
   chainId?: number;
   rpcUrl?: string;
-  privateKey?: string;
   apiUrl?: string;
 }
 
 async function executeHide(agentId: string, options: HideOptions): Promise<void> {
   try {
-    const { client, sessionToken } = await createAuthenticatedClient(options);
+    const auth = await resolveAuth(options);
 
     console.log(chalk.blue(`Hiding agent ${agentId}...`));
-    const result = await client.hideAgent(sessionToken, agentId);
+    const result = await auth.client.hideAgent(auth.sessionToken, agentId);
 
     if (!result.success) {
       exitWithError(result.error || "Failed to hide agent");
@@ -31,10 +33,10 @@ async function executeHide(agentId: string, options: HideOptions): Promise<void>
 
 async function executeUnhide(agentId: string, options: HideOptions): Promise<void> {
   try {
-    const { client, sessionToken } = await createAuthenticatedClient(options);
+    const auth = await resolveAuth(options);
 
     console.log(chalk.blue(`Unhiding agent ${agentId}...`));
-    const result = await client.unhideAgent(sessionToken, agentId);
+    const result = await auth.client.unhideAgent(auth.sessionToken, agentId);
 
     if (!result.success) {
       exitWithError(result.error || "Failed to unhide agent");
@@ -48,28 +50,34 @@ async function executeUnhide(agentId: string, options: HideOptions): Promise<voi
   }
 }
 
-export function registerAgentHideCommand(parent: Command): void {
-  parent
-    .command("hide <agentId>")
-    .description("Hide an agent (soft-delete)")
+function addAuthOptions(cmd: Command): Command {
+  return cmd
     .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
     .option("--rpc-url <url>", "Custom RPC URL")
     .option("--private-key <key>", "Private key (0x-prefixed)")
-    .option("--api-url <url>", "Net Protocol API URL")
-    .action(async (agentId, options) => {
-      await executeHide(agentId, options);
-    });
+    .option(
+      "--session-token <token>",
+      "Pre-existing session token (alternative to --private-key)",
+    )
+    .option(
+      "--operator <address>",
+      "Operator address (required with --session-token)",
+    )
+    .option("--api-url <url>", "Net Protocol API URL");
+}
+
+export function registerAgentHideCommand(parent: Command): void {
+  const cmd = parent.command("hide <agentId>").description("Hide an agent (soft-delete)");
+  addAuthOptions(cmd).action(async (agentId, options) => {
+    await executeHide(agentId, options);
+  });
 }
 
 export function registerAgentUnhideCommand(parent: Command): void {
-  parent
+  const cmd = parent
     .command("unhide <agentId>")
-    .description("Unhide a previously hidden agent")
-    .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
-    .option("--rpc-url <url>", "Custom RPC URL")
-    .option("--private-key <key>", "Private key (0x-prefixed)")
-    .option("--api-url <url>", "Net Protocol API URL")
-    .action(async (agentId, options) => {
-      await executeUnhide(agentId, options);
-    });
+    .description("Unhide a previously hidden agent");
+  addAuthOptions(cmd).action(async (agentId, options) => {
+    await executeUnhide(agentId, options);
+  });
 }

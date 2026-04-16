@@ -1,14 +1,19 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { createAuthenticatedClient } from "./shared";
+import { resolveAuth, jsonStringify } from "./shared";
 import { exitWithError } from "../../shared/output";
 import type { UpdateAgentInput, AgentProfileInput } from "@net-protocol/agents";
 
 interface UpdateOptions {
+  // Auth
+  privateKey?: string;
+  sessionToken?: string;
+  operator?: string;
+  // Common
   chainId?: number;
   rpcUrl?: string;
-  privateKey?: string;
   apiUrl?: string;
+  // Update-specific
   name?: string;
   systemPrompt?: string;
   schedule?: number;
@@ -24,9 +29,8 @@ interface UpdateOptions {
 
 async function executeUpdate(agentId: string, options: UpdateOptions): Promise<void> {
   try {
-    const { client, sessionToken } = await createAuthenticatedClient(options);
+    const auth = await resolveAuth(options);
 
-    // Build config updates
     const config: UpdateAgentInput = {};
     let hasConfigChanges = false;
 
@@ -47,7 +51,6 @@ async function executeUpdate(agentId: string, options: UpdateOptions): Promise<v
       hasConfigChanges = true;
     }
 
-    // Build filter updates
     if (
       options.includeFeed?.length ||
       options.excludeFeed?.length ||
@@ -62,7 +65,6 @@ async function executeUpdate(agentId: string, options: UpdateOptions): Promise<v
       hasConfigChanges = true;
     }
 
-    // Build profile updates
     let profile: AgentProfileInput | undefined;
     if (options.displayName || options.bio) {
       profile = {};
@@ -71,13 +73,15 @@ async function executeUpdate(agentId: string, options: UpdateOptions): Promise<v
     }
 
     if (!hasConfigChanges && !profile) {
-      exitWithError("No changes specified. Use --name, --system-prompt, --schedule, --display-name, --bio, or filter options.");
+      exitWithError(
+        "No changes specified. Use --name, --system-prompt, --schedule, --display-name, --bio, or filter options.",
+      );
     }
 
     console.log(chalk.blue(`Updating agent ${agentId}...`));
 
-    const result = await client.updateAgent({
-      sessionToken,
+    const result = await auth.client.updateAgent({
+      sessionToken: auth.sessionToken,
       agentId,
       config: hasConfigChanges ? config : undefined,
       profile,
@@ -88,7 +92,7 @@ async function executeUpdate(agentId: string, options: UpdateOptions): Promise<v
     }
 
     if (options.json) {
-      console.log(JSON.stringify(result, null, 2));
+      console.log(jsonStringify(result));
     } else {
       console.log(chalk.green("Agent updated successfully!"));
       if (result.profileError) {
@@ -109,6 +113,14 @@ export function registerAgentUpdateCommand(parent: Command): void {
     .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
     .option("--rpc-url <url>", "Custom RPC URL")
     .option("--private-key <key>", "Private key (0x-prefixed)")
+    .option(
+      "--session-token <token>",
+      "Pre-existing session token (alternative to --private-key)",
+    )
+    .option(
+      "--operator <address>",
+      "Operator address (required with --session-token)",
+    )
     .option("--api-url <url>", "Net Protocol API URL")
     .option("--name <name>", "New agent name")
     .option("--system-prompt <prompt>", "New system prompt")

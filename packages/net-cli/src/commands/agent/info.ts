@@ -1,21 +1,23 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { createAuthenticatedClient } from "./shared";
+import { resolveAuth, jsonStringify } from "./shared";
 import { exitWithError } from "../../shared/output";
 
 interface InfoOptions {
+  privateKey?: string;
+  sessionToken?: string;
+  operator?: string;
   chainId?: number;
   rpcUrl?: string;
-  privateKey?: string;
   apiUrl?: string;
   json?: boolean;
 }
 
 async function executeInfo(agentId: string, options: InfoOptions): Promise<void> {
   try {
-    const { client, sessionToken } = await createAuthenticatedClient(options);
+    const auth = await resolveAuth(options);
 
-    const agent = await client.getAgent(sessionToken, agentId);
+    const agent = await auth.client.getAgent(auth.sessionToken, agentId);
 
     if (!agent) {
       exitWithError(`Agent not found: ${agentId}`);
@@ -23,7 +25,7 @@ async function executeInfo(agentId: string, options: InfoOptions): Promise<void>
     }
 
     if (options.json) {
-      console.log(JSON.stringify(agent, null, 2));
+      console.log(jsonStringify(agent));
       return;
     }
 
@@ -74,6 +76,14 @@ export function registerAgentInfoCommand(parent: Command): void {
     .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
     .option("--rpc-url <url>", "Custom RPC URL")
     .option("--private-key <key>", "Private key (0x-prefixed)")
+    .option(
+      "--session-token <token>",
+      "Pre-existing session token (alternative to --private-key)",
+    )
+    .option(
+      "--operator <address>",
+      "Operator address (required with --session-token)",
+    )
     .option("--api-url <url>", "Net Protocol API URL")
     .option("--json", "Output as JSON")
     .action(async (agentId, options) => {

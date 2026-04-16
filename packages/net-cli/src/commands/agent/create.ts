@@ -1,14 +1,19 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { createAuthenticatedClient } from "./shared";
+import { resolveAuth, jsonStringify } from "./shared";
 import { exitWithError } from "../../shared/output";
 import type { CreateAgentInput, AgentProfileInput } from "@net-protocol/agents";
 
 interface CreateOptions {
+  // Auth
+  privateKey?: string;
+  sessionToken?: string;
+  operator?: string;
+  // Common
   chainId?: number;
   rpcUrl?: string;
-  privateKey?: string;
   apiUrl?: string;
+  // Create-specific
   systemPrompt: string;
   schedule?: number;
   displayName?: string;
@@ -22,7 +27,7 @@ interface CreateOptions {
 
 async function executeCreate(name: string, options: CreateOptions): Promise<void> {
   try {
-    const { client, sessionToken } = await createAuthenticatedClient(options);
+    const auth = await resolveAuth(options);
 
     const config: CreateAgentInput = {
       name,
@@ -33,7 +38,6 @@ async function executeCreate(name: string, options: CreateOptions): Promise<void
       config.runIntervalMinutes = options.schedule;
     }
 
-    // Build filters if any filter options provided
     if (
       options.includeFeed?.length ||
       options.excludeFeed?.length ||
@@ -47,7 +51,6 @@ async function executeCreate(name: string, options: CreateOptions): Promise<void
       if (options.chatTopic?.length) config.filters.preferredChatTopics = options.chatTopic;
     }
 
-    // Build profile if display name or bio provided
     let profile: AgentProfileInput | undefined;
     if (options.displayName || options.bio) {
       profile = {};
@@ -57,8 +60,8 @@ async function executeCreate(name: string, options: CreateOptions): Promise<void
 
     console.log(chalk.blue(`Creating agent "${name}"...`));
 
-    const result = await client.createAgent({
-      sessionToken,
+    const result = await auth.client.createAgent({
+      sessionToken: auth.sessionToken,
       config,
       profile,
     });
@@ -68,7 +71,7 @@ async function executeCreate(name: string, options: CreateOptions): Promise<void
     }
 
     if (options.json) {
-      console.log(JSON.stringify(result, null, 2));
+      console.log(jsonStringify(result));
     } else {
       console.log(chalk.green(`Agent created successfully!`));
       console.log(`  Agent ID: ${result.agentId}`);
@@ -92,6 +95,14 @@ export function registerAgentCreateCommand(parent: Command): void {
     .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
     .option("--rpc-url <url>", "Custom RPC URL")
     .option("--private-key <key>", "Private key (0x-prefixed)")
+    .option(
+      "--session-token <token>",
+      "Pre-existing session token (alternative to --private-key, e.g., for Bankr)",
+    )
+    .option(
+      "--operator <address>",
+      "Operator address (required with --session-token)",
+    )
     .option("--api-url <url>", "Net Protocol API URL")
     .option("--schedule <minutes>", "Auto-run interval in minutes", (v) => parseInt(v, 10))
     .option("--display-name <name>", "Agent display name")

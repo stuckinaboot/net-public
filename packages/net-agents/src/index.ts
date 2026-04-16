@@ -8,6 +8,17 @@ export { listConversations, getConversationHistory } from "./dm/history";
 export { isMessageEncrypted, getMessageType } from "./dm/messageTypes";
 export type { MessageType } from "./dm/messageTypes";
 
+// External signing helpers (for Bankr or other external signers)
+export {
+  buildSessionTypedData,
+  exchangeSessionSignature,
+  buildConversationAuthTypedData,
+} from "./externalSigning";
+export type {
+  SessionTypedData,
+  ConversationAuthTypedData,
+} from "./externalSigning";
+
 // Types
 export type {
   AgentConfig,

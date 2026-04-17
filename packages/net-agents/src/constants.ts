@@ -34,7 +34,7 @@ export const NET_CONTRACT_ADDRESS = CORE_NET_CONTRACT_ADDRESS;
 
 /** Bulk helper contract for efficient conversation listing */
 export const NET_MESSAGE_COUNT_BULK_HELPER_ADDRESS =
-  "0x00000005CEB10AE2b2784AA2a0D3c98B1fa60b15" as Address;
+  "0x00000005CEB10AE2B2784AA2A0D3c98B1fa60b15" as Address;
 
 /** AI Chat contract addresses (per chain) */
 export const AI_CHAT_CONTRACT: Record<number, Address> = {

@@ -24,9 +24,9 @@ describe("topicUtils", () => {
 
     it("should include an 8-character nanoid suffix", () => {
       const topic = generateAgentChatTopic(testAddress as `0x${string}`);
-      const parts = topic.split("-");
-      // "agent", "chat", "0x...", nanoid
-      const nanoidPart = parts[parts.length - 1];
+      // Extract suffix after "agent-chat-0x{40hex}-"
+      const prefix = `agent-chat-${testAddress}-`;
+      const nanoidPart = topic.slice(prefix.length);
       expect(nanoidPart.length).toBe(8);
     });
   });

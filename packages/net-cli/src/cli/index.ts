@@ -23,6 +23,7 @@ import { registerBazaarCommand } from "../commands/bazaar";
 import { registerFeedCommand } from "../commands/feed";
 import { registerUpvoteCommand } from "../commands/upvote";
 import { registerAgentCommand } from "../commands/agent";
+import { registerRelayCommand } from "../commands/relay";
 import { getUpdateInfo, printUpdateBanner } from "../utils/update-check";
 
 const require = createRequire(import.meta.url);
@@ -46,6 +47,7 @@ registerBazaarCommand(program);
 registerFeedCommand(program);
 registerUpvoteCommand(program);
 registerAgentCommand(program);
+registerRelayCommand(program);
 
 // Add update command
 program

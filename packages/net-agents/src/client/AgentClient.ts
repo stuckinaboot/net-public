@@ -270,7 +270,11 @@ export class AgentClient {
   }
 
   private async parseResponse<T>(response: Response): Promise<T> {
-    const data = await response.json();
+    const data = await response.json().catch(() => ({} as Record<string, string>));
+    if (!response.ok) {
+      const errorMsg = (data as Record<string, string>).error || `Request failed: ${response.status}`;
+      return { success: false, error: errorMsg } as T;
+    }
     return data as T;
   }
 }

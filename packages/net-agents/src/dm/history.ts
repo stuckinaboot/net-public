@@ -118,8 +118,7 @@ export async function getConversationHistory(
   ).map((msg) => {
     const msgType = getMessageType(msg.data);
     const isAI = msgType === "ai" || msgType === "encrypted_ai";
-    const isEncrypted =
-      msgType === "encrypted_human" || msgType === "encrypted_ai";
+    const isEncrypted = isMessageEncrypted(msg.data);
 
     return {
       text: msg.text,

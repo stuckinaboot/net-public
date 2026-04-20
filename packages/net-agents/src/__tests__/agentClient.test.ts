@@ -37,6 +37,7 @@ describe("AgentClient", () => {
         agentWalletAddress: "0xabc",
       };
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockResponse),
       });
 
@@ -66,6 +67,7 @@ describe("AgentClient", () => {
 
     it("should include profile when provided", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({ success: true }),
       });
 
@@ -87,6 +89,7 @@ describe("AgentClient", () => {
   describe("updateAgent", () => {
     it("should call PUT /api/agents/config", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({ success: true }),
       });
 
@@ -117,6 +120,7 @@ describe("AgentClient", () => {
         },
       ];
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({ success: true, agents }),
       });
 
@@ -138,6 +142,7 @@ describe("AgentClient", () => {
         { config: { id: "agent-2", name: "Bot2" }, walletAddress: "0xdef" },
       ];
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({ success: true, agents }),
       });
 
@@ -148,6 +153,7 @@ describe("AgentClient", () => {
 
     it("should return null for non-existent agent", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () =>
           Promise.resolve({ success: true, agents: [] }),
       });
@@ -160,6 +166,7 @@ describe("AgentClient", () => {
   describe("hideAgent / unhideAgent", () => {
     it("should call updateAgent with hidden: true", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({ success: true }),
       });
 
@@ -171,6 +178,7 @@ describe("AgentClient", () => {
 
     it("should call updateAgent with hidden: false", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({ success: true }),
       });
 
@@ -184,6 +192,7 @@ describe("AgentClient", () => {
   describe("runAgent", () => {
     it("should call POST /api/agents/run with correct body", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: true,
         json: () =>
           Promise.resolve({
             success: true,

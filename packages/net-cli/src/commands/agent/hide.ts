@@ -3,36 +3,27 @@ import { Command } from "commander";
 import { addAuthOptions, resolveAuth, type AgentAuthOptions } from "./shared";
 import { exitWithError } from "../../shared/output";
 
-async function executeHide(agentId: string, options: AgentAuthOptions): Promise<void> {
+async function executeToggleHidden(
+  agentId: string,
+  options: AgentAuthOptions,
+  hide: boolean,
+): Promise<void> {
+  const verb = hide ? "Hiding" : "Unhiding";
+  const past = hide ? "hidden" : "unhidden";
   try {
     const auth = await resolveAuth(options);
-    console.log(chalk.blue(`Hiding agent ${agentId}...`));
-    const result = await auth.client.hideAgent(auth.sessionToken, agentId);
+    console.log(chalk.blue(`${verb} agent ${agentId}...`));
+    const result = hide
+      ? await auth.client.hideAgent(auth.sessionToken, agentId)
+      : await auth.client.unhideAgent(auth.sessionToken, agentId);
 
     if (!result.success) {
-      exitWithError(result.error || "Failed to hide agent");
+      exitWithError(result.error || `Failed to ${hide ? "hide" : "unhide"} agent`);
     }
-    console.log(chalk.green("Agent hidden successfully."));
+    console.log(chalk.green(`Agent ${past} successfully.`));
   } catch (error) {
     exitWithError(
-      `Failed to hide agent: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-}
-
-async function executeUnhide(agentId: string, options: AgentAuthOptions): Promise<void> {
-  try {
-    const auth = await resolveAuth(options);
-    console.log(chalk.blue(`Unhiding agent ${agentId}...`));
-    const result = await auth.client.unhideAgent(auth.sessionToken, agentId);
-
-    if (!result.success) {
-      exitWithError(result.error || "Failed to unhide agent");
-    }
-    console.log(chalk.green("Agent unhidden successfully."));
-  } catch (error) {
-    exitWithError(
-      `Failed to unhide agent: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to ${hide ? "hide" : "unhide"} agent: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -40,7 +31,7 @@ async function executeUnhide(agentId: string, options: AgentAuthOptions): Promis
 export function registerAgentHideCommand(parent: Command): void {
   const cmd = parent.command("hide <agentId>").description("Hide an agent (soft-delete)");
   addAuthOptions(cmd).action(async (agentId, options) => {
-    await executeHide(agentId, options);
+    await executeToggleHidden(agentId, options, true);
   });
 }
 
@@ -49,6 +40,6 @@ export function registerAgentUnhideCommand(parent: Command): void {
     .command("unhide <agentId>")
     .description("Unhide a previously hidden agent");
   addAuthOptions(cmd).action(async (agentId, options) => {
-    await executeUnhide(agentId, options);
+    await executeToggleHidden(agentId, options, false);
   });
 }

@@ -8,7 +8,11 @@ import {
   fundBackendWallet,
   checkBackendWalletBalance,
 } from "@net-protocol/relay";
-import { RELAY_ACCESS_KEY } from "@net-protocol/agents";
+import {
+  RELAY_ACCESS_KEY,
+  NET_API_URL,
+  NET_TESTNET_API_URL,
+} from "@net-protocol/agents";
 import { parseCommonOptionsWithDefault } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 
@@ -16,6 +20,10 @@ const CHAINS: Record<number, typeof base> = {
   8453: base,
   84532: baseSepolia,
 };
+
+function getApiUrl(chainId: number): string {
+  return chainId === 84532 ? NET_TESTNET_API_URL : NET_API_URL;
+}
 
 /**
  * Register the relay command group with the commander program
@@ -91,10 +99,7 @@ export function registerRelayCommand(program: Command): void {
       const fetchWithPayment = wrapFetchWithPayment(fetch, client);
       const httpClient = new x402HTTPClient(client);
 
-      const apiUrl =
-        chainId === 84532
-          ? "https://testnets.netprotocol.app"
-          : "https://netprotocol.app";
+      const apiUrl = getApiUrl(chainId);
 
       if (!options.json) {
         console.log(
@@ -158,10 +163,7 @@ export function registerRelayCommand(program: Command): void {
       });
 
       const account = privateKeyToAccount(privateKey);
-      const apiUrl =
-        chainId === 84532
-          ? "https://testnets.netprotocol.app"
-          : "https://netprotocol.app";
+      const apiUrl = getApiUrl(chainId);
 
       try {
         const result = await checkBackendWalletBalance({

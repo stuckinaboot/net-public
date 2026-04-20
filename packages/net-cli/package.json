@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.1.42",
+  "version": "0.1.43",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
@@ -48,6 +48,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@net-protocol/agents": "^0.1.0",
     "@net-protocol/bazaar": "^0.1.17",
     "@net-protocol/chats": "^0.1.0",
     "@net-protocol/core": "^0.1.9",

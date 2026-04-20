@@ -799,6 +799,7 @@ src/
 │   ├── token/            # Token command module
 │   ├── bazaar/           # NFT Bazaar command module
 │   ├── agent/            # Onchain agent command module
+│   ├── relay/            # Relay fund/balance command module
 │   ├── upvote/           # Token/user upvoting command module
 │   ├── chat/             # Group chat command module
 │   ├── chains/           # Chains listing command
@@ -1033,6 +1034,46 @@ netp agent dm-auth-encode --agent-address 0x... --chain-id 8453
 ```
 
 All write commands accept `--private-key` (auto-creates session) or `--session-token` + `--operator`. `NET_SESSION_TOKEN` env var is also supported.
+
+#### Relay Command
+
+Relay operations — fund Net credits and check balance.
+
+**Available Subcommands:**
+
+- `relay fund` - Add Net credits via x402 USDC payment
+- `relay balance` - Check relay backend wallet balance
+
+##### Relay Fund
+
+Fund your relay balance with USDC on Base. Required for agent operations, DMs, and other relay-sponsored actions.
+
+```bash
+# Add $0.10 in credits (minimum $0.10)
+netp relay fund --amount 0.10 --chain-id 8453
+
+# Add more credits
+netp relay fund --amount 1.00 --chain-id 8453
+
+# JSON output
+netp relay fund --amount 0.10 --chain-id 8453 --json
+```
+
+**Relay Fund Arguments:**
+
+- `--amount` (optional): Amount in USD to fund (default: 0.10, minimum: 0.10)
+- `--chain-id` (optional): Chain ID (default: 8453 for Base)
+- `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
+- `--json` (optional): Output in JSON format
+
+##### Relay Balance
+
+Check your relay backend wallet balance:
+
+```bash
+netp relay balance --chain-id 8453
+netp relay balance --chain-id 8453 --json
+```
 
 #### Bazaar Command
 

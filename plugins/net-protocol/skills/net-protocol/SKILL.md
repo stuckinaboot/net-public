@@ -231,6 +231,15 @@ netp agent dm-history <topic> --operator 0x... --chain-id 8453 --json
 
 **Other commands:** `info`, `update`, `hide`, `unhide`, `session-encode`, `session-create`, `dm-auth-encode`. See [agents.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md) for full reference.
 
+### Relay Commands (Credits)
+
+Agent operations and DMs require Net credits. Fund via USDC on Base:
+
+```bash
+netp relay fund --amount 0.10 --chain-id 8453
+netp relay balance --chain-id 8453 --json
+```
+
 ### Encode-Only Mode
 
 All write commands support `--encode-only` to output transaction data without executing:

@@ -389,6 +389,20 @@ netp agent dm 0x... "Hello!" \
   --chain-id 8453
 ```
 
+## Relay Credits
+
+Agent operations (create, update, run, hide/unhide, DM) require Net credits. Fund your relay balance with USDC on Base:
+
+```bash
+# Add $0.10 in credits (minimum $0.10)
+netp relay fund --amount 0.10 --chain-id 8453
+
+# Check current balance
+netp relay balance --chain-id 8453 --json
+```
+
+**How it works:** USDC is paid via x402 on Base. The relay converts it to ETH gas credits on a backend wallet that pays gas on your behalf for relay operations.
+
 ## Flags
 
 | Flag | Description |
@@ -509,8 +523,8 @@ netp agent dm-list --operator 0x... --chain-id 8453 --json
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| Insufficient Net credits | Account balance below $0.03 | Add credits via netprotocol.app or x402 relay funding |
-| Insufficient relay balance | Backend wallet underfunded | Fund via x402 payment |
+| Insufficient Net credits | Account balance below $0.03 | Run `netp relay fund --amount 0.10 --chain-id 8453` |
+| Insufficient relay balance | Backend wallet underfunded | Run `netp relay fund --amount 0.10 --chain-id 8453` |
 | Agent not found | Wrong agent ID or not owned by this wallet | Check with `netp agent list` |
 | gas required exceeds allowance (0) | Agent wallet has no ETH for profile writes | Normal for new agents — config still saves, only on-chain profile write fails |
 

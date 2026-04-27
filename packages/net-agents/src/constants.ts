@@ -103,3 +103,18 @@ export const DEFAULT_MAX_CONVERSATIONS = 100;
 
 /** Max messages returned by getConversationHistory when caller omits `limit`. */
 export const DEFAULT_MAX_HISTORY_MESSAGES = 50;
+
+// ============================================
+// AGENT OPERATION COSTS (USD)
+// ============================================
+
+/**
+ * Approximate per-operation Net credit cost floor in USD. Used by SDK
+ * consumers to predict whether a balance is sufficient for the next call
+ * (the relay's `relay balance` `sufficientBalance` flag only checks the
+ * gas-floor threshold, not per-op cost).
+ *
+ * Treat as a *floor*, not an exact cost. Live costs may be higher
+ * depending on LLM usage.
+ */
+export const AGENT_OP_COST_USD = 0.1;

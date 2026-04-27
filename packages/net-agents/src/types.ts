@@ -205,12 +205,18 @@ export interface SendAgentMessageParams {
 
 /**
  * Response from sending a DM to an agent
+ *
+ * On success, all message fields are populated and `success` is `true`.
+ * On failure, `success` is `false` and `error` describes the cause; the
+ * message fields will be undefined.
  */
 export interface SendAgentMessageResponse {
-  aiMessage: string;
-  transactionHash: Hex;
-  timestamp: number;
-  encrypted: boolean;
+  success: boolean;
+  error?: string;
+  aiMessage?: string;
+  transactionHash?: Hex;
+  timestamp?: number;
+  encrypted?: boolean;
 }
 
 /**
@@ -228,9 +234,16 @@ export interface ConversationInfo {
  * A single message in a DM conversation
  */
 export interface ChatMessage {
+  /** Human-readable plaintext (decoded from `data`). */
   text: string;
+  /** "user" if a human authored the message, "ai" if the agent did. Derived from the marker byte in `envelope`. */
   sender: "user" | "ai";
+  /** Block timestamp (unix seconds). */
   timestamp: number;
+  /** Whether the message is end-to-end encrypted. */
   encrypted: boolean;
+  /** Raw on-chain envelope: [version byte][marker byte][optional metadata like model id]. */
+  envelope?: string;
+  /** Raw plaintext bytes (hex). UTF-8-decoded to populate `text`. */
   data?: Hex;
 }

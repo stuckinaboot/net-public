@@ -26,6 +26,23 @@ import {
 } from "./constants";
 import { getAIChatContractAddress } from "./dm/signature";
 
+// EIP-712 spec allows omitting the EIP712Domain entry from `types` — most
+// signers derive it from `domain` automatically. But strict signers (e.g.,
+// some Bankr API versions) reject the payload without an explicit
+// EIP712Domain definition. Include it to maximize compatibility.
+const EIP712_DOMAIN_TYPE_NO_VERIFYING_CONTRACT = [
+  { name: "name", type: "string" },
+  { name: "version", type: "string" },
+  { name: "chainId", type: "uint256" },
+] as const;
+
+const EIP712_DOMAIN_TYPE_WITH_VERIFYING_CONTRACT = [
+  { name: "name", type: "string" },
+  { name: "version", type: "string" },
+  { name: "chainId", type: "uint256" },
+  { name: "verifyingContract", type: "address" },
+] as const;
+
 // ============================================
 // RELAY SESSION EIP-712
 // ============================================
@@ -44,7 +61,9 @@ export interface SessionTypedData {
     version: string;
     chainId: number;
   };
-  types: typeof RELAY_SESSION_TYPES;
+  types: {
+    EIP712Domain: typeof EIP712_DOMAIN_TYPE_NO_VERIFYING_CONTRACT;
+  } & typeof RELAY_SESSION_TYPES;
   primaryType: "RelaySession";
   message: {
     operatorAddress: Address;
@@ -101,7 +120,10 @@ export function buildSessionTypedData(params: {
         version: RELAY_DOMAIN_VERSION,
         chainId: params.chainId,
       },
-      types: RELAY_SESSION_TYPES,
+      types: {
+        EIP712Domain: EIP712_DOMAIN_TYPE_NO_VERIFYING_CONTRACT,
+        ...RELAY_SESSION_TYPES,
+      },
       primaryType: "RelaySession",
       message: {
         operatorAddress: params.operatorAddress,
@@ -181,7 +203,9 @@ export interface ConversationAuthTypedData {
     chainId: number;
     verifyingContract: Address;
   };
-  types: typeof CONVERSATION_AUTH_TYPES;
+  types: {
+    EIP712Domain: typeof EIP712_DOMAIN_TYPE_WITH_VERIFYING_CONTRACT;
+  } & typeof CONVERSATION_AUTH_TYPES;
   primaryType: "ConversationAuth";
   message: { topic: string };
 }
@@ -215,7 +239,10 @@ export function buildConversationAuthTypedData(params: {
         chainId: params.chainId,
         verifyingContract: getAIChatContractAddress(params.chainId),
       },
-      types: CONVERSATION_AUTH_TYPES,
+      types: {
+        EIP712Domain: EIP712_DOMAIN_TYPE_WITH_VERIFYING_CONTRACT,
+        ...CONVERSATION_AUTH_TYPES,
+      },
       primaryType: "ConversationAuth",
       message: { topic: params.topic },
     },

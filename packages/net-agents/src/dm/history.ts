@@ -6,6 +6,7 @@
  */
 
 import type { Address, Hex, PublicClient } from "viem";
+import { hexToString, stringToHex } from "viem";
 import { readContract } from "viem/actions";
 import {
   NET_CONTRACT_ADDRESS,
@@ -50,13 +51,36 @@ export async function listConversations(
   const [infos, topics] = data as [TopicInfo[], string[]];
 
   return infos
-    .map((info, i) => ({
-      topic: topics[i],
-      messageCount: Number(info.messageCount),
-      lastMessageTimestamp: Number(info.lastMessageTimestamp),
-      isEncrypted: isMessageEncrypted(info.lastMessageData),
-      lastMessage: info.lastMessageText?.slice(0, 100),
-    }))
+    .map((info, i) => {
+      // Same field swap as getConversationHistory: the marker byte is in
+      // the contract's `text` field (here surfaced as `lastMessageText`)
+      // as a raw string, and the human-readable plaintext is in
+      // `lastMessageData` as bytes.
+      const envelopeHex =
+        info.lastMessageText && info.lastMessageText.length > 0
+          ? stringToHex(info.lastMessageText)
+          : "0x";
+      const isEncrypted = isMessageEncrypted(envelopeHex);
+      let preview = "";
+      if (
+        !isEncrypted &&
+        info.lastMessageData &&
+        info.lastMessageData !== "0x"
+      ) {
+        try {
+          preview = hexToString(info.lastMessageData).slice(0, 100);
+        } catch {
+          // Non-UTF8 — leave empty.
+        }
+      }
+      return {
+        topic: topics[i],
+        messageCount: Number(info.messageCount),
+        lastMessageTimestamp: Number(info.lastMessageTimestamp),
+        isEncrypted,
+        lastMessage: preview,
+      };
+    })
     .filter((c) => c.messageCount > 0)
     .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
 }
@@ -116,15 +140,33 @@ export async function getConversationHistory(
       timestamp: bigint;
     }>
   ).map((msg) => {
-    const msgType = getMessageType(msg.data);
+    // The on-chain message envelope (version byte + type marker + optional
+    // metadata like model id) lives in the contract's `text` field as a raw
+    // string; the human-readable plaintext is stored as bytes in the
+    // contract's `data` field. Convert `text` to hex so getMessageType /
+    // isMessageEncrypted can read the marker byte; decode the plaintext
+    // from `data`.
+    const envelopeHex =
+      msg.text && msg.text.length > 0 ? stringToHex(msg.text) : "0x";
+    const msgType = getMessageType(envelopeHex);
     const isAI = msgType === "ai" || msgType === "encrypted_ai";
-    const isEncrypted = isMessageEncrypted(msg.data);
+    const isEncrypted = isMessageEncrypted(envelopeHex);
+
+    let plaintext = "";
+    if (!isEncrypted && msg.data && msg.data !== "0x") {
+      try {
+        plaintext = hexToString(msg.data);
+      } catch {
+        // Non-UTF8 bytes — leave plaintext empty; raw `data` is preserved below.
+      }
+    }
 
     return {
-      text: msg.text,
+      text: plaintext,
       sender: isAI ? ("ai" as const) : ("user" as const),
       timestamp: Number(msg.timestamp),
       encrypted: isEncrypted,
+      envelope: msg.text,
       data: msg.data,
     };
   });

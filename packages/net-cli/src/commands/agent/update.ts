@@ -61,7 +61,9 @@ async function executeUpdate(agentId: string, options: UpdateOptions): Promise<v
       );
     }
 
-    console.log(chalk.blue(`Updating agent ${agentId}...`));
+    if (!options.json) {
+      console.log(chalk.blue(`Updating agent ${agentId}...`));
+    }
     const result = await auth.client.updateAgent({
       sessionToken: auth.sessionToken,
       agentId,
@@ -69,13 +71,14 @@ async function executeUpdate(agentId: string, options: UpdateOptions): Promise<v
       profile,
     });
 
-    if (!result.success) {
-      exitWithError(result.error || "Failed to update agent");
-    }
-
     if (options.json) {
       console.log(jsonStringify(result));
+      if (!result.success) process.exit(1);
       return;
+    }
+
+    if (!result.success) {
+      exitWithError(result.error || "Failed to update agent");
     }
 
     console.log(chalk.green("Agent updated successfully!"));

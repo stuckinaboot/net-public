@@ -19,7 +19,9 @@ async function executeRun(agentId: string, options: RunOptions): Promise<void> {
     const auth = await resolveAuth(options);
     const mode = parseRunMode(options.mode);
 
-    console.log(chalk.blue(`Running agent ${agentId} (mode: ${mode})...`));
+    if (!options.json) {
+      console.log(chalk.blue(`Running agent ${agentId} (mode: ${mode})...`));
+    }
     const result = await auth.client.runAgent({
       sessionToken: auth.sessionToken,
       agentId,
@@ -28,6 +30,7 @@ async function executeRun(agentId: string, options: RunOptions): Promise<void> {
 
     if (options.json) {
       console.log(jsonStringify(result));
+      if (!result.success) process.exit(1);
       return;
     }
 

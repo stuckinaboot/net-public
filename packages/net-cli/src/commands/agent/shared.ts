@@ -234,14 +234,19 @@ export async function resolveAuth(options: AgentAuthOptions): Promise<AuthResolu
     );
   }
 
+  // Pass the original CLI flag value (not the env-resolved key) so the
+  // "Private key provided via command line" warning inside
+  // parseCommonOptionsWithDefault only fires when --private-key was actually
+  // used. parseCommonOptionsWithDefault re-resolves env vars internally.
   const commonOptions = parseCommonOptionsWithDefault({
-    privateKey,
+    privateKey: options.privateKey,
     chainId: options.chainId,
     rpcUrl: options.rpcUrl,
   });
   const account = privateKeyToAccount(commonOptions.privateKey);
 
-  console.log(chalk.blue("Creating session..."));
+  // Route status to stderr so --json consumers reading stdout get clean JSON.
+  console.error(chalk.blue("Creating session..."));
   const { sessionToken: token } = await createRelaySession({
     apiUrl,
     chainId: commonOptions.chainId,

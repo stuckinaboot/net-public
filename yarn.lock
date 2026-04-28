@@ -1303,7 +1303,7 @@ __metadata:
 
 "@net-protocol/cli@file:../net-cli::locator=botchan%40workspace%3Apackages%2Fbotchan":
   version: 0.1.45
-  resolution: "@net-protocol/cli@file:../net-cli#../net-cli::hash=bf832a&locator=botchan%40workspace%3Apackages%2Fbotchan"
+  resolution: "@net-protocol/cli@file:../net-cli#../net-cli::hash=6b4baa&locator=botchan%40workspace%3Apackages%2Fbotchan"
   dependencies:
     "@net-protocol/agents": "npm:^0.1.0"
     "@net-protocol/bazaar": "npm:^0.1.17"
@@ -1324,7 +1324,7 @@ __metadata:
     viem: "npm:^2.45.0"
   bin:
     netp: ./dist/cli/index.mjs
-  checksum: f784b50a2f77ca9a548302f96352417387136e96a514042cdc20da1983ea40d3d389b531ef29518f5caee8a3d82ebab615b0a8c429fae5041f1f7d1660ffdcce
+  checksum: 7700b996946de4810ab179c4b1d3399f09bafff49a68efca54ee29a9f5e4822770d64a042834bd28e650ffe8eb6875c08bcc6e09bf21a365f74043a3b7a7a1a3
   languageName: node
   linkType: hard
 

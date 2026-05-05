@@ -2,6 +2,11 @@ import chalk from "chalk";
 import { NetrClient, isNetrSupportedChain } from "@net-protocol/netr";
 import { parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import {
+  explorerAddressUrl,
+  profileUrl as buildProfileUrl,
+  tokenUrl as buildTokenUrl,
+} from "../../shared/urls";
 import type { TokenInfoOptions } from "./types";
 
 /**
@@ -49,10 +54,19 @@ export async function executeTokenInfo(options: TokenInfoOptions): Promise<void>
       const output = {
         address: tokenAddress,
         chainId: readOnlyOptions.chainId,
+        tokenUrl: buildTokenUrl(readOnlyOptions.chainId, tokenAddress),
+        explorerAddressUrl: explorerAddressUrl(
+          readOnlyOptions.chainId,
+          tokenAddress
+        ),
         token: {
           name: token.name,
           symbol: token.symbol,
           deployer: token.deployer,
+          deployerProfileUrl: buildProfileUrl(
+            readOnlyOptions.chainId,
+            token.deployer
+          ),
           image: token.image,
           animation: token.animation || null,
           fid: token.fid.toString(),

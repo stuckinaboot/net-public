@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import { tokenUrl as buildTokenUrl } from "../../shared/urls";
 import {
   ScoreClient,
   getTokenScoreKey,
@@ -74,6 +75,7 @@ async function executeGetUpvotes(options: GetUpvotesOptions): Promise<void> {
         JSON.stringify(
           {
             tokenAddress,
+            tokenUrl: buildTokenUrl(readOnlyOptions.chainId, tokenAddress),
             scoreKey,
             total,
             strategies: strategyCounts.map((s) => ({

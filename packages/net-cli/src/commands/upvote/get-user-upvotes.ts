@@ -4,6 +4,10 @@ import { formatEther } from "viem";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import { UserUpvoteClient } from "@net-protocol/score";
+import {
+  profileUrl as buildProfileUrl,
+  walletUrl as buildWalletUrl,
+} from "../../shared/urls";
 import type { GetUserUpvotesOptions } from "./types";
 
 export async function executeGetUserUpvotes(
@@ -46,6 +50,8 @@ export async function executeGetUserUpvotes(
           {
             address: userAddress,
             chainId: readOnlyOptions.chainId,
+            profileUrl: buildProfileUrl(readOnlyOptions.chainId, userAddress),
+            walletUrl: buildWalletUrl(readOnlyOptions.chainId, userAddress),
             upvotesGiven: Number(given),
             upvotesReceived: Number(received),
             upvotePriceWei: upvotePrice.toString(),

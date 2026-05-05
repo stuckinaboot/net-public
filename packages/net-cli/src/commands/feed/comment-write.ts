@@ -1,11 +1,11 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import { parseReadOnlyOptionsWithDefault, parseCommonOptionsWithDefault } from "../../cli/shared";
-import { createFeedClient } from "../../shared/client";
+import { createFeedClient, createNetClient } from "../../shared/client";
 import { createWallet, executeTransaction } from "../../shared/wallet";
 import { encodeTransaction } from "../../shared/encode";
 import { exitWithError } from "../../shared/output";
-import { parsePostId, findPostByParsedId } from "../../shared/postId";
+import { parsePostId } from "../../shared/postId";
 import { addHistoryEntry } from "../../shared/state";
 import { getMessageIndicesFromTx } from "../../shared/messageIndex";
 import {
@@ -75,18 +75,26 @@ async function executeFeedCommentWrite(
     );
   }
 
-  // Fetch the target post to get its full data (needed to generate comment topic hash)
-  const posts = await client.getFeedPosts({
+  // Fetch the target post to get its full data (needed to generate comment
+  // topic hash) and its absolute topic-stream index (needed for the parent
+  // post permalink we return alongside the comment).
+  const fetched = await client.getFeedPostsWithIndex({
     topic: normalizedFeed,
-    maxPosts: 100, // Fetch enough to find the post
+    maxPosts: 100,
   });
 
-  const targetPost = findPostByParsedId(posts, parsedId);
+  const matchOffset = fetched.messages.findIndex(
+    (p) =>
+      p.sender.toLowerCase() === parsedId.sender.toLowerCase() &&
+      p.timestamp === parsedId.timestamp
+  );
+  const targetPost = matchOffset >= 0 ? fetched.messages[matchOffset] : undefined;
   if (!targetPost) {
     exitWithError(
       `Post not found with ID ${postId} in feed "${normalizedFeed}". Make sure the sender and timestamp are correct.`
     );
   }
+  const parentTopicIndex = fetched.startIndex + matchOffset;
 
   const txConfig = client.prepareComment({
     post: targetPost,
@@ -136,6 +144,25 @@ async function executeFeedCommentWrite(
       // Non-fatal.
     }
 
+    // Fetch the just-posted comment from chain to get its real on-chain
+    // timestamp. We need that exact timestamp to build the deep-link
+    // commentId param (`{sender}-{timestamp}`); using local clock time
+    // would silently produce a broken URL.
+    let commentTimestamp: number | undefined;
+    if (globalIndex !== undefined) {
+      try {
+        const netClient = createNetClient(commonOptions);
+        const fetchedComment = await netClient.getMessageAtIndex({
+          messageIndex: globalIndex,
+        });
+        if (fetchedComment) {
+          commentTimestamp = Number(fetchedComment.timestamp);
+        }
+      } catch {
+        // Non-fatal — we'll fall back to a permalink without the highlight.
+      }
+    }
+
     addHistoryEntry({
       type: "comment",
       txHash: hash,
@@ -146,23 +173,25 @@ async function executeFeedCommentWrite(
       postId: postId,
     });
 
-    // Build permalinks: parent post (best-effort with topicIndex from existing
-    // fetch) and the new comment itself (using the global index).
-    const parentTopicIndex = posts.indexOf(targetPost);
-    const parentPostUrl =
-      parentTopicIndex >= 0
+    // Build permalinks. The parent post URL uses the absolute topic index
+    // we recovered from getFeedPostsWithIndex above. The primary `permalink`
+    // for the comment is the parent's URL with `&commentId=...` so the
+    // deep-link highlights the new comment in context. If we couldn't
+    // recover the on-chain timestamp, fall back to `?index={globalIndex}`
+    // (which renders the comment as a post — still useful, just no
+    // surrounding context).
+    const parentPostUrl = postPermalink(commonOptions.chainId, {
+      topic: normalizedFeed,
+      topicIndex: parentTopicIndex,
+    });
+    const commentPermalink =
+      commentTimestamp !== undefined
         ? postPermalink(commonOptions.chainId, {
             topic: normalizedFeed,
-            // posts came from a fetch with maxPosts=100; we don't know the
-            // absolute topic index, so omit topicIndex for the parent and
-            // fall back to the global-index permalink for the comment itself.
+            topicIndex: parentTopicIndex,
+            commentId: `${senderAddress}-${commentTimestamp}`,
           })
-        : null;
-    const commentParam = `${senderAddress}-${Math.floor(Date.now() / 1000)}`;
-    const commentPermalink = postPermalink(commonOptions.chainId, {
-      globalIndex,
-      commentId: commentParam,
-    });
+        : postPermalink(commonOptions.chainId, { globalIndex });
 
     if (options.json) {
       printJson({
@@ -178,6 +207,9 @@ async function executeFeedCommentWrite(
         sender: senderAddress,
         senderProfileUrl: buildProfileUrl(commonOptions.chainId, senderAddress),
         text: message,
+        ...(commentTimestamp !== undefined && {
+          commentId: `${senderAddress}:${commentTimestamp}`,
+        }),
       });
       return;
     }

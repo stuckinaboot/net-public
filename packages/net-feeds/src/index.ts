@@ -35,6 +35,7 @@ export type {
   UseFeedPostsOptions,
   FeedClientOptions,
   GetFeedPostsOptions,
+  GetFeedPostsWithIndexResult,
   PrepareFeedPostOptions,
   NetMessage,
   WriteTransactionConfig,

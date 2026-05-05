@@ -7,6 +7,13 @@ import { encodeTransaction } from "../../shared/encode";
 import { exitWithError } from "../../shared/output";
 import { parsePostId, findPostByParsedId } from "../../shared/postId";
 import { addHistoryEntry } from "../../shared/state";
+import { getMessageIndicesFromTx } from "../../shared/messageIndex";
+import {
+  explorerTxUrl,
+  feedUrl as buildFeedUrl,
+  postPermalink,
+  profileUrl as buildProfileUrl,
+} from "../../shared/urls";
 import { printJson } from "./format";
 import { normalizeFeedName } from "./types";
 
@@ -15,6 +22,7 @@ interface CommentWriteOptions {
   rpcUrl?: string;
   privateKey?: string;
   encodeOnly?: boolean;
+  json?: boolean;
 }
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -108,27 +116,81 @@ async function executeFeedCommentWrite(
     commonOptions.rpcUrl
   );
 
-  console.log(chalk.blue(`Commenting on post ${postId}...`));
+  if (!options.json) {
+    console.log(chalk.blue(`Commenting on post ${postId}...`));
+  }
 
   try {
     const hash = await executeTransaction(walletClient, txConfig);
+    const senderAddress = walletClient.account.address;
 
-    // Record in history
+    let globalIndex: number | undefined;
+    try {
+      const indices = await getMessageIndicesFromTx({
+        chainId: commonOptions.chainId,
+        rpcUrl: commonOptions.rpcUrl,
+        txHash: hash,
+      });
+      globalIndex = indices[0];
+    } catch {
+      // Non-fatal.
+    }
+
     addHistoryEntry({
       type: "comment",
       txHash: hash,
       chainId: commonOptions.chainId,
       feed: normalizedFeed,
-      sender: walletClient.account.address,
+      sender: senderAddress,
       text: message,
       postId: postId,
     });
 
-    console.log(
-      chalk.green(
-        `Comment posted successfully!\n  Transaction: ${hash}\n  Post: ${postId}\n  Comment: ${message}`
-      )
-    );
+    // Build permalinks: parent post (best-effort with topicIndex from existing
+    // fetch) and the new comment itself (using the global index).
+    const parentTopicIndex = posts.indexOf(targetPost);
+    const parentPostUrl =
+      parentTopicIndex >= 0
+        ? postPermalink(commonOptions.chainId, {
+            topic: normalizedFeed,
+            // posts came from a fetch with maxPosts=100; we don't know the
+            // absolute topic index, so omit topicIndex for the parent and
+            // fall back to the global-index permalink for the comment itself.
+          })
+        : null;
+    const commentParam = `${senderAddress}-${Math.floor(Date.now() / 1000)}`;
+    const commentPermalink = postPermalink(commonOptions.chainId, {
+      globalIndex,
+      commentId: commentParam,
+    });
+
+    if (options.json) {
+      printJson({
+        success: true,
+        txHash: hash,
+        explorerTxUrl: explorerTxUrl(commonOptions.chainId, hash),
+        globalIndex,
+        permalink: commentPermalink,
+        parentPostId: postId,
+        parentPostUrl,
+        feed: normalizedFeed,
+        feedUrl: buildFeedUrl(commonOptions.chainId, normalizedFeed),
+        sender: senderAddress,
+        senderProfileUrl: buildProfileUrl(commonOptions.chainId, senderAddress),
+        text: message,
+      });
+      return;
+    }
+
+    const lines = [
+      `Comment posted successfully!`,
+      `  Transaction: ${hash}`,
+      `  Post: ${postId}`,
+    ];
+    if (commentPermalink) lines.push(`  Permalink: ${commentPermalink}`);
+    lines.push(`  Comment: ${message}`);
+
+    console.log(chalk.green(lines.join("\n")));
   } catch (error) {
     exitWithError(
       `Failed to post comment: ${error instanceof Error ? error.message : String(error)}`
@@ -155,6 +217,10 @@ export function registerFeedCommentWriteCommand(parent: Command): void {
     .option(
       "--encode-only",
       "Output transaction data as JSON instead of executing"
+    )
+    .option(
+      "--json",
+      "Output structured JSON (includes permalink and other URLs) after submission"
     )
     .action(async (feed, postId, message, options) => {
       await executeFeedCommentWrite(feed, postId, message, options);

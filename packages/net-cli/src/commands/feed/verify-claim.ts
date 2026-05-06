@@ -69,13 +69,9 @@ async function executeFeedVerifyClaim(
   const netContract = getNetContract(readOnlyOptions.chainId);
   const netClient = createNetClient(readOnlyOptions);
 
-  // Note whether this tx is already in local history. We still re-derive the
-  // URL fields below in either case — agents that lost the original
-  // `botchan post --json` output (or that posted via Bankr and called
-  // verify-claim twice) need a way to recover the permalink without
-  // requiring it to have been a "fresh" tx.
-  const existingHistory = getHistory();
-  const wasAlreadyRecorded = existingHistory.some(
+  // Re-derive URL fields even if already recorded, so callers that lost the
+  // original --json output can still recover the permalink.
+  const wasAlreadyRecorded = getHistory().some(
     (entry) => entry.txHash === txHash
   );
 

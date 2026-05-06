@@ -2,59 +2,26 @@
  * URL builders for Net Protocol web pages and external services.
  *
  * These helpers exist so callers (and AI agents reading CLI JSON output) never
- * need to construct URLs by hand. URL grammar quirks (chain ID -> slug, the
- * "feed-" topic prefix, hyphen-vs-colon separators in comment IDs, lowercased
- * addresses, etc.) all live here in one place.
+ * need to construct URLs by hand. URL grammar quirks (the "feed-" topic
+ * prefix, hyphen-vs-colon separators in comment IDs, lowercased addresses,
+ * etc.) all live here in one place.
  *
- * NOTE: The chain → slug map below mirrors `CHAIN_ID_TO_OPENSEA_CHAIN_MAP`
- * in the Net website (`website/src/app/constants.ts` in stuckinaboot/Net).
- * If a chain is added or its slug changed there, update this table too —
- * otherwise URLs will silently come back null on this side.
+ * Chain slugs and block-explorer base URLs come from
+ * `@net-protocol/core`'s chain config — this module deliberately holds no
+ * per-chain tables of its own.
  */
 
+import {
+  getChainBlockExplorer,
+  getChainSlug,
+} from "@net-protocol/core";
 import { encodeStorageKeyForUrl } from "@net-protocol/storage";
 
 const WEBSITE_BASE = "https://netprotocol.app";
 const STORAGE_BASE = "https://storedon.net";
 
-/**
- * Chain ID -> URL slug used in netprotocol.app paths (matches OpenSea-style
- * slugs from website/src/app/constants.ts CHAIN_ID_TO_OPENSEA_CHAIN_MAP).
- */
-const CHAIN_SLUG: Record<number, string> = {
-  1: "ethereum",
-  130: "unichain",
-  143: "monad",
-  999: "hyperliquid",
-  4326: "megaeth",
-  5112: "ham",
-  8453: "base",
-  9745: "plasma",
-  57073: "ink",
-  84532: "base_sepolia",
-  666666666: "degen",
-  11155111: "sepolia",
-};
-
-/**
- * Chain ID -> block explorer base URL (no trailing slash). Returns null for
- * chains where we don't have a confirmed canonical explorer.
- */
-const EXPLORER_BASE: Record<number, string> = {
-  1: "https://etherscan.io",
-  130: "https://uniscan.xyz",
-  143: "https://monadscan.com",
-  999: "https://hyperliquid.cloud.blockscout.com",
-  5112: "https://explorer.ham.fun",
-  8453: "https://basescan.org",
-  9745: "https://plasmascan.to",
-  57073: "https://explorer.inkonchain.com",
-  84532: "https://sepolia.basescan.org",
-  11155111: "https://sepolia.etherscan.io",
-};
-
 export function chainSlug(chainId: number): string | null {
-  return CHAIN_SLUG[chainId] ?? null;
+  return getChainSlug({ chainId }) ?? null;
 }
 
 /**
@@ -161,7 +128,7 @@ export function explorerTxUrl(
   chainId: number,
   txHash: string
 ): string | null {
-  const base = EXPLORER_BASE[chainId];
+  const base = getChainBlockExplorer({ chainId })?.url;
   if (!base) return null;
   return `${base}/tx/${txHash}`;
 }
@@ -170,7 +137,7 @@ export function explorerAddressUrl(
   chainId: number,
   address: string
 ): string | null {
-  const base = EXPLORER_BASE[chainId];
+  const base = getChainBlockExplorer({ chainId })?.url;
   if (!base) return null;
   return `${base}/address/${address}`;
 }

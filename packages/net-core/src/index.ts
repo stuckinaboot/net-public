@@ -5,10 +5,14 @@ export { NetClient } from "./client/NetClient";
 export {
   getPublicClient,
   getChainName,
+  getChainSlug,
+  getChainBlockExplorer,
   getChainRpcUrls,
+  getSupportedChains,
   setChainRpcOverrides,
   getNetContract,
 } from "./chainConfig";
+export type { SupportedChainSummary } from "./chainConfig";
 
 // Utilities
 export { keccak256HashString, toBytes32 } from "./utils/crypto";

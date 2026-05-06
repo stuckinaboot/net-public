@@ -109,8 +109,14 @@ describe("storageUrl", () => {
 
 describe("explorer URLs", () => {
   it("returns null for unknown chains", () => {
-    expect(explorerTxUrl(666666666, "0xabc")).toBeNull();
-    expect(explorerAddressUrl(666666666, ADDR)).toBeNull();
+    expect(explorerTxUrl(12345, "0xabc")).toBeNull();
+    expect(explorerAddressUrl(12345, ADDR)).toBeNull();
+  });
+
+  it("returns canonical URL for Degen (covered by net-core chain config)", () => {
+    expect(explorerTxUrl(666666666, "0xabc")).toBe(
+      "https://explorer.degen.tips/tx/0xabc"
+    );
   });
 
   it("returns canonical URLs for known chains", () => {

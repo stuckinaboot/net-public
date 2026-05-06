@@ -5,7 +5,14 @@
  * need to construct URLs by hand. URL grammar quirks (chain ID -> slug, the
  * "feed-" topic prefix, hyphen-vs-colon separators in comment IDs, lowercased
  * addresses, etc.) all live here in one place.
+ *
+ * NOTE: The chain → slug map below mirrors `CHAIN_ID_TO_OPENSEA_CHAIN_MAP`
+ * in the Net website (`website/src/app/constants.ts` in stuckinaboot/Net).
+ * If a chain is added or its slug changed there, update this table too —
+ * otherwise URLs will silently come back null on this side.
  */
+
+import { encodeStorageKeyForUrl } from "@net-protocol/storage";
 
 const WEBSITE_BASE = "https://netprotocol.app";
 const STORAGE_BASE = "https://storedon.net";
@@ -135,13 +142,17 @@ export function agentUrl(chainId: number, agentId: string): string | null {
  * Public storage retrieval URL via storedon.net. Works on any chain with Net
  * Storage deployed (returns a URL even when chainSlug is unknown — storedon
  * uses numeric chain IDs).
+ *
+ * Uses `encodeStorageKeyForUrl` from `@net-protocol/storage` so the encoder
+ * stays in sync with the storage SDK if it ever needs to handle binary keys
+ * or other special characters differently from `encodeURIComponent`.
  */
 export function storageUrl(
   chainId: number,
   operatorAddress: string,
   key: string
 ): string {
-  return `${STORAGE_BASE}/net/${chainId}/storage/load/${operatorAddress.toLowerCase()}/${encodeURIComponent(
+  return `${STORAGE_BASE}/net/${chainId}/storage/load/${operatorAddress.toLowerCase()}/${encodeStorageKeyForUrl(
     key
   )}`;
 }

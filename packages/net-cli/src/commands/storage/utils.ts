@@ -1,7 +1,7 @@
 import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
-import { encodeStorageKeyForUrl } from "@net-protocol/storage";
 import { WriteTransactionConfig } from "@net-protocol/core";
+import { storageUrl } from "../../shared/urls";
 import {
   checkNormalStorageExists,
   checkChunkedStorageExists,
@@ -70,8 +70,12 @@ export function extractContentFromTransaction(
 }
 
 /**
- * Generate storage URL for displaying to user
- * Centralizes URL generation logic
+ * Generate storage URL for displaying to user.
+ *
+ * Thin wrapper around the canonical builder in `shared/urls.ts` so the CLI
+ * has exactly one place where storage URLs are produced. The wrapper exists
+ * to preserve this function's "undefined when operator is missing" contract,
+ * which several call sites rely on.
  */
 export function generateStorageUrl(
   operatorAddress: string | undefined,
@@ -79,9 +83,7 @@ export function generateStorageUrl(
   storageKey: string
 ): string | undefined {
   if (!operatorAddress) return undefined;
-  return `https://storedon.net/net/${chainId}/storage/load/${
-    operatorAddress
-  }/${encodeStorageKeyForUrl(storageKey)}`;
+  return storageUrl(chainId, operatorAddress, storageKey);
 }
 
 /**

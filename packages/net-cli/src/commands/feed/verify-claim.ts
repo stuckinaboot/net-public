@@ -7,6 +7,13 @@ import { exitWithError } from "../../shared/output";
 import { addHistoryEntry, getHistory } from "../../shared/state";
 import { createPostId } from "../../shared/postId";
 import {
+  explorerTxUrl,
+  feedUrl as buildFeedUrl,
+  postPermalink,
+  profileUrl as buildProfileUrl,
+} from "../../shared/urls";
+import { printJson } from "./format";
+import {
   getPublicClient,
   getNetContract,
 } from "@net-protocol/core";
@@ -20,6 +27,7 @@ import {
 interface VerifyClaimOptions {
   chainId?: number;
   rpcUrl?: string;
+  json?: boolean;
 }
 
 /**
@@ -64,9 +72,13 @@ async function executeFeedVerifyClaim(
   // Check if already in history
   const existingHistory = getHistory();
   if (existingHistory.some((entry) => entry.txHash === txHash)) {
-    console.log(
-      chalk.yellow("Transaction already recorded in history. Skipping.")
-    );
+    if (options.json) {
+      printJson({ alreadyRecorded: true, txHash });
+    } else {
+      console.log(
+        chalk.yellow("Transaction already recorded in history. Skipping.")
+      );
+    }
     return;
   }
 
@@ -118,11 +130,13 @@ async function executeFeedVerifyClaim(
     );
   }
 
-  console.log(
-    chalk.blue(
-      `Found ${messageSentEvents.length} message(s) in transaction. Fetching details...`
-    )
-  );
+  if (!options.json) {
+    console.log(
+      chalk.blue(
+        `Found ${messageSentEvents.length} message(s) in transaction. Fetching details...`
+      )
+    );
+  }
 
   // Fetch all messages in parallel
   const messages = await Promise.all(
@@ -133,37 +147,47 @@ async function executeFeedVerifyClaim(
     )
   );
 
+  type RecoveredEntry = Record<string, unknown>;
+  const entries: RecoveredEntry[] = [];
   let recorded = 0;
 
   for (let i = 0; i < messages.length; i++) {
     const message = messages[i];
     if (!message) {
-      console.log(
-        chalk.yellow(
-          `  Could not fetch message at index ${messageSentEvents[i].messageIndex}. Skipping.`
-        )
-      );
+      if (!options.json) {
+        console.log(
+          chalk.yellow(
+            `  Could not fetch message at index ${messageSentEvents[i].messageIndex}. Skipping.`
+          )
+        );
+      }
       continue;
     }
 
+    const globalIndex = Number(messageSentEvents[i].messageIndex);
     const feedName = extractFeedName(message.topic);
     const isComment = isCommentTopic(message.topic);
 
     let type: "post" | "comment";
     let postId: string | undefined;
-    let label: string;
+    let parentPostId: string | undefined;
+    let permalink: string | null = null;
 
     if (isComment) {
       type = "comment";
       const commentData = parseCommentData(message.data);
-      postId = commentData
+      parentPostId = commentData
         ? `${commentData.parentSender}:${commentData.parentTimestamp}`
         : undefined;
-      label = `Verified comment:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Parent post: ${postId ?? "unknown"}\n    Tx: ${txHash}`;
+      const commentParam = `${message.sender}-${Number(message.timestamp)}`;
+      permalink = postPermalink(readOnlyOptions.chainId, {
+        globalIndex,
+        commentId: commentParam,
+      });
     } else {
       type = "post";
       postId = createPostId(message);
-      label = `Verified post:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Post ID: ${postId}\n    Tx: ${txHash}`;
+      permalink = postPermalink(readOnlyOptions.chainId, { globalIndex });
     }
 
     addHistoryEntry({
@@ -173,11 +197,42 @@ async function executeFeedVerifyClaim(
       feed: feedName,
       sender: message.sender,
       text: message.text,
-      postId,
+      postId: type === "comment" ? parentPostId : postId,
     });
 
-    console.log(chalk.green(`  ${label}`));
+    const entry: RecoveredEntry = {
+      type,
+      txHash,
+      explorerTxUrl: explorerTxUrl(readOnlyOptions.chainId, txHash),
+      globalIndex,
+      permalink,
+      feed: feedName,
+      feedUrl: buildFeedUrl(readOnlyOptions.chainId, feedName),
+      sender: message.sender,
+      senderProfileUrl: buildProfileUrl(
+        readOnlyOptions.chainId,
+        message.sender
+      ),
+      text: message.text,
+      timestamp: Number(message.timestamp),
+    };
+    if (type === "post") entry.postId = postId;
+    if (type === "comment") entry.parentPostId = parentPostId;
+    entries.push(entry);
+
+    if (!options.json) {
+      const label =
+        type === "comment"
+          ? `Verified comment:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Parent post: ${parentPostId ?? "unknown"}\n    Permalink: ${permalink ?? "(unavailable)"}\n    Tx: ${txHash}`
+          : `Verified post:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Post ID: ${postId}\n    Permalink: ${permalink ?? "(unavailable)"}\n    Tx: ${txHash}`;
+      console.log(chalk.green(`  ${label}`));
+    }
     recorded++;
+  }
+
+  if (options.json) {
+    printJson({ recorded, entries });
+    return;
   }
 
   if (recorded > 0) {
@@ -202,6 +257,10 @@ export function registerFeedVerifyClaimCommand(parent: Command): void {
       (value) => parseInt(value, 10)
     )
     .option("--rpc-url <url>", "Custom RPC URL")
+    .option(
+      "--json",
+      "Output structured JSON (includes permalink and other URLs)"
+    )
     .action(async (txHash, options) => {
       await executeFeedVerifyClaim(txHash, options);
     });

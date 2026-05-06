@@ -34,7 +34,9 @@ async function executeListAgents(options: ListAgentsOptions): Promise<void> {
     if (options.json) {
       printJson({
         totalCount,
-        agents: agents.map((agent: RegisteredAgent, i: number) => agentToJson(agent, i)),
+        agents: agents.map((agent: RegisteredAgent, i: number) =>
+          agentToJson(agent, i, readOnlyOptions.chainId)
+        ),
       });
     } else {
       if (agents.length === 0) {

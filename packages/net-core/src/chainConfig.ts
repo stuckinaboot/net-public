@@ -3,6 +3,14 @@ import { NET_CONTRACT_ABI } from "./constants";
 
 interface ChainConfig {
   name: string;
+  /**
+   * URL slug used in netprotocol.app paths (OpenSea-style).
+   * Source of truth for `getChainSlug` — keep in sync with the website's
+   * CHAIN_ID_TO_OPENSEA_CHAIN_MAP.
+   */
+  slug?: string;
+  /** Network classification, used by the CLI's `netp chains` listing. */
+  type: "mainnet" | "testnet";
   rpcUrls: string[];
   netContractAddress: `0x${string}`;
   nativeCurrency?: {
@@ -10,6 +18,10 @@ interface ChainConfig {
     symbol: string;
     decimals: number;
   };
+  /**
+   * Block explorer metadata. `url` should NOT have a trailing slash —
+   * callers append paths like `/tx/${hash}` to it.
+   */
   blockExplorer?: {
     name: string;
     url: string;
@@ -21,6 +33,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Base Mainnet
   8453: {
     name: "Base",
+    slug: "base",
+    type: "mainnet",
     rpcUrls: [
       "https://base-mainnet.public.blastapi.io",
       "https://mainnet.base.org",
@@ -34,6 +48,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Ethereum Mainnet
   1: {
     name: "Ethereum",
+    slug: "ethereum",
+    type: "mainnet",
     rpcUrls: ["https://eth.llamarpc.com", "https://rpc.ankr.com/eth"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -42,6 +58,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Degen Chain
   666666666: {
     name: "Degen",
+    slug: "degen",
+    type: "mainnet",
     rpcUrls: ["https://rpc.degen.tips"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Degen", symbol: "DEGEN", decimals: 18 },
@@ -50,6 +68,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Ham Chain
   5112: {
     name: "Ham",
+    slug: "ham",
+    type: "mainnet",
     rpcUrls: ["https://rpc.ham.fun"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -61,6 +81,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Ink Chain
   57073: {
     name: "Ink",
+    slug: "ink",
+    type: "mainnet",
     rpcUrls: ["https://rpc-qnd.inkonchain.com"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -72,6 +94,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Unichain
   130: {
     name: "Unichain",
+    slug: "unichain",
+    type: "mainnet",
     rpcUrls: ["https://mainnet.unichain.org"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -80,17 +104,21 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Hyperliquid EVM
   999: {
     name: "HyperEVM",
+    slug: "hyperliquid",
+    type: "mainnet",
     rpcUrls: ["https://rpc.hyperliquid.xyz/evm"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Hype", symbol: "HYPE", decimals: 18 },
     blockExplorer: {
       name: "Hyperliquid",
-      url: "https://hyperliquid.cloud.blockscout.com/",
+      url: "https://hyperliquid.cloud.blockscout.com",
     },
   },
   // Plasma Chain
   9745: {
     name: "Plasma",
+    slug: "plasma",
+    type: "mainnet",
     rpcUrls: ["https://rpc.plasma.to"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Plasma", symbol: "PLASMA", decimals: 18 },
@@ -99,14 +127,18 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Monad Chain
   143: {
     name: "Monad",
+    slug: "monad",
+    type: "mainnet",
     rpcUrls: ["https://rpc3.monad.xyz"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Monad", symbol: "MONAD", decimals: 18 },
-    blockExplorer: { name: "Monad Scan", url: "https://monadscan.com/" },
+    blockExplorer: { name: "Monad Scan", url: "https://monadscan.com" },
   },
   // MegaETH
   4326: {
     name: "MegaETH",
+    slug: "megaeth",
+    type: "mainnet",
     rpcUrls: ["https://mainnet.megaeth.com/rpc"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -115,6 +147,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Base Sepolia (testnet)
   84532: {
     name: "Base Sepolia",
+    slug: "base_sepolia",
+    type: "testnet",
     rpcUrls: ["https://sepolia.base.org"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -126,6 +160,8 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
   // Sepolia (testnet)
   11155111: {
     name: "Sepolia",
+    slug: "sepolia",
+    type: "testnet",
     rpcUrls: ["https://rpc.sepolia.org"],
     netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -144,6 +180,46 @@ let globalRpcOverrides: Record<number, string[]> = {};
  */
 export function getChainName(params: { chainId: number }): string | undefined {
   return CHAIN_CONFIG[params.chainId]?.name;
+}
+
+/**
+ * Get the netprotocol.app URL slug for a chain (e.g. 8453 -> "base").
+ * Returns undefined for unsupported chains.
+ */
+export function getChainSlug(params: {
+  chainId: number;
+}): string | undefined {
+  return CHAIN_CONFIG[params.chainId]?.slug;
+}
+
+/**
+ * Get block explorer metadata for a chain. The `url` is a base with no
+ * trailing slash — append paths like `/tx/${hash}` or `/address/${addr}`.
+ */
+export function getChainBlockExplorer(params: {
+  chainId: number;
+}): { name: string; url: string } | undefined {
+  return CHAIN_CONFIG[params.chainId]?.blockExplorer;
+}
+
+export interface SupportedChainSummary {
+  chainId: number;
+  name: string;
+  type: "mainnet" | "testnet";
+  slug?: string;
+}
+
+/**
+ * List all chains the SDK has built-in config for, with their classification.
+ * Used by tools that show users which chains are supported.
+ */
+export function getSupportedChains(): SupportedChainSummary[] {
+  return Object.entries(CHAIN_CONFIG).map(([id, config]) => ({
+    chainId: Number(id),
+    name: config.name,
+    type: config.type,
+    slug: config.slug,
+  }));
 }
 
 /**

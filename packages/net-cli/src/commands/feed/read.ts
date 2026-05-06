@@ -47,19 +47,26 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
     // Fetch more posts if filtering by sender (we need to find enough matches)
     const fetchLimit = options.sender ? Math.max(limit * 5, 100) : limit;
 
-    let posts = await client.getFeedPosts({
+    const fetched = await client.getFeedPostsWithIndex({
       topic: normalizedFeed,
       maxPosts: fetchLimit,
     });
+    // Pair each post with its absolute topic-stream index so we can build
+    // permalinks even after later filtering reorders/removes entries.
+    let postsWithIndex: { post: NetMessage; topicIndex: number }[] =
+      fetched.messages.map((post, i) => ({
+        post,
+        topicIndex: fetched.startIndex + i,
+      }));
 
     // Filter by sender if specified
     if (options.sender) {
       const senderLower = options.sender.toLowerCase();
-      posts = posts.filter(
-        (post: NetMessage) => post.sender.toLowerCase() === senderLower
+      postsWithIndex = postsWithIndex.filter(
+        ({ post }) => post.sender.toLowerCase() === senderLower
       );
       // Apply limit after filtering
-      posts = posts.slice(0, limit);
+      postsWithIndex = postsWithIndex.slice(0, limit);
     }
 
     // Filter to unseen posts if --unseen flag is set
@@ -67,7 +74,7 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
       const lastSeen = getLastSeenTimestamp(normalizedFeed);
       const myAddress = getMyAddress();
 
-      posts = posts.filter((post: NetMessage) => {
+      postsWithIndex = postsWithIndex.filter(({ post }) => {
         // Must be newer than last seen (or no last seen = all are unseen)
         const isNew = lastSeen === null || Number(post.timestamp) > lastSeen;
         // Exclude own posts if myAddress is configured
@@ -75,6 +82,8 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
         return isNew && isFromOther;
       });
     }
+
+    const posts = postsWithIndex.map(({ post }) => post);
 
     // Mark feed as seen if --mark-seen flag is set
     // Use the original unfiltered posts to get the true latest timestamp
@@ -95,7 +104,13 @@ async function executeFeedRead(feed: string, options: ReadOptions): Promise<void
 
     if (options.json) {
       printJson(
-        posts.map((post: NetMessage, i: number) => postToJson(post, i, commentCounts[i]))
+        postsWithIndex.map(({ post, topicIndex }, i) =>
+          postToJson(post, {
+            chainId: readOnlyOptions.chainId,
+            topicIndex,
+            commentCount: commentCounts[i],
+          })
+        )
       );
     } else {
       if (posts.length === 0) {

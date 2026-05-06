@@ -10,6 +10,10 @@ import {
 } from "@net-protocol/profiles";
 import { parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import {
+  profileUrl as buildProfileUrl,
+  walletUrl as buildWalletUrl,
+} from "../../shared/urls";
 import type { ProfileGetOptions } from "./types";
 
 /**
@@ -122,6 +126,8 @@ export async function executeProfileGet(
       const output = {
         address: options.address,
         chainId: readOnlyOptions.chainId,
+        profileUrl: buildProfileUrl(readOnlyOptions.chainId, options.address),
+        walletUrl: buildWalletUrl(readOnlyOptions.chainId, options.address),
         profilePicture: profilePicture || null,
         displayName: displayName || null,
         xUsername: xUsername || null,

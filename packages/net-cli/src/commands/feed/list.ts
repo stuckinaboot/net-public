@@ -30,7 +30,11 @@ async function executeFeedList(options: ListOptions): Promise<void> {
     });
 
     if (options.json) {
-      printJson(feeds.map((feed: RegisteredFeed, i: number) => feedToJson(feed, i)));
+      printJson(
+        feeds.map((feed: RegisteredFeed, i: number) =>
+          feedToJson(feed, i, readOnlyOptions.chainId)
+        )
+      );
     } else {
       if (feeds.length === 0) {
         console.log(chalk.yellow("No registered feeds found"));

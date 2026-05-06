@@ -1,5 +1,11 @@
 import chalk from "chalk";
 import type { NetMessage, RegisteredFeed, RegisteredAgent } from "@net-protocol/feeds";
+import {
+  feedUrl as buildFeedUrl,
+  postPermalink,
+  profileUrl as buildProfileUrl,
+  walletUrl as buildWalletUrl,
+} from "../../shared/urls";
 
 /**
  * Truncate an address for display
@@ -95,28 +101,74 @@ export function formatComment(
 }
 
 /**
- * Convert a post to JSON format
+ * Strip the on-chain "feed-" topic prefix to get a display feed name.
+ */
+function stripFeedPrefix(topic: string): string {
+  const match = topic.match(/^(.+?):comments:/);
+  const base = match ? match[1] : topic;
+  return base.replace(/^feed-/i, "");
+}
+
+interface PostJsonOptions {
+  chainId: number;
+  /**
+   * Absolute index in the topic-filtered stream (when this post was fetched
+   * via a topic filter, e.g. `botchan read general`).
+   */
+  topicIndex?: number;
+  /**
+   * Absolute index in the maker-filtered stream (when this post was fetched
+   * via a sender filter, e.g. `botchan posts <address>`).
+   */
+  userIndex?: number;
+  /**
+   * Global Net message index (most reliable URL form when known — typically
+   * available after a transaction via the MessageSent log).
+   */
+  globalIndex?: number;
+  commentCount?: number;
+}
+
+/**
+ * Convert a post to JSON format with ready-to-use URLs.
+ *
+ * Every URL field is pre-built using the chainId so AI agents reading this
+ * output never need to construct URLs from parts.
  */
 export function postToJson(
   post: NetMessage,
-  index: number,
-  commentCount?: number
+  options: PostJsonOptions
 ): Record<string, unknown> {
+  const { chainId, topicIndex, userIndex, globalIndex, commentCount } = options;
+  const feedName = stripFeedPrefix(post.topic);
+  const postId = `${post.sender}:${post.timestamp}`;
+
+  const permalink = postPermalink(chainId, {
+    globalIndex,
+    topic: post.topic,
+    topicIndex,
+    user: userIndex !== undefined ? post.sender : undefined,
+    userIndex,
+  });
+
   const result: Record<string, unknown> = {
-    index,
+    postId,
+    permalink,
     sender: post.sender,
+    senderProfileUrl: buildProfileUrl(chainId, post.sender),
+    senderWalletUrl: buildWalletUrl(chainId, post.sender),
     text: post.text,
     timestamp: Number(post.timestamp),
+    feed: feedName,
+    feedUrl: buildFeedUrl(chainId, feedName),
     topic: post.topic,
   };
 
-  if (commentCount !== undefined) {
-    result.commentCount = commentCount;
-  }
-
-  if (post.data && post.data !== "0x") {
-    result.data = post.data;
-  }
+  if (topicIndex !== undefined) result.topicIndex = topicIndex;
+  if (userIndex !== undefined) result.userIndex = userIndex;
+  if (globalIndex !== undefined) result.globalIndex = globalIndex;
+  if (commentCount !== undefined) result.commentCount = commentCount;
+  if (post.data && post.data !== "0x") result.data = post.data;
 
   return result;
 }
@@ -126,30 +178,58 @@ export function postToJson(
  */
 export function feedToJson(
   feed: RegisteredFeed,
-  index: number
+  index: number,
+  chainId?: number
 ): Record<string, unknown> {
-  return {
+  const result: Record<string, unknown> = {
     index,
     feedName: feed.feedName,
     registrant: feed.registrant,
     timestamp: feed.timestamp,
   };
+  if (chainId !== undefined) {
+    result.feedUrl = buildFeedUrl(chainId, feed.feedName);
+  }
+  return result;
+}
+
+interface CommentJsonOptions {
+  chainId: number;
+  depth: number;
+  /**
+   * Permalink to the parent post (with `?topic=...&index=...`). When
+   * provided, a per-comment `permalink` is built by appending
+   * `&commentId={sender}-{timestamp}`.
+   */
+  parentPostUrl?: string | null;
 }
 
 /**
- * Convert a comment to JSON format
+ * Convert a comment to JSON format with ready-to-use URLs.
  */
 export function commentToJson(
   comment: NetMessage,
-  depth: number
+  options: CommentJsonOptions
 ): Record<string, unknown> {
-  return {
+  const { chainId, depth, parentPostUrl } = options;
+  const commentParam = `${comment.sender}-${comment.timestamp}`;
+  const permalink = parentPostUrl
+    ? `${parentPostUrl}${parentPostUrl.includes("?") ? "&" : "?"}commentId=${commentParam}`
+    : null;
+
+  const result: Record<string, unknown> = {
+    commentId: `${comment.sender}:${comment.timestamp}`,
+    permalink,
     sender: comment.sender,
+    senderProfileUrl: buildProfileUrl(chainId, comment.sender),
     text: comment.text,
     timestamp: Number(comment.timestamp),
     depth,
-    data: comment.data !== "0x" ? comment.data : undefined,
   };
+  if (comment.data !== "0x") {
+    result.data = comment.data;
+  }
+  return result;
 }
 
 /**
@@ -170,13 +250,19 @@ export function formatAgent(agent: RegisteredAgent, index: number): string {
  */
 export function agentToJson(
   agent: RegisteredAgent,
-  index: number
+  index: number,
+  chainId?: number
 ): Record<string, unknown> {
-  return {
+  const result: Record<string, unknown> = {
     index,
     address: agent.address,
     timestamp: agent.timestamp,
   };
+  if (chainId !== undefined) {
+    result.profileUrl = buildProfileUrl(chainId, agent.address);
+    result.walletUrl = buildWalletUrl(chainId, agent.address);
+  }
+  return result;
 }
 
 /**

@@ -65,7 +65,14 @@ async function executeFeedPosts(
     });
 
     if (options.json) {
-      printJson(messages.map((msg: NetMessage, i: number) => postToJson(msg, i)));
+      printJson(
+        messages.map((msg: NetMessage, i: number) =>
+          postToJson(msg, {
+            chainId: readOnlyOptions.chainId,
+            userIndex: startIndex + i,
+          })
+        )
+      );
     } else {
       console.log(
         chalk.white(`Found ${messages.length} post(s) by ${address}:\n`)

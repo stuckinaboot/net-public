@@ -3,6 +3,7 @@ import { StorageClient } from "@net-protocol/storage";
 import { hexToString } from "viem";
 import { parseReadOnlyOptions } from "../../../cli/shared";
 import { exitWithError } from "../../../shared/output";
+import { storageUrl } from "../../../shared/urls";
 
 export interface StorageReadOptions {
   key: string;
@@ -43,6 +44,11 @@ export async function executeStorageRead(
         key: options.key,
         operator: options.operator,
         chainId: readOnlyOptions.chainId,
+        storageUrl: storageUrl(
+          readOnlyOptions.chainId,
+          options.operator,
+          options.key
+        ),
         text: result.text,
         data: options.raw ? result.data : result.data,
         isXml: result.isXml,

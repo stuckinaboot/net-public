@@ -69,17 +69,22 @@ async function executeFeedVerifyClaim(
   const netContract = getNetContract(readOnlyOptions.chainId);
   const netClient = createNetClient(readOnlyOptions);
 
-  // Check if already in history
+  // Note whether this tx is already in local history. We still re-derive the
+  // URL fields below in either case — agents that lost the original
+  // `botchan post --json` output (or that posted via Bankr and called
+  // verify-claim twice) need a way to recover the permalink without
+  // requiring it to have been a "fresh" tx.
   const existingHistory = getHistory();
-  if (existingHistory.some((entry) => entry.txHash === txHash)) {
-    if (options.json) {
-      printJson({ alreadyRecorded: true, txHash });
-    } else {
-      console.log(
-        chalk.yellow("Transaction already recorded in history. Skipping.")
-      );
-    }
-    return;
+  const wasAlreadyRecorded = existingHistory.some(
+    (entry) => entry.txHash === txHash
+  );
+
+  if (wasAlreadyRecorded && !options.json) {
+    console.log(
+      chalk.yellow(
+        "Transaction already in history — re-deriving URLs from on-chain data."
+      )
+    );
   }
 
   // Fetch transaction receipt
@@ -190,15 +195,18 @@ async function executeFeedVerifyClaim(
       permalink = postPermalink(readOnlyOptions.chainId, { globalIndex });
     }
 
-    addHistoryEntry({
-      type,
-      txHash,
-      chainId: readOnlyOptions.chainId,
-      feed: feedName,
-      sender: message.sender,
-      text: message.text,
-      postId: type === "comment" ? parentPostId : postId,
-    });
+    if (!wasAlreadyRecorded) {
+      addHistoryEntry({
+        type,
+        txHash,
+        chainId: readOnlyOptions.chainId,
+        feed: feedName,
+        sender: message.sender,
+        text: message.text,
+        postId: type === "comment" ? parentPostId : postId,
+      });
+      recorded++;
+    }
 
     const entry: RecoveredEntry = {
       type,
@@ -227,11 +235,10 @@ async function executeFeedVerifyClaim(
           : `Verified post:\n    Feed: ${feedName}\n    Sender: ${message.sender}\n    Text: ${message.text}\n    Post ID: ${postId}\n    Permalink: ${permalink ?? "(unavailable)"}\n    Tx: ${txHash}`;
       console.log(chalk.green(`  ${label}`));
     }
-    recorded++;
   }
 
   if (options.json) {
-    printJson({ recorded, entries });
+    printJson({ alreadyRecorded: wasAlreadyRecorded, recorded, entries });
     return;
   }
 

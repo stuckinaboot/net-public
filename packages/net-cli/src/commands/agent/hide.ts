@@ -12,7 +12,7 @@ async function executeToggleHidden(
   const past = hide ? "hidden" : "unhidden";
   try {
     const auth = await resolveAuth(options);
-    console.log(chalk.blue(`${verb} agent ${agentId}...`));
+    console.error(chalk.blue(`${verb} agent ${agentId}...`));
     const result = hide
       ? await auth.client.hideAgent(auth.sessionToken, agentId)
       : await auth.client.unhideAgent(auth.sessionToken, agentId);

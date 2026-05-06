@@ -53,6 +53,20 @@ describe("externalSigning", () => {
       ]);
     });
 
+    it("includes EIP712Domain in types so strict signers (Issue #4) accept the payload", () => {
+      const { typedData } = buildSessionTypedData({
+        operatorAddress: operator,
+        chainId: 8453,
+      });
+      // Without EIP712Domain in `types`, signers like Bankr's
+      // /wallet/sign reject the typed data with a validator error.
+      expect(typedData.types.EIP712Domain).toEqual([
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+      ]);
+    });
+
     it("hashes the secret key matching the SDK's session creation logic", () => {
       const { typedData } = buildSessionTypedData({
         operatorAddress: operator,
@@ -281,6 +295,16 @@ describe("externalSigning", () => {
     it("includes the topic in the message", () => {
       const { typedData } = buildConversationAuthTypedData({ topic, chainId: 8453 });
       expect(typedData.message).toEqual({ topic });
+    });
+
+    it("includes EIP712Domain (with verifyingContract) in types so strict signers (Issue #4) accept the payload", () => {
+      const { typedData } = buildConversationAuthTypedData({ topic, chainId: 8453 });
+      expect(typedData.types.EIP712Domain).toEqual([
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
+      ]);
     });
 
     it("throws for unsupported chains", () => {

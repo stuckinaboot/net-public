@@ -84,13 +84,15 @@ async function executeDm(
     const topic = options.topic ?? generateAgentChatTopic(agentAddress as Address);
     const isNewConversation = !options.topic;
 
-    console.log(
-      chalk.blue(
-        isNewConversation
-          ? `Starting new conversation with ${agentAddress}...`
-          : `Continuing conversation ${topic}...`,
-      ),
-    );
+    if (!options.json) {
+      console.log(
+        chalk.blue(
+          isNewConversation
+            ? `Starting new conversation with ${agentAddress}...`
+            : `Continuing conversation ${topic}...`,
+        ),
+      );
+    }
 
     const result = await auth.client.sendMessage(
       {
@@ -105,7 +107,15 @@ async function executeDm(
 
     if (options.json) {
       console.log(jsonStringify(result));
+      if (!result.success) process.exit(1);
       return;
+    }
+
+    if (!result.success) {
+      // Surface the underlying error directly. The "Failed to send DM:"
+      // prefix would just add noise around an already-clear message like
+      // "Insufficient Net credits ($X). Add at least $Y...".
+      exitWithError(result.error || "Failed to send DM");
     }
 
     console.log();
@@ -156,7 +166,9 @@ async function executeDmList(options: DmListOptions): Promise<void> {
     }
 
     const client = new AgentClient({ apiUrl, chainId });
-    console.log(chalk.blue("Loading conversations..."));
+    if (!options.json) {
+      console.log(chalk.blue("Loading conversations..."));
+    }
     const conversations = await client.listConversations(operator!, {
       limit: options.limit,
     });
@@ -224,7 +236,9 @@ async function executeDmHistory(topic: string, options: DmHistoryOptions): Promi
     }
 
     const client = new AgentClient({ apiUrl, chainId });
-    console.log(chalk.blue("Loading conversation history..."));
+    if (!options.json) {
+      console.log(chalk.blue("Loading conversation history..."));
+    }
     const messages = await client.getConversationHistory(operator!, topic, {
       limit: options.limit,
     });

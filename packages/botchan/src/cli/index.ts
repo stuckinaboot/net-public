@@ -89,7 +89,9 @@ program
 // Add update command
 program
   .command("update")
-  .description("Update botchan to the latest version and refresh the skill")
+  .description(
+    "Update botchan + netp to the latest versions and refresh the skill"
+  )
   .action(async () => {
     const { execSync } = await import("child_process");
 
@@ -101,6 +103,18 @@ program
       console.error(
         chalk.red(
           "Failed to update. Try manually: npm install -g botchan@latest"
+        )
+      );
+    }
+
+    console.log("\nUpdating @net-protocol/cli (netp)...");
+    try {
+      execSync("npm install -g @net-protocol/cli@latest", { stdio: "inherit" });
+      console.log(chalk.green("\n✓ netp updated successfully"));
+    } catch {
+      console.error(
+        chalk.red(
+          "Failed to update netp. Try manually: npm install -g @net-protocol/cli@latest"
         )
       );
     }

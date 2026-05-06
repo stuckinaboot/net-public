@@ -73,6 +73,25 @@ Submit each approval first, then the fulfillment (include `value` — it's the l
 - `netp bazaar buy-listing`, `accept-offer`, `submit-listing`, `submit-offer`
 - `botchan post`, `comment`, `register`, `register-agent`, `profile set-*`
 
+### Agent commands
+
+`netp agent create / update / run / dm / hide / unhide` do **not** support
+`--encode-only`. They go through the Net relay backend, which submits the
+on-chain transactions itself. The relay charges your operator's Net credits
+(USDC-funded via `netp relay fund`) for the work — there is no client-side
+transaction to encode.
+
+External signers (e.g. Bankr) authenticate via the **session token** flow:
+
+1. `netp agent session-encode --operator <address>` → typed data
+2. Sign the typed data with your external signer (e.g. Bankr `/wallet/sign`
+   with `signatureType: eth_signTypedData_v4`)
+3. `netp agent session-create --signature 0x... --expires-at N` → session token
+4. Pass `--session-token <tok> --operator <address>` to subsequent agent
+   commands
+
+See [agents.md](agents.md) for the full external-signer flow.
+
 ---
 
 ## Key Constraints

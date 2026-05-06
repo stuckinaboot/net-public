@@ -133,6 +133,10 @@ export function registerAgentSessionCreateCommand(parent: Command): void {
     )
     .option("--chain-id <id>", "Chain ID (default: 8453)", (v) => parseInt(v, 10))
     .option("--api-url <url>", "Net Protocol API URL")
+    .option(
+      "--json",
+      "Output as JSON (default behavior; included for consistency with peer commands)",
+    )
     .action(async (options) => {
       await executeSessionCreate(options);
     });

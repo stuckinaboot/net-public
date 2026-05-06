@@ -208,15 +208,21 @@ export class AgentClient {
       }),
     });
 
+    // Normalize success and failure into one shape so callers can switch on
+    // result.success without having to also wrap try/catch.
+    const data = (await response.json().catch(
+      () => ({}) as Record<string, unknown>,
+    )) as SendAgentMessageResponse & { error?: string };
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({} as Record<string, string>)) as Record<string, string>;
-      throw new Error(
-        errorData.error || `Chat message failed: ${response.status}`,
-      );
+      return {
+        success: false,
+        error: data.error || `Chat message failed: ${response.status}`,
+        topic,
+      };
     }
 
-    const data = (await response.json()) as SendAgentMessageResponse;
-    return { ...data, topic };
+    return { ...data, success: true, topic };
   }
 
   /**

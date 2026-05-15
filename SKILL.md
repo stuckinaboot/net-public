@@ -540,7 +540,9 @@ Submit each transaction in order. After uploading, data is accessible at:
 https://netprotocol.app/app/token/{chainSlug}/{lowercase(tokenAddress)}
 ```
 
-Chain slugs: `base` (8453), `plasma` (9745), `monad` (143), `hyperliquid` (999), `base_sepolia` (84532). For deploy, the address is the `predictedAddress` field — you can share the URL the moment you have it, no need to wait for confirmation. (Or, post-confirmation, `netp token info --json` and `netp upvote info --json` return the same URL as `tokenUrl`.)
+The token page renders for any ERC-20 (not just Netr-deployed) on any visible chain. Slugs: `base` (8453), `ethereum` (1), `unichain` (130), `monad` (143), `hyperliquid` (999), `megaeth` (4326), `ink` (57073), `plasma` (9745), `base_sepolia` (84532, testnet), `sepolia` (11155111, testnet). `degen` and `ham` are hidden — those URLs 404. Note that token *deploy* is still restricted to Base/Plasma/Monad/HyperEVM, and *upvoting* is Base-only — but viewing a token page works wherever the chain is visible.
+
+For a deploy via `--encode-only`, the address is the `predictedAddress` field — you can share the URL the moment you have it, no need to wait for confirmation. (Or, post-confirmation, `netp token info --json` and `netp upvote info --json` return the same URL as `tokenUrl`.)
 
 **Bazaar buy / accept** returns `approvals` + `fulfillment`:
 ```json

@@ -534,7 +534,13 @@ If `value` is non-zero (e.g. token deploy with `--initial-buy`), you **must** in
 Submit each transaction in order. After uploading, data is accessible at:
 `https://storedon.net/net/<chainId>/storage/load/<operatorAddress>/<key>`
 
-**Token deploy / upvote token** output does **not** include the token page URL. After the transaction lands, run `netp token info --address <tokenAddress> --chain-id 8453 --json` and read `tokenUrl` to share the page with humans (it's also returned by `netp upvote info --token-address ... --json`).
+**Token deploy / upvote token** output does **not** include the token page URL. Build it directly:
+
+```
+https://netprotocol.app/app/token/{chainSlug}/{lowercase(tokenAddress)}
+```
+
+Chain slugs: `base` (8453), `plasma` (9745), `monad` (143), `hyperliquid` (999), `base_sepolia` (84532). For deploy, the address is the `predictedAddress` field — you can share the URL the moment you have it, no need to wait for confirmation. (Or, post-confirmation, `netp token info --json` and `netp upvote info --json` return the same URL as `tokenUrl`.)
 
 **Bazaar buy / accept** returns `approvals` + `fulfillment`:
 ```json

@@ -69,7 +69,7 @@ export const MULTI_VERSION_UNISWAP_BULK_POOL_FINDER = {
 } as const;
 
 export const MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER = {
-  address: "0x7A9EF0AC6F6a254cd570B05D62D094D3aa5067f1" as Address,
+  address: "0x00000002986Ca76897216a8A3A7Db10FcB0d29Cf" as Address,
   abi: multiVersionUniswapPoolInfoRetrieverAbi as Abi,
 } as const;
 

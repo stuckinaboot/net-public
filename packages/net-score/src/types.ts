@@ -169,3 +169,14 @@ export type UseUpvotePriceOptions = {
   chainId: number;
   enabled?: boolean;
 };
+
+export type PoolDiscoveryPair = {
+  tokenAddress: string;
+  baseTokenAddress?: string;
+};
+
+export type UseDiscoverPoolsOptions = {
+  chainId: number;
+  pairs: PoolDiscoveryPair[];
+  enabled?: boolean;
+};

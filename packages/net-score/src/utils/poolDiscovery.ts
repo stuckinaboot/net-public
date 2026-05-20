@@ -6,13 +6,13 @@ import {
   getWethAddress,
   NULL_ADDRESS,
 } from "../constants";
-import type { PoolKey, PoolDiscoveryResult } from "../types";
+import type { PoolKey, PoolDiscoveryResult, PoolDiscoveryPair } from "../types";
 
 // ============================================================================
 // Internal types
 // ============================================================================
 
-type PairInput = { tokenAddress: string; baseTokenAddress?: string };
+type PairInput = PoolDiscoveryPair;
 
 type V4PoolKeyLike = {
   currency0: Address;
@@ -452,7 +452,7 @@ export async function discoverPools({
   chainId = 8453,
 }: {
   publicClient: PublicClient;
-  pairs: { tokenAddress: string; baseTokenAddress?: string }[];
+  pairs: PoolDiscoveryPair[];
   /** Chain ID used to resolve the WETH address. Defaults to Base (8453). */
   chainId?: number;
 }): Promise<PoolDiscoveryResult[]> {

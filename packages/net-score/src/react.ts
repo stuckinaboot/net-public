@@ -11,6 +11,9 @@ export { useUserUpvotesReceivedPerTokenBatch } from "./hooks/useUserUpvotesRecei
 export { useUpvoteUser } from "./hooks/useUpvoteUser";
 export { useUpvotePrice } from "./hooks/useUpvotePrice";
 
+// Pool discovery hook
+export { useDiscoverPools } from "./hooks/useDiscoverPools";
+
 // Re-export utilities commonly needed with hooks
 export {
   getTokenScoreKey,
@@ -31,4 +34,8 @@ export type {
   UseUserUpvotesReceivedPerTokenBatchOptions,
   UseUpvoteUserOptions,
   UseUpvotePriceOptions,
+  UseDiscoverPoolsOptions,
+  PoolDiscoveryPair,
+  PoolDiscoveryResult,
+  PoolKey,
 } from "./types";

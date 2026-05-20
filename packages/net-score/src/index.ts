@@ -63,6 +63,7 @@ export type {
   DecodedStrategyMetadata,
   DecodedUpvoteBlob,
   PoolDiscoveryResult,
+  PoolDiscoveryPair,
   ScoreClientOptions,
   GetUpvotesOptions,
   GetUpvotesForItemsOptions,

@@ -69,6 +69,8 @@ export type PoolDiscoveryResult = {
   price: number | null;
   fee: number;
   poolKey?: PoolKey;
+  /** V4 in-range concentrated liquidity (uint128) as a decimal string. "0" for V2/V3. */
+  liquidity?: string;
   balances?: {
     baseTokenBalance: string;
     token0Balance: string;

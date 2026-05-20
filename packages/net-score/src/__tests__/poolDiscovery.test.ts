@@ -172,70 +172,119 @@ describe("selectBestPoolPerPair", () => {
     token1: WETH_ADDRESS as `0x${string}`,
     token0Balance: "1000000000000000000000",
     token1Balance: "1000000000000000000",
+    liquidity: "0",
   };
 
   it("should return single pool when only one exists", () => {
     const pools = [
       {
         ...basePool,
-        poolAddress: "0x1111000000000000000000000000000000000001" as `0x${string}`,
+        poolAddress:
+          "0x1111000000000000000000000000000000000001" as `0x${string}`,
         baseTokenBalance: "1000000000000000000",
         fee: 3000,
+        wethDepthWei: 1_000_000_000_000_000_000n,
       },
     ];
 
-    const result = selectBestPoolPerPair(pools, WETH_ADDRESS);
+    const result = selectBestPoolPerPair(pools);
     expect(result).toHaveLength(1);
     expect(result[0].poolAddress).toBe(
       "0x1111000000000000000000000000000000000001"
     );
   });
 
-  it("should prefer V2/V3 pools with sufficient liquidity over V4", () => {
+  it("should pick the deeper V4 pool over a shallower V2/V3 pool", () => {
     const pools = [
       {
         ...basePool,
-        poolAddress: "0x1111000000000000000000000000000000000001" as `0x${string}`,
-        baseTokenBalance: String(0.2 * 1e18), // Above 0.1 ETH threshold
+        poolAddress:
+          "0x1111000000000000000000000000000000000001" as `0x${string}`,
+        baseTokenBalance: "5740000000000000000",
         fee: 3000,
+        wethDepthWei: 5_740_000_000_000_000_000n,
       },
       {
         ...basePool,
         poolAddress: null,
         baseTokenBalance: "0",
-        fee: 500,
+        fee: 8388608,
+        liquidity: "999999999999999999999",
+        wethDepthWei: 371_000_000_000_000_000_000n,
       },
     ];
 
-    const result = selectBestPoolPerPair(pools, WETH_ADDRESS);
+    const result = selectBestPoolPerPair(pools);
+    expect(result).toHaveLength(1);
+    expect(result[0].poolAddress).toBeNull();
+  });
+
+  it("should pick the deeper V2/V3 pool over a shallower V4 pool", () => {
+    const pools = [
+      {
+        ...basePool,
+        poolAddress:
+          "0x1111000000000000000000000000000000000001" as `0x${string}`,
+        baseTokenBalance: "100000000000000000000",
+        fee: 3000,
+        wethDepthWei: 100_000_000_000_000_000_000n,
+      },
+      {
+        ...basePool,
+        poolAddress: null,
+        baseTokenBalance: "0",
+        fee: 8388608,
+        liquidity: "1000",
+        wethDepthWei: 1_000_000_000_000_000_000n,
+      },
+    ];
+
+    const result = selectBestPoolPerPair(pools);
     expect(result).toHaveLength(1);
     expect(result[0].poolAddress).toBe(
       "0x1111000000000000000000000000000000000001"
     );
   });
 
-  it("should fall back to V4 when V2/V3 pools lack liquidity", () => {
+  it("should reject pools with zero wethDepthWei (V4 ghost pool kill)", () => {
     const pools = [
       {
         ...basePool,
-        poolAddress: "0x1111000000000000000000000000000000000001" as `0x${string}`,
-        baseTokenBalance: String(0.001 * 1e18), // Below both thresholds
-        // token1 is WETH, so getWethBalanceWei uses token1Balance
-        token1Balance: String(0.001 * 1e18), // Below both thresholds
-        fee: 3000,
+        poolAddress: null,
+        baseTokenBalance: "0",
+        fee: 10000,
+        liquidity: "0",
+        wethDepthWei: 0n,
       },
       {
         ...basePool,
         poolAddress: null,
         baseTokenBalance: "0",
-        token1Balance: "0",
-        fee: 500,
+        fee: 8388608,
+        liquidity: "1000000000",
+        wethDepthWei: 11_800_000_000_000_000_000n,
       },
     ];
 
-    const result = selectBestPoolPerPair(pools, WETH_ADDRESS);
+    const result = selectBestPoolPerPair(pools);
     expect(result).toHaveLength(1);
-    expect(result[0].poolAddress).toBeNull(); // V4 pool
+    expect(result[0].fee).toBe(8388608);
+  });
+
+  it("should drop the pair entirely when all pools have zero depth", () => {
+    const pools = [
+      {
+        ...basePool,
+        poolAddress:
+          "0x1111000000000000000000000000000000000001" as `0x${string}`,
+        baseTokenBalance: "0",
+        fee: 3000,
+        wethDepthWei: 0n,
+      },
+    ];
+
+    const result = selectBestPoolPerPair(pools);
+    expect(result).toHaveLength(0);
   });
 });
 

@@ -3,7 +3,59 @@
     "type": "function",
     "name": "V4_POOL_MANAGER",
     "inputs": [],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_getV4Liquidity",
+    "inputs": [
+      {
+        "name": "poolKey",
+        "type": "tuple",
+        "internalType": "struct PoolKey",
+        "components": [
+          {
+            "name": "currency0",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "currency1",
+            "type": "address",
+            "internalType": "Currency"
+          },
+          {
+            "name": "fee",
+            "type": "uint24",
+            "internalType": "uint24"
+          },
+          {
+            "name": "tickSpacing",
+            "type": "int24",
+            "internalType": "int24"
+          },
+          {
+            "name": "hooks",
+            "type": "address",
+            "internalType": "contract IHooks"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "liquidity",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ],
     "stateMutability": "view"
   },
   {
@@ -25,8 +77,16 @@
             "type": "address",
             "internalType": "Currency"
           },
-          { "name": "fee", "type": "uint24", "internalType": "uint24" },
-          { "name": "tickSpacing", "type": "int24", "internalType": "int24" },
+          {
+            "name": "fee",
+            "type": "uint24",
+            "internalType": "uint24"
+          },
+          {
+            "name": "tickSpacing",
+            "type": "int24",
+            "internalType": "int24"
+          },
           {
             "name": "hooks",
             "type": "address",
@@ -36,7 +96,11 @@
       }
     ],
     "outputs": [
-      { "name": "sqrtPriceX96", "type": "uint160", "internalType": "uint160" }
+      {
+        "name": "sqrtPriceX96",
+        "type": "uint160",
+        "internalType": "uint160"
+      }
     ],
     "stateMutability": "view"
   },
@@ -69,8 +133,16 @@
             "type": "address",
             "internalType": "Currency"
           },
-          { "name": "fee", "type": "uint24", "internalType": "uint24" },
-          { "name": "tickSpacing", "type": "int24", "internalType": "int24" },
+          {
+            "name": "fee",
+            "type": "uint24",
+            "internalType": "uint24"
+          },
+          {
+            "name": "tickSpacing",
+            "type": "int24",
+            "internalType": "int24"
+          },
           {
             "name": "hooks",
             "type": "address",
@@ -78,7 +150,11 @@
           }
         ]
       },
-      { "name": "baseToken", "type": "address", "internalType": "address" }
+      {
+        "name": "baseToken",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
     "outputs": [
       {
@@ -91,8 +167,16 @@
             "type": "address",
             "internalType": "address"
           },
-          { "name": "token0", "type": "address", "internalType": "address" },
-          { "name": "token1", "type": "address", "internalType": "address" },
+          {
+            "name": "token0",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "token1",
+            "type": "address",
+            "internalType": "address"
+          },
           {
             "name": "token0Decimals",
             "type": "uint8",
@@ -122,6 +206,11 @@
             "name": "token1Balance",
             "type": "uint256",
             "internalType": "uint256"
+          },
+          {
+            "name": "liquidity",
+            "type": "uint128",
+            "internalType": "uint128"
           }
         ]
       }

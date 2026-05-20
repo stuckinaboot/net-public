@@ -42,6 +42,7 @@ type PoolFullInfo = {
   baseTokenBalance: bigint;
   token0Balance: bigint;
   token1Balance: bigint;
+  liquidity: bigint;
 };
 
 type PairMeta = {
@@ -76,8 +77,39 @@ const V4_HOOKS: Address[] = [
   "0xBDF938149ac6a781F94FAa0ed45E6A0e984c6544",
 ];
 
-const LIQUIDITY_THRESHOLD_TO_PREFER_V2_V3_POOLS = 0.1 * 1e18;
-const LIQUIDITY_THRESHOLD_TO_CONSIDER_V2_V3_POOLS = 0.01 * 1e18;
+const Q96 = BigInt(2) ** BigInt(96);
+const ZERO_BI = BigInt(0);
+
+// Derived WETH amount (wei) for a V4 pool at its current price.
+//   WETH = currency1:  L * sqrtPriceX96 / Q96
+//   WETH = currency0:  L * Q96 / sqrtPriceX96
+// Only counts in-range liquidity, which is sufficient for selection.
+function deriveV4WethDepthWei(
+  liquidity: bigint,
+  sqrtPriceX96: bigint,
+  wethIsCurrency1: boolean
+): bigint {
+  if (sqrtPriceX96 === ZERO_BI || liquidity === ZERO_BI) return ZERO_BI;
+  if (wethIsCurrency1) {
+    return (liquidity * sqrtPriceX96) / Q96;
+  }
+  return (liquidity * Q96) / sqrtPriceX96;
+}
+
+// WETH-side balance for a V2/V3 pool. Mirrors the V4 helper so selection can
+// compare both versions on the same `wethDepthWei` axis.
+function deriveV2V3WethDepthWei(
+  info: PoolFullInfo,
+  wethLower: string
+): bigint {
+  if ((info.token0 ?? "").toLowerCase() === wethLower) {
+    return BigInt(info.token0Balance ?? 0);
+  }
+  if ((info.token1 ?? "").toLowerCase() === wethLower) {
+    return BigInt(info.token1Balance ?? 0);
+  }
+  return BigInt(info.baseTokenBalance ?? 0);
+}
 
 // ============================================================================
 // Pure helper functions
@@ -357,58 +389,8 @@ export function constructPoolKey(
 }
 
 // ============================================================================
-// Pool selection helpers
+// Pool selection
 // ============================================================================
-
-function getWethBalanceWei(pool: {
-  token0?: Address;
-  token1?: Address;
-  token0Balance: string;
-  token1Balance: string;
-  baseTokenBalance: string;
-}, wethAddress: Address): number {
-  if (pool.token0?.toLowerCase() === wethAddress.toLowerCase()) {
-    return Number(pool.token0Balance);
-  } else if (pool.token1?.toLowerCase() === wethAddress.toLowerCase()) {
-    return Number(pool.token1Balance);
-  } else {
-    return Number(pool.baseTokenBalance);
-  }
-}
-
-function filterV2V3PoolsByLiquidity(
-  pools: PoolWithMeta[],
-  threshold: number,
-  wethAddress: Address
-): PoolWithMeta[] {
-  return pools.filter((pool) => {
-    if (!pool.poolAddress) return false;
-    const wethBalanceWei = getWethBalanceWei(pool, wethAddress);
-    return wethBalanceWei >= threshold;
-  });
-}
-
-function selectBestV2V3Pool(pools: PoolWithMeta[]): PoolWithMeta {
-  return pools.reduce((a, b) => {
-    const aIsV3 = a.fee > 0;
-    const bIsV3 = b.fee > 0;
-    if (aIsV3 && !bIsV3) return a;
-    if (!aIsV3 && bIsV3) return b;
-    return Number(a.baseTokenBalance) > Number(b.baseTokenBalance) ? a : b;
-  });
-}
-
-function selectBestV4Pool(pools: PoolWithMeta[]): PoolWithMeta {
-  return pools.reduce((a, b) => {
-    return a.fee < b.fee ? a : b;
-  });
-}
-
-function selectBestV2V3PoolByFee(pools: PoolWithMeta[]): PoolWithMeta {
-  return pools.reduce((a, b) => {
-    return a.fee < b.fee ? a : b;
-  });
-}
 
 type PoolWithMeta = {
   tokenAddress: string;
@@ -422,11 +404,15 @@ type PoolWithMeta = {
   token1Balance: string;
   fee: number;
   poolKey?: PoolKey;
+  liquidity: string;
+  wethDepthWei: bigint;
 };
 
+// V2/V3 WETH-side ERC20 balance and V4 in-range virtual reserve are both
+// expressed in WETH wei, so they're directly comparable. Pools with zero depth
+// are rejected to skip V4 ghost pools left behind after liquidity removal.
 export function selectBestPoolPerPair(
-  allPools: PoolWithMeta[],
-  wethAddress: Address
+  allPools: PoolWithMeta[]
 ): PoolWithMeta[] {
   const poolsByPair: Record<string, PoolWithMeta[]> = {};
 
@@ -440,38 +426,13 @@ export function selectBestPoolPerPair(
   }
 
   const bestPools: PoolWithMeta[] = [];
-  for (const [, group] of Object.entries(poolsByPair)) {
-    let best: PoolWithMeta | undefined;
-    if (group.length === 1) {
-      best = group[0];
-    } else {
-      const v2v3PoolsWithPreferredLiquidity = filterV2V3PoolsByLiquidity(
-        group,
-        LIQUIDITY_THRESHOLD_TO_PREFER_V2_V3_POOLS,
-        wethAddress
-      );
-
-      if (v2v3PoolsWithPreferredLiquidity.length > 0) {
-        best = selectBestV2V3Pool(v2v3PoolsWithPreferredLiquidity);
-      } else {
-        const v4Pools = group.filter((pool) => !pool.poolAddress);
-        if (v4Pools.length > 0) {
-          best = selectBestV4Pool(v4Pools);
-        } else {
-          const v2v3PoolsWithAcceptableLiquidity = filterV2V3PoolsByLiquidity(
-            group,
-            LIQUIDITY_THRESHOLD_TO_CONSIDER_V2_V3_POOLS,
-            wethAddress
-          );
-          if (v2v3PoolsWithAcceptableLiquidity.length > 0) {
-            best = selectBestV2V3PoolByFee(v2v3PoolsWithAcceptableLiquidity);
-          }
-        }
-      }
-    }
-    if (best) {
-      bestPools.push(best);
-    }
+  for (const group of Object.values(poolsByPair)) {
+    const withDepth = group.filter((p) => p.wethDepthWei > ZERO_BI);
+    if (withDepth.length === 0) continue;
+    const best = withDepth.reduce((a, b) =>
+      a.wethDepthWei > b.wethDepthWei ? a : b
+    );
+    bestPools.push(best);
   }
 
   return bestPools;
@@ -533,17 +494,34 @@ export async function discoverPools({
 
   if (!Array.isArray(poolInfos) || poolInfos.length === 0) return [];
 
+  const wethLower = wethAddress.toLowerCase();
+
   // Step 3: Map pool infos to enriched format
   const allPools = poolInfos
     .map((info: PoolFullInfo, index: number) => {
       const poolData = determinePoolVersion(discoveries, index);
       if (!poolData || !poolData.pair) return null;
 
+      const isV4 = poolData.version === 4;
+      const liquidity = BigInt(info.liquidity ?? 0);
+
+      let wethDepthWei: bigint;
+      if (isV4) {
+        const wethIsCurrency1 =
+          poolData.v4PoolKey!.currency1.toLowerCase() === wethLower;
+        wethDepthWei = deriveV4WethDepthWei(
+          liquidity,
+          BigInt(info.sqrtPriceX96 ?? 0),
+          wethIsCurrency1
+        );
+      } else {
+        wethDepthWei = deriveV2V3WethDepthWei(info, wethLower);
+      }
+
       return {
         tokenAddress: poolData.pair.tokenAddress,
         baseTokenAddress: poolData.pair.baseTokenAddress || wethAddress,
-        poolAddress:
-          poolData.version === 4 ? null : (info.poolAddress as Address),
+        poolAddress: isV4 ? null : (info.poolAddress as Address),
         price: calculatePoolPrice(info, poolData.pair, poolData.version),
         baseTokenBalance: String(info.baseTokenBalance || 0),
         token0: info.token0,
@@ -557,12 +535,14 @@ export async function discoverPools({
           poolData.version,
           poolData.v4PoolKey
         ),
+        liquidity: String(liquidity),
+        wethDepthWei,
       };
     })
     .filter((p): p is NonNullable<typeof p> => p !== null) as PoolWithMeta[];
 
   // Step 4: Select best pool per pair
-  const bestPools = selectBestPoolPerPair(allPools, wethAddress);
+  const bestPools = selectBestPoolPerPair(allPools);
 
   return bestPools.map(
     (pool): PoolDiscoveryResult => ({
@@ -572,6 +552,7 @@ export async function discoverPools({
       price: pool.price,
       fee: pool.fee,
       poolKey: pool.poolKey,
+      liquidity: pool.liquidity,
       balances: {
         baseTokenBalance: pool.baseTokenBalance,
         token0Balance: pool.token0Balance,

@@ -159,3 +159,43 @@ export interface AcceptErc20OfferOptions {
   rpcUrl?: string;
   encodeOnly?: boolean;
 }
+
+export interface CancelListingOptions {
+  orderHash: string;
+  nftAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelOfferOptions {
+  orderHash: string;
+  nftAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelErc20ListingOptions {
+  orderHash: string;
+  tokenAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelErc20OfferOptions {
+  orderHash: string;
+  tokenAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}

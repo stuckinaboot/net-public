@@ -13,8 +13,8 @@ import { getErc20BazaarAddress, isBazaarSupportedOnChain } from "../chainConfig"
 export interface UseBazaarErc20ListingsOptions {
   /** Chain ID to query */
   chainId: number;
-  /** ERC20 token address */
-  tokenAddress: `0x${string}`;
+  /** ERC20 token address (optional - if omitted, fetches recent listings across all tokens) */
+  tokenAddress?: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
   /** Only include listings from this address */
@@ -25,6 +25,8 @@ export interface UseBazaarErc20ListingsOptions {
   startIndex?: number;
   /** Override end index for message range */
   endIndex?: number;
+  /** Include expired listings in results (default: false) */
+  includeExpired?: boolean;
   /** Whether the query is enabled (default: true) */
   enabled?: boolean;
   /** Optional viem PublicClient (defaults to wagmi's client for the chain) */
@@ -83,6 +85,7 @@ export function useBazaarErc20Listings({
   maxMessages = 200,
   startIndex: startIndexOverride,
   endIndex: endIndexOverride,
+  includeExpired = false,
   enabled = true,
   publicClient,
 }: UseBazaarErc20ListingsOptions): UseBazaarErc20ListingsResult {
@@ -112,7 +115,7 @@ export function useBazaarErc20Listings({
   const filter = useMemo(
     () => ({
       appAddress: erc20BazaarAddress as `0x${string}`,
-      topic: tokenAddress.toLowerCase(),
+      topic: tokenAddress?.toLowerCase(),
       maker,
     }),
     [erc20BazaarAddress, tokenAddress, maker]
@@ -145,7 +148,7 @@ export function useBazaarErc20Listings({
     enabled: enabled && isSupported && (hasRangeOverride || totalCount > 0),
   });
 
-  const TAG = `[useBazaarErc20Listings chain=${chainId} token=${tokenAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarErc20Listings chain=${chainId} token=${tokenAddress?.slice(0, 10) ?? "all"}]`;
 
   // Log pipeline state changes
   useEffect(() => {
@@ -186,7 +189,7 @@ export function useBazaarErc20Listings({
         const client = new BazaarClient({ chainId, publicClient: resolvedClient });
         const validListings = await client.processErc20ListingsFromMessages(
           messages,
-          { tokenAddress, excludeMaker }
+          { tokenAddress, excludeMaker, includeExpired }
         );
         console.log(TAG, `processed → ${validListings.length} valid listings`);
 
@@ -211,7 +214,7 @@ export function useBazaarErc20Listings({
     return () => {
       cancelled = true;
     };
-  }, [chainId, tokenAddress, excludeMaker, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, excludeMaker, includeExpired, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

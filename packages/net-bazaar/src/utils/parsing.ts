@@ -306,6 +306,12 @@ export function parseErc20ListingFromMessage(
 
     const pricePerTokenWei = priceWei / tokenAmount;
 
+    const targetFulfiller =
+      parameters.zone.toLowerCase() === NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS.toLowerCase() &&
+      parameters.zoneHash !== "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ? parameters.zoneHash
+        : undefined;
+
     return {
       maker: parameters.offerer,
       tokenAddress: offerItem.token,
@@ -323,6 +329,7 @@ export function parseErc20ListingFromMessage(
         ...parameters,
         counter: submission.counter,
       },
+      targetFulfiller,
     };
   } catch {
     return null;

@@ -213,6 +213,38 @@ export class BazaarClient {
   }
 
   /**
+   * Pre-warm the decimals cache for every unique token referenced by `messages`
+   * on the given Seaport order side, in parallel. Returns a lookup function that
+   * resolves decimals synchronously (or returns undefined if the message could
+   * not be decoded and decimals are unknown — caller should skip such messages
+   * rather than silently default to 18).
+   */
+  private async warmTokenDecimals(
+    messages: NetMessage[],
+    side: "offer" | "consideration"
+  ): Promise<(message: NetMessage) => number | undefined> {
+    const tokenByMessage = new Map<NetMessage, `0x${string}`>();
+    for (const message of messages) {
+      try {
+        const order = getSeaportOrderFromMessageData(message.data as `0x${string}`);
+        const token = order.parameters[side]?.[0]?.token as `0x${string}` | undefined;
+        if (token) tokenByMessage.set(message, token);
+      } catch {
+        // skip; parser will reject the message later
+      }
+    }
+
+    const uniqueTokens = [...new Set(tokenByMessage.values())];
+    await Promise.all(uniqueTokens.map((t) => this.fetchTokenDecimals(t)));
+
+    return (message: NetMessage) => {
+      const token = tokenByMessage.get(message);
+      if (!token) return undefined;
+      return tokenDecimalsCache.get(`${this.chainId}:${token.toLowerCase()}`);
+    };
+  }
+
+  /**
    * Get valid NFT listings for a collection
    *
    * Returns listings that are:
@@ -557,9 +589,11 @@ export class BazaarClient {
   }
 
   /**
-   * Get valid ERC20 offers for a token
+   * Get valid ERC20 offers for a token (or recent offers across all tokens
+   * when tokenAddress is omitted).
    *
-   * ERC20 offers are only available on Base (8453) and HyperEVM (999).
+   * ERC20 offers are only available on chains with an erc20OffersAddress
+   * configured (see chainConfig.ts).
    *
    * Returns offers that are:
    * - OPEN status (not filled, cancelled, or expired)
@@ -569,21 +603,21 @@ export class BazaarClient {
    * Results are sorted by price per token (highest first)
    */
   async getErc20Offers(options: GetErc20OffersOptions): Promise<Erc20Offer[]> {
-    const { tokenAddress, excludeMaker, maxMessages = 200 } = options;
+    const { tokenAddress, maxMessages = 200 } = options;
     const erc20OffersAddress = getErc20OffersAddress(this.chainId);
 
-    // ERC20 offers only available on Base and HyperEVM
+    // ERC20 offers only available on chains with the contract deployed
     if (!erc20OffersAddress) {
       return [];
     }
 
+    const filter = {
+      appAddress: erc20OffersAddress,
+      topic: tokenAddress?.toLowerCase(),
+    };
+
     // Get message count
-    const count = await this.netClient.getMessageCount({
-      filter: {
-        appAddress: erc20OffersAddress,
-        topic: tokenAddress.toLowerCase(),
-      },
-    });
+    const count = await this.netClient.getMessageCount({ filter });
 
     if (count === 0) {
       return [];
@@ -592,10 +626,7 @@ export class BazaarClient {
     // Fetch messages (most recent)
     const startIndex = Math.max(0, count - maxMessages);
     const messages = await this.netClient.getMessages({
-      filter: {
-        appAddress: erc20OffersAddress,
-        topic: tokenAddress.toLowerCase(),
-      },
+      filter,
       startIndex,
       endIndex: count,
     });
@@ -621,13 +652,25 @@ export class BazaarClient {
       return [];
     }
 
-    // Fetch token decimals for accurate price-per-token computation
-    const tokenDecimals = await this.fetchTokenDecimals(tokenAddress);
+    // Resolve decimals: one shot for single-token queries, otherwise warm the
+    // cache for every distinct consideration token in parallel before parsing.
+    let resolveDecimals: (message: NetMessage) => number | undefined;
+    if (tokenAddress) {
+      const presetDecimals = await this.fetchTokenDecimals(tokenAddress);
+      resolveDecimals = () => presetDecimals;
+    } else {
+      resolveDecimals = await this.warmTokenDecimals(messages, "consideration");
+    }
 
     // Parse messages into offers
     let offers: Erc20Offer[] = [];
     for (const message of messages) {
-      const offer = parseErc20OfferFromMessage(message, this.chainId, tokenDecimals);
+      const decimals = resolveDecimals(message);
+      // Cross-token path: skip messages whose token decimals couldn't be resolved
+      // rather than silently mis-pricing them.
+      if (decimals === undefined) continue;
+
+      const offer = parseErc20OfferFromMessage(message, this.chainId, decimals);
       if (!offer) continue;
 
       // Validate WETH token matches
@@ -637,8 +680,8 @@ export class BazaarClient {
         continue;
       }
 
-      // Validate the consideration token matches the requested token
-      if (offer.tokenAddress.toLowerCase() !== tokenAddress.toLowerCase()) {
+      // Validate the consideration token matches the requested token (when filtering)
+      if (tokenAddress && offer.tokenAddress.toLowerCase() !== tokenAddress.toLowerCase()) {
         continue;
       }
 
@@ -726,12 +769,12 @@ export class BazaarClient {
    * all valid listings are returned (grouped by maker in the UI).
    */
   async getErc20Listings(options: GetErc20ListingsOptions): Promise<Erc20Listing[]> {
-    const { tokenAddress, excludeMaker, maker, maxMessages = 200 } = options;
+    const { tokenAddress, maker, maxMessages = 200 } = options;
     const erc20BazaarAddress = getErc20BazaarAddress(this.chainId);
 
     const filter = {
       appAddress: erc20BazaarAddress,
-      topic: tokenAddress.toLowerCase(),
+      topic: tokenAddress?.toLowerCase(),
       maker,
     };
 
@@ -769,22 +812,34 @@ export class BazaarClient {
    */
   async processErc20ListingsFromMessages(
     messages: NetMessage[],
-    options: Pick<GetErc20ListingsOptions, "tokenAddress" | "excludeMaker">
+    options: Pick<GetErc20ListingsOptions, "tokenAddress" | "excludeMaker" | "includeExpired">
   ): Promise<Erc20Listing[]> {
-    const { tokenAddress, excludeMaker } = options;
+    const { tokenAddress, excludeMaker, includeExpired = false } = options;
     const tag = `[BazaarClient.processErc20Listings chain=${this.chainId}]`;
 
-    // Fetch token decimals for accurate price-per-token computation
-    const tokenDecimals = await this.fetchTokenDecimals(tokenAddress);
+    // Resolve decimals: one shot for single-token queries, otherwise warm the
+    // cache for every distinct offer token in parallel before parsing.
+    let resolveDecimals: (message: NetMessage) => number | undefined;
+    if (tokenAddress) {
+      const presetDecimals = await this.fetchTokenDecimals(tokenAddress);
+      resolveDecimals = () => presetDecimals;
+    } else {
+      resolveDecimals = await this.warmTokenDecimals(messages, "offer");
+    }
 
     // Parse messages into listings
     let listings: Erc20Listing[] = [];
     for (const message of messages) {
-      const listing = parseErc20ListingFromMessage(message, this.chainId, tokenDecimals);
+      const decimals = resolveDecimals(message);
+      // Cross-token path: skip messages whose token decimals couldn't be resolved
+      // rather than silently mis-pricing them.
+      if (decimals === undefined) continue;
+
+      const listing = parseErc20ListingFromMessage(message, this.chainId, decimals);
       if (!listing) continue;
 
-      // Validate the offer token matches the requested token
-      if (listing.tokenAddress.toLowerCase() !== tokenAddress.toLowerCase()) {
+      // Validate the offer token matches the requested token (when filtering)
+      if (tokenAddress && listing.tokenAddress.toLowerCase() !== tokenAddress.toLowerCase()) {
         continue;
       }
 
@@ -829,44 +884,103 @@ export class BazaarClient {
     }
     console.log(tag, `order statuses:`, statusCounts, `expired: ${expiredCount}`);
 
-    // Filter to OPEN orders only
+    // Filter by order status: keep OPEN (and optionally EXPIRED) listings
     listings = listings.filter(
       (l) =>
-        l.orderStatus === SeaportOrderStatus.OPEN &&
-        l.expirationDate > now
+        (l.orderStatus === SeaportOrderStatus.OPEN && l.expirationDate > now) ||
+        (includeExpired && l.orderStatus === SeaportOrderStatus.EXPIRED)
     );
 
-    console.log(tag, `after status filter: ${listings.length} OPEN & not expired`);
+    console.log(tag, `after status filter: ${listings.length} (OPEN${includeExpired ? ' + EXPIRED' : ''})`);
 
     if (listings.length === 0) {
       return [];
     }
 
-    // Validate seller's ERC20 balances
-    const uniqueMakers = [...new Set(listings.map((l) => l.maker))];
-    const balances = await bulkFetchErc20Balances(this.client, tokenAddress, uniqueMakers);
+    // Validate seller's ERC20 balances (only for OPEN listings; expired skip balance check)
+    const openListings = listings.filter((l) => l.orderStatus === SeaportOrderStatus.OPEN);
+    const expiredListings = includeExpired
+      ? listings.filter((l) => l.orderStatus === SeaportOrderStatus.EXPIRED)
+      : [];
 
-    const balanceMap = new Map<string, bigint>();
-    uniqueMakers.forEach((maker, index) => {
-      balanceMap.set(maker.toLowerCase(), balances[index]);
-    });
+    let validOpenListings: Erc20Listing[];
+    const beforeBalance = openListings.length;
 
-    // Filter to listings where seller has sufficient token balance
-    const beforeBalance = listings.length;
-    listings = listings.filter((listing) => {
-      const balance = balanceMap.get(listing.maker.toLowerCase()) || BigInt(0);
-      return isErc20ListingValid(
-        listing.orderStatus,
-        listing.expirationDate,
-        listing.tokenAmount,
-        balance
+    if (tokenAddress) {
+      // Single token: one bulkFetchErc20Balances call against that token.
+      const uniqueMakers = [...new Set(openListings.map((l) => l.maker))];
+      const balances = await bulkFetchErc20Balances(this.client, tokenAddress, uniqueMakers);
+
+      const balanceMap = new Map<string, bigint>();
+      uniqueMakers.forEach((maker, index) => {
+        balanceMap.set(maker.toLowerCase(), balances[index]);
+      });
+
+      validOpenListings = openListings.filter((listing) => {
+        const balance = balanceMap.get(listing.maker.toLowerCase()) || BigInt(0);
+        return isErc20ListingValid(
+          listing.orderStatus,
+          listing.expirationDate,
+          listing.tokenAmount,
+          balance
+        );
+      });
+    } else {
+      // Cross-token: group by tokenAddress, fetch balances per group in parallel.
+      const groups = new Map<string, Erc20Listing[]>();
+      for (const listing of openListings) {
+        const key = listing.tokenAddress.toLowerCase();
+        const group = groups.get(key);
+        if (group) {
+          group.push(listing);
+        } else {
+          groups.set(key, [listing]);
+        }
+      }
+
+      const groupEntries = Array.from(groups.entries());
+      const balanceResults = await Promise.all(
+        groupEntries.map(async ([token, groupListings]) => {
+          const uniqueMakers = [...new Set(groupListings.map((l) => l.maker))];
+          const balances = await bulkFetchErc20Balances(
+            this.client,
+            token as `0x${string}`,
+            uniqueMakers
+          );
+          const map = new Map<string, bigint>();
+          uniqueMakers.forEach((maker, idx) => {
+            map.set(maker.toLowerCase(), balances[idx]);
+          });
+          return map;
+        })
       );
-    });
 
-    console.log(tag, `after balance filter: ${listings.length}/${beforeBalance} (${beforeBalance - listings.length} dropped)`);
+      validOpenListings = [];
+      groupEntries.forEach(([, groupListings], groupIndex) => {
+        const balanceMap = balanceResults[groupIndex];
+        for (const listing of groupListings) {
+          const balance = balanceMap.get(listing.maker.toLowerCase()) || BigInt(0);
+          if (
+            isErc20ListingValid(
+              listing.orderStatus,
+              listing.expirationDate,
+              listing.tokenAmount,
+              balance
+            )
+          ) {
+            validOpenListings.push(listing);
+          }
+        }
+      });
+    }
 
-    // Sort by price per token (lowest first) — no deduplication for ERC20 listings
-    return sortErc20ListingsByPricePerToken(listings);
+    console.log(tag, `after balance filter: ${validOpenListings.length}/${beforeBalance} (${beforeBalance - validOpenListings.length} dropped)`);
+
+    // Sort by price per token (lowest first) — no deduplication for ERC20 listings.
+    // Active listings first, then expired listings after.
+    const sortedOpen = sortErc20ListingsByPricePerToken(validOpenListings);
+    const sortedExpired = sortErc20ListingsByPricePerToken(expiredListings);
+    return [...sortedOpen, ...sortedExpired];
   }
 
   /**
@@ -980,7 +1094,8 @@ export class BazaarClient {
 
   /**
    * Get the ERC20 offers contract address for this chain
-   * Only available on Base (8453) and HyperEVM (999)
+   * Only available on chains with the contract deployed (see chainConfig.ts).
+   * Returns undefined on chains without an ERC20 offers contract.
    */
   getErc20OffersAddress(): `0x${string}` | undefined {
     return getErc20OffersAddress(this.chainId);
@@ -1040,6 +1155,20 @@ export class BazaarClient {
     }
 
     return this.prepareCancelOrder(listing.orderComponents);
+  }
+
+  /**
+   * Prepare a transaction to cancel an ERC20 offer
+   *
+   * The offer must have been created by the caller.
+   * Use the orderComponents from the Erc20Offer object returned by getErc20Offers().
+   */
+  prepareCancelErc20Offer(offer: Erc20Offer): WriteTransactionConfig {
+    if (!offer.orderComponents) {
+      throw new Error("Offer does not have order components");
+    }
+
+    return this.prepareCancelOrder(offer.orderComponents);
   }
 
   /**

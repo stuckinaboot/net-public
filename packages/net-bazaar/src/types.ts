@@ -130,6 +130,8 @@ export interface Erc20Listing {
   messageData: `0x${string}`;
   /** Decoded Seaport order components */
   orderComponents?: SeaportOrderComponents;
+  /** Private order fulfiller zone hash (undefined = public order) */
+  targetFulfiller?: `0x${string}`;
 }
 
 /**
@@ -282,8 +284,8 @@ export interface GetCollectionOffersOptions {
  * Options for fetching ERC20 offers
  */
 export interface GetErc20OffersOptions {
-  /** ERC20 token address to filter by */
-  tokenAddress: `0x${string}`;
+  /** ERC20 token address (optional - if omitted, fetches recent offers across all tokens) */
+  tokenAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
@@ -294,8 +296,8 @@ export interface GetErc20OffersOptions {
  * Options for fetching ERC20 listings
  */
 export interface GetErc20ListingsOptions {
-  /** ERC20 token address to filter by */
-  tokenAddress: `0x${string}`;
+  /** ERC20 token address (optional - if omitted, fetches recent listings across all tokens) */
+  tokenAddress?: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
   /** Only include listings from this address */
@@ -306,6 +308,8 @@ export interface GetErc20ListingsOptions {
   startIndex?: number;
   /** Override end index for message range */
   endIndex?: number;
+  /** Include expired listings in results (default: false) */
+  includeExpired?: boolean;
 }
 
 /**

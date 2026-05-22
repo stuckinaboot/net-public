@@ -25,6 +25,8 @@ export interface BazaarChainConfig {
   feeCollectorAddress: `0x${string}`;
   /** Fee in basis points for NFT trades */
   nftFeeBps: number;
+  /** Fee in basis points for ERC20 trades (defaults to DEFAULT_ERC20_FEE_BPS) */
+  erc20FeeBps?: number;
   /** Wrapped native currency (WETH, etc.) */
   wrappedNativeCurrency: WrappedNativeCurrency;
   /** Address with high ETH balance for Seaport checks */
@@ -40,6 +42,7 @@ const DEFAULT_COLLECTION_OFFERS_ADDRESS = "0x0000000D43423E0A12CecB307a74591999b
 const DEFAULT_FEE_COLLECTOR_ADDRESS = "0x32D16C15410248bef498D7aF50D10Db1a546b9E5" as const;
 const DEFAULT_ERC20_BAZAAR_ADDRESS = "0x00000000a2d173a4610c85c7471a25b6bc216a70" as const;
 const DEFAULT_NFT_FEE_BPS = 500; // 5%
+const DEFAULT_ERC20_FEE_BPS = 100; // 1%
 
 // Helper contract addresses (same on all chains)
 export const BULK_SEAPORT_ORDER_STATUS_FETCHER_ADDRESS = "0x0000009112ABCE652674b4fE3eD9C765B22d11A7" as const;
@@ -64,6 +67,7 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
     nftFeeBps: 0, // 0% on Ethereum Mainnet
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       name: "Wrapped Ether",
@@ -81,6 +85,7 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
     nftFeeBps: 0, // 0% on Base
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       address: "0x4200000000000000000000000000000000000006",
       name: "Wrapped Ether",
@@ -176,6 +181,7 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
     nftFeeBps: 0, // 0% on HyperEVM
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       address: "0x5555555555555555555555555555555555555555",
       name: "Wrapped Hype",
@@ -286,6 +292,13 @@ export function getFeeCollectorAddress(chainId: number): `0x${string}` {
  */
 export function getNftFeeBps(chainId: number): number {
   return BAZAAR_CHAIN_CONFIGS[chainId]?.nftFeeBps ?? DEFAULT_NFT_FEE_BPS;
+}
+
+/**
+ * Get ERC20 trade fee in basis points for a chain
+ */
+export function getErc20FeeBps(chainId: number): number {
+  return BAZAAR_CHAIN_CONFIGS[chainId]?.erc20FeeBps ?? DEFAULT_ERC20_FEE_BPS;
 }
 
 /**

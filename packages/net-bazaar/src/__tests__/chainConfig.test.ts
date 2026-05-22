@@ -8,6 +8,8 @@ import {
   getSeaportAddress,
   getWrappedNativeCurrency,
   getCurrencySymbol,
+  getNftFeeBps,
+  getErc20FeeBps,
 } from "../chainConfig";
 
 describe("chainConfig", () => {
@@ -113,6 +115,33 @@ describe("chainConfig", () => {
 
     it("returns degen for Degen", () => {
       expect(getCurrencySymbol(666666666)).toBe("degen");
+    });
+  });
+
+  describe("fee bps", () => {
+    it("Base: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(8453)).toBe(0);
+      expect(getErc20FeeBps(8453)).toBe(0);
+    });
+
+    it("Ethereum Mainnet: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(1)).toBe(0);
+      expect(getErc20FeeBps(1)).toBe(0);
+    });
+
+    it("HyperEVM: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(999)).toBe(0);
+      expect(getErc20FeeBps(999)).toBe(0);
+    });
+
+    it("default-fee chain (Degen): 5% NFT, 1% ERC20", () => {
+      expect(getNftFeeBps(666666666)).toBe(500);
+      expect(getErc20FeeBps(666666666)).toBe(100);
+    });
+
+    it("unknown chain falls back to defaults", () => {
+      expect(getNftFeeBps(99999)).toBe(500);
+      expect(getErc20FeeBps(99999)).toBe(100);
     });
   });
 });

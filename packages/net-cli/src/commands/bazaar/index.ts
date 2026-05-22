@@ -17,6 +17,10 @@ import { executeSubmitErc20Listing } from "./submit-erc20-listing";
 import { executeSubmitErc20Offer } from "./submit-erc20-offer";
 import { executeBuyErc20Listing } from "./buy-erc20-listing";
 import { executeAcceptErc20Offer } from "./accept-erc20-offer";
+import { executeCancelListing } from "./cancel-listing";
+import { executeCancelOffer } from "./cancel-offer";
+import { executeCancelErc20Listing } from "./cancel-erc20-listing";
+import { executeCancelErc20Offer } from "./cancel-erc20-offer";
 
 const chainIdOption = [
   "--chain-id <id>",
@@ -266,6 +270,7 @@ export function registerBazaarCommand(program: Command): void {
     .requiredOption("--token-address <address>", "ERC-20 token contract address")
     .requiredOption("--token-amount <amount>", "Token amount in raw units (bigint string)")
     .requiredOption("--price <eth>", "Total price in ETH for the token amount")
+    .option("--target-fulfiller <address>", "Make a private listing for this address")
     .option("--offerer <address>", "Offerer address (required without --private-key)")
     .option(...privateKeyOption)
     .option(...chainIdOption)
@@ -275,6 +280,7 @@ export function registerBazaarCommand(program: Command): void {
         tokenAddress: options.tokenAddress,
         tokenAmount: options.tokenAmount,
         price: options.price,
+        targetFulfiller: options.targetFulfiller,
         offerer: options.offerer,
         privateKey: options.privateKey,
         chainId: options.chainId,
@@ -383,6 +389,92 @@ export function registerBazaarCommand(program: Command): void {
       });
     });
 
+  // Cancel commands
+
+  const cancelListingCommand = new Command("cancel-listing")
+    .description("Cancel an NFT listing you created")
+    .requiredOption("--order-hash <hash>", "Order hash of the listing to cancel")
+    .requiredOption("--nft-address <address>", "NFT contract address")
+    .option("--maker <address>", "Maker address (required with --encode-only)")
+    .option(...privateKeyOption)
+    .option(...chainIdOption)
+    .option(...rpcUrlOption)
+    .option("--encode-only", "Output transaction data as JSON instead of executing")
+    .action(async (options) => {
+      await executeCancelListing({
+        orderHash: options.orderHash,
+        nftAddress: options.nftAddress,
+        maker: options.maker,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
+  const cancelOfferCommand = new Command("cancel-offer")
+    .description("Cancel a collection offer you created")
+    .requiredOption("--order-hash <hash>", "Order hash of the offer to cancel")
+    .requiredOption("--nft-address <address>", "NFT contract address")
+    .option("--maker <address>", "Maker address (required with --encode-only)")
+    .option(...privateKeyOption)
+    .option(...chainIdOption)
+    .option(...rpcUrlOption)
+    .option("--encode-only", "Output transaction data as JSON instead of executing")
+    .action(async (options) => {
+      await executeCancelOffer({
+        orderHash: options.orderHash,
+        nftAddress: options.nftAddress,
+        maker: options.maker,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
+  const cancelErc20ListingCommand = new Command("cancel-erc20-listing")
+    .description("Cancel an ERC-20 listing you created")
+    .requiredOption("--order-hash <hash>", "Order hash of the listing to cancel")
+    .requiredOption("--token-address <address>", "ERC-20 token contract address")
+    .option("--maker <address>", "Maker address (required with --encode-only)")
+    .option(...privateKeyOption)
+    .option(...chainIdOption)
+    .option(...rpcUrlOption)
+    .option("--encode-only", "Output transaction data as JSON instead of executing")
+    .action(async (options) => {
+      await executeCancelErc20Listing({
+        orderHash: options.orderHash,
+        tokenAddress: options.tokenAddress,
+        maker: options.maker,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
+  const cancelErc20OfferCommand = new Command("cancel-erc20-offer")
+    .description("Cancel an ERC-20 offer you created")
+    .requiredOption("--order-hash <hash>", "Order hash of the offer to cancel")
+    .requiredOption("--token-address <address>", "ERC-20 token contract address")
+    .option("--maker <address>", "Maker address (required with --encode-only)")
+    .option(...privateKeyOption)
+    .option(...chainIdOption)
+    .option(...rpcUrlOption)
+    .option("--encode-only", "Output transaction data as JSON instead of executing")
+    .action(async (options) => {
+      await executeCancelErc20Offer({
+        orderHash: options.orderHash,
+        tokenAddress: options.tokenAddress,
+        maker: options.maker,
+        privateKey: options.privateKey,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
   bazaarCommand.addCommand(listListingsCommand);
   bazaarCommand.addCommand(listOffersCommand);
   bazaarCommand.addCommand(listSalesCommand);
@@ -401,4 +493,8 @@ export function registerBazaarCommand(program: Command): void {
   bazaarCommand.addCommand(submitErc20OfferCommand);
   bazaarCommand.addCommand(buyErc20ListingCommand);
   bazaarCommand.addCommand(acceptErc20OfferCommand);
+  bazaarCommand.addCommand(cancelListingCommand);
+  bazaarCommand.addCommand(cancelOfferCommand);
+  bazaarCommand.addCommand(cancelErc20ListingCommand);
+  bazaarCommand.addCommand(cancelErc20OfferCommand);
 }

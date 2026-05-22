@@ -48,6 +48,7 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
       tokenAmount,
       priceWei,
       offerer: account.address,
+      targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });
 
     const rpcUrls = getChainRpcUrls({
@@ -144,6 +145,7 @@ async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<v
       tokenAmount,
       priceWei,
       offerer: options.offerer as `0x${string}`,
+      targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });
 
     const output = {

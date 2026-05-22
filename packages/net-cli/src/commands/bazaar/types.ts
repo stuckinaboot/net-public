@@ -106,6 +106,7 @@ export interface CreateErc20ListingOptions {
   tokenAddress: string;
   tokenAmount: string;
   price: string;
+  targetFulfiller?: string;
   offerer?: string;
   privateKey?: string;
   chainId?: number;

@@ -270,6 +270,7 @@ export function registerBazaarCommand(program: Command): void {
     .requiredOption("--token-address <address>", "ERC-20 token contract address")
     .requiredOption("--token-amount <amount>", "Token amount in raw units (bigint string)")
     .requiredOption("--price <eth>", "Total price in ETH for the token amount")
+    .option("--target-fulfiller <address>", "Make a private listing for this address")
     .option("--offerer <address>", "Offerer address (required without --private-key)")
     .option(...privateKeyOption)
     .option(...chainIdOption)
@@ -279,6 +280,7 @@ export function registerBazaarCommand(program: Command): void {
         tokenAddress: options.tokenAddress,
         tokenAmount: options.tokenAmount,
         price: options.price,
+        targetFulfiller: options.targetFulfiller,
         offerer: options.offerer,
         privateKey: options.privateKey,
         chainId: options.chainId,

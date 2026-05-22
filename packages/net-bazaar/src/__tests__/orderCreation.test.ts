@@ -182,7 +182,7 @@ describe("buildCollectionOfferOrderComponents", () => {
 });
 
 describe("buildErc20OfferOrderComponents", () => {
-  it("builds an ERC20 offer", () => {
+  it("builds an ERC20 offer (chain 8453, 0% fee)", () => {
     const { orderParameters } = buildErc20OfferOrderComponents(
       {
         tokenAddress: TOKEN_ADDRESS,
@@ -197,15 +197,35 @@ describe("buildErc20OfferOrderComponents", () => {
     // Offer: WETH
     expect(orderParameters.offer[0].itemType).toBe(ItemType.ERC20);
 
-    // Consideration: ERC20 tokens
+    // Consideration: ERC20 tokens (no fee item on a 0% chain)
+    expect(orderParameters.consideration).toHaveLength(1);
     expect(orderParameters.consideration[0].itemType).toBe(ItemType.ERC20);
     expect(orderParameters.consideration[0].token).toBe(TOKEN_ADDRESS);
     expect(orderParameters.consideration[0].startAmount).toBe(BigInt("1000000"));
   });
+
+  it("applies 1% ERC20 fee on default-fee chains (not 5% NFT fee)", () => {
+    const { orderParameters } = buildErc20OfferOrderComponents(
+      {
+        tokenAddress: TOKEN_ADDRESS,
+        tokenAmount: BigInt("1000000"),
+        priceWei: BigInt("1000000000000000000"),
+        offerer: OFFERER,
+      },
+      84532, // baseSepolia: default fees (5% NFT, 1% ERC20)
+      BigInt(0)
+    );
+
+    // Consideration[1] is the fee item (WETH to feeCollector)
+    expect(orderParameters.consideration).toHaveLength(2);
+    const feeAmount = orderParameters.consideration[1].startAmount;
+    // Fee = ceiling(1e18 * 100 / 10000) = 10000000000000000 (1%)
+    expect(feeAmount).toBe(BigInt("10000000000000000"));
+  });
 });
 
 describe("buildErc20ListingOrderComponents", () => {
-  it("builds an ERC20 listing with fee (chain 84532, 5%)", () => {
+  it("applies 1% ERC20 fee on default-fee chains (not 5% NFT fee)", () => {
     const { orderParameters } = buildErc20ListingOrderComponents(
       {
         tokenAddress: TOKEN_ADDRESS,
@@ -227,8 +247,8 @@ describe("buildErc20ListingOrderComponents", () => {
 
     const sellerAmount = orderParameters.consideration[0].startAmount;
     const feeAmount = orderParameters.consideration[1].startAmount;
-    // Fee = ceiling(1e18 * 500 / 10000) = 50000000000000000
-    expect(feeAmount).toBe(BigInt("50000000000000000"));
+    // Fee = ceiling(1e18 * 100 / 10000) = 10000000000000000 (1%)
+    expect(feeAmount).toBe(BigInt("10000000000000000"));
     expect(sellerAmount + feeAmount).toBe(BigInt("1000000000000000000"));
   });
 

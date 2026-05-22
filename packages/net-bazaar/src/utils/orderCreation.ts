@@ -23,6 +23,7 @@ import {
   getSeaportAddress,
   getFeeCollectorAddress,
   getNftFeeBps,
+  getErc20FeeBps,
   getWrappedNativeCurrency,
   NET_SEAPORT_ZONE_ADDRESS,
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
@@ -281,7 +282,7 @@ export function buildErc20OfferOrderComponents(
     throw new Error(`No wrapped native currency configured for chain ${chainId}`);
   }
 
-  const feeBps = getNftFeeBps(chainId);
+  const feeBps = getErc20FeeBps(chainId);
   const feeAmount = calculateFee(params.priceWei, feeBps, true); // Ceiling division for ERC20s
   const endTime = BigInt(params.expirationDate ?? getDefaultExpiration());
   const feeCollector = getFeeCollectorAddress(chainId);
@@ -344,7 +345,7 @@ export function buildErc20ListingOrderComponents(
   chainId: number,
   counter: bigint
 ): { orderParameters: SeaportOrderParameters; counter: bigint } {
-  const feeBps = getNftFeeBps(chainId);
+  const feeBps = getErc20FeeBps(chainId);
   const feeAmount = calculateFee(params.priceWei, feeBps, true); // Ceiling division for ERC20s
   const sellerAmount = params.priceWei - feeAmount;
   const endTime = BigInt(params.expirationDate ?? getDefaultExpiration());

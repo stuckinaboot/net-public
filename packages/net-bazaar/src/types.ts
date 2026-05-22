@@ -276,6 +276,8 @@ export interface GetCollectionOffersOptions {
   nftAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
   maxMessages?: number;
 }
@@ -288,6 +290,8 @@ export interface GetErc20OffersOptions {
   tokenAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
   maxMessages?: number;
 }
@@ -341,11 +345,14 @@ export interface Sale {
 }
 
 /**
- * Options for fetching sales
+ * Options for fetching sales.
+ *
+ * Sales work for both NFT and ERC20 trades — zone storage is keyed by the
+ * traded token address regardless of token kind.
  */
 export interface GetSalesOptions {
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** Token contract address (NFT or ERC20) */
+  tokenAddress: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
   maxMessages?: number;
 }

@@ -32,12 +32,11 @@ export async function executeCancelOffer(options: CancelOfferOptions): Promise<v
     console.log(chalk.blue("Fetching collection offer..."));
     const offers = await bazaarClient.getCollectionOffers({
       nftAddress: options.nftAddress as `0x${string}`,
+      maker: account.address,
     });
 
     const offer = offers.find(
-      (o) =>
-        o.orderHash.toLowerCase() === options.orderHash.toLowerCase() &&
-        o.maker.toLowerCase() === account.address.toLowerCase()
+      (o) => o.orderHash.toLowerCase() === options.orderHash.toLowerCase()
     );
 
     if (!offer) {
@@ -88,12 +87,11 @@ async function executeEncodeOnly(options: CancelOfferOptions): Promise<void> {
   try {
     const offers = await bazaarClient.getCollectionOffers({
       nftAddress: options.nftAddress as `0x${string}`,
+      maker: makerAddress,
     });
 
     const offer = offers.find(
-      (o) =>
-        o.orderHash.toLowerCase() === options.orderHash.toLowerCase() &&
-        o.maker.toLowerCase() === makerAddress.toLowerCase()
+      (o) => o.orderHash.toLowerCase() === options.orderHash.toLowerCase()
     );
 
     if (!offer) {

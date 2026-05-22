@@ -13,8 +13,8 @@ import { NET_SEAPORT_ZONE_ADDRESS, isBazaarSupportedOnChain } from "../chainConf
 export interface UseBazaarSalesOptions {
   /** Chain ID to query */
   chainId: number;
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** Token contract address (NFT or ERC20) */
+  tokenAddress: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
   maxMessages?: number;
   /** Whether the query is enabled (default: true) */
@@ -36,7 +36,7 @@ export interface UseBazaarSalesResult {
  * React hook for fetching recent sales from Bazaar
  *
  * Sales data flows differently from listings/offers:
- * - Net messages (appAddress=zone, topic=nftAddress) contain order hashes
+ * - Net messages (appAddress=zone, topic=tokenAddress) contain order hashes
  * - Actual sale data is fetched from the bulk storage contract
  *
  * Results are sorted by timestamp (most recent first)
@@ -45,7 +45,7 @@ export interface UseBazaarSalesResult {
  * ```tsx
  * const { sales, isLoading, error } = useBazaarSales({
  *   chainId: 8453,
- *   nftAddress: "0x...",
+ *   tokenAddress: "0x...",
  *   maxMessages: 100,
  * });
  *
@@ -65,7 +65,7 @@ export interface UseBazaarSalesResult {
  */
 export function useBazaarSales({
   chainId,
-  nftAddress,
+  tokenAddress,
   maxMessages = 100,
   enabled = true,
 }: UseBazaarSalesOptions): UseBazaarSalesResult {
@@ -86,9 +86,9 @@ export function useBazaarSales({
   const filter = useMemo(
     () => ({
       appAddress: NET_SEAPORT_ZONE_ADDRESS as `0x${string}`,
-      topic: nftAddress.toLowerCase(),
+      topic: tokenAddress.toLowerCase(),
     }),
-    [nftAddress]
+    [tokenAddress]
   );
 
   // Get message count
@@ -118,7 +118,7 @@ export function useBazaarSales({
     enabled: enabled && isSupported && totalCount > 0,
   });
 
-  const TAG = `[useBazaarSales chain=${chainId} nft=${nftAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarSales chain=${chainId} nft=${tokenAddress.slice(0, 10)}]`;
 
   // Log pipeline state changes
   useEffect(() => {
@@ -158,7 +158,7 @@ export function useBazaarSales({
         const client = new BazaarClient({ chainId, publicClient: wagmiClient as PublicClient });
         const parsedSales = await client.processSalesFromMessages(
           messages,
-          { nftAddress }
+          { tokenAddress }
         );
         console.log(TAG, `processed → ${parsedSales.length} sales`);
 
@@ -183,7 +183,7 @@ export function useBazaarSales({
     return () => {
       cancelled = true;
     };
-  }, [chainId, nftAddress, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

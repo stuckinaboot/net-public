@@ -456,16 +456,17 @@ export class BazaarClient {
    * Results are sorted by price (highest first)
    */
   async getCollectionOffers(options: GetCollectionOffersOptions): Promise<CollectionOffer[]> {
-    const { nftAddress, excludeMaker, maxMessages = 100 } = options;
+    const { nftAddress, maker, maxMessages = 100 } = options;
     const collectionOffersAddress = getCollectionOffersAddress(this.chainId);
 
+    const filter = {
+      appAddress: collectionOffersAddress,
+      topic: nftAddress?.toLowerCase(),
+      maker,
+    };
+
     // Get message count
-    const count = await this.netClient.getMessageCount({
-      filter: {
-        appAddress: collectionOffersAddress,
-        topic: nftAddress?.toLowerCase(),
-      },
-    });
+    const count = await this.netClient.getMessageCount({ filter });
 
     if (count === 0) {
       return [];
@@ -474,10 +475,7 @@ export class BazaarClient {
     // Fetch messages (most recent)
     const startIndex = Math.max(0, count - maxMessages);
     const messages = await this.netClient.getMessages({
-      filter: {
-        appAddress: collectionOffersAddress,
-        topic: nftAddress?.toLowerCase(),
-      },
+      filter,
       startIndex,
       endIndex: count,
     });
@@ -603,7 +601,7 @@ export class BazaarClient {
    * Results are sorted by price per token (highest first)
    */
   async getErc20Offers(options: GetErc20OffersOptions): Promise<Erc20Offer[]> {
-    const { tokenAddress, maxMessages = 200 } = options;
+    const { tokenAddress, maker, maxMessages = 200 } = options;
     const erc20OffersAddress = getErc20OffersAddress(this.chainId);
 
     // ERC20 offers only available on chains with the contract deployed
@@ -614,6 +612,7 @@ export class BazaarClient {
     const filter = {
       appAddress: erc20OffersAddress,
       topic: tokenAddress?.toLowerCase(),
+      maker,
     };
 
     // Get message count
@@ -992,11 +991,11 @@ export class BazaarClient {
    * Results are sorted by timestamp (most recent first)
    */
   async getSales(options: GetSalesOptions): Promise<Sale[]> {
-    const { nftAddress, maxMessages = 100 } = options;
+    const { tokenAddress, maxMessages = 100 } = options;
 
     const filter = {
       appAddress: NET_SEAPORT_ZONE_ADDRESS as `0x${string}`,
-      topic: nftAddress.toLowerCase(),
+      topic: tokenAddress.toLowerCase(),
     };
 
     // Get message count
@@ -1024,7 +1023,7 @@ export class BazaarClient {
    */
   async processSalesFromMessages(
     messages: NetMessage[],
-    options: Pick<GetSalesOptions, "nftAddress">
+    options: Pick<GetSalesOptions, "tokenAddress">
   ): Promise<Sale[]> {
     const tag = `[BazaarClient.processSales chain=${this.chainId}]`;
 

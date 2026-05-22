@@ -34,12 +34,11 @@ export async function executeCancelErc20Offer(
     console.log(chalk.blue("Fetching ERC20 offer..."));
     const offers = await bazaarClient.getErc20Offers({
       tokenAddress: options.tokenAddress as `0x${string}`,
+      maker: account.address,
     });
 
     const offer = offers.find(
-      (o) =>
-        o.orderHash.toLowerCase() === options.orderHash.toLowerCase() &&
-        o.maker.toLowerCase() === account.address.toLowerCase()
+      (o) => o.orderHash.toLowerCase() === options.orderHash.toLowerCase()
     );
 
     if (!offer) {
@@ -90,12 +89,11 @@ async function executeEncodeOnly(options: CancelErc20OfferOptions): Promise<void
   try {
     const offers = await bazaarClient.getErc20Offers({
       tokenAddress: options.tokenAddress as `0x${string}`,
+      maker: makerAddress,
     });
 
     const offer = offers.find(
-      (o) =>
-        o.orderHash.toLowerCase() === options.orderHash.toLowerCase() &&
-        o.maker.toLowerCase() === makerAddress.toLowerCase()
+      (o) => o.orderHash.toLowerCase() === options.orderHash.toLowerCase()
     );
 
     if (!offer) {

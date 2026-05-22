@@ -17,6 +17,8 @@ export interface UseBazaarErc20OffersOptions {
   tokenAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
   maxMessages?: number;
   /** Whether the query is enabled (default: true) */
@@ -72,6 +74,7 @@ export function useBazaarErc20Offers({
   chainId,
   tokenAddress,
   excludeMaker,
+  maker,
   maxMessages = 200,
   enabled = true,
 }: UseBazaarErc20OffersOptions): UseBazaarErc20OffersResult {
@@ -102,8 +105,9 @@ export function useBazaarErc20Offers({
     () => ({
       appAddress: erc20OffersAddress as `0x${string}`,
       topic: tokenAddress?.toLowerCase(),
+      maker,
     }),
-    [erc20OffersAddress, tokenAddress]
+    [erc20OffersAddress, tokenAddress, maker]
   );
 
   // Get message count
@@ -198,7 +202,7 @@ export function useBazaarErc20Offers({
     return () => {
       cancelled = true;
     };
-  }, [chainId, tokenAddress, excludeMaker, messages, hasErc20Offers, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, excludeMaker, maker, messages, hasErc20Offers, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

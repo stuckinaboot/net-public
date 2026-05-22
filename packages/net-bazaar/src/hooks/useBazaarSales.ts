@@ -82,7 +82,7 @@ export function useBazaarSales({
     [chainId]
   );
 
-  // Build filter: appAddress = zone contract, topic = nft address
+  // Build filter: appAddress = zone contract, topic = token address (NFT or ERC20)
   const filter = useMemo(
     () => ({
       appAddress: NET_SEAPORT_ZONE_ADDRESS as `0x${string}`,
@@ -118,7 +118,7 @@ export function useBazaarSales({
     enabled: enabled && isSupported && totalCount > 0,
   });
 
-  const TAG = `[useBazaarSales chain=${chainId} nft=${tokenAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarSales chain=${chainId} token=${tokenAddress.slice(0, 10)}]`;
 
   // Log pipeline state changes
   useEffect(() => {

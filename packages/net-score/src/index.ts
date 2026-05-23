@@ -2,6 +2,14 @@
 export { ScoreClient } from "./client/ScoreClient";
 export { UserUpvoteClient } from "./user-upvote/UserUpvoteClient";
 
+// Ranking
+export { getTokenRankings } from "./ranking/getTokenRankings";
+export type {
+  GetTokenRankingsOptions,
+  RankedToken,
+  RankingSort,
+} from "./ranking/types";
+
 // Utilities
 export {
   getTokenScoreKey,
@@ -51,6 +59,7 @@ export {
   NULL_ADDRESS,
   UPVOTE_PRICE_ETH,
   USER_UPVOTE_CONTRACT,
+  ERC20_BULK_INFO_HELPER_CONTRACT,
 } from "./constants";
 
 // Types

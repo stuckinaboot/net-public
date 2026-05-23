@@ -32,3 +32,15 @@ export interface GetUserUpvotesOptions {
   rpcUrl?: string;
   json?: boolean;
 }
+
+export interface RankingsOptions {
+  sort?: string;
+  limit?: number;
+  scanWindow?: number;
+  minUpvotes?: number;
+  minMarketCap?: number;
+  recencyHours?: number;
+  chainId?: number;
+  rpcUrl?: string;
+  json?: boolean;
+}

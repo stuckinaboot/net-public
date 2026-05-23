@@ -38,6 +38,41 @@ async function executeRankings(options: RankingsOptions): Promise<void> {
     return;
   }
 
+  // Reject NaN that survives parseInt for any numeric flag. Without this an
+  // input like `--scan-window foo` propagates NaN into the ranking algorithm
+  // and silently produces empty/junk output.
+  const optionalPositiveInt = (
+    value: number | undefined,
+    name: string,
+    { allowZero = false }: { allowZero?: boolean } = {}
+  ): number | undefined => {
+    if (value === undefined) return undefined;
+    if (!Number.isFinite(value) || (allowZero ? value < 0 : value < 1)) {
+      exitWithError(
+        `Invalid ${name}. Must be a ${allowZero ? "non-negative" : "positive"} integer.`
+      );
+    }
+    return value;
+  };
+  const scanWindow = optionalPositiveInt(options.scanWindow, "--scan-window");
+  const minUpvotes = optionalPositiveInt(options.minUpvotes, "--min-upvotes", {
+    allowZero: true,
+  });
+  const minMarketCap = optionalPositiveInt(
+    options.minMarketCap,
+    "--min-market-cap",
+    { allowZero: true }
+  );
+  const recencyHours = optionalPositiveInt(
+    options.recencyHours,
+    "--recency-hours",
+    { allowZero: true }
+  );
+  if (options.chainId !== undefined && !Number.isFinite(options.chainId)) {
+    exitWithError("Invalid --chain-id. Must be an integer.");
+    return;
+  }
+
   const readOnlyOptions = parseReadOnlyOptionsWithDefault({
     chainId: options.chainId,
     rpcUrl: options.rpcUrl,
@@ -48,15 +83,13 @@ async function executeRankings(options: RankingsOptions): Promise<void> {
       chainId: readOnlyOptions.chainId,
       sort,
       maxTokens: limit,
-      messageScanWindow: options.scanWindow,
+      messageScanWindow: scanWindow,
       thresholds:
-        options.minUpvotes != null ||
-        options.minMarketCap != null ||
-        options.recencyHours != null
+        minUpvotes != null || minMarketCap != null || recencyHours != null
           ? {
-              minUpvotes: options.minUpvotes,
-              minMarketCap: options.minMarketCap,
-              recencyHours: options.recencyHours,
+              minUpvotes,
+              minMarketCap,
+              recencyHours,
             }
           : undefined,
       rpcUrl: readOnlyOptions.rpcUrl,

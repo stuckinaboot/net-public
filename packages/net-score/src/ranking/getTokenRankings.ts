@@ -1,7 +1,7 @@
 import { decodeAbiParameters, type Address, type PublicClient } from "viem";
 import { readContract } from "viem/actions";
 import { NetClient, getPublicClient } from "@net-protocol/core";
-import { StorageClient, type BulkStorageKey } from "@net-protocol/storage";
+import { STORAGE_CONTRACT } from "@net-protocol/storage";
 import {
   SCORE_CONTRACT,
   UPVOTE_APP,
@@ -11,6 +11,7 @@ import {
   UNIV234_POOLS_STRATEGY,
   DYNAMIC_SPLIT_STRATEGY,
   ERC20_BULK_INFO_HELPER_CONTRACT,
+  SUPPORTED_SCORE_CHAINS,
   NULL_ADDRESS,
   getWethAddress,
 } from "../constants";
@@ -31,12 +32,12 @@ const DEFAULT_MAX_TOKENS = 6;
 const DEFAULT_MIN_UPVOTES = 500;
 const DEFAULT_MIN_MARKET_CAP = 40_000;
 const DEFAULT_RECENCY_HOURS = 48;
-const USDC_ADDRESS_BASE: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const USDC_ADDRESS_BY_CHAIN: Record<number, Address> = {
-  8453: USDC_ADDRESS_BASE,
+  8453: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
 };
+const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
-interface TokenInfo {
+export interface TokenInfo {
   name: string;
   symbol: string;
   decimals: number;
@@ -60,6 +61,9 @@ interface UpvoteEvent {
  *
  * All reads are live from chain — no off-chain index. Callers should cache
  * results (e.g. HTTP `Cache-Control`) since each call performs ~8 RPC reads.
+ *
+ * Currently supports only chains in SUPPORTED_SCORE_CHAINS (Base mainnet).
+ * Throws synchronously for any other chain.
  */
 export async function getTokenRankings(
   options: GetTokenRankingsOptions
@@ -71,17 +75,19 @@ export async function getTokenRankings(
     messageScanWindow = DEFAULT_MESSAGE_SCAN_WINDOW,
     rpcUrl,
   } = options;
+  validateChainSupported(chainId);
+
   const minUpvotes = options.thresholds?.minUpvotes ?? DEFAULT_MIN_UPVOTES;
   const minMarketCap =
     options.thresholds?.minMarketCap ?? DEFAULT_MIN_MARKET_CAP;
   const recencyHours = options.thresholds?.recencyHours ?? DEFAULT_RECENCY_HOURS;
+  const nowSec = Date.now() / 1000;
 
   const rpcOverride = rpcUrl
     ? { rpcUrls: Array.isArray(rpcUrl) ? rpcUrl : [rpcUrl] }
     : undefined;
   const publicClient = getPublicClient({ chainId, rpcUrl });
   const netClient = new NetClient({ chainId, overrides: rpcOverride });
-  const storageClient = new StorageClient({ chainId, overrides: rpcOverride });
 
   // --- Steps 1-2: enumerate recent upvote messages for legacy + 3 strategies
   const messageGroups = await fetchUpvoteMessages({
@@ -91,22 +97,24 @@ export async function getTokenRankings(
 
   // --- Steps 3-4: bulk-read storage blobs referenced by strategy messages
   const storageBlobByKey = await fetchStrategyStorage({
-    storageClient,
+    publicClient,
     messageGroups,
   });
 
   // --- Step 5: aggregate per-token events, score, take top N+slack
+  const wethAddress = getWethAddress(chainId);
   const { tokenAddresses, latestUpvoteTimestamps } = aggregateAndRank({
     messageGroups,
     storageBlobByKey,
     sort,
     maxTokens,
+    excludeAddresses: [wethAddress.toLowerCase()],
+    nowSec,
   });
 
   if (tokenAddresses.length === 0) return [];
 
   // --- Steps 6-8: ERC20 info, pool prices, aggregate upvotes (parallel)
-  const wethAddress = getWethAddress(chainId);
   const usdcAddress = USDC_ADDRESS_BY_CHAIN[chainId];
   const pairs = [
     ...tokenAddresses.map((tokenAddress) => ({
@@ -123,6 +131,17 @@ export async function getTokenRankings(
     fetchAggregateUpvotes({ publicClient, tokenAddresses }),
   ]);
 
+  if (tokenInfos.length !== tokenAddresses.length) {
+    throw new Error(
+      `ERC20 bulk info returned ${tokenInfos.length} entries for ${tokenAddresses.length} addresses`
+    );
+  }
+  if (upvoteCounts.length !== tokenAddresses.length) {
+    throw new Error(
+      `getUpvotesWithLegacy returned ${upvoteCounts.length} entries for ${tokenAddresses.length} addresses`
+    );
+  }
+
   // --- Step 9: compose, filter, sort, slice
   return composeAndFilter({
     tokenAddresses,
@@ -137,7 +156,17 @@ export async function getTokenRankings(
     minUpvotes,
     minMarketCap,
     recencyHours,
+    nowSec,
   });
+}
+
+function validateChainSupported(chainId: number): void {
+  if (!(SUPPORTED_SCORE_CHAINS as readonly number[]).includes(chainId)) {
+    throw new Error(
+      `getTokenRankings: chainId ${chainId} is not supported. ` +
+        `Supported chains: ${SUPPORTED_SCORE_CHAINS.join(", ")}`
+    );
+  }
 }
 
 // ============================================================================
@@ -176,6 +205,9 @@ async function fetchUpvoteMessages({
     ...strategyFilters.map((filter) => netClient.getMessageCount({ filter })),
   ]);
 
+  // TOCTOU note: the count read above can be stale by the time the batch read
+  // below runs. New messages landing in between are excluded from the window.
+  // We accept this for simplicity; the alternative is overshoot+dedupe.
   const sliceRange = (count: number) => ({
     startIndex: Math.max(0, count - messageScanWindow),
     endIndex: count,
@@ -206,55 +238,76 @@ async function fetchUpvoteMessages({
 // ============================================================================
 
 async function fetchStrategyStorage({
-  storageClient,
+  publicClient,
   messageGroups,
 }: {
-  storageClient: StorageClient;
+  publicClient: PublicClient;
   messageGroups: MessageGroups;
 }): Promise<Map<string, `0x${string}`>> {
-  const keys: BulkStorageKey[] = [];
+  // Dedup so the multicall payload grows with unique slots, not message count.
+  const seen = new Set<string>();
+  const keys: { key: `0x${string}`; operator: Address }[] = [];
   for (const msg of [
     ...messageGroups.strategy1,
     ...messageGroups.strategy2,
     ...messageGroups.strategy3,
   ]) {
-    if (msg.data && msg.data.startsWith("0x")) {
-      keys.push({ key: msg.data, operator: SCORE_CONTRACT.address });
-    }
+    if (!msg.data || !msg.data.startsWith("0x")) continue;
+    const key = msg.data as `0x${string}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    keys.push({ key, operator: SCORE_CONTRACT.address });
   }
 
   if (keys.length === 0) return new Map();
 
-  const results = await storageClient.bulkGet({ keys });
+  // Direct readContract instead of StorageClient.bulkGet, which swallows
+  // errors. We want RPC failures to surface, not silently produce empty
+  // rankings.
+  const results = (await readContract(publicClient, {
+    address: STORAGE_CONTRACT.address,
+    abi: STORAGE_CONTRACT.abi,
+    functionName: "bulkGet",
+    args: [keys],
+  })) as Array<readonly [string, `0x${string}`]>;
+
   const map = new Map<string, `0x${string}`>();
   results.forEach((item, idx) => {
-    if (item && item.value) {
-      map.set(keys[idx].key, item.value as `0x${string}`);
+    const value = item?.[1];
+    if (value && value !== "0x") {
+      map.set(keys[idx].key, value);
     }
   });
   return map;
 }
 
 // ============================================================================
-// Step 5: aggregate + score
+// Step 5: aggregate + score (PURE, exported for tests)
 // ============================================================================
 
-function aggregateAndRank({
+export function aggregateAndRank({
   messageGroups,
   storageBlobByKey,
   sort,
   maxTokens,
+  excludeAddresses = [],
+  nowSec,
 }: {
   messageGroups: MessageGroups;
   storageBlobByKey: Map<string, `0x${string}`>;
   sort: RankingSort;
   maxTokens: number;
+  excludeAddresses?: string[];
+  nowSec: number;
 }): { tokenAddresses: Address[]; latestUpvoteTimestamps: Map<string, number> } {
   const tokenUpvoteEvents = new Map<string, UpvoteEvent[]>();
+  const excludeSet = new Set(excludeAddresses.map((a) => a.toLowerCase()));
 
   const addEvent = (tokenAddress: string, timestamp: number, count: number) => {
+    if (!ADDRESS_RE.test(tokenAddress)) return;
     const lower = tokenAddress.toLowerCase();
-    if (!lower || lower === NULL_ADDRESS) return;
+    if (lower === NULL_ADDRESS || excludeSet.has(lower)) return;
+    if (!Number.isFinite(timestamp) || !Number.isFinite(count)) return;
     const events = tokenUpvoteEvents.get(lower) ?? [];
     events.push({ timestamp, count });
     tokenUpvoteEvents.set(lower, events);
@@ -294,12 +347,13 @@ function aggregateAndRank({
     addEvent(tokenAddress, Number(msg.timestamp), decoded.scoreDelta);
   }
 
-  const nowSec = Date.now() / 1000;
   const timeWeight = (ts: number) => Math.exp(-0.1 * ((nowSec - ts) / 3600));
 
   const latestUpvoteTimestamps = new Map<string, number>();
   for (const [addr, events] of tokenUpvoteEvents) {
-    latestUpvoteTimestamps.set(addr, Math.max(...events.map((e) => e.timestamp)));
+    let latest = events[0].timestamp;
+    for (const e of events) if (e.timestamp > latest) latest = e.timestamp;
+    latestUpvoteTimestamps.set(addr, latest);
   }
 
   let ordered: string[];
@@ -345,13 +399,41 @@ async function fetchBulkErc20Info({
   addresses: Address[];
 }): Promise<TokenInfo[]> {
   if (addresses.length === 0) return [];
-  const data = (await readContract(publicClient, {
-    address: ERC20_BULK_INFO_HELPER_CONTRACT.address,
-    abi: ERC20_BULK_INFO_HELPER_CONTRACT.abi,
-    functionName: "getTokenInfo",
-    args: [addresses],
-  })) as TokenInfo[];
-  return Array.isArray(data) ? data : [];
+  try {
+    const data = (await readContract(publicClient, {
+      address: ERC20_BULK_INFO_HELPER_CONTRACT.address,
+      abi: ERC20_BULK_INFO_HELPER_CONTRACT.abi,
+      functionName: "getTokenInfo",
+      args: [addresses],
+    })) as TokenInfo[];
+    if (Array.isArray(data) && data.length === addresses.length) return data;
+  } catch {
+    // Bulk reverted (likely one bad address). Fall through to per-address.
+  }
+  // Per-address fallback so one bad address doesn't kill the whole ranking.
+  const results = await Promise.all(
+    addresses.map(async (addr): Promise<TokenInfo> => {
+      try {
+        const data = (await readContract(publicClient, {
+          address: ERC20_BULK_INFO_HELPER_CONTRACT.address,
+          abi: ERC20_BULK_INFO_HELPER_CONTRACT.abi,
+          functionName: "getTokenInfo",
+          args: [[addr]],
+        })) as TokenInfo[];
+        if (Array.isArray(data) && data[0]) return data[0];
+      } catch {
+        // swallow per-address failure
+      }
+      return {
+        name: "",
+        symbol: "",
+        decimals: 0,
+        totalSupply: 0n,
+        burnedTokens: 0n,
+      };
+    })
+  );
+  return results;
 }
 
 // ============================================================================
@@ -375,14 +457,19 @@ async function fetchAggregateUpvotes({
       ALL_STRATEGY_ADDRESSES,
     ],
   })) as readonly bigint[];
-  return Array.isArray(data) ? data.map(Number) : [];
+  if (!Array.isArray(data)) {
+    throw new Error(
+      "getUpvotesWithLegacy returned non-array; contract or RPC misbehaving"
+    );
+  }
+  return data.map(Number);
 }
 
 // ============================================================================
-// Step 9: compose, filter, sort, slice
+// Step 9: compose, filter, sort, slice (PURE, exported for tests)
 // ============================================================================
 
-function composeAndFilter({
+export function composeAndFilter({
   tokenAddresses,
   tokenInfos,
   pools,
@@ -395,6 +482,7 @@ function composeAndFilter({
   minUpvotes,
   minMarketCap,
   recencyHours,
+  nowSec,
 }: {
   tokenAddresses: Address[];
   tokenInfos: TokenInfo[];
@@ -408,6 +496,7 @@ function composeAndFilter({
   minUpvotes: number;
   minMarketCap: number;
   recencyHours: number;
+  nowSec: number;
 }): RankedToken[] {
   const wethLower = wethAddress.toLowerCase();
   const usdcLower = usdcAddress?.toLowerCase();
@@ -427,11 +516,13 @@ function composeAndFilter({
         p.tokenAddress.toLowerCase() === usdcLower &&
         p.baseTokenAddress.toLowerCase() === wethLower
     );
-    ethPriceInUsdc = wethUsdcPool?.price
-      ? wethUsdcPool.price
-      : usdcWethPool?.price
-        ? 1 / usdcWethPool.price
-        : undefined;
+    // Match website behavior: treat price == 0 as missing (truthy check), and
+    // guard against 1/0 = Infinity in the fallback path.
+    if (wethUsdcPool?.price) {
+      ethPriceInUsdc = wethUsdcPool.price;
+    } else if (usdcWethPool?.price) {
+      ethPriceInUsdc = 1 / usdcWethPool.price;
+    }
   }
 
   const tokenAddressToPool = new Map<string, (typeof pools)[number]>();
@@ -444,23 +535,30 @@ function composeAndFilter({
   const composed: RankedToken[] = tokenAddresses.map((address, i) => {
     const info = tokenInfos[i];
     const pool = tokenAddressToPool.get(address.toLowerCase());
+    // Truthy check on price matches the website; treats 0 as 'no price'.
     const priceInUsdc =
-      pool?.price != null && ethPriceInUsdc != null
-        ? pool.price * ethPriceInUsdc
-        : undefined;
-    const circulating = info?.totalSupply
-      ? BigInt(info.totalSupply) - BigInt(info.burnedTokens ?? 0n)
-      : undefined;
+      pool?.price && ethPriceInUsdc ? pool.price * ethPriceInUsdc : undefined;
+    // Truthy check on totalSupply matches the website; 0n is treated as 'no
+    // supply data'. Clamp at 0 in case burned > total (buggy/reflection tokens).
+    let circulating: bigint | undefined;
+    if (info?.totalSupply) {
+      const burned = info.burnedTokens ?? 0n;
+      const c = info.totalSupply - burned;
+      circulating = c > 0n ? c : 0n;
+    }
+    // Match website: decimals 0 is treated as 'no decimals known' (rare ERC20
+    // case that produces wildly inflated FDV otherwise).
+    const decimals = info?.decimals || undefined;
     const fdv =
-      circulating != null && info?.decimals != null && priceInUsdc != null
-        ? (Number(circulating) / 10 ** Number(info.decimals)) * priceInUsdc
+      circulating != null && decimals != null && priceInUsdc != null
+        ? (Number(circulating) / 10 ** decimals) * priceInUsdc
         : undefined;
 
     return {
       address,
       name: info?.name || undefined,
       symbol: info?.symbol || undefined,
-      decimals: info?.decimals != null ? Number(info.decimals) : undefined,
+      decimals,
       fdv,
       priceInUsdc,
       upvotes: upvoteCounts[i] ?? 0,
@@ -470,7 +568,6 @@ function composeAndFilter({
   });
 
   // Drop tokens with missing metadata, or stale tokens below the market cap floor.
-  const nowSec = Date.now() / 1000;
   const valid = composed.filter((t) => {
     if (!t.name?.trim() || !t.symbol?.trim()) return false;
     const belowFloor = t.fdv == null || t.fdv < minMarketCap;

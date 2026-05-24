@@ -1149,18 +1149,18 @@ netp bazaar create-offer \
   --nft-address <address> --price <eth> \
   --chain-id 8453 --private-key 0x...
 
-# ERC-20 listing (sell tokens for ETH) — same dual mode
+# ERC-20 listing (sell tokens for the chain's native currency) — same dual mode
 netp bazaar create-erc20-listing \
-  --token-address <address> --token-amount <raw-units> --price <eth> \
+  --token-address <address> --token-amount <raw-units> --price <native-amount> \
   --chain-id 8453 --private-key 0x...
 
-# ERC-20 offer (bid WETH for tokens) — same dual mode
+# ERC-20 offer (bid wrapped native currency for tokens) — same dual mode
 netp bazaar create-erc20-offer \
-  --token-address <address> --token-amount <raw-units> --price <eth> \
+  --token-address <address> --token-amount <raw-units> --price <wrapped-native-amount> \
   --chain-id 8453 --private-key 0x...
 ```
 
-`--token-amount` is in **raw token units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). `--price` is the **total** ETH (listing) or WETH (offer) for the whole `--token-amount`.
+`--token-amount` is in **raw token units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). `--price` is the **total** amount of the chain's native currency for ERC-20 listings (ETH on Base, HYPE on HyperEVM), or the **total** wrapped-native amount for ERC-20 offers (WETH on Base, wrapped HYPE on HyperEVM).
 
 ##### Submit Commands
 
@@ -1193,17 +1193,18 @@ netp bazaar buy-listing \
   --order-hash <hash> --nft-address <address> \
   --chain-id 8453 [--private-key 0x... | --buyer <address> --encode-only]
 
-# Accept an offer (sell your NFT)
+# Accept an offer (sell your NFT). Fulfillment value is 0 — buyer pays in WETH.
 netp bazaar accept-offer \
   --order-hash <hash> --nft-address <address> --token-id <id> \
   --chain-id 8453 [--private-key 0x... | --seller <address> --encode-only]
 
-# Buy an ERC-20 listing (pays in ETH)
+# Buy an ERC-20 listing (pays in the chain's native currency — ETH on Base, HYPE on HyperEVM)
 netp bazaar buy-erc20-listing \
   --order-hash <hash> --token-address <address> \
   --chain-id 8453 [--private-key 0x... | --buyer <address> --encode-only]
 
-# Accept an ERC-20 offer (sell tokens for WETH; no --token-id, amount comes from offer)
+# Accept an ERC-20 offer (sell tokens for wrapped native currency — WETH or wrapped HYPE;
+# no --token-id, amount comes from the offer; fulfillment value is 0)
 netp bazaar accept-erc20-offer \
   --order-hash <hash> --token-address <address> \
   --chain-id 8453 [--private-key 0x... | --seller <address> --encode-only]
@@ -1231,3 +1232,7 @@ Output:
   }
 }
 ```
+
+The `fulfillment.value` is:
+- The listing price in wei (in the chain's native currency) for NFT or ERC-20 **listing buys**.
+- **Zero** for **offer accepts** on both sides (NFT collection offers and ERC-20 offers pay in the wrapped native currency, which the offerer pre-approved).

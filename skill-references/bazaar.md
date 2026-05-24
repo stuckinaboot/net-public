@@ -1,14 +1,16 @@
 # Net Bazaar Reference
 
-Buy, sell, and trade NFTs on NFT Bazaar using Net Protocol's Seaport-based exchange.
+Buy, sell, and trade NFTs **and ERC-20 tokens** on Net Bazaar using Net Protocol's Seaport-based exchange.
 
 ## Overview
 
-NFT Bazaar is built on Seaport (v1.6). It supports:
-- Fixed-price NFT listings
-- Collection offers (bid on any token in a collection)
+Net Bazaar is built on Seaport (v1.6). It supports:
+- Fixed-price NFT listings and ERC-20 token listings
+- Collection offers (bid on any token in an NFT collection) and ERC-20 token offers
 - Private listings (targeted to a specific buyer)
 - EIP-712 signed orders (gasless order creation)
+
+NFT listings/offers are paid in ETH. ERC-20 listings are paid in ETH; ERC-20 offers are paid in WETH (the offerer pre-approves WETH so the seller can pull it on acceptance).
 
 All commands support two modes:
 1. **With `--private-key`**: Full flow (approve, sign, submit) executed directly
@@ -16,14 +18,16 @@ All commands support two modes:
 
 ## Supported Chains
 
-| Chain | Chain ID | Status |
-|-------|----------|--------|
-| Base | 8453 | Supported |
-| Ethereum | 1 | Supported |
+| Feature | Chain | Chain ID |
+|---------|-------|----------|
+| NFT bazaar | Base | 8453 |
+| NFT bazaar | Ethereum | 1 |
+| ERC-20 bazaar | Base | 8453 |
+| ERC-20 bazaar | HyperEVM | 999 |
 
-## Commands
+# NFT Commands
 
-### List Listings
+## List Listings
 
 View active NFT listings:
 
@@ -59,7 +63,7 @@ netp bazaar list-listings \
 ]
 ```
 
-### List Offers
+## List Offers
 
 View active collection offers:
 
@@ -71,7 +75,7 @@ netp bazaar list-offers \
   [--json]
 ```
 
-### List Sales
+## List Sales
 
 View recent sales:
 
@@ -83,7 +87,7 @@ netp bazaar list-sales \
   [--json]
 ```
 
-### Owned NFTs
+## Owned NFTs
 
 Query NFTs owned by an address (read-only, uses on-chain helper contract):
 
@@ -107,7 +111,7 @@ netp bazaar owned-nfts \
 | `--end-token-id` | No | End of token ID range (default: 10000) |
 | `--json` | No | Output in JSON format |
 
-### Create Listing
+## Create Listing
 
 Create an NFT listing. Dual mode:
 
@@ -156,7 +160,7 @@ The agent should:
 2. Sign the `eip712` data via `/agent/sign` with `signatureType: "eth_signTypedData_v4"`
 3. Save the output to a file, then use `submit-listing` to build the final transaction
 
-### Create Offer
+## Create Offer
 
 Create a collection offer (bid on any token in a collection). Same dual mode as create-listing:
 
@@ -180,7 +184,7 @@ netp bazaar create-offer \
 
 Output format is the same as create-listing. Use `submit-offer` for the follow-up.
 
-### Submit Listing
+## Submit Listing
 
 Submit a signed listing (follow-up to keyless `create-listing`):
 
@@ -211,7 +215,7 @@ netp bazaar submit-listing \
 }
 ```
 
-### Submit Offer
+## Submit Offer
 
 Same as submit-listing but for offers:
 
@@ -224,7 +228,7 @@ netp bazaar submit-offer \
   [--encode-only]
 ```
 
-### Buy Listing
+## Buy Listing
 
 Buy an NFT listing by order hash:
 
@@ -262,7 +266,7 @@ netp bazaar buy-listing \
 
 The `value` field is the listing price in wei. The agent must include this value when submitting the fulfillment transaction.
 
-### Accept Offer
+## Accept Offer
 
 Accept a collection offer by selling your NFT:
 
@@ -287,9 +291,248 @@ netp bazaar accept-offer \
   --encode-only
 ```
 
-## Agent Integration Workflows
+# ERC-20 Commands
 
-### Buy a Listed NFT (Encode-Only)
+ERC-20 bazaar lets you list a specific quantity of an ERC-20 token for ETH, or offer WETH for a specific quantity of an ERC-20 token. Supported on **Base (8453)** and **HyperEVM (999)** only. The command shape mirrors the NFT commands, with `--token-address` in place of `--nft-address` and an explicit `--token-amount` (raw units, bigint string).
+
+## List ERC-20 Listings
+
+View active ERC-20 listings for a token:
+
+```bash
+netp bazaar list-erc20-listings \
+  --token-address <address> \
+  [--chain-id <8453|999>] \
+  [--rpc-url <url>] \
+  [--json]
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--token-address` | Yes | ERC-20 token contract address |
+| `--chain-id` | No | Chain ID (default from env) |
+| `--json` | No | Output in JSON format |
+
+**JSON Output:**
+```json
+[
+  {
+    "orderHash": "0x...",
+    "maker": "0x...",
+    "tokenAddress": "0x...",
+    "tokenAmount": "1000000000000000000",
+    "price": 0.05,
+    "priceWei": "50000000000000000",
+    "pricePerToken": 0.05,
+    "pricePerTokenWei": "50000000000000000",
+    "currency": "eth",
+    "expirationDate": 1770537792,
+    "orderStatus": 2
+  }
+]
+```
+
+`tokenAmount` is in raw token units (no decimals applied). `price` is the total ETH price for the whole `tokenAmount`; `pricePerToken` is the ETH price per single token unit (raw). Listings are sorted by `pricePerToken` ascending.
+
+## List ERC-20 Offers
+
+View active ERC-20 offers for a token:
+
+```bash
+netp bazaar list-erc20-offers \
+  --token-address <address> \
+  [--chain-id <8453|999>] \
+  [--rpc-url <url>] \
+  [--json]
+```
+
+JSON output has the same shape as `list-erc20-listings`. Offer currency is **WETH** (offerer pre-approves WETH so the seller can pull it on acceptance). Offers are sorted by `pricePerToken` descending and filtered to those where the maker still has enough WETH balance.
+
+## Create ERC-20 Listing
+
+Create an ERC-20 listing (sell `tokenAmount` of a token for ETH). Dual mode:
+
+**With private key (full flow):**
+```bash
+netp bazaar create-erc20-listing \
+  --token-address <address> \
+  --token-amount <raw-units> \
+  --price <eth> \
+  [--target-fulfiller <address>] \
+  --chain-id 8453 \
+  --private-key 0x...
+```
+
+Steps executed: approve Seaport to spend ERC-20 -> sign EIP-712 order -> submit listing on-chain.
+
+**Without private key (output EIP-712 data):**
+```bash
+netp bazaar create-erc20-listing \
+  --token-address <address> \
+  --token-amount <raw-units> \
+  --price <eth> \
+  --offerer <address> \
+  --chain-id 8453
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--token-address` | Yes | ERC-20 token contract address |
+| `--token-amount` | Yes | Amount to sell in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token) |
+| `--price` | Yes | **Total** price in ETH for the whole `token-amount` (e.g. `0.05`) |
+| `--target-fulfiller` | No | Make a private listing for this address |
+| `--offerer` | No | Required without `--private-key` |
+
+Output format is the same as `create-listing` (EIP-712 data + approvals). Use `submit-erc20-listing` for the follow-up.
+
+## Create ERC-20 Offer
+
+Create an ERC-20 offer (bid WETH for `tokenAmount` of a token). Same dual mode:
+
+**With private key:**
+```bash
+netp bazaar create-erc20-offer \
+  --token-address <address> \
+  --token-amount <raw-units> \
+  --price <eth> \
+  --chain-id 8453 \
+  --private-key 0x...
+```
+
+**Without private key:**
+```bash
+netp bazaar create-erc20-offer \
+  --token-address <address> \
+  --token-amount <raw-units> \
+  --price <eth> \
+  --offerer <address> \
+  --chain-id 8453
+```
+
+`--price` is the **total** WETH the offerer is bidding for the whole `token-amount`. The approval emitted is a WETH `approve` to Seaport. Use `submit-erc20-offer` for the follow-up.
+
+## Submit ERC-20 Listing
+
+Submit a signed ERC-20 listing (follow-up to keyless `create-erc20-listing`):
+
+```bash
+netp bazaar submit-erc20-listing \
+  --order-data <path> \
+  --signature <sig> \
+  --chain-id 8453 \
+  [--private-key 0x...] \
+  [--encode-only]
+```
+
+Parameters and output mirror `submit-listing`.
+
+## Submit ERC-20 Offer
+
+Same as `submit-erc20-listing` but for offers:
+
+```bash
+netp bazaar submit-erc20-offer \
+  --order-data <path> \
+  --signature <sig> \
+  --chain-id 8453 \
+  [--private-key 0x...] \
+  [--encode-only]
+```
+
+## Buy ERC-20 Listing
+
+Buy an ERC-20 listing by order hash (pays in ETH):
+
+**With private key:**
+```bash
+netp bazaar buy-erc20-listing \
+  --order-hash <hash> \
+  --token-address <address> \
+  --chain-id 8453 \
+  --private-key 0x...
+```
+
+**Encode-only (for agents):**
+```bash
+netp bazaar buy-erc20-listing \
+  --order-hash <hash> \
+  --token-address <address> \
+  --buyer <address> \
+  --chain-id 8453 \
+  --encode-only
+```
+
+**Encode-only output:**
+```json
+{
+  "approvals": [],
+  "fulfillment": {
+    "to": "0x...",
+    "data": "0x...",
+    "chainId": 8453,
+    "value": "50000000000000000"
+  }
+}
+```
+
+The `value` field is the listing's total ETH price in wei. The agent must include this value when submitting the fulfillment transaction.
+
+## Accept ERC-20 Offer
+
+Accept an ERC-20 offer by selling your tokens (receive WETH):
+
+**With private key:**
+```bash
+netp bazaar accept-erc20-offer \
+  --order-hash <hash> \
+  --token-address <address> \
+  --chain-id 8453 \
+  --private-key 0x...
+```
+
+**Encode-only (for agents):**
+```bash
+netp bazaar accept-erc20-offer \
+  --order-hash <hash> \
+  --token-address <address> \
+  --seller <address> \
+  --chain-id 8453 \
+  --encode-only
+```
+
+The token amount being sold comes from the offer itself — there is no `--token-id` for ERC-20 offers. The `approvals` array will contain a Seaport ERC-20 approval if the seller hasn't already approved.
+
+## Cancel ERC-20 Listing
+
+Cancel an ERC-20 listing you created:
+
+```bash
+netp bazaar cancel-erc20-listing \
+  --order-hash <hash> \
+  --token-address <address> \
+  --chain-id 8453 \
+  [--private-key 0x... | --maker <address> --encode-only]
+```
+
+`--maker` is required when using `--encode-only`. The CLI verifies the order belongs to the maker (using `includeExpired: true` so even expired orders can be cancelled to free the counter).
+
+## Cancel ERC-20 Offer
+
+Cancel an ERC-20 offer you created:
+
+```bash
+netp bazaar cancel-erc20-offer \
+  --order-hash <hash> \
+  --token-address <address> \
+  --chain-id 8453 \
+  [--private-key 0x... | --maker <address> --encode-only]
+```
+
+# Agent Integration Workflows
+
+## Buy a Listed NFT (Encode-Only)
 
 ```bash
 # 1. Find available listings
@@ -307,7 +550,7 @@ netp bazaar buy-listing \
 # Include the fulfillment.value as the transaction value
 ```
 
-### Create and Submit a Listing (Keyless + Agent Signing)
+## Create and Submit a Listing (Keyless + Agent Signing)
 
 ```bash
 # 1. Get EIP-712 data and approval txs
@@ -336,7 +579,7 @@ netp bazaar submit-listing \
 # 6. Submit the encoded transaction via agent
 ```
 
-### Accept a Collection Offer (Encode-Only)
+## Accept a Collection Offer (Encode-Only)
 
 ```bash
 # 1. Find available offers
@@ -354,13 +597,50 @@ netp bazaar accept-offer \
 # 3. Submit approval txs (if any) and fulfillment tx via agent
 ```
 
-## Finding the Order Hash
-
-The `--order-hash` flag (used by `buy-listing` and `accept-offer`) comes from the `orderHash` field in the output of `list-listings` or `list-offers`. Always use `--json` for reliable parsing:
+## Buy an ERC-20 Listing (Encode-Only)
 
 ```bash
-# Get order hashes from listings
+# 1. Find available ERC-20 listings (sorted by pricePerToken ascending)
+netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json
+
+# 2. Get encoded buy transaction
+netp bazaar buy-erc20-listing \
+  --order-hash 0x... \
+  --token-address 0x... \
+  --buyer 0xAgentWallet \
+  --chain-id 8453 \
+  --encode-only
+
+# 3. Submit via agent. Include fulfillment.value (total ETH price in wei).
+```
+
+## Accept an ERC-20 Offer (Encode-Only)
+
+```bash
+# 1. Find available ERC-20 offers (sorted by pricePerToken descending, balance-validated)
+netp bazaar list-erc20-offers --token-address 0x... --chain-id 8453 --json
+
+# 2. Get encoded accept transaction (no --token-id; amount is in the offer)
+netp bazaar accept-erc20-offer \
+  --order-hash 0x... \
+  --token-address 0x... \
+  --seller 0xAgentWallet \
+  --chain-id 8453 \
+  --encode-only
+
+# 3. Submit approval txs (Seaport ERC-20 approval if needed), then the fulfillment tx, via agent
+```
+
+## Finding the Order Hash
+
+The `--order-hash` flag (used by `buy-listing`, `accept-offer`, `buy-erc20-listing`, `accept-erc20-offer`, and the cancel commands) comes from the `orderHash` field in the output of the corresponding `list-*` command. Always use `--json` for reliable parsing:
+
+```bash
+# NFT
 netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json | jq '.[].orderHash'
+
+# ERC-20
+netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json | jq '.[].orderHash'
 ```
 
 ## Error Handling
@@ -368,14 +648,18 @@ netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json | jq '.[].o
 | Error | Cause | Solution |
 |-------|-------|----------|
 | "Listing not found" | Order hash doesn't match any active listing | Listing may have been fulfilled or cancelled |
-| "Insufficient funds" | Not enough ETH for purchase | Fund wallet with listing price + gas |
+| "ERC-20 listing with order hash ... not found or no longer active" | Same, for ERC-20 listings | Re-query `list-erc20-listings` |
+| "ERC-20 offer with order hash ... not found or no longer active" | Same, for ERC-20 offers | Re-query `list-erc20-offers` |
+| "Insufficient funds" | Not enough ETH (NFT/ERC-20 listing buy) or WETH (ERC-20 offer accept) | Fund wallet with price + gas |
 | "--offerer is required" | Keyless mode needs offerer address | Add `--offerer 0x...` flag |
 | "--buyer is required" | Encode-only buy needs buyer address | Add `--buyer 0x...` flag |
 | "--seller is required" | Encode-only accept needs seller address | Add `--seller 0x...` flag |
+| "--maker is required" | Encode-only cancel needs maker address | Add `--maker 0x...` flag |
 
 ## Cost Considerations
 
-- **Creating listings/offers**: Gas for approval tx + submit tx (~0.001-0.003 ETH on Base)
-- **Buying listings**: Listing price + gas (~0.0005-0.002 ETH gas on Base)
-- **Accepting offers**: Gas for approval + fulfillment (~0.001-0.003 ETH on Base)
+- **Creating listings/offers (NFT or ERC-20)**: Gas for approval tx + submit tx (~0.001-0.003 ETH on Base)
+- **Buying NFT listings / ERC-20 listings**: Listing price (ETH) + gas (~0.0005-0.002 ETH on Base)
+- **Accepting NFT offers**: Gas for NFT approval + fulfillment (~0.001-0.003 ETH on Base)
+- **Accepting ERC-20 offers**: Gas for ERC-20 approval (if needed) + fulfillment; payment received in WETH
 - **Reading data**: Free (view calls)

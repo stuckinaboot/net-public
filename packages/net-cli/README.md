@@ -797,7 +797,7 @@ src/
 │   ├── feed/             # Feed command module
 │   ├── message/          # Message command module
 │   ├── token/            # Token command module
-│   ├── bazaar/           # NFT Bazaar command module
+│   ├── bazaar/           # Bazaar command module (NFT + ERC-20)
 │   ├── agent/            # Onchain agent command module
 │   ├── relay/            # Relay fund/balance command module
 │   ├── upvote/           # Token/user upvoting command module
@@ -1077,10 +1077,11 @@ netp relay balance --chain-id 8453 --json
 
 #### Bazaar Command
 
-NFT Bazaar operations — list, buy, sell, and trade NFTs via Seaport.
+Bazaar operations — list, buy, sell, and trade NFTs and ERC-20 tokens via Seaport. NFT bazaar is supported on Base (8453) and Ethereum (1); ERC-20 bazaar is supported on Base (8453) and HyperEVM (999).
 
 **Available Subcommands:**
 
+NFT:
 - `bazaar list-listings` - List active NFT listings
 - `bazaar list-offers` - List active collection offers
 - `bazaar list-sales` - List recent sales
@@ -1091,6 +1092,20 @@ NFT Bazaar operations — list, buy, sell, and trade NFTs via Seaport.
 - `bazaar submit-offer` - Submit a signed offer
 - `bazaar buy-listing` - Buy an NFT listing
 - `bazaar accept-offer` - Accept a collection offer
+- `bazaar cancel-listing` - Cancel an NFT listing you created
+- `bazaar cancel-offer` - Cancel a collection offer you created
+
+ERC-20:
+- `bazaar list-erc20-listings` - List active ERC-20 token listings
+- `bazaar list-erc20-offers` - List active ERC-20 token offers
+- `bazaar create-erc20-listing` - Create an ERC-20 token listing
+- `bazaar create-erc20-offer` - Create an ERC-20 token offer
+- `bazaar submit-erc20-listing` - Submit a signed ERC-20 listing
+- `bazaar submit-erc20-offer` - Submit a signed ERC-20 offer
+- `bazaar buy-erc20-listing` - Buy an ERC-20 listing
+- `bazaar accept-erc20-offer` - Accept an ERC-20 offer
+- `bazaar cancel-erc20-listing` - Cancel an ERC-20 listing you created
+- `bazaar cancel-erc20-offer` - Cancel an ERC-20 offer you created
 
 ##### Read Commands
 
@@ -1106,6 +1121,12 @@ netp bazaar list-sales --nft-address <address> --chain-id 8453 [--json]
 
 # Check NFTs owned by an address
 netp bazaar owned-nfts --nft-address <address> --owner <address> --chain-id 8453 [--json]
+
+# List active ERC-20 listings (sorted by price-per-token ascending)
+netp bazaar list-erc20-listings --token-address <address> --chain-id 8453 [--json]
+
+# List active ERC-20 offers (sorted by price-per-token descending, balance-validated)
+netp bazaar list-erc20-offers --token-address <address> --chain-id 8453 [--json]
 ```
 
 ##### Create Commands (Dual Mode)
@@ -1127,7 +1148,19 @@ netp bazaar create-listing \
 netp bazaar create-offer \
   --nft-address <address> --price <eth> \
   --chain-id 8453 --private-key 0x...
+
+# ERC-20 listing (sell tokens for ETH) — same dual mode
+netp bazaar create-erc20-listing \
+  --token-address <address> --token-amount <raw-units> --price <eth> \
+  --chain-id 8453 --private-key 0x...
+
+# ERC-20 offer (bid WETH for tokens) — same dual mode
+netp bazaar create-erc20-offer \
+  --token-address <address> --token-amount <raw-units> --price <eth> \
+  --chain-id 8453 --private-key 0x...
 ```
+
+`--token-amount` is in **raw token units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). `--price` is the **total** ETH (listing) or WETH (offer) for the whole `--token-amount`.
 
 ##### Submit Commands
 
@@ -1139,6 +1172,15 @@ netp bazaar submit-listing \
   --chain-id 8453 [--private-key 0x... | --encode-only]
 
 netp bazaar submit-offer \
+  --order-data <path> --signature <sig> \
+  --chain-id 8453 [--private-key 0x... | --encode-only]
+
+# ERC-20 variants
+netp bazaar submit-erc20-listing \
+  --order-data <path> --signature <sig> \
+  --chain-id 8453 [--private-key 0x... | --encode-only]
+
+netp bazaar submit-erc20-offer \
   --order-data <path> --signature <sig> \
   --chain-id 8453 [--private-key 0x... | --encode-only]
 ```
@@ -1154,6 +1196,16 @@ netp bazaar buy-listing \
 # Accept an offer (sell your NFT)
 netp bazaar accept-offer \
   --order-hash <hash> --nft-address <address> --token-id <id> \
+  --chain-id 8453 [--private-key 0x... | --seller <address> --encode-only]
+
+# Buy an ERC-20 listing (pays in ETH)
+netp bazaar buy-erc20-listing \
+  --order-hash <hash> --token-address <address> \
+  --chain-id 8453 [--private-key 0x... | --buyer <address> --encode-only]
+
+# Accept an ERC-20 offer (sell tokens for WETH; no --token-id, amount comes from offer)
+netp bazaar accept-erc20-offer \
+  --order-hash <hash> --token-address <address> \
   --chain-id 8453 [--private-key 0x... | --seller <address> --encode-only]
 ```
 

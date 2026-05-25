@@ -25,6 +25,7 @@ Net Score is a decentralized on-chain scoring system built on Net Protocol. It a
 - **Decode upvote messages** from Net protocol (legacy and strategy formats)
 - **Decode strategy metadata** to inspect vote weight details
 - **Select strategies** automatically based on pool key availability
+- **Compute token leaderboards** with `getTokenRankings()` — the same time-decayed ranking that powers the website's `/token/<chain>/trending` page (`trending` / `recent` / `top` sorts)
 
 This package provides both React hooks (for UI) and a client class (for non-React code).
 
@@ -128,6 +129,29 @@ const appCounts = await client.getAppKeyScores({
 });
 ```
 
+### Token Rankings
+
+`getTokenRankings()` returns the same leaderboard that powers the website's
+`/token/<chain>/trending` page — read live from chain with no off-chain index.
+
+```typescript
+import { getTokenRankings } from "@net-protocol/score";
+
+const tokens = await getTokenRankings({
+  chainId: 8453,
+  sort: "trending", // "trending" | "recent" | "top"
+  maxTokens: 50,
+});
+
+for (const t of tokens) {
+  console.log(t.symbol, t.upvotes, t.fdv, t.priceInUsdc);
+}
+```
+
+Each call performs ~8 RPC reads. Production callers should cache via HTTP
+`Cache-Control` headers or an edge cache. Only Base (chainId 8453) is
+supported today; other chains throw synchronously.
+
 ## API Reference
 
 ### ScoreClient
@@ -138,6 +162,12 @@ const appCounts = await client.getAppKeyScores({
 | `getUpvotesForItems(opts)` | Get upvote counts for an array of `ScoreItem` objects |
 | `getStrategyKeyScores(opts)` | Get scores for keys from a specific strategy |
 | `getAppKeyScores(opts)` | Get scores for keys from a specific app |
+
+### Token Rankings
+
+| Function | Description |
+|----------|-------------|
+| `getTokenRankings(opts)` | Compute a token leaderboard ranked by upvote activity (`trending` / `recent` / `top`). Mirrors the website's `/token/<chain>/trending` page. |
 
 ### React Hooks
 

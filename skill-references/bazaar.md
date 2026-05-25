@@ -18,7 +18,7 @@ All commands support two modes:
 
 ## Approval Spender (Important)
 
-Net Bazaar uses Seaport **directly** — `conduitKey` is always `0x00…00` (zero bytes32). There is **no conduit**. All NFT (`setApprovalForAll`) and ERC-20 (`approve`) approvals must be granted to the Seaport contract itself, not to any OpenSea/Seaport conduit address (e.g. `0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC` is **not** used).
+Net Bazaar uses Seaport **directly** — `conduitKey` is always `0x00…00` (zero bytes32). There is **no conduit**. All NFT (`setApprovalForAll`) and ERC-20 (`approve`) approvals must be granted to the Seaport contract itself, not to any conduit address.
 
 When checking an existing allowance or `isApprovedForAll` before listing, use the Seaport address for the chain as the spender:
 

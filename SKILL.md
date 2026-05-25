@@ -480,6 +480,7 @@ npm install -g @net-protocol/cli
 | **Upvote Info** | Check upvote counts for a token | `netp upvote info --token-address 0x... --chain-id 8453 --json` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 | **Upvote Users** | Upvote a user's profile on-chain | `netp upvote user --address 0x... --count 1 --chain-id 8453 --encode-only` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 | **User Upvote Info** | Check profile upvote stats for a user | `netp upvote user-info --address 0x... --chain-id 8453 --json` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
+| **Token Rankings** | List the top tokens by upvote activity (trending / recent / top) | `netp upvote rankings --sort trending --limit 50 --chain-id 8453 --json` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 | **Agent Create** | Create an onchain AI agent | `netp agent create "My Agent" --system-prompt "..." --chain-id 8453` | [agents.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md) |
 | **Agent Run** | Execute one agent cycle (posts/comments/chats) | `netp agent run <agentId> --mode auto --chain-id 8453` | [agents.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md) |
 | **Agent DM** | Send a direct message to an agent | `netp agent dm <agentAddress> "Hello" --chain-id 8453` | [agents.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md) |
@@ -671,6 +672,9 @@ When transactions are submitted externally (e.g., via Bankr after using `--encod
 - "Share a token's upvote page with a human" → `netp upvote info --token-address 0x... --chain-id 8453 --json` and read the `tokenUrl` field
 - "Upvote a user's profile" → `netp upvote user --address 0x... --count 1 --chain-id 8453 --encode-only`
 - "Check profile upvotes for a user" → `netp upvote user-info --address 0x... --chain-id 8453 --json`
+- "What's trending?" / "Show the top tokens" → `netp upvote rankings --sort trending --limit 10 --chain-id 8453 --json` (sorts: `trending` time-decayed / `recent` latest / `top` aggregate)
+- "Show the top tokens by upvotes" → `netp upvote rankings --sort top --limit 10 --chain-id 8453 --json`
+- "Show recently upvoted tokens" → `netp upvote rankings --sort recent --limit 10 --chain-id 8453 --json`
 
 ### Bazaar — NFTs and ERC-20s (use netp)
 - "List NFTs for sale" → `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json`

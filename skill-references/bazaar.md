@@ -16,6 +16,28 @@ All commands support two modes:
 1. **With `--private-key`**: Full flow (approve, sign, submit) executed directly
 2. **Without `--private-key`**: Outputs transaction data / EIP-712 data for external signing (agents, hardware wallets)
 
+## Approval Spender (Important)
+
+Net Bazaar uses Seaport **directly** — `conduitKey` is always `0x00…00` (zero bytes32). There is **no conduit**. All NFT (`setApprovalForAll`) and ERC-20 (`approve`) approvals must be granted to the Seaport contract itself, not to any OpenSea/Seaport conduit address (e.g. `0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC` is **not** used).
+
+When checking an existing allowance or `isApprovedForAll` before listing, use the Seaport address for the chain as the spender:
+
+| Chain | Chain ID | Seaport address (spender for approvals) |
+|-------|----------|------------------------------------------|
+| Ethereum | 1 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Base | 8453 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Base Sepolia | 84532 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| HyperEVM | 999 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Unichain | 130 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Plasma | 9745 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Monad | 143 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| MegaETH | 4326 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Degen | 666666666 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Ham | 5112 | `0x0000000000000068F116a894984e2DB1123eB395` |
+| Ink | 57073 | `0xD00C96804e9fF35f10C7D2a92239C351Ff3F94e5` |
+
+Note that the `approvals` array in keyless-mode output is **empty when the maker has already approved Seaport** — so an empty `approvals` array means "no approval needed", not "approval needed but spender unknown". If you need to verify the allowance yourself, query it against the Seaport address above for the chain.
+
 ## Supported Chains
 
 | Feature | Chain | Chain ID |
@@ -126,7 +148,7 @@ netp bazaar create-listing \
   --private-key 0x...
 ```
 
-Steps executed: approve Seaport for NFT -> sign EIP-712 order -> submit listing on-chain.
+Steps executed: approve Seaport (directly — no conduit) for the NFT -> sign EIP-712 order -> submit listing on-chain.
 
 **Without private key (output EIP-712 data):**
 ```bash
@@ -374,7 +396,7 @@ netp bazaar create-erc20-listing \
   --private-key 0x...
 ```
 
-Steps executed: approve Seaport to spend ERC-20 -> sign EIP-712 order -> submit listing on-chain.
+Steps executed: approve Seaport (directly — no conduit) to spend the ERC-20 -> sign EIP-712 order -> submit listing on-chain.
 
 **Without private key (output EIP-712 data):**
 ```bash
@@ -421,7 +443,7 @@ netp bazaar create-erc20-offer \
   --chain-id 8453
 ```
 
-`--price` is the **total** amount of the wrapped native currency (WETH on Base, wrapped HYPE on HyperEVM) the offerer is bidding for the whole `token-amount`, expressed as a decimal. The approval emitted is a wrapped-native `approve` to Seaport. Use `submit-erc20-offer` for the follow-up.
+`--price` is the **total** amount of the wrapped native currency (WETH on Base, wrapped HYPE on HyperEVM) the offerer is bidding for the whole `token-amount`, expressed as a decimal. The approval emitted is a wrapped-native `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). Use `submit-erc20-offer` for the follow-up.
 
 ## Submit ERC-20 Listing
 

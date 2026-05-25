@@ -49,7 +49,7 @@ const EIP712_DOMAIN_TYPE_WITH_VERIFYING_CONTRACT = [
 
 /**
  * Just the EIP-712 typed data structure — exactly what an external signer
- * (e.g., Bankr /agent/sign) expects in its `typedData` field.
+ * expects in its `typedData` field.
  *
  * BigInt values are pre-stringified so JSON.stringify works. Signers
  * normalize decimal strings back to the correct integer representation

@@ -73,7 +73,7 @@ async function executeDm(
         "When using --session-token, you must also provide --topic and --topic-signature.\n" +
           "  Obtain the signature with:\n" +
           "    netp agent dm-auth-encode --agent-address <addr>  → produces { typedData, topic }\n" +
-          "    [sign .typedData with your external signer, e.g. Bankr /agent/sign]\n" +
+          "    [sign .typedData with your external signer]\n" +
           "  Then:\n" +
           "    netp agent dm <addr> <message> --session-token <token> --operator <addr> \\\n" +
           "      --topic <topic> --topic-signature <sig>",

@@ -226,3 +226,45 @@ yarn workspaces foreach -A run build
 ```
 
 This is especially common in git worktrees or after switching branches.
+
+**Additional note (May 2026):** `yarn workspaces foreach -A run build` only builds the `packages/net-*/dist` directories — it does **not** populate the nested `packages/net-X/node_modules/@net-protocol/*` copies. If you see `SyntaxError: The requested module ... does not provide an export named ...` from one of those nested paths, copy the freshly built dist into them:
+
+```bash
+for pkg_json in $(find packages -path '*/node_modules/@net-protocol/*/package.json' -not -path '*/dist/*' 2>/dev/null); do
+  nested_dir=$(dirname "$pkg_json")
+  pkg_name=$(node -p "require('./$pkg_json').name")
+  short_name=${pkg_name#@net-protocol/}
+  src_dist="packages/net-${short_name}/dist"
+  if [ -d "$src_dist" ] && [ ! -d "$nested_dir/dist" ]; then
+    cp -r "$src_dist" "$nested_dir/dist"
+  fi
+done
+```
+
+**Longer-term root-cause TODO:** the nested copies should be symlinks. Investigate the workspace's yarn `nodeLinker` / `enableTransparentWorkspaces` config so workspace-resolved deps don't get materialized as copies.
+
+### `yarn start` fails with `SyntaxError: ... does not provide an export named ...`
+
+**Symptom:** Running `yarn start` (or `tsx src/...`) inside `packages/net-cli` (or any package that imports `@net-protocol/*`) fails parsing a workspace package's TypeScript source.
+
+**Cause:** Most `@net-protocol/*` SDK packages (`net-core`, `net-storage`, `net-bazaar`, `net-feeds`, `net-chats`, `net-netr`, `net-profiles`, `net-relay`, `net-score`, `net-agents`) are missing `"type": "module"` in their `package.json`. When tsx resolves the import, it prefers the TS source (`src/index.ts`) over the built `dist/index.mjs` — and without `type: module`, Node interprets that source as CommonJS, so the named ESM exports are unavailable.
+
+**Workaround:** Run the built CLI instead of `yarn start`:
+
+```bash
+node packages/net-cli/dist/cli/index.mjs <command>
+```
+
+**Longer-term root-cause TODO:** Add `"type": "module"` to each SDK package's `package.json`, rename CJS dist output from `.js` → `.cjs` (in `tsup.config.ts` `outExtension`) and update `main` / `exports.require` to match. `net-cli` already follows this pattern.
+
+## External Integrations
+
+### Bankr Wallet API
+
+For programmatic transaction signing/submission via Bankr, use the **Wallet API** (`/wallet/sign`, `/wallet/submit`, `/wallet/me`) — not the deprecated `/agent/sign` and `/agent/submit` endpoints referenced in older test fixtures. The API key must have `walletApiEnabled`.
+
+- `GET https://api.bankr.bot/wallet/me` — returns wallet addresses (EVM + Solana), socials, club status.
+- `POST https://api.bankr.bot/wallet/submit` — submits a raw tx: `{ transaction: { to, chainId, value, data }, description, waitForConfirmation }`. Supports Base (8453), Ethereum (1), Polygon (137), Unichain (130), World Chain (480), Arbitrum (42161), BNB (56).
+- `POST https://api.bankr.bot/wallet/sign` — supports `personal_sign` and `eth_signTypedData_v4`. Body: `{ signatureType, message }` for personal_sign or `{ signatureType, typedData: { domain, types, primaryType, message } }` for EIP-712. Response: `{ success, signature, signer, signatureType }`.
+
+See `docs.bankr.bot/wallet-api/overview` for the canonical spec.

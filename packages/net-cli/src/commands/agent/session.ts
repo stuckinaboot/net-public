@@ -5,7 +5,7 @@
  * These commands expose the two-step flow so external signers can plug in:
  *
  *   1. `session-encode --operator 0x...` → { typedData, expiresAt }
- *   2. sign typedData externally (Bankr /agent/sign)
+ *   2. sign typedData externally
  *   3. `session-create --signature 0x... --expires-at N` → { sessionToken }
  */
 

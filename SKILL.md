@@ -559,13 +559,15 @@ Submit each approval (in order), then the fulfillment. The `fulfillment.value` f
 
 **The `approvals` array is exhaustive.** The bazaar CLI has already checked on-chain allowance / `isApprovedForAll` state and emitted exactly the approval transactions that are still needed. Submit what's in the array — nothing more, nothing less. This applies to every bazaar encode-only command (`buy-*`, `accept-*`, `create-*`, `submit-*`, `cancel-*`).
 
+**You do not need to run your own pre-flight allowance check.** Do not call `allowance(...)`, `isApprovedForAll(...)`, `balanceOf(...)`, or any other read against the asset, Seaport, or a "bazaar/conduit contract" to "verify" the CLI's output before submitting. The CLI already did this. If `approvals` is empty, the maker is already approved — proceed straight to `fulfillment`. If `approvals` has entries, those are the only approvals you need to submit.
+
 Do **NOT** apply general NFT-marketplace knowledge to "double-check" approvals. In particular:
 
 - **No conduit.** Net Bazaar uses Seaport **directly** — `conduitKey` is always `0x00…00`. There is no conduit address. Do NOT add a `setApprovalForAll` or `approve` to any "conduit" / "OpenSea conduit" / "Seaport conduit" contract.
 - **No separate bazaar contract.** There is no Net Bazaar contract that needs approval. All approvals (when present) target Seaport itself, and the CLI has already built them into `approvals`. Do NOT add an `approve` to any "bazaar contract" address.
 - **Empty `approvals` array = nothing to approve.** It does not mean "approval needed but spender unknown." It means the maker has already approved Seaport for the asset. Go straight to `fulfillment` — do not insert a "just in case" `setApprovalForAll` or ERC-20 `approve`.
 
-If you genuinely need to verify allowance independently (e.g., a pre-flight UI check), the spender to query is the chain's Seaport address — see [bazaar.md § Approval Spender](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md). Never use that address to construct an *additional* approval tx; only to read state.
+The only legitimate reason to read allowance state yourself is a non-submitting UI preview (e.g., showing the user "you will be asked to approve" before they click). Even then, the spender is the chain's Seaport address — see [bazaar.md § Approval Spender](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md) — and the result must never be used to add an extra approval tx on top of what the CLI returned.
 
 ### Key Constraints (netp)
 
@@ -576,7 +578,7 @@ If you genuinely need to verify allowance independently (e.g., a pre-flight UI c
 | **Token deploy with initial buy** | Output includes a non-zero `value` field (price in wei). You **must** include this value when submitting. |
 | **Upvoting (tokens)** | Each upvote costs 0.000025 ETH. Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. `--encode-only` still requires RPC access for pool discovery. |
 | **Upvoting (users)** | Price fetched from contract (currently 0.000025 ETH per upvote). Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. |
-| **Bazaar approvals** | The CLI handles all approval logic. The `approvals` array in every encode-only output is exhaustive — submit it verbatim. **Net Bazaar uses Seaport directly (no conduit).** Do NOT add `setApprovalForAll`/`approve` txs for any "conduit" or "bazaar contract"; an empty `approvals` array means none are needed. See "Bazaar Approvals" under Encode-Only Transaction Formats above. |
+| **Bazaar approvals** | The CLI handles all approval logic. The `approvals` array in every encode-only output is exhaustive — submit it verbatim, no pre-flight `allowance` / `isApprovedForAll` check needed. **Net Bazaar uses Seaport directly (no conduit).** Do NOT add `setApprovalForAll`/`approve` txs for any "conduit" or "bazaar contract"; an empty `approvals` array means none are needed. See "Bazaar Approvals" under Encode-Only Transaction Formats above. |
 | **Bazaar (NFT)** | NFT listings/offers are supported on Base (8453) and Ethereum (1). All write commands support `--encode-only`. |
 | **Bazaar (ERC-20)** | ERC-20 listings/offers are supported on Base (8453) and HyperEVM (999). ERC-20 commands use `--token-address` + `--token-amount` (raw bigint units). Listings pay in the chain's native currency (ETH or HYPE); offers pay in the wrapped native currency (WETH or wrapped HYPE), which the offerer pre-approves. |
 | **Bazaar JSON fields (ERC-20)** | `pricePerToken` is a **string** (not a number) for full-decimal precision; `pricePerTokenWei` is `priceWei / tokenAmount` (bigint integer division — often rounds to `"0"` for 18-decimal tokens). `currency` is the native-chain symbol (`"eth"`, `"hype"`), not the wrapped-token name. |

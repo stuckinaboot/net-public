@@ -8,6 +8,7 @@ import dynamicSplitStrategyAbi from "./abis/dynamic-split-strategy.json";
 import multiVersionUniswapBulkPoolFinderAbi from "./abis/multi-version-uniswap-bulk-pool-finder.json";
 import multiVersionUniswapPoolInfoRetrieverAbi from "./abis/multi-version-uniswap-pool-info-retriever.json";
 import userUpvoteAbi from "./abis/user-upvote.json";
+import erc20BulkInfoHelperAbi from "./abis/erc20-bulk-info-helper.json";
 
 // Score core contract (v2 strategy)
 export const SCORE_CONTRACT = {
@@ -101,4 +102,10 @@ export const UPVOTE_PRICE_ETH = 0.000025;
 export const USER_UPVOTE_CONTRACT = {
   address: "0xa4bc2c63dd0157692fd5f409389e5032e37d8895" as Address,
   abi: userUpvoteAbi as Abi,
+} as const;
+
+// ERC20 bulk info helper (name/symbol/decimals/totalSupply/burnedTokens in one call)
+export const ERC20_BULK_INFO_HELPER_CONTRACT = {
+  address: "0x00000051809cbfacdf7d08ada813836822b880a2" as Address,
+  abi: erc20BulkInfoHelperAbi as Abi,
 } as const;

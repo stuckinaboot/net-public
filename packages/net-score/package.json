@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/score",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Score/upvoting functionality for Net Protocol - on-chain scoring system",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@net-protocol/core": "^0.1.9",
-    "@net-protocol/storage": "^0.1.11",
+    "@net-protocol/storage": "^0.1.17",
     "@opensea/seaport-js": "^4.0.4"
   },
   "devDependencies": {

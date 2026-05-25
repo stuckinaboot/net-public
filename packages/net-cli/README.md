@@ -365,6 +365,59 @@ netp token info \
   --json
 ```
 
+#### Upvote Command
+
+Upvote-related operations for Net Protocol. Run `netp upvote --help` for the
+full list of subcommands (`token`, `info`, `user`, `user-info`, `rankings`).
+
+##### Upvote Rankings
+
+List the top tokens ranked by upvote activity — the same leaderboard that
+powers the website's `/token/<chain>/trending` page. All reads are live from
+chain; no off-chain index. Callers should cache via HTTP headers.
+
+```bash
+netp upvote rankings \
+  [--sort <trending|recent|top>] \
+  [--limit <n>] \
+  [--scan-window <n>] \
+  [--min-upvotes <n>] \
+  [--min-market-cap <n>] \
+  [--recency-hours <n>] \
+  [--chain-id <8453>] \
+  [--rpc-url <custom-rpc>] \
+  [--json]
+```
+
+**Arguments:**
+
+- `--sort` (optional): Ranking strategy. `trending` (time-decayed score, recent upvotes weighted higher), `recent` (latest upvote timestamp), `top` (aggregate upvote count). Default: `trending`.
+- `--limit` (optional): Number of tokens to return, 1-100. Default: 50.
+- `--scan-window` (optional): Messages to scan per contract (legacy + 3 strategies). Default: 150.
+- `--min-upvotes` (optional): Two-tier filter floor — tokens with at least this many aggregate upvotes get top slots. Default: 500.
+- `--min-market-cap` (optional): FDV floor in USDC for the top slots. Default: 40000.
+- `--recency-hours` (optional): Drop below-floor tokens with no upvote within N hours. Default: 48.
+- `--chain-id` (optional): Chain ID. Base (8453) is currently the only supported chain.
+- `--rpc-url` (optional): Custom RPC URL.
+- `--json` (optional): Output JSON.
+
+**Example:**
+
+```bash
+netp upvote rankings --sort top --limit 5 --chain-id 8453
+```
+
+Output:
+
+```
+Top 5 tokens by top on chain 8453:
+# 1  ALPHA      2238158 upvotes    FDV 402.75K    $0.000004    0x3d01fe5a...
+# 2  BNKR       133462 upvotes     FDV 53.03M     $0.000530    0x22af33fe...
+# 3  DICKBUTT   33364 upvotes      FDV 388.94K    $0.000004    0x2d57c47b...
+# 4  AEGON      33335 upvotes      FDV 285.30K    $0.000285    0x78a5d1de...
+# 5  DRB        31460 upvotes      FDV 4.23M      $0.000042    0x3ec2156d...
+```
+
 #### Profile Command
 
 Profile operations for managing your Net Protocol profile.

@@ -70,7 +70,7 @@ export async function getTokenRankings(
 ): Promise<RankedToken[]> {
   const {
     chainId,
-    sort = "hot",
+    sort = "trending",
     maxTokens = DEFAULT_MAX_TOKENS,
     messageScanWindow = DEFAULT_MESSAGE_SCAN_WINDOW,
     rpcUrl,
@@ -384,7 +384,7 @@ export function aggregateAndRank({
       if (sort === "recent") {
         scores.set(addr, latestUpvoteTimestamps.get(addr) ?? 0);
       } else {
-        // "hot" / "trending"
+        // "trending": time-decayed weighted score
         const score = events.reduce(
           (total, e) => total + e.count * timeWeight(e.timestamp),
           0

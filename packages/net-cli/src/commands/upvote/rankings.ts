@@ -6,7 +6,7 @@ import { tokenUrl as buildTokenUrl } from "../../shared/urls";
 import { getTokenRankings, type RankingSort } from "@net-protocol/score";
 import type { RankingsOptions } from "./types";
 
-const VALID_SORTS: RankingSort[] = ["hot", "trending", "recent", "top"];
+const VALID_SORTS: RankingSort[] = ["trending", "recent", "top"];
 
 function formatNumber(n: number | undefined, digits = 2): string {
   if (n == null || !Number.isFinite(n)) return "-";
@@ -24,7 +24,7 @@ function formatPrice(price: number | undefined): string {
 }
 
 async function executeRankings(options: RankingsOptions): Promise<void> {
-  const sort = (options.sort ?? "hot").toLowerCase() as RankingSort;
+  const sort = (options.sort ?? "trending").toLowerCase() as RankingSort;
   if (!VALID_SORTS.includes(sort)) {
     exitWithError(
       `Invalid --sort "${options.sort}". Must be one of: ${VALID_SORTS.join(", ")}`
@@ -147,12 +147,12 @@ export function registerRankingsCommand(
   parent
     .command(commandName)
     .description(
-      "List tokens ranked by upvote activity (hot / trending / recent / top)"
+      "List tokens ranked by upvote activity (trending / recent / top)"
     )
     .option(
       "--sort <sort>",
-      `Ranking strategy: ${VALID_SORTS.join(" | ")} (default: hot)`,
-      "hot"
+      `Ranking strategy: ${VALID_SORTS.join(" | ")} (default: trending)`,
+      "trending"
     )
     .option(
       "--limit <n>",

@@ -51,7 +51,7 @@ describe("getTokenRankings: public surface", () => {
   it("accepts the documented options shape", () => {
     const options: GetTokenRankingsOptions = {
       chainId: 8453,
-      sort: "hot",
+      sort: "trending",
       maxTokens: 10,
       messageScanWindow: 200,
       thresholds: { minUpvotes: 100, minMarketCap: 10_000, recencyHours: 24 },
@@ -66,9 +66,9 @@ describe("getTokenRankings: public surface", () => {
     );
   });
 
-  it("RankingSort accepts hot/trending/recent/top", () => {
-    const sorts: RankingSort[] = ["hot", "trending", "recent", "top"];
-    expect(sorts).toHaveLength(4);
+  it("RankingSort accepts trending/recent/top", () => {
+    const sorts: RankingSort[] = ["trending", "recent", "top"];
+    expect(sorts).toHaveLength(3);
   });
 });
 
@@ -116,7 +116,7 @@ describe("aggregateAndRank", () => {
     ]);
   });
 
-  it("sorts 'hot' with time-decayed weighting (recent activity wins)", () => {
+  it("sorts 'trending' with time-decayed weighting (recent activity wins)", () => {
     const messageGroups = {
       // A has more total upvotes but old; B has fewer but recent.
       legacy: [
@@ -128,7 +128,7 @@ describe("aggregateAndRank", () => {
     const result = aggregateAndRank({
       messageGroups,
       storageBlobByKey: new Map(),
-      sort: "hot",
+      sort: "trending",
       maxTokens: 10,
       nowSec: NOW,
     });
@@ -409,7 +409,7 @@ describe("composeAndFilter", () => {
     expect(result.map((t) => t.upvotes)).toEqual([3000, 2000]);
   });
 
-  it("preserves sort='hot'/'recent' ordering from step 5", () => {
+  it("preserves sort='trending'/'recent' ordering from step 5", () => {
     // tokenAddresses comes in pre-sorted from aggregateAndRank
     const addrs = [TOKEN_B, TOKEN_A] as Address[];
     const result = composeAndFilter({
@@ -422,7 +422,7 @@ describe("composeAndFilter", () => {
       latestUpvoteTimestamps: new Map(
         addrs.map((a) => [a.toLowerCase(), NOW])
       ),
-      sort: "hot",
+      sort: "trending",
     });
     expect(result.map((t) => t.address)).toEqual([TOKEN_B, TOKEN_A]);
   });

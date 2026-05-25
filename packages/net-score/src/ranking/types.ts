@@ -3,11 +3,12 @@ import type { Address } from "viem";
 /**
  * How to rank tokens by upvote activity.
  *
- * - `hot` (alias: `trending`): time-decayed score, recent upvotes weighted higher
+ * - `trending`: time-decayed score, recent upvotes weighted higher.
+ *   Matches the website's "Hot" / default tab on /token/<chain>/trending.
  * - `recent`: latest upvote timestamp
  * - `top`: aggregate upvote count (via UpvoteApp.getUpvotesWithLegacy)
  */
-export type RankingSort = "hot" | "trending" | "recent" | "top";
+export type RankingSort = "trending" | "recent" | "top";
 
 export interface RankedToken {
   address: Address;
@@ -32,7 +33,7 @@ export interface GetTokenRankingsOptions {
    * the website's /token/<chain>/trending page).
    */
   maxTokens?: number;
-  /** Default: "hot" */
+  /** Default: "trending" */
   sort?: RankingSort;
   /**
    * Number of recent messages to scan per contract (legacy + 3 strategies).

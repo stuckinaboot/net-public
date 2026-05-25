@@ -269,11 +269,29 @@ async function fetchStrategyStorage({
     abi: STORAGE_CONTRACT.abi,
     functionName: "bulkGet",
     args: [keys],
-  })) as Array<readonly [string, `0x${string}`]>;
+  })) as BulkGetResult[];
 
+  return buildStorageMapFromBulkGetResults(results, keys);
+}
+
+export type BulkGetResult = { text: string; value: `0x${string}` };
+
+/**
+ * Build the storage-key → value map from a bulkGet response.
+ *
+ * Exported so callers (and tests) can verify the deserialization shape:
+ * viem returns named-tuple outputs as objects (`{text, value}`), not arrays.
+ * A previous version cast the result to `[string, bytes][]` and read `item[1]`,
+ * which silently dropped every strategy storage blob — the legacy upvote
+ * fallback hid the failure.
+ */
+export function buildStorageMapFromBulkGetResults(
+  results: BulkGetResult[],
+  keys: { key: `0x${string}`; operator: Address }[]
+): Map<string, `0x${string}`> {
   const map = new Map<string, `0x${string}`>();
   results.forEach((item, idx) => {
-    const value = item?.[1];
+    const value = item?.value;
     if (value && value !== "0x") {
       map.set(keys[idx].key, value);
     }

@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import { encodeAbiParameters, type Address } from "viem";
 import {
   aggregateAndRank,
+  buildStorageMapFromBulkGetResults,
   composeAndFilter,
   getTokenRankings,
+  type BulkGetResult,
   type TokenInfo,
 } from "../ranking/getTokenRankings";
 import type {
@@ -423,5 +425,55 @@ describe("composeAndFilter", () => {
       sort: "hot",
     });
     expect(result.map((t) => t.address)).toEqual([TOKEN_B, TOKEN_A]);
+  });
+});
+
+describe("buildStorageMapFromBulkGetResults", () => {
+  // viem deserializes Solidity named-tuple outputs as objects, not positional
+  // arrays. A previous version of fetchStrategyStorage cast bulkGet results
+  // as `[string, bytes][]` and read `item[1]`, which always returned undefined
+  // and silently dropped every strategy storage blob from the candidate set.
+  // The bug was masked because the legacy upvote path kept producing some
+  // tokens, just a much smaller set than the website. These tests pin the
+  // expected shape.
+  const KEY_A: `0x${string}` = `0x${"a".repeat(64)}`;
+  const KEY_B: `0x${string}` = `0x${"b".repeat(64)}`;
+  const OPERATOR: Address = "0x0000000fa09b022e5616e5a173b4b67fa2fbcf28";
+  const VALUE_A: `0x${string}` = "0xdeadbeef";
+  const VALUE_B: `0x${string}` = "0xcafebabe";
+
+  it("reads value from the .value property, not via array index", () => {
+    const results: BulkGetResult[] = [
+      { text: "", value: VALUE_A },
+      { text: "", value: VALUE_B },
+    ];
+    const keys = [
+      { key: KEY_A, operator: OPERATOR },
+      { key: KEY_B, operator: OPERATOR },
+    ];
+    const map = buildStorageMapFromBulkGetResults(results, keys);
+    expect(map.size).toBe(2);
+    expect(map.get(KEY_A)).toBe(VALUE_A);
+    expect(map.get(KEY_B)).toBe(VALUE_B);
+  });
+
+  it("skips entries whose value is empty 0x", () => {
+    const results: BulkGetResult[] = [
+      { text: "", value: "0x" },
+      { text: "", value: VALUE_B },
+    ];
+    const keys = [
+      { key: KEY_A, operator: OPERATOR },
+      { key: KEY_B, operator: OPERATOR },
+    ];
+    const map = buildStorageMapFromBulkGetResults(results, keys);
+    expect(map.size).toBe(1);
+    expect(map.has(KEY_A)).toBe(false);
+    expect(map.get(KEY_B)).toBe(VALUE_B);
+  });
+
+  it("returns an empty map when results is empty", () => {
+    const map = buildStorageMapFromBulkGetResults([], []);
+    expect(map.size).toBe(0);
   });
 });

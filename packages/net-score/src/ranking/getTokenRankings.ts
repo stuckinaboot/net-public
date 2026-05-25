@@ -274,21 +274,19 @@ async function fetchStrategyStorage({
   return buildStorageMapFromBulkGetResults(results, keys);
 }
 
+// viem returns Solidity named-tuple outputs as `{text, value}` objects, not
+// positional arrays.
 export type BulkGetResult = { text: string; value: `0x${string}` };
 
-/**
- * Build the storage-key → value map from a bulkGet response.
- *
- * Exported so callers (and tests) can verify the deserialization shape:
- * viem returns named-tuple outputs as objects (`{text, value}`), not arrays.
- * A previous version cast the result to `[string, bytes][]` and read `item[1]`,
- * which silently dropped every strategy storage blob — the legacy upvote
- * fallback hid the failure.
- */
 export function buildStorageMapFromBulkGetResults(
   results: BulkGetResult[],
   keys: { key: `0x${string}`; operator: Address }[]
 ): Map<string, `0x${string}`> {
+  if (results.length !== keys.length) {
+    throw new Error(
+      `bulkGet returned ${results.length} entries for ${keys.length} keys`
+    );
+  }
   const map = new Map<string, `0x${string}`>();
   results.forEach((item, idx) => {
     const value = item?.value;

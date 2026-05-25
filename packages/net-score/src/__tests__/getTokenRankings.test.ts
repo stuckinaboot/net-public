@@ -429,27 +429,20 @@ describe("composeAndFilter", () => {
 });
 
 describe("buildStorageMapFromBulkGetResults", () => {
-  // viem deserializes Solidity named-tuple outputs as objects, not positional
-  // arrays. A previous version of fetchStrategyStorage cast bulkGet results
-  // as `[string, bytes][]` and read `item[1]`, which always returned undefined
-  // and silently dropped every strategy storage blob from the candidate set.
-  // The bug was masked because the legacy upvote path kept producing some
-  // tokens, just a much smaller set than the website. These tests pin the
-  // expected shape.
   const KEY_A: `0x${string}` = `0x${"a".repeat(64)}`;
   const KEY_B: `0x${string}` = `0x${"b".repeat(64)}`;
   const OPERATOR: Address = "0x0000000fa09b022e5616e5a173b4b67fa2fbcf28";
   const VALUE_A: `0x${string}` = "0xdeadbeef";
   const VALUE_B: `0x${string}` = "0xcafebabe";
+  const keys = [
+    { key: KEY_A, operator: OPERATOR },
+    { key: KEY_B, operator: OPERATOR },
+  ];
 
   it("reads value from the .value property, not via array index", () => {
     const results: BulkGetResult[] = [
       { text: "", value: VALUE_A },
       { text: "", value: VALUE_B },
-    ];
-    const keys = [
-      { key: KEY_A, operator: OPERATOR },
-      { key: KEY_B, operator: OPERATOR },
     ];
     const map = buildStorageMapFromBulkGetResults(results, keys);
     expect(map.size).toBe(2);
@@ -462,10 +455,6 @@ describe("buildStorageMapFromBulkGetResults", () => {
       { text: "", value: "0x" },
       { text: "", value: VALUE_B },
     ];
-    const keys = [
-      { key: KEY_A, operator: OPERATOR },
-      { key: KEY_B, operator: OPERATOR },
-    ];
     const map = buildStorageMapFromBulkGetResults(results, keys);
     expect(map.size).toBe(1);
     expect(map.has(KEY_A)).toBe(false);
@@ -475,5 +464,12 @@ describe("buildStorageMapFromBulkGetResults", () => {
   it("returns an empty map when results is empty", () => {
     const map = buildStorageMapFromBulkGetResults([], []);
     expect(map.size).toBe(0);
+  });
+
+  it("throws when results and keys lengths disagree", () => {
+    const results: BulkGetResult[] = [{ text: "", value: VALUE_A }];
+    expect(() => buildStorageMapFromBulkGetResults(results, keys)).toThrow(
+      /1 entries for 2 keys/
+    );
   });
 });

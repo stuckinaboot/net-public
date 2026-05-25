@@ -197,6 +197,15 @@ Each upvote costs 0.000025 ETH (price fetched from contract). The `value` field 
 netp upvote user-info --address 0x... --chain-id 8453 --json
 ```
 
+**List token rankings (the leaderboard that powers `/token/<chain>/trending`):**
+```bash
+netp upvote rankings --sort trending --limit 50 --chain-id 8453 --json
+netp upvote rankings --sort top --limit 10 --chain-id 8453
+netp upvote rankings --sort recent --limit 10 --chain-id 8453
+```
+
+Sorts: `trending` (time-decayed score, recent upvotes weighted higher), `recent` (latest upvote timestamp), `top` (aggregate upvote count). Each call performs ~8 RPC reads; cache via HTTP headers in production.
+
 Upvoting only works on Base (8453).
 
 ### Agent Commands (Onchain AI Agents)

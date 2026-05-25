@@ -156,9 +156,9 @@ export function registerRankingsCommand(
     )
     .option(
       "--limit <n>",
-      "Number of tokens to return (1-100, default: 10)",
+      "Number of tokens to return (1-100, default: 50)",
       (v) => parseInt(v, 10),
-      10
+      50
     )
     .option(
       "--scan-window <n>",

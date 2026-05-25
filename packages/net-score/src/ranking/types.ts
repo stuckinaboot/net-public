@@ -28,7 +28,8 @@ export interface GetTokenRankingsOptions {
   chainId: number;
   /**
    * Maximum number of tokens to return. The function fetches and ranks more
-   * tokens than this internally to account for filtering. Default: 6.
+   * tokens than this internally to account for filtering. Default: 50 (matches
+   * the website's /token/<chain>/trending page).
    */
   maxTokens?: number;
   /** Default: "hot" */

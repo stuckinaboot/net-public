@@ -28,7 +28,7 @@ import type {
 } from "./types";
 
 const DEFAULT_MESSAGE_SCAN_WINDOW = 150;
-const DEFAULT_MAX_TOKENS = 6;
+const DEFAULT_MAX_TOKENS = 50;
 const DEFAULT_MIN_UPVOTES = 500;
 const DEFAULT_MIN_MARKET_CAP = 40_000;
 const DEFAULT_RECENCY_HOURS = 48;

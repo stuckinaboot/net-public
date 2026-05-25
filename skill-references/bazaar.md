@@ -18,9 +18,17 @@ All commands support two modes:
 
 ## Approval Spender (Important)
 
-Net Bazaar uses Seaport **directly** — `conduitKey` is always `0x00…00` (zero bytes32). There is **no conduit**. All NFT (`setApprovalForAll`) and ERC-20 (`approve`) approvals must be granted to the Seaport contract itself, not to any conduit address.
+**The bazaar CLI handles all approvals for you.** Every encode-only command (`buy-*`, `accept-*`, `create-*`, `submit-*`, `cancel-*`) returns an `approvals` array that is **exhaustive** — the CLI has already queried on-chain allowance / `isApprovedForAll` state and emitted exactly the approval transactions that are still needed. Submit each entry in `approvals` in order, then the `fulfillment` (or signed order). Do not invent extra approval transactions based on general NFT-marketplace intuition.
 
-When checking an existing allowance or `isApprovedForAll` before listing, use the Seaport address for the chain as the spender:
+In particular:
+
+- **There is no conduit.** Net Bazaar uses Seaport **directly** — `conduitKey` is always `0x00…00` (zero bytes32). Do NOT add a `setApprovalForAll` or `approve` to any "conduit" / "OpenSea conduit" / "Seaport conduit" contract — no such address exists in this flow.
+- **There is no separate "bazaar contract" to approve.** All approvals (when present) target Seaport itself, and the CLI has already built them into the `approvals` array.
+- **An empty `approvals` array means no approval is needed** — the maker has already approved Seaport for this asset. It does NOT mean "approval needed but spender unknown." Skip straight to the fulfillment.
+
+The Seaport address table below is provided for the rare case where you need to **read** allowance state independently (e.g., a UI pre-flight check). Never use it to construct an *additional* approval tx on top of what the CLI returned.
+
+When checking an existing allowance or `isApprovedForAll` independently, use the Seaport address for the chain as the spender:
 
 | Chain | Chain ID | Seaport address (spender for approvals) |
 |-------|----------|------------------------------------------|
@@ -36,7 +44,7 @@ When checking an existing allowance or `isApprovedForAll` before listing, use th
 | Ham | 5112 | `0x0000000000000068F116a894984e2DB1123eB395` |
 | Ink | 57073 | `0xD00C96804e9fF35f10C7D2a92239C351Ff3F94e5` |
 
-Note that the `approvals` array in keyless-mode output is **empty when the maker has already approved Seaport** — so an empty `approvals` array means "no approval needed", not "approval needed but spender unknown". If you need to verify the allowance yourself, query it against the Seaport address above for the chain.
+Recap: the `approvals` array in keyless-mode output is **empty when the maker has already approved Seaport** — so an empty `approvals` array means "no approval needed", not "approval needed but spender unknown." If you need to verify the allowance yourself, query it against the Seaport address above for the chain — but do not turn that verification into an extra approval tx.
 
 ## Supported Chains
 

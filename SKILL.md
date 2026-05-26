@@ -677,10 +677,14 @@ When transactions are submitted externally (e.g., via Bankr after using `--encod
 - "Show recently upvoted tokens" → `netp upvote rankings --sort recent --limit 10 --chain-id 8453 --json`
 
 ### Bazaar — NFTs and ERC-20s (use netp)
-- "List NFTs for sale" → `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json`
+- "Browse NFT listings for a collection" → `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json`
+- "List my NFT for sale" / "Create an NFT listing" → `netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --offerer 0xMyAddr --chain-id 8453` (keyless; sign the returned EIP-712 then `submit-listing`)
+- "Make an offer on an NFT collection" → `netp bazaar create-offer --nft-address 0x... --price 0.1 --offerer 0xMyAddr --chain-id 8453` (bid is paid in WETH; keyless; sign then `submit-offer`)
 - "Buy an NFT" → `netp bazaar buy-listing --order-hash 0x... --nft-address 0x... --buyer 0xMyAddr --chain-id 8453 --encode-only`
 - "What NFTs do I own?" → `netp bazaar owned-nfts --nft-address 0x... --owner 0xMyAddr --chain-id 8453 --json`
-- "List ERC-20 tokens for sale" → `netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json`
+- "Browse ERC-20 listings for a token" → `netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json`
+- "Sell my ERC-20 tokens" / "Create an ERC-20 listing" → `netp bazaar create-erc20-listing --token-address 0x... --token-amount 1000000000000000000 --price 0.05 --offerer 0xMyAddr --chain-id 8453` (keyless; sign then `submit-erc20-listing`)
+- "Make an offer on an ERC-20 token" → `netp bazaar create-erc20-offer --token-address 0x... --token-amount 1000000000000000000 --price 0.05 --offerer 0xMyAddr --chain-id 8453` (bid is paid in wrapped native currency; keyless; sign then `submit-erc20-offer`)
 - "Check ERC-20 offers for a token" → `netp bazaar list-erc20-offers --token-address 0x... --chain-id 8453 --json`
 - "Buy ERC-20 tokens from a listing" → `netp bazaar buy-erc20-listing --order-hash 0x... --token-address 0x... --buyer 0xMyAddr --chain-id 8453 --encode-only`
 - "Accept an ERC-20 offer (sell tokens for wrapped native currency)" → `netp bazaar accept-erc20-offer --order-hash 0x... --token-address 0x... --seller 0xMyAddr --chain-id 8453 --encode-only`

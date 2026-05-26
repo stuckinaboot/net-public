@@ -196,7 +196,7 @@ The agent should:
 
 Create a collection offer (bid on any token in a collection). Same dual mode as create-listing:
 
-**With private key:**
+**With private key (full flow):**
 ```bash
 netp bazaar create-offer \
   --nft-address <address> \
@@ -205,7 +205,9 @@ netp bazaar create-offer \
   --private-key 0x...
 ```
 
-**Without private key:**
+Steps executed: wrap native currency if needed, approve Seaport (directly — no conduit) to spend the wrapped native currency -> sign EIP-712 order -> submit offer on-chain.
+
+**Without private key (output EIP-712 data):**
 ```bash
 netp bazaar create-offer \
   --nft-address <address> \
@@ -214,7 +216,16 @@ netp bazaar create-offer \
   --chain-id 8453
 ```
 
-Output format is the same as create-listing. Use `submit-offer` for the follow-up.
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--nft-address` | Yes | NFT contract address. Offer applies to any token in this collection. |
+| `--price` | Yes | Bid amount in the chain's native currency unit (e.g. `0.1`). The actual currency moved on-chain is the **wrapped** native currency (WETH on Base/Ethereum) — the offerer pre-approves WETH to Seaport, and the fulfiller pulls it on accept. The offerer must hold enough WETH (or enough native currency for the CLI to wrap). |
+| `--offerer` | No | Required without `--private-key`. |
+
+`--price` is the **total** WETH the offerer is bidding, expressed as a decimal. The approval emitted in `approvals` (keyless mode) is a WETH `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above).
+
+Output format is the same as `create-listing` (EIP-712 data + approvals). Use `submit-offer` for the follow-up.
 
 ## Submit Listing
 
@@ -453,7 +464,15 @@ netp bazaar create-erc20-offer \
   --chain-id 8453
 ```
 
-`--price` is the **total** amount of the wrapped native currency (WETH on Base, wrapped HYPE on HyperEVM) the offerer is bidding for the whole `token-amount`, expressed as a decimal. The approval emitted is a wrapped-native `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). Use `submit-erc20-offer` for the follow-up.
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--token-address` | Yes | ERC-20 token contract address (the token being bid on). |
+| `--token-amount` | Yes | Amount to buy in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). |
+| `--price` | Yes | **Total** amount of the wrapped native currency (WETH on Base, wrapped HYPE on HyperEVM) bid for the whole `token-amount`, expressed as a decimal (e.g. `0.05`). |
+| `--offerer` | No | Required without `--private-key`. |
+
+The approval emitted in `approvals` (keyless mode) is a wrapped-native `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). Use `submit-erc20-offer` for the follow-up.
 
 ## Submit ERC-20 Listing
 

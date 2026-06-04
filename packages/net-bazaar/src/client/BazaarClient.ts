@@ -46,6 +46,7 @@ import {
   getErc20BazaarAddress,
   getSeaportAddress,
   getWrappedNativeCurrency,
+  getErc20QuoteToken,
   isBazaarSupportedOnChain,
   NET_SEAPORT_ZONE_ADDRESS,
 } from "../chainConfig";
@@ -645,9 +646,15 @@ export class BazaarClient {
   ): Promise<Erc20Offer[]> {
     const { tokenAddress, excludeMaker } = options;
     const tag = `[BazaarClient.processErc20Offers chain=${this.chainId}]`;
-    const weth = getWrappedNativeCurrency(this.chainId);
+    // The offer side of an ERC20 offer is the chain's quote token (USDC on
+    // Base, WETH elsewhere). Balances and validation use the same address.
+    const quoteToken = getErc20QuoteToken(this.chainId);
+    const wrappedNative = getWrappedNativeCurrency(this.chainId);
+    const offerPaymentToken = quoteToken
+      ? { address: quoteToken.address }
+      : wrappedNative;
 
-    if (!weth) {
+    if (!offerPaymentToken) {
       return [];
     }
 
@@ -672,10 +679,13 @@ export class BazaarClient {
       const offer = parseErc20OfferFromMessage(message, this.chainId, decimals);
       if (!offer) continue;
 
-      // Validate WETH token matches
+      // Validate the offer's payment token matches the chain's quote token
+      // (USDC on Base, WETH elsewhere). parseErc20OfferFromMessage already
+      // enforces this on chains with a configured quote token, but this guard
+      // also keeps legacy non-WETH offers out on chains without one.
       const order = getSeaportOrderFromMessageData(offer.messageData);
       const offerToken = order.parameters.offer?.[0]?.token?.toLowerCase();
-      if (offerToken !== weth.address.toLowerCase()) {
+      if (offerToken !== offerPaymentToken.address.toLowerCase()) {
         continue;
       }
 
@@ -729,9 +739,9 @@ export class BazaarClient {
       return [];
     }
 
-    // Validate WETH balances
+    // Validate buyer's balance in the chain's quote token
     const uniqueMakers = [...new Set(offers.map((o) => o.maker))];
-    const balances = await bulkFetchErc20Balances(this.client, weth.address, uniqueMakers);
+    const balances = await bulkFetchErc20Balances(this.client, offerPaymentToken.address, uniqueMakers);
 
     const balanceMap = new Map<string, bigint>();
     uniqueMakers.forEach((maker, index) => {
@@ -1403,16 +1413,20 @@ export class BazaarClient {
   /**
    * Prepare an ERC20 offer order for signing.
    *
-   * Returns EIP-712 typed data for the caller to sign, plus any maker approvals needed
-   * (WETH `approve` for Seaport).
+   * Returns EIP-712 typed data for the caller to sign, plus any maker approvals
+   * needed (quote-token `approve` for Seaport — USDC on Base, WETH elsewhere).
    */
   async prepareCreateErc20Offer(
     params: CreateErc20OfferParams & { offerer: `0x${string}` }
   ): Promise<PreparedOrder> {
     const seaportAddress = getSeaportAddress(this.chainId);
-    const weth = getWrappedNativeCurrency(this.chainId);
-    if (!weth) {
-      throw new Error(`No wrapped native currency configured for chain ${this.chainId}`);
+    const quoteToken = getErc20QuoteToken(this.chainId);
+    const wrappedNative = getWrappedNativeCurrency(this.chainId);
+    const paymentTokenAddress = quoteToken
+      ? quoteToken.address
+      : wrappedNative?.address;
+    if (!paymentTokenAddress) {
+      throw new Error(`No ERC20 quote token configured for chain ${this.chainId}`);
     }
 
     const counter = await this.getSeaportCounter(params.offerer);
@@ -1420,17 +1434,17 @@ export class BazaarClient {
     const { orderParameters } = buildErc20OfferOrderComponents(params, this.chainId, counter);
     const eip712 = buildEIP712OrderData(orderParameters, counter, this.chainId, seaportAddress);
 
-    // Check WETH approval
+    // Check quote-token approval for the offerer
     const approvals: WriteTransactionConfig[] = [];
-    const wethApproval = await checkErc20Approval(
+    const approval = await checkErc20Approval(
       this.client,
-      weth.address,
+      paymentTokenAddress,
       params.offerer,
       seaportAddress,
       params.priceWei
     );
-    if (wethApproval) {
-      approvals.push(wethApproval);
+    if (approval) {
+      approvals.push(approval);
     }
 
     return { eip712, approvals };

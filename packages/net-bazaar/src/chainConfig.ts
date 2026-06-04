@@ -10,6 +10,20 @@ export interface WrappedNativeCurrency {
   symbol: string;
 }
 
+/**
+ * Quote token for ERC20 bazaar trades.
+ *
+ * When set, ERC20 offers and listings on this chain use this token as the
+ * payment currency instead of the wrapped native currency / native currency.
+ * Offers pay in this token; listings receive payment in this token (ERC20
+ * consideration instead of NATIVE).
+ */
+export interface QuoteToken {
+  address: `0x${string}`;
+  symbol: string;
+  decimals: number;
+}
+
 export interface BazaarChainConfig {
   /** Main NFT listing contract */
   bazaarAddress: `0x${string}`;
@@ -29,6 +43,14 @@ export interface BazaarChainConfig {
   erc20FeeBps?: number;
   /** Wrapped native currency (WETH, etc.) */
   wrappedNativeCurrency: WrappedNativeCurrency;
+  /**
+   * Optional quote token for ERC20 bazaar trades.
+   *
+   * If set, ERC20 offers/listings on this chain use this token (e.g. USDC)
+   * for pricing instead of the wrapped native currency / native currency.
+   * If unset, offers use wrappedNativeCurrency and listings use NATIVE.
+   */
+  erc20QuoteToken?: QuoteToken;
   /** Address with high ETH balance for Seaport checks */
   highEthAddress?: `0x${string}`;
   /** Native currency symbol (lowercase) */
@@ -90,6 +112,12 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
       address: "0x4200000000000000000000000000000000000006",
       name: "Wrapped Ether",
       symbol: "WETH",
+    },
+    // ERC20 bazaar trades on Base are priced in USDC, not WETH/ETH.
+    erc20QuoteToken: {
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      symbol: "USDC",
+      decimals: 6,
     },
     currencySymbol: "eth",
   },
@@ -306,6 +334,17 @@ export function getErc20FeeBps(chainId: number): number {
  */
 export function getWrappedNativeCurrency(chainId: number): WrappedNativeCurrency | undefined {
   return BAZAAR_CHAIN_CONFIGS[chainId]?.wrappedNativeCurrency;
+}
+
+/**
+ * Get the ERC20 bazaar quote token for a chain, if one is configured.
+ *
+ * When set, ERC20 offers and listings on this chain price/settle in this
+ * token (e.g. USDC on Base) instead of WETH/native ETH. When undefined,
+ * the chain uses the legacy WETH-for-offers / native-for-listings flow.
+ */
+export function getErc20QuoteToken(chainId: number): QuoteToken | undefined {
+  return BAZAAR_CHAIN_CONFIGS[chainId]?.erc20QuoteToken;
 }
 
 /**

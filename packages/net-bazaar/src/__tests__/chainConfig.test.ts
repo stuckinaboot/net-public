@@ -7,6 +7,7 @@ import {
   getCollectionOffersAddress,
   getSeaportAddress,
   getWrappedNativeCurrency,
+  getErc20QuoteToken,
   getCurrencySymbol,
   getNftFeeBps,
   getErc20FeeBps,
@@ -101,6 +102,21 @@ describe("chainConfig", () => {
     it("returns WHYPE for HyperEVM", () => {
       const whype = getWrappedNativeCurrency(999);
       expect(whype?.symbol).toBe("WHYPE");
+    });
+  });
+
+  describe("getErc20QuoteToken", () => {
+    it("returns USDC for Base", () => {
+      const usdc = getErc20QuoteToken(8453);
+      expect(usdc?.symbol).toBe("USDC");
+      expect(usdc?.address).toBe("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913");
+      expect(usdc?.decimals).toBe(6);
+    });
+
+    it("returns undefined for chains without a configured quote token", () => {
+      expect(getErc20QuoteToken(1)).toBeUndefined();
+      expect(getErc20QuoteToken(84532)).toBeUndefined();
+      expect(getErc20QuoteToken(999)).toBeUndefined();
     });
   });
 

@@ -1,8 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { encodeAbiParameters } from "viem";
-import { parseListingFromMessage, parseErc20ListingFromMessage } from "../utils/parsing";
+import { parseListingFromMessage, parseErc20ListingFromMessage, parseErc20OfferFromMessage } from "../utils/parsing";
 import { BAZAAR_SUBMISSION_ABI } from "../abis";
-import { NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS, NET_SEAPORT_ZONE_ADDRESS } from "../chainConfig";
+import {
+  NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
+  NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
+  NET_SEAPORT_ZONE_ADDRESS,
+} from "../chainConfig";
 import { ItemType, OrderType } from "../types";
 
 // Helper to create a mock NetMessage with encoded Seaport submission data
@@ -231,7 +235,7 @@ function createMockErc20ListingMessage({
 describe("parseErc20ListingFromMessage", () => {
   it("parses a basic public ERC20 listing", () => {
     const message = createMockErc20ListingMessage();
-    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+    const listing = parseErc20ListingFromMessage(message as any, 84532, 18);
 
     expect(listing).not.toBeNull();
     expect(listing!.maker).toBe("0x1234567890123456789012345678901234567890");
@@ -249,7 +253,7 @@ describe("parseErc20ListingFromMessage", () => {
       zoneHash: privateZoneHash,
     });
 
-    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+    const listing = parseErc20ListingFromMessage(message as any, 84532, 18);
 
     expect(listing).not.toBeNull();
     expect(listing!.targetFulfiller).toBe(privateZoneHash);
@@ -261,7 +265,7 @@ describe("parseErc20ListingFromMessage", () => {
       zoneHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
     });
 
-    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+    const listing = parseErc20ListingFromMessage(message as any, 84532, 18);
 
     expect(listing).not.toBeNull();
     expect(listing!.targetFulfiller).toBeUndefined();
@@ -273,9 +277,180 @@ describe("parseErc20ListingFromMessage", () => {
       zoneHash: "0x00000000000000000000000000000000000000000000000000000000deadbeef",
     });
 
-    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+    const listing = parseErc20ListingFromMessage(message as any, 84532, 18);
 
     expect(listing).not.toBeNull();
     expect(listing!.targetFulfiller).toBeUndefined();
+  });
+
+  it("rejects legacy native-payment listings on chains with a configured USDC quote token", () => {
+    // Base (8453) is configured with USDC as quote token, so a native-payment
+    // listing must be filtered out — legacy WETH/ETH orders no longer appear.
+    const message = createMockErc20ListingMessage();
+    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+    expect(listing).toBeNull();
+  });
+});
+
+// Helper to create a mock USDC-denominated ERC20 listing (consideration = ERC20 USDC)
+const BASE_USDC_ADDRESS =
+  "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
+
+function createMockErc20UsdcListingMessage({
+  offerer = "0x1234567890123456789012345678901234567890" as `0x${string}`,
+  tokenAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" as `0x${string}`,
+  tokenAmount = BigInt("1000000000000000000"),
+  price = BigInt("5000000"), // 5 USDC (6 decimals)
+  quoteToken = BASE_USDC_ADDRESS,
+}: {
+  offerer?: `0x${string}`;
+  tokenAddress?: `0x${string}`;
+  tokenAmount?: bigint;
+  price?: bigint;
+  quoteToken?: `0x${string}`;
+} = {}) {
+  const submission = {
+    parameters: {
+      offerer,
+      zone: NET_SEAPORT_ZONE_ADDRESS,
+      offer: [
+        {
+          itemType: ItemType.ERC20,
+          token: tokenAddress,
+          identifierOrCriteria: BigInt(0),
+          startAmount: tokenAmount,
+          endAmount: tokenAmount,
+        },
+      ],
+      consideration: [
+        {
+          itemType: ItemType.ERC20,
+          token: quoteToken,
+          identifierOrCriteria: BigInt(0),
+          startAmount: price,
+          endAmount: price,
+          recipient: offerer,
+        },
+      ],
+      orderType: OrderType.FULL_RESTRICTED,
+      startTime: BigInt(0),
+      endTime: BigInt(Math.floor(Date.now() / 1000) + 86400),
+      zoneHash: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+      salt: BigInt(12345),
+      conduitKey: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+      totalOriginalConsiderationItems: BigInt(1),
+    },
+    counter: BigInt(0),
+    signature: "0x1234" as `0x${string}`,
+  };
+
+  const data = encodeAbiParameters(BAZAAR_SUBMISSION_ABI, [submission]);
+  return {
+    sender: offerer,
+    text: "",
+    data,
+    timestamp: BigInt(Math.floor(Date.now() / 1000)),
+  };
+}
+
+describe("parseErc20ListingFromMessage with USDC quote token (Base)", () => {
+  it("parses a USDC-denominated ERC20 listing on Base", () => {
+    const message = createMockErc20UsdcListingMessage();
+    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+
+    expect(listing).not.toBeNull();
+    expect(listing!.tokenAddress.toLowerCase()).toBe("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+    expect(listing!.tokenAmount).toBe(BigInt("1000000000000000000"));
+    expect(listing!.priceWei).toBe(BigInt("5000000"));
+  });
+
+  it("rejects a USDC listing whose consideration is a different ERC20 token", () => {
+    const wrongToken = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" as `0x${string}`;
+    const message = createMockErc20UsdcListingMessage({ quoteToken: wrongToken });
+    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+    expect(listing).toBeNull();
+  });
+});
+
+// Helper to create a mock ERC20 offer message (buyer offers `quoteToken` for `tokenAddress`)
+function createMockErc20OfferMessage({
+  offerer = "0x1234567890123456789012345678901234567890" as `0x${string}`,
+  tokenAddress = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" as `0x${string}`,
+  tokenAmount = BigInt("1000000000000000000"),
+  price = BigInt("5000000"),
+  quoteToken = BASE_USDC_ADDRESS,
+}: {
+  offerer?: `0x${string}`;
+  tokenAddress?: `0x${string}`;
+  tokenAmount?: bigint;
+  price?: bigint;
+  quoteToken?: `0x${string}`;
+} = {}) {
+  const submission = {
+    parameters: {
+      offerer,
+      zone: NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
+      offer: [
+        {
+          itemType: ItemType.ERC20,
+          token: quoteToken,
+          identifierOrCriteria: BigInt(0),
+          startAmount: price,
+          endAmount: price,
+        },
+      ],
+      consideration: [
+        {
+          itemType: ItemType.ERC20,
+          token: tokenAddress,
+          identifierOrCriteria: BigInt(0),
+          startAmount: tokenAmount,
+          endAmount: tokenAmount,
+          recipient: offerer,
+        },
+      ],
+      orderType: OrderType.FULL_RESTRICTED,
+      startTime: BigInt(0),
+      endTime: BigInt(Math.floor(Date.now() / 1000) + 86400),
+      zoneHash: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+      salt: BigInt(12345),
+      conduitKey: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+      totalOriginalConsiderationItems: BigInt(1),
+    },
+    counter: BigInt(0),
+    signature: "0x1234" as `0x${string}`,
+  };
+
+  const data = encodeAbiParameters(BAZAAR_SUBMISSION_ABI, [submission]);
+  return {
+    sender: offerer,
+    text: "",
+    data,
+    timestamp: BigInt(Math.floor(Date.now() / 1000)),
+  };
+}
+
+describe("parseErc20OfferFromMessage with USDC quote token (Base)", () => {
+  it("parses a USDC-denominated ERC20 offer on Base", () => {
+    const message = createMockErc20OfferMessage();
+    const offer = parseErc20OfferFromMessage(message as any, 8453, 18);
+
+    expect(offer).not.toBeNull();
+    expect(offer!.tokenAddress.toLowerCase()).toBe("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+    expect(offer!.priceWei).toBe(BigInt("5000000"));
+  });
+
+  it("rejects a legacy WETH-denominated offer on Base", () => {
+    const wethAddress = "0x4200000000000000000000000000000000000006" as `0x${string}`;
+    const message = createMockErc20OfferMessage({ quoteToken: wethAddress });
+    const offer = parseErc20OfferFromMessage(message as any, 8453, 18);
+    expect(offer).toBeNull();
+  });
+
+  it("accepts WETH-denominated offers on chains without a USDC quote token", () => {
+    const wethAddress = "0x4200000000000000000000000000000000000006" as `0x${string}`;
+    const message = createMockErc20OfferMessage({ quoteToken: wethAddress });
+    const offer = parseErc20OfferFromMessage(message as any, 84532, 18);
+    expect(offer).not.toBeNull();
   });
 });

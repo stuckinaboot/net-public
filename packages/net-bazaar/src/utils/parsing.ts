@@ -12,7 +12,12 @@ import {
   formatPrice,
   formatPricePerToken,
 } from "./seaport";
-import { getCurrencySymbol, NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS, NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS } from "../chainConfig";
+import {
+  getCurrencySymbol,
+  getErc20QuoteToken,
+  NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
+  NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
+} from "../chainConfig";
 
 /**
  * Parse a Net message into an NFT listing
@@ -205,15 +210,28 @@ export function parseErc20OfferFromMessage(
       return null;
     }
 
-    // ERC20 offers have WETH in the offer array
+    // ERC20 offers have the quote token (WETH or USDC) in the offer array
     const offerItem = parameters.offer[0];
     if (!offerItem || offerItem.itemType !== ItemType.ERC20) {
       return null;
     }
 
-    // The ERC20 token being purchased is in the consideration array
+    // On chains with a configured ERC20 quote token, strictly require the
+    // offer item to be that token. This naturally hides legacy WETH orders
+    // on chains that have migrated to USDC.
+    const offerTokenLower = offerItem.token.toLowerCase();
+    const quoteToken = getErc20QuoteToken(chainId);
+    if (quoteToken && offerTokenLower !== quoteToken.address.toLowerCase()) {
+      return null;
+    }
+
+    // The ERC20 token being purchased is in the consideration array.
+    // It must be different from the quote token (otherwise the fee/payment
+    // items would shadow the actual traded token).
     const erc20Consideration = parameters.consideration.find(
-      (item) => item.itemType === ItemType.ERC20
+      (item) =>
+        item.itemType === ItemType.ERC20 &&
+        item.token.toLowerCase() !== offerTokenLower
     );
 
     if (!erc20Consideration) {
@@ -297,6 +315,22 @@ export function parseErc20ListingFromMessage(
     const tokenAmount = offerItem.startAmount;
     if (tokenAmount === BigInt(0)) {
       return null;
+    }
+
+    // On chains with a configured ERC20 quote token, strictly require every
+    // consideration item to be that quote token. This hides legacy
+    // native-payment listings on chains that have migrated to USDC.
+    const quoteToken = getErc20QuoteToken(chainId);
+    if (quoteToken) {
+      const quoteAddrLower = quoteToken.address.toLowerCase();
+      const allMatch = parameters.consideration.every(
+        (item) =>
+          item.itemType === ItemType.ERC20 &&
+          item.token.toLowerCase() === quoteAddrLower
+      );
+      if (!allMatch) {
+        return null;
+      }
     }
 
     const priceWei = getTotalConsiderationAmount(parameters);

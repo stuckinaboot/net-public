@@ -182,7 +182,9 @@ describe("buildCollectionOfferOrderComponents", () => {
 });
 
 describe("buildErc20OfferOrderComponents", () => {
-  it("builds an ERC20 offer (chain 8453, 0% fee)", () => {
+  const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
+
+  it("builds an ERC20 offer (chain 8453, 0% fee) using USDC as the quote token", () => {
     const { orderParameters } = buildErc20OfferOrderComponents(
       {
         tokenAddress: TOKEN_ADDRESS,
@@ -194,8 +196,9 @@ describe("buildErc20OfferOrderComponents", () => {
       BigInt(0)
     );
 
-    // Offer: WETH
+    // Offer: USDC payment from the buyer
     expect(orderParameters.offer[0].itemType).toBe(ItemType.ERC20);
+    expect(orderParameters.offer[0].token.toLowerCase()).toBe(BASE_USDC.toLowerCase());
 
     // Consideration: ERC20 tokens (no fee item on a 0% chain)
     expect(orderParameters.consideration).toHaveLength(1);
@@ -212,20 +215,39 @@ describe("buildErc20OfferOrderComponents", () => {
         priceWei: BigInt("1000000000000000000"),
         offerer: OFFERER,
       },
-      84532, // baseSepolia: default fees (5% NFT, 1% ERC20)
+      84532, // baseSepolia: default fees (5% NFT, 1% ERC20), no USDC quote token
       BigInt(0)
     );
 
-    // Consideration[1] is the fee item (WETH to feeCollector)
+    // Consideration[1] is the fee item (WETH to feeCollector on this chain)
     expect(orderParameters.consideration).toHaveLength(2);
     const feeAmount = orderParameters.consideration[1].startAmount;
     // Fee = ceiling(1e18 * 100 / 10000) = 10000000000000000 (1%)
     expect(feeAmount).toBe(BigInt("10000000000000000"));
   });
+
+  it("uses WETH (not USDC) on chains without an erc20QuoteToken", () => {
+    const { orderParameters } = buildErc20OfferOrderComponents(
+      {
+        tokenAddress: TOKEN_ADDRESS,
+        tokenAmount: BigInt("1000000"),
+        priceWei: BigInt("1000000000000000000"),
+        offerer: OFFERER,
+      },
+      84532, // baseSepolia: no erc20QuoteToken configured
+      BigInt(0)
+    );
+
+    // Offer should be WETH on chains without a quote token override
+    const wethAddress = "0x4200000000000000000000000000000000000006";
+    expect(orderParameters.offer[0].token.toLowerCase()).toBe(wethAddress);
+  });
 });
 
 describe("buildErc20ListingOrderComponents", () => {
-  it("applies 1% ERC20 fee on default-fee chains (not 5% NFT fee)", () => {
+  const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
+
+  it("uses native consideration and applies 1% fee on chains without a quote token", () => {
     const { orderParameters } = buildErc20ListingOrderComponents(
       {
         tokenAddress: TOKEN_ADDRESS,
@@ -233,7 +255,7 @@ describe("buildErc20ListingOrderComponents", () => {
         priceWei: BigInt("1000000000000000000"),
         offerer: OFFERER,
       },
-      84532,
+      84532, // baseSepolia: no quote token configured
       BigInt(0)
     );
 
@@ -244,12 +266,37 @@ describe("buildErc20ListingOrderComponents", () => {
     // Consideration: native payment + fee (ceiling division for ERC20s)
     expect(orderParameters.consideration).toHaveLength(2);
     expect(orderParameters.consideration[0].itemType).toBe(ItemType.NATIVE);
+    expect(orderParameters.consideration[1].itemType).toBe(ItemType.NATIVE);
 
     const sellerAmount = orderParameters.consideration[0].startAmount;
     const feeAmount = orderParameters.consideration[1].startAmount;
     // Fee = ceiling(1e18 * 100 / 10000) = 10000000000000000 (1%)
     expect(feeAmount).toBe(BigInt("10000000000000000"));
     expect(sellerAmount + feeAmount).toBe(BigInt("1000000000000000000"));
+  });
+
+  it("uses USDC consideration on Base (chain 8453) instead of native ETH", () => {
+    const { orderParameters } = buildErc20ListingOrderComponents(
+      {
+        tokenAddress: TOKEN_ADDRESS,
+        tokenAmount: BigInt("1000000000000000000"), // 1 token, 18 decimals
+        priceWei: BigInt("5000000"), // 5 USDC (6 decimals)
+        offerer: OFFERER,
+      },
+      8453,
+      BigInt(0)
+    );
+
+    // Offer: ERC20 tokens being sold
+    expect(orderParameters.offer[0].itemType).toBe(ItemType.ERC20);
+    expect(orderParameters.offer[0].token).toBe(TOKEN_ADDRESS);
+
+    // Consideration must be ERC20 USDC (0% fee on Base means a single item)
+    expect(orderParameters.consideration).toHaveLength(1);
+    expect(orderParameters.consideration[0].itemType).toBe(ItemType.ERC20);
+    expect(orderParameters.consideration[0].token.toLowerCase()).toBe(BASE_USDC.toLowerCase());
+    expect(orderParameters.consideration[0].startAmount).toBe(BigInt("5000000"));
+    expect(orderParameters.consideration[0].recipient).toBe(OFFERER);
   });
 
   it("supports private orders", () => {

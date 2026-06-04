@@ -46,7 +46,7 @@ import {
   getErc20BazaarAddress,
   getSeaportAddress,
   getWrappedNativeCurrency,
-  getErc20QuoteToken,
+  getErc20PaymentToken,
   isBazaarSupportedOnChain,
   NET_SEAPORT_ZONE_ADDRESS,
 } from "../chainConfig";
@@ -646,17 +646,13 @@ export class BazaarClient {
   ): Promise<Erc20Offer[]> {
     const { tokenAddress, excludeMaker } = options;
     const tag = `[BazaarClient.processErc20Offers chain=${this.chainId}]`;
-    // The offer side of an ERC20 offer is the chain's quote token (USDC on
-    // Base, WETH elsewhere). Balances and validation use the same address.
-    const quoteToken = getErc20QuoteToken(this.chainId);
-    const wrappedNative = getWrappedNativeCurrency(this.chainId);
-    const offerPaymentToken = quoteToken
-      ? { address: quoteToken.address }
-      : wrappedNative;
-
-    if (!offerPaymentToken) {
+    // The offer side of an ERC20 offer is the chain's payment token
+    // (USDC on Base, WETH elsewhere). Balances and validation use the same address.
+    const paymentToken = getErc20PaymentToken(this.chainId);
+    if (!paymentToken) {
       return [];
     }
+    const paymentTokenAddressLower = paymentToken.address.toLowerCase();
 
     // Resolve decimals: one shot for single-token queries, otherwise warm the
     // cache for every distinct consideration token in parallel before parsing.
@@ -679,13 +675,13 @@ export class BazaarClient {
       const offer = parseErc20OfferFromMessage(message, this.chainId, decimals);
       if (!offer) continue;
 
-      // Validate the offer's payment token matches the chain's quote token
+      // Validate the offer's payment token matches the chain's payment token
       // (USDC on Base, WETH elsewhere). parseErc20OfferFromMessage already
       // enforces this on chains with a configured quote token, but this guard
       // also keeps legacy non-WETH offers out on chains without one.
       const order = getSeaportOrderFromMessageData(offer.messageData);
       const offerToken = order.parameters.offer?.[0]?.token?.toLowerCase();
-      if (offerToken !== offerPaymentToken.address.toLowerCase()) {
+      if (offerToken !== paymentTokenAddressLower) {
         continue;
       }
 
@@ -739,9 +735,9 @@ export class BazaarClient {
       return [];
     }
 
-    // Validate buyer's balance in the chain's quote token
+    // Validate buyer's balance in the chain's payment token
     const uniqueMakers = [...new Set(offers.map((o) => o.maker))];
-    const balances = await bulkFetchErc20Balances(this.client, offerPaymentToken.address, uniqueMakers);
+    const balances = await bulkFetchErc20Balances(this.client, paymentToken.address, uniqueMakers);
 
     const balanceMap = new Map<string, bigint>();
     uniqueMakers.forEach((maker, index) => {
@@ -1420,13 +1416,9 @@ export class BazaarClient {
     params: CreateErc20OfferParams & { offerer: `0x${string}` }
   ): Promise<PreparedOrder> {
     const seaportAddress = getSeaportAddress(this.chainId);
-    const quoteToken = getErc20QuoteToken(this.chainId);
-    const wrappedNative = getWrappedNativeCurrency(this.chainId);
-    const paymentTokenAddress = quoteToken
-      ? quoteToken.address
-      : wrappedNative?.address;
-    if (!paymentTokenAddress) {
-      throw new Error(`No ERC20 quote token configured for chain ${this.chainId}`);
+    const paymentToken = getErc20PaymentToken(this.chainId);
+    if (!paymentToken) {
+      throw new Error(`No ERC20 payment token configured for chain ${this.chainId}`);
     }
 
     const counter = await this.getSeaportCounter(params.offerer);
@@ -1434,11 +1426,11 @@ export class BazaarClient {
     const { orderParameters } = buildErc20OfferOrderComponents(params, this.chainId, counter);
     const eip712 = buildEIP712OrderData(orderParameters, counter, this.chainId, seaportAddress);
 
-    // Check quote-token approval for the offerer
+    // Check payment-token approval for the offerer
     const approvals: WriteTransactionConfig[] = [];
     const approval = await checkErc20Approval(
       this.client,
-      paymentTokenAddress,
+      paymentToken.address,
       params.offerer,
       seaportAddress,
       params.priceWei

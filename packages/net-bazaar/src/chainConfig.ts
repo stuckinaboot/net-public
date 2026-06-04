@@ -348,6 +348,26 @@ export function getErc20QuoteToken(chainId: number): QuoteToken | undefined {
 }
 
 /**
+ * Resolve the ERC20 token used to pay for offers (and to receive payment in
+ * listings) on a chain.
+ *
+ * Returns the configured `erc20QuoteToken` if set (e.g. USDC on Base),
+ * otherwise the wrapped native currency synthesized as a 18-decimal quote
+ * token. Returns undefined when neither is configured.
+ *
+ * This is the single source of truth for "what token denominates ERC20
+ * bazaar trades?" — call sites that previously combined `getErc20QuoteToken`
+ * and `getWrappedNativeCurrency` should use this instead.
+ */
+export function getErc20PaymentToken(chainId: number): QuoteToken | undefined {
+  const quote = BAZAAR_CHAIN_CONFIGS[chainId]?.erc20QuoteToken;
+  if (quote) return quote;
+  const weth = BAZAAR_CHAIN_CONFIGS[chainId]?.wrappedNativeCurrency;
+  if (!weth) return undefined;
+  return { address: weth.address, symbol: weth.symbol, decimals: 18 };
+}
+
+/**
  * Get currency symbol for a chain (lowercase)
  */
 export function getCurrencySymbol(chainId: number): string {

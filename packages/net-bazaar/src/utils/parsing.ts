@@ -219,11 +219,9 @@ export function parseErc20OfferFromMessage(
     // On chains with a configured ERC20 quote token, strictly require the
     // offer item to be that token. This naturally hides legacy WETH orders
     // on chains that have migrated to USDC.
+    const offerTokenLower = offerItem.token.toLowerCase();
     const quoteToken = getErc20QuoteToken(chainId);
-    if (
-      quoteToken &&
-      offerItem.token.toLowerCase() !== quoteToken.address.toLowerCase()
-    ) {
+    if (quoteToken && offerTokenLower !== quoteToken.address.toLowerCase()) {
       return null;
     }
 
@@ -233,7 +231,7 @@ export function parseErc20OfferFromMessage(
     const erc20Consideration = parameters.consideration.find(
       (item) =>
         item.itemType === ItemType.ERC20 &&
-        item.token.toLowerCase() !== offerItem.token.toLowerCase()
+        item.token.toLowerCase() !== offerTokenLower
     );
 
     if (!erc20Consideration) {
@@ -324,10 +322,11 @@ export function parseErc20ListingFromMessage(
     // native-payment listings on chains that have migrated to USDC.
     const quoteToken = getErc20QuoteToken(chainId);
     if (quoteToken) {
+      const quoteAddrLower = quoteToken.address.toLowerCase();
       const allMatch = parameters.consideration.every(
         (item) =>
           item.itemType === ItemType.ERC20 &&
-          item.token.toLowerCase() === quoteToken.address.toLowerCase()
+          item.token.toLowerCase() === quoteAddrLower
       );
       if (!allMatch) {
         return null;

@@ -26,6 +26,7 @@ import {
   getErc20FeeBps,
   getWrappedNativeCurrency,
   getErc20QuoteToken,
+  getErc20PaymentToken,
   NET_SEAPORT_ZONE_ADDRESS,
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
   NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
@@ -268,22 +269,6 @@ export function buildCollectionOfferOrderComponents(
 }
 
 /**
- * Resolve the ERC20 quote token for offers/listings on a chain.
- *
- * Returns the configured `erc20QuoteToken` if set (e.g. USDC on Base), otherwise
- * falls back to the wrapped native currency (e.g. WETH).
- */
-function getOfferQuoteTokenAddress(chainId: number): `0x${string}` {
-  const quote = getErc20QuoteToken(chainId);
-  if (quote) return quote.address;
-  const weth = getWrappedNativeCurrency(chainId);
-  if (!weth) {
-    throw new Error(`No ERC20 quote token configured for chain ${chainId}`);
-  }
-  return weth.address;
-}
-
-/**
  * Build order components for an ERC20 offer (buying ERC20 tokens with the quote token).
  *
  * Offer: quote token payment (USDC on Base, WETH elsewhere)
@@ -294,7 +279,11 @@ export function buildErc20OfferOrderComponents(
   chainId: number,
   counter: bigint
 ): { orderParameters: SeaportOrderParameters; counter: bigint } {
-  const quoteTokenAddress = getOfferQuoteTokenAddress(chainId);
+  const paymentToken = getErc20PaymentToken(chainId);
+  if (!paymentToken) {
+    throw new Error(`No ERC20 payment token configured for chain ${chainId}`);
+  }
+  const quoteTokenAddress = paymentToken.address;
 
   const feeBps = getErc20FeeBps(chainId);
   const feeAmount = calculateFee(params.priceWei, feeBps, true); // Ceiling division for ERC20s

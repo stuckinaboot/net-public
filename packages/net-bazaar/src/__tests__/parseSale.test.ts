@@ -65,6 +65,8 @@ function createMockStoredSaleData({
   amount = BigInt(1),
   itemType = ItemType.ERC721 as number,
   considerationAmount = BigInt("1000000000000000000"), // 1 ETH
+  considerationItemType = 0 as number, // NATIVE by default
+  considerationToken = ZERO_ADDRESS as `0x${string}`,
 }: {
   timestamp?: bigint;
   orderHash?: `0x${string}`;
@@ -75,6 +77,8 @@ function createMockStoredSaleData({
   amount?: bigint;
   itemType?: number;
   considerationAmount?: bigint;
+  considerationItemType?: number;
+  considerationToken?: `0x${string}`;
 } = {}): `0x${string}` {
   return encodeAbiParameters(ZONE_STORED_SALE_ABI, [
     timestamp,
@@ -94,8 +98,8 @@ function createMockStoredSaleData({
       ],
       consideration: [
         {
-          itemType: 0, // NATIVE
-          token: ZERO_ADDRESS,
+          itemType: considerationItemType,
+          token: considerationToken,
           identifier: BigInt(0),
           amount: considerationAmount,
           recipient: offerer,
@@ -130,12 +134,16 @@ describe("parseSaleFromStoredData", () => {
   });
 
   it("parses an ERC20 sale with custom amount in USDC on Base", () => {
-    // Base's ERC20 bazaar prices in USDC (6 decimals), so 2 USDC =
-    // 2_000_000 base units. The price field should format using the quote
-    // token's decimals, not assume 18.
+    // Base's ERC20 bazaar pays sellers in USDC, so the on-chain
+    // consideration is an ERC20 item pointing at USDC (6 decimals).
+    // The parser should pick up the payment token from the consideration
+    // side and format price using USDC's decimals + symbol.
+    const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
     const data = createMockStoredSaleData({
       itemType: ItemType.ERC20,
       amount: BigInt("500000000000000000000"), // 500 tokens
+      considerationItemType: ItemType.ERC20,
+      considerationToken: USDC,
       considerationAmount: BigInt("2000000"), // 2 USDC
     });
     const sale = parseSaleFromStoredData(data, 8453);

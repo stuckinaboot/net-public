@@ -15,9 +15,30 @@ import {
 import {
   getCurrencySymbol,
   getErc20QuoteToken,
+  QuoteToken,
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
   NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
 } from "../chainConfig";
+
+/**
+ * Resolve display fields (decimals + lowercased symbol) for a parsed
+ * ERC20 trade's payment side.
+ *
+ * - If a `quoteToken` is provided (e.g. USDC on Base), use its decimals
+ *   and symbol so prices format in that token.
+ * - Otherwise fall back to 18 decimals and the chain's native currency
+ *   symbol — matches the legacy WETH-for-offers / NATIVE-for-listings
+ *   shape on chains without a configured quote token.
+ */
+function resolvePaymentDisplay(
+  quoteToken: QuoteToken | undefined,
+  chainId: number
+): { decimals: number; symbol: string } {
+  if (quoteToken) {
+    return { decimals: quoteToken.decimals, symbol: quoteToken.symbol.toLowerCase() };
+  }
+  return { decimals: 18, symbol: getCurrencySymbol(chainId) };
+}
 
 /**
  * Parse a Net message into an NFT listing
@@ -247,13 +268,8 @@ export function parseErc20OfferFromMessage(
     const priceWei = offerItem.startAmount;
     const pricePerTokenWei = priceWei / tokenAmount;
 
-    // The payment side is the chain's quote token (USDC on Base) when one is
-    // configured, otherwise the wrapped native currency at 18 decimals. Use
-    // its decimals + symbol so a 1 USDC offer renders as 1.00 USDC, not
-    // 1e-12 ETH.
-    const paymentDecimals = quoteToken?.decimals ?? 18;
-    const paymentSymbol = quoteToken?.symbol.toLowerCase()
-      ?? getCurrencySymbol(chainId);
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
 
     return {
       maker: parameters.offerer,
@@ -354,12 +370,8 @@ export function parseErc20ListingFromMessage(
         ? parameters.zoneHash
         : undefined;
 
-    // Payment side: USDC on a chain with a configured quote token, native
-    // currency (18 decimals) otherwise. See parseErc20OfferFromMessage for
-    // the same shape.
-    const paymentDecimals = quoteToken?.decimals ?? 18;
-    const paymentSymbol = quoteToken?.symbol.toLowerCase()
-      ?? getCurrencySymbol(chainId);
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
 
     return {
       maker: parameters.offerer,
@@ -475,14 +487,20 @@ export function parseSaleFromStoredData(
       BigInt(0)
     );
 
-    // For ERC20 sales (offer side is an ERC20 token), the consideration is
-    // paid in the chain's bazaar quote token — USDC on Base, native ETH
-    // elsewhere. NFT sales always pay in native currency.
-    const isErc20Sale = (offerItem.itemType as ItemType) === ItemType.ERC20;
-    const quoteToken = isErc20Sale ? getErc20QuoteToken(chainId) : undefined;
-    const paymentDecimals = quoteToken?.decimals ?? 18;
-    const paymentSymbol = quoteToken?.symbol.toLowerCase()
-      ?? getCurrencySymbol(chainId);
+    // The currency the seller received is the consideration's payment side.
+    // For ERC20-paying sales (ERC20 listings fulfilled on chains with a
+    // configured quote token — USDC on Base today), consideration[0] is an
+    // ERC20 item and we format with that token's decimals + symbol. For
+    // native-paying sales (NFT listings, or ERC20 listings on legacy
+    // native-payment chains), consideration[0] is NATIVE and we keep the
+    // 18-decimals + native-symbol shape.
+    const paymentItem = zoneParameters.consideration[0];
+    const isErc20Paying =
+      paymentItem != null &&
+      (paymentItem.itemType as ItemType) === ItemType.ERC20;
+    const quoteToken = isErc20Paying ? getErc20QuoteToken(chainId) : undefined;
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
 
     return {
       seller: zoneParameters.offerer as `0x${string}`,

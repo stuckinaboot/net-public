@@ -15,9 +15,30 @@ import {
 import {
   getCurrencySymbol,
   getErc20QuoteToken,
+  QuoteToken,
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
   NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
 } from "../chainConfig";
+
+/**
+ * Resolve display fields (decimals + lowercased symbol) for a parsed
+ * ERC20 trade's payment side.
+ *
+ * - If a `quoteToken` is provided (e.g. USDC on Base), use its decimals
+ *   and symbol so prices format in that token.
+ * - Otherwise fall back to 18 decimals and the chain's native currency
+ *   symbol — matches the legacy WETH-for-offers / NATIVE-for-listings
+ *   shape on chains without a configured quote token.
+ */
+function resolvePaymentDisplay(
+  quoteToken: QuoteToken | undefined,
+  chainId: number
+): { decimals: number; symbol: string } {
+  if (quoteToken) {
+    return { decimals: quoteToken.decimals, symbol: quoteToken.symbol.toLowerCase() };
+  }
+  return { decimals: 18, symbol: getCurrencySymbol(chainId) };
+}
 
 /**
  * Parse a Net message into an NFT listing
@@ -247,15 +268,18 @@ export function parseErc20OfferFromMessage(
     const priceWei = offerItem.startAmount;
     const pricePerTokenWei = priceWei / tokenAmount;
 
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
+
     return {
       maker: parameters.offerer,
       tokenAddress: erc20Consideration.token,
       tokenAmount,
       priceWei,
       pricePerTokenWei,
-      price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(priceWei, paymentDecimals),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals, paymentDecimals),
+      currency: paymentSymbol,
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
       orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
@@ -346,15 +370,18 @@ export function parseErc20ListingFromMessage(
         ? parameters.zoneHash
         : undefined;
 
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
+
     return {
       maker: parameters.offerer,
       tokenAddress: offerItem.token,
       tokenAmount,
       priceWei,
       pricePerTokenWei,
-      price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(priceWei, paymentDecimals),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals, paymentDecimals),
+      currency: paymentSymbol,
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
       orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
@@ -460,6 +487,21 @@ export function parseSaleFromStoredData(
       BigInt(0)
     );
 
+    // The currency the seller received is the consideration's payment side.
+    // For ERC20-paying sales (ERC20 listings fulfilled on chains with a
+    // configured quote token — USDC on Base today), consideration[0] is an
+    // ERC20 item and we format with that token's decimals + symbol. For
+    // native-paying sales (NFT listings, or ERC20 listings on legacy
+    // native-payment chains), consideration[0] is NATIVE and we keep the
+    // 18-decimals + native-symbol shape.
+    const paymentItem = zoneParameters.consideration[0];
+    const isErc20Paying =
+      paymentItem != null &&
+      (paymentItem.itemType as ItemType) === ItemType.ERC20;
+    const quoteToken = isErc20Paying ? getErc20QuoteToken(chainId) : undefined;
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
+
     return {
       seller: zoneParameters.offerer as `0x${string}`,
       buyer: zoneParameters.fulfiller as `0x${string}`,
@@ -468,8 +510,8 @@ export function parseSaleFromStoredData(
       amount: offerItem.amount,
       itemType: offerItem.itemType as ItemType,
       priceWei: totalConsideration,
-      price: formatPrice(totalConsideration),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(totalConsideration, paymentDecimals),
+      currency: paymentSymbol,
       timestamp: Number(timestamp),
       orderHash: zoneParameters.orderHash,
     };

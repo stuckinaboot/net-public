@@ -364,6 +364,19 @@ describe("parseErc20ListingFromMessage with USDC quote token (Base)", () => {
     expect(listing!.priceWei).toBe(BigInt("5000000"));
   });
 
+  it("formats price/pricePerToken/currency using USDC decimals + symbol on Base", () => {
+    // 5 USDC = 5_000_000 base units for a 1-token (18-decimal) listing.
+    // price should read as 5 (USDC), not 5e-12 (the WETH-assumed value),
+    // and the currency symbol should be "usdc", not "eth".
+    const message = createMockErc20UsdcListingMessage();
+    const listing = parseErc20ListingFromMessage(message as any, 8453, 18);
+
+    expect(listing).not.toBeNull();
+    expect(listing!.price).toBe(5);
+    expect(listing!.pricePerToken).toBe("5");
+    expect(listing!.currency).toBe("usdc");
+  });
+
   it("rejects a USDC listing whose consideration is a different ERC20 token", () => {
     const wrongToken = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" as `0x${string}`;
     const message = createMockErc20UsdcListingMessage({ quoteToken: wrongToken });
@@ -438,6 +451,18 @@ describe("parseErc20OfferFromMessage with USDC quote token (Base)", () => {
     expect(offer).not.toBeNull();
     expect(offer!.tokenAddress.toLowerCase()).toBe("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
     expect(offer!.priceWei).toBe(BigInt("5000000"));
+  });
+
+  it("formats price/pricePerToken/currency using USDC decimals + symbol on Base", () => {
+    // Same intent as the listing test above — make sure offers don't end
+    // up displayed as 5e-12 ETH instead of 5 USDC.
+    const message = createMockErc20OfferMessage();
+    const offer = parseErc20OfferFromMessage(message as any, 8453, 18);
+
+    expect(offer).not.toBeNull();
+    expect(offer!.price).toBe(5);
+    expect(offer!.pricePerToken).toBe("5");
+    expect(offer!.currency).toBe("usdc");
   });
 
   it("rejects a legacy WETH-denominated offer on Base", () => {

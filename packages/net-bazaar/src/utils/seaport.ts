@@ -2,7 +2,7 @@
  * Seaport-related utilities for decoding and computing order hashes
  */
 
-import { decodeAbiParameters, formatEther } from "viem";
+import { decodeAbiParameters, formatUnits } from "viem";
 import { Seaport } from "@opensea/seaport-js";
 import { ethers } from "ethers";
 import { BAZAAR_SUBMISSION_ABI } from "../abis";
@@ -169,10 +169,15 @@ export function getTotalConsiderationAmount(parameters: SeaportOrderParameters):
 }
 
 /**
- * Format price from wei to a display number.
+ * Format a payment-token amount from base units to a display number.
+ *
+ * `paymentDecimals` defaults to 18 so existing callers (NFT listings priced
+ * in native ETH, collection offers in WETH) keep their behavior. Pass a
+ * different value when the payment token has a different scale — e.g. 6
+ * for USDC-denominated ERC20 bazaar orders on Base.
  */
-export function formatPrice(priceWei: bigint): number {
-  return parseFloat(formatEther(priceWei));
+export function formatPrice(priceWei: bigint, paymentDecimals: number = 18): number {
+  return parseFloat(formatUnits(priceWei, paymentDecimals));
 }
 
 /**
@@ -180,13 +185,21 @@ export function formatPrice(priceWei: bigint): number {
  *
  * Plain `priceWei / tokenAmount` is integer division; when the token amount
  * (in raw units) exceeds the wei value the result truncates to 0.
- * By scaling priceWei up by 10^18 before dividing, we keep 18 extra digits
- * of precision, then `formatEther` converts the result back into a
- * human-readable decimal string.
+ * By scaling priceWei up by 10^tokenDecimals before dividing, we keep that
+ * many extra digits of precision, then `formatUnits(_, paymentDecimals)`
+ * converts the result back into a human-readable decimal string in the
+ * payment token's units.
+ *
+ * Defaults preserve the original WETH-only behavior (both decimals = 18).
  */
-export function formatPricePerToken(priceWei: bigint, tokenAmount: bigint, tokenDecimals: number = 18): string {
+export function formatPricePerToken(
+  priceWei: bigint,
+  tokenAmount: bigint,
+  tokenDecimals: number = 18,
+  paymentDecimals: number = 18
+): string {
   if (tokenAmount === 0n) return "0";
   const scaled = priceWei * 10n ** BigInt(tokenDecimals);
   const result = scaled / tokenAmount;
-  return formatEther(result);
+  return formatUnits(result, paymentDecimals);
 }

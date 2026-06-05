@@ -129,19 +129,23 @@ describe("parseSaleFromStoredData", () => {
     expect(sale!.orderHash).toBe(ORDER_HASH);
   });
 
-  it("parses an ERC20 sale with custom amount", () => {
+  it("parses an ERC20 sale with custom amount in USDC on Base", () => {
+    // Base's ERC20 bazaar prices in USDC (6 decimals), so 2 USDC =
+    // 2_000_000 base units. The price field should format using the quote
+    // token's decimals, not assume 18.
     const data = createMockStoredSaleData({
       itemType: ItemType.ERC20,
       amount: BigInt("500000000000000000000"), // 500 tokens
-      considerationAmount: BigInt("2000000000000000000"), // 2 ETH
+      considerationAmount: BigInt("2000000"), // 2 USDC
     });
     const sale = parseSaleFromStoredData(data, 8453);
 
     expect(sale).not.toBeNull();
     expect(sale!.itemType).toBe(ItemType.ERC20);
     expect(sale!.amount).toBe(BigInt("500000000000000000000"));
-    expect(sale!.priceWei).toBe(BigInt("2000000000000000000"));
+    expect(sale!.priceWei).toBe(BigInt("2000000"));
     expect(sale!.price).toBe(2);
+    expect(sale!.currency).toBe("usdc");
   });
 
   it("uses correct currency symbol for chain", () => {

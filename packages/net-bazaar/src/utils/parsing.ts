@@ -247,15 +247,23 @@ export function parseErc20OfferFromMessage(
     const priceWei = offerItem.startAmount;
     const pricePerTokenWei = priceWei / tokenAmount;
 
+    // The payment side is the chain's quote token (USDC on Base) when one is
+    // configured, otherwise the wrapped native currency at 18 decimals. Use
+    // its decimals + symbol so a 1 USDC offer renders as 1.00 USDC, not
+    // 1e-12 ETH.
+    const paymentDecimals = quoteToken?.decimals ?? 18;
+    const paymentSymbol = quoteToken?.symbol.toLowerCase()
+      ?? getCurrencySymbol(chainId);
+
     return {
       maker: parameters.offerer,
       tokenAddress: erc20Consideration.token,
       tokenAmount,
       priceWei,
       pricePerTokenWei,
-      price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(priceWei, paymentDecimals),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals, paymentDecimals),
+      currency: paymentSymbol,
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
       orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
@@ -346,15 +354,22 @@ export function parseErc20ListingFromMessage(
         ? parameters.zoneHash
         : undefined;
 
+    // Payment side: USDC on a chain with a configured quote token, native
+    // currency (18 decimals) otherwise. See parseErc20OfferFromMessage for
+    // the same shape.
+    const paymentDecimals = quoteToken?.decimals ?? 18;
+    const paymentSymbol = quoteToken?.symbol.toLowerCase()
+      ?? getCurrencySymbol(chainId);
+
     return {
       maker: parameters.offerer,
       tokenAddress: offerItem.token,
       tokenAmount,
       priceWei,
       pricePerTokenWei,
-      price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(priceWei, paymentDecimals),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals, paymentDecimals),
+      currency: paymentSymbol,
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
       orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
@@ -460,6 +475,15 @@ export function parseSaleFromStoredData(
       BigInt(0)
     );
 
+    // For ERC20 sales (offer side is an ERC20 token), the consideration is
+    // paid in the chain's bazaar quote token — USDC on Base, native ETH
+    // elsewhere. NFT sales always pay in native currency.
+    const isErc20Sale = (offerItem.itemType as ItemType) === ItemType.ERC20;
+    const quoteToken = isErc20Sale ? getErc20QuoteToken(chainId) : undefined;
+    const paymentDecimals = quoteToken?.decimals ?? 18;
+    const paymentSymbol = quoteToken?.symbol.toLowerCase()
+      ?? getCurrencySymbol(chainId);
+
     return {
       seller: zoneParameters.offerer as `0x${string}`,
       buyer: zoneParameters.fulfiller as `0x${string}`,
@@ -468,8 +492,8 @@ export function parseSaleFromStoredData(
       amount: offerItem.amount,
       itemType: offerItem.itemType as ItemType,
       priceWei: totalConsideration,
-      price: formatPrice(totalConsideration),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(totalConsideration, paymentDecimals),
+      currency: paymentSymbol,
       timestamp: Number(timestamp),
       orderHash: zoneParameters.orderHash,
     };

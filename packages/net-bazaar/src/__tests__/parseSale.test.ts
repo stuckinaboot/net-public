@@ -156,6 +156,37 @@ describe("parseSaleFromStoredData", () => {
     expect(sale!.currency).toBe("usdc");
   });
 
+  it("does NOT format a non-quote-token ERC20 consideration with the quote token's decimals", () => {
+    // Regression for a real bug observed on the live bazaar:
+    //
+    // Legacy ERC20 listings on Base (created before the USDC migration)
+    // had a WETH item in consideration[0]. When parsed by the previous
+    // implementation, the parser saw `consideration[0].itemType === ERC20`,
+    // assumed the trade was USDC-paying, and formatted the WETH base units
+    // (18 decimals) using USDC's 6 decimals — inflating a $0.0035 fair
+    // trade into a "$994,764 USDC" display, off by 10^12.
+    //
+    // Now: an ERC20 payment whose token is NOT the chain's configured
+    // quote token (USDC) should fall back to wrapped-native semantics
+    // (18 decimals, "WETH" symbol).
+    const WETH_BASE = "0x4200000000000000000000000000000000000006" as `0x${string}`;
+    const data = createMockStoredSaleData({
+      itemType: ItemType.ERC20,
+      amount: BigInt("1111000000000000000000"), // 1,111 ALPHA (18 decimals)
+      considerationItemType: ItemType.ERC20,
+      considerationToken: WETH_BASE,
+      // 9.94e11 WETH base units ≈ 9.94e-7 WETH ≈ $0.0035 at $3500/ETH
+      considerationAmount: BigInt("994764506934"),
+    });
+    const sale = parseSaleFromStoredData(data, 8453);
+
+    expect(sale).not.toBeNull();
+    expect(sale!.priceWei).toBe(BigInt("994764506934"));
+    // Formatted with WETH's 18 decimals, not USDC's 6 decimals.
+    expect(sale!.price).toBeCloseTo(9.94764506934e-7, 18);
+    expect(sale!.currency).toBe("weth");
+  });
+
   it("uses correct currency symbol for chain", () => {
     const data = createMockStoredSaleData();
     const sale = parseSaleFromStoredData(data, 666666666); // Degen chain

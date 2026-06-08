@@ -15,6 +15,7 @@ import {
 import {
   getCurrencySymbol,
   getErc20QuoteToken,
+  getWrappedNativeCurrency,
   QuoteToken,
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
   NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
@@ -488,19 +489,43 @@ export function parseSaleFromStoredData(
     );
 
     // The currency the seller received is the consideration's payment side.
-    // For ERC20-paying sales (ERC20 listings fulfilled on chains with a
-    // configured quote token — USDC on Base today), consideration[0] is an
-    // ERC20 item and we format with that token's decimals + symbol. For
-    // native-paying sales (NFT listings, or ERC20 listings on legacy
-    // native-payment chains), consideration[0] is NATIVE and we keep the
-    // 18-decimals + native-symbol shape.
+    // Match `consideration[0].token` against the chain's configured quote
+    // token by address — not just by itemType — so legacy ERC20-paying
+    // sales (e.g. WETH-denominated listings filled before a chain migrated
+    // to USDC) don't get force-formatted through the quote token's
+    // decimals/symbol.
+    //
+    // - NATIVE consideration → 18 decimals + native symbol (e.g. "eth").
+    // - ERC20 consideration whose token matches the chain's quote token
+    //   (USDC on Base) → quote-token decimals + symbol ("usdc", 6).
+    // - ERC20 consideration whose token is anything else (e.g. legacy WETH
+    //   sales on Base) → assume the wrapped native at 18 decimals and use
+    //   that symbol; don't reuse the quote-token decimals or we silently
+    //   inflate the price by `10^(18 - quoteDecimals)`.
     const paymentItem = zoneParameters.consideration[0];
-    const isErc20Paying =
-      paymentItem != null &&
-      (paymentItem.itemType as ItemType) === ItemType.ERC20;
-    const quoteToken = isErc20Paying ? getErc20QuoteToken(chainId) : undefined;
-    const { decimals: paymentDecimals, symbol: paymentSymbol } =
-      resolvePaymentDisplay(quoteToken, chainId);
+    const paymentItemType = paymentItem?.itemType as ItemType | undefined;
+    const quoteToken = getErc20QuoteToken(chainId);
+    const wrappedNative = getWrappedNativeCurrency(chainId);
+
+    let paymentDecimals: number;
+    let paymentSymbol: string;
+    if (paymentItemType === ItemType.ERC20 && paymentItem) {
+      const paymentToken = paymentItem.token.toLowerCase();
+      if (quoteToken && paymentToken === quoteToken.address.toLowerCase()) {
+        paymentDecimals = quoteToken.decimals;
+        paymentSymbol = quoteToken.symbol.toLowerCase();
+      } else {
+        // Some other ERC20 — almost always WETH on chains that had ERC20
+        // listings/offers before the quote-token migration.
+        paymentDecimals = 18;
+        paymentSymbol = (
+          wrappedNative?.symbol ?? getCurrencySymbol(chainId)
+        ).toLowerCase();
+      }
+    } else {
+      paymentDecimals = 18;
+      paymentSymbol = getCurrencySymbol(chainId);
+    }
 
     return {
       seller: zoneParameters.offerer as `0x${string}`,

@@ -2,28 +2,15 @@ import chalk from "chalk";
 import {
   createWalletClient,
   http,
-  parseUnits,
   encodeFunctionData,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { BazaarClient, getErc20PaymentToken } from "@net-protocol/bazaar";
+import { BazaarClient } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import { parseErc20Price } from "./format";
 import type { CreateErc20ListingOptions } from "./types";
-
-/**
- * Parse `--price` into base units using the chain's ERC20 payment token
- * decimals (USDC=6 on Base, WETH=18 elsewhere). Using `parseEther` here
- * would silently inflate USDC prices by 10^12.
- */
-function parseErc20PriceWei(chainId: number, price: string): bigint {
-  const paymentToken = getErc20PaymentToken(chainId);
-  if (!paymentToken) {
-    exitWithError(`Chain ${chainId} has no ERC20 payment token configured`);
-  }
-  return parseUnits(price, paymentToken.decimals);
-}
 
 export async function executeCreateErc20Listing(options: CreateErc20ListingOptions): Promise<void> {
   const hasPrivateKey = !!(
@@ -50,10 +37,11 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
     rpcUrl: commonOptions.rpcUrl,
   });
 
-  const priceWei = parseErc20PriceWei(commonOptions.chainId, options.price);
+  const { priceWei, symbol: paymentSymbol } = parseErc20Price(
+    commonOptions.chainId,
+    options.price
+  );
   const tokenAmount = BigInt(options.tokenAmount);
-  const paymentSymbol =
-    getErc20PaymentToken(commonOptions.chainId)?.symbol ?? "";
 
   try {
     console.log(chalk.blue("Preparing ERC-20 listing..."));
@@ -151,7 +139,7 @@ async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<v
     rpcUrl: readOnlyOptions.rpcUrl,
   });
 
-  const priceWei = parseErc20PriceWei(readOnlyOptions.chainId, options.price);
+  const { priceWei } = parseErc20Price(readOnlyOptions.chainId, options.price);
   const tokenAmount = BigInt(options.tokenAmount);
 
   try {

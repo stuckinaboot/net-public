@@ -2,15 +2,28 @@ import chalk from "chalk";
 import {
   createWalletClient,
   http,
-  parseEther,
+  parseUnits,
   encodeFunctionData,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { BazaarClient } from "@net-protocol/bazaar";
+import { BazaarClient, getErc20PaymentToken } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
 import type { CreateErc20ListingOptions } from "./types";
+
+/**
+ * Parse `--price` into base units using the chain's ERC20 payment token
+ * decimals (USDC=6 on Base, WETH=18 elsewhere). Using `parseEther` here
+ * would silently inflate USDC prices by 10^12.
+ */
+function parseErc20PriceWei(chainId: number, price: string): bigint {
+  const paymentToken = getErc20PaymentToken(chainId);
+  if (!paymentToken) {
+    exitWithError(`Chain ${chainId} has no ERC20 payment token configured`);
+  }
+  return parseUnits(price, paymentToken.decimals);
+}
 
 export async function executeCreateErc20Listing(options: CreateErc20ListingOptions): Promise<void> {
   const hasPrivateKey = !!(
@@ -37,8 +50,10 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
     rpcUrl: commonOptions.rpcUrl,
   });
 
-  const priceWei = parseEther(options.price);
+  const priceWei = parseErc20PriceWei(commonOptions.chainId, options.price);
   const tokenAmount = BigInt(options.tokenAmount);
+  const paymentSymbol =
+    getErc20PaymentToken(commonOptions.chainId)?.symbol ?? "";
 
   try {
     console.log(chalk.blue("Preparing ERC-20 listing..."));
@@ -111,7 +126,7 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
 
     console.log(
       chalk.green(
-        `ERC-20 listing created successfully!\n  Transaction: ${hash}\n  Token: ${options.tokenAddress}\n  Amount: ${options.tokenAmount}\n  Price: ${options.price} ETH`
+        `ERC-20 listing created successfully!\n  Transaction: ${hash}\n  Token: ${options.tokenAddress}\n  Amount: ${options.tokenAmount}\n  Price: ${options.price} ${paymentSymbol}`
       )
     );
   } catch (error) {
@@ -136,7 +151,7 @@ async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<v
     rpcUrl: readOnlyOptions.rpcUrl,
   });
 
-  const priceWei = parseEther(options.price);
+  const priceWei = parseErc20PriceWei(readOnlyOptions.chainId, options.price);
   const tokenAmount = BigInt(options.tokenAmount);
 
   try {

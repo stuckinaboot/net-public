@@ -10,7 +10,14 @@ Net Bazaar is built on Seaport (v1.6). It supports:
 - Private listings (targeted to a specific buyer)
 - EIP-712 signed orders (gasless order creation)
 
-NFT listings and ERC-20 listings are paid in the chain's native currency (ETH on Base/Ethereum, HYPE on HyperEVM). NFT collection offers and ERC-20 offers are paid in the wrapped native currency (WETH or wrapped HYPE) — the offerer pre-approves it so the fulfiller can pull it on acceptance.
+NFT listings and NFT collection offers are paid in the chain's native currency / its wrapped form (ETH/WETH on Base/Ethereum, HYPE/wrapped HYPE on HyperEVM).
+
+ERC-20 listings and ERC-20 offers are paid in the chain's **configured ERC-20 payment token**, which varies by chain:
+
+- **Base (8453)**: USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, 6 decimals) — both offers and listings settle in USDC
+- **HyperEVM (999)** and other ERC-20-supporting chains without a configured quote token: wrapped native currency (e.g. WHYPE, 18 decimals)
+
+The SDK exposes the per-chain mapping via `getErc20PaymentToken(chainId)` from `@net-protocol/bazaar`, which returns `{ address, symbol, decimals }`. The CLI uses this to scale `--price` correctly, so a `--price 5 --chain-id 8453` means **5 USDC** (parsed as `5_000_000` base units), not 5e18 of anything. When passing through the keyless flow to an external signer, the emitted `approvals` array contains an approve to **Seaport directly** for the right payment token (USDC on Base, wrapped native elsewhere).
 
 All commands support two modes:
 1. **With `--private-key`**: Full flow (approve, sign, submit) executed directly
@@ -336,7 +343,7 @@ netp bazaar accept-offer \
 
 # ERC-20 Commands
 
-ERC-20 bazaar lets you list a specific quantity of an ERC-20 token for the chain's native currency, or offer wrapped native currency for a specific quantity of an ERC-20 token. Supported on **Base (8453)** and **HyperEVM (999)** only. The command shape mirrors the NFT commands, with `--token-address` in place of `--nft-address` and an explicit `--token-amount` (raw units, bigint string).
+ERC-20 bazaar lets you list a specific quantity of an ERC-20 token, or offer to buy a specific quantity, with payment in the chain's configured ERC-20 payment token — **USDC on Base (8453)**, wrapped native currency (e.g. WHYPE) on **HyperEVM (999)**. The command shape mirrors the NFT commands, with `--token-address` in place of `--nft-address` and an explicit `--token-amount` (raw units, bigint string). The CLI reads the chain's payment token via `getErc20PaymentToken(chainId)` and scales `--price` by that token's decimals automatically.
 
 ## List ERC-20 Listings
 
@@ -379,11 +386,11 @@ netp bazaar list-erc20-listings \
 Field semantics (from `packages/net-bazaar/src/types.ts`):
 
 - `tokenAmount`: raw token units as a bigint string (no decimal scaling applied).
-- `price`: total price as a JS number (the chain's native currency — ETH on Base, HYPE on HyperEVM).
-- `priceWei`: total price in wei as a bigint string.
-- `pricePerTokenWei`: **bigint string**, computed as `priceWei / tokenAmount` (integer division — frequently rounds to `"0"` for 18-decimal tokens with sub-ETH-per-token prices).
-- `pricePerToken`: **string** (not a number), full-decimal-precision native currency per single raw token unit. Use this field, not `pricePerTokenWei`, when you need an accurate per-unit price.
-- `currency`: native-chain currency symbol (`"eth"`, `"hype"`, etc.) — not the wrapped-token name.
+- `price`: total price as a JS number, expressed in the chain's ERC-20 payment token (USDC on Base, native/wrapped-native elsewhere). Already formatted using the payment token's decimals.
+- `priceWei`: total price in payment-token base units as a bigint string. For USDC on Base this is base units of USDC (6 decimals); on a chain without a configured quote token it's native wei (18 decimals).
+- `pricePerTokenWei`: **bigint string**, computed as `priceWei / tokenAmount` (integer division — frequently rounds to `"0"` for 18-decimal traded tokens with sub-unit-per-token prices).
+- `pricePerToken`: **string** (not a number), full-decimal-precision payment-token amount per single raw token unit. Use this, not `pricePerTokenWei`, when you need an accurate per-unit price.
+- `currency`: payment-token symbol, lowercased. `"usdc"` on Base, native chain symbol (`"eth"`, `"hype"`, etc.) on chains without a configured quote token.
 - `expirationDate`: Unix seconds.
 
 Listings are sorted by price per token ascending.
@@ -400,7 +407,7 @@ netp bazaar list-erc20-offers \
   [--json]
 ```
 
-JSON output has the same field shapes and types as `list-erc20-listings` (`pricePerToken` is a string, `currency` is the native symbol such as `"eth"` / `"hype"`). Offer **payment is in the wrapped native currency** — WETH on Base, wrapped HYPE on HyperEVM — and the offerer pre-approves it so the seller can pull it on acceptance. Offers are sorted by price per token descending and filtered to those where the maker still has enough wrapped-currency balance.
+JSON output has the same field shapes and types as `list-erc20-listings` (`pricePerToken` is a string, `currency` is the payment-token symbol such as `"usdc"` / `"hype"`). Offer **payment is in the chain's configured ERC-20 payment token** — USDC on Base, wrapped HYPE on HyperEVM — and the offerer pre-approves it so the seller can pull it on acceptance. Offers are sorted by price per token descending and filtered to those where the maker still has enough payment-token balance.
 
 ## Create ERC-20 Listing
 
@@ -434,7 +441,7 @@ netp bazaar create-erc20-listing \
 |-----------|----------|-------------|
 | `--token-address` | Yes | ERC-20 token contract address |
 | `--token-amount` | Yes | Amount to sell in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token) |
-| `--price` | Yes | **Total** price in the chain's native currency (ETH on Base, HYPE on HyperEVM) for the whole `token-amount`, expressed as a decimal (e.g. `0.05`) |
+| `--price` | Yes | **Total** price in the chain's ERC-20 payment token (USDC on Base, native/wrapped-native on chains without a configured quote token), expressed as a decimal (e.g. `5` = 5 USDC on Base). The CLI scales by the payment token's decimals — `5` → `5_000_000` base units on Base USDC, `5` → `5e18` base units on a WETH chain. Do not pre-scale. |
 | `--target-fulfiller` | No | Make a private listing for this address |
 | `--offerer` | No | Required without `--private-key` |
 
@@ -442,14 +449,14 @@ Output format is the same as `create-listing` (EIP-712 data + approvals). Use `s
 
 ## Create ERC-20 Offer
 
-Create an ERC-20 offer (bid wrapped native currency for `tokenAmount` of a token). Same dual mode:
+Create an ERC-20 offer (bid the chain's ERC-20 payment token for `tokenAmount` of a token). Same dual mode:
 
 **With private key:**
 ```bash
 netp bazaar create-erc20-offer \
   --token-address <address> \
   --token-amount <raw-units> \
-  --price <wrapped-native-amount> \
+  --price <payment-token-amount> \
   --chain-id 8453 \
   --private-key 0x...
 ```
@@ -459,7 +466,7 @@ netp bazaar create-erc20-offer \
 netp bazaar create-erc20-offer \
   --token-address <address> \
   --token-amount <raw-units> \
-  --price <wrapped-native-amount> \
+  --price <payment-token-amount> \
   --offerer <address> \
   --chain-id 8453
 ```
@@ -469,10 +476,10 @@ netp bazaar create-erc20-offer \
 |-----------|----------|-------------|
 | `--token-address` | Yes | ERC-20 token contract address (the token being bid on). |
 | `--token-amount` | Yes | Amount to buy in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). |
-| `--price` | Yes | **Total** amount of the wrapped native currency (WETH on Base, wrapped HYPE on HyperEVM) bid for the whole `token-amount`, expressed as a decimal (e.g. `0.05`). |
+| `--price` | Yes | **Total** amount of the chain's ERC-20 payment token bid for the whole `token-amount`, expressed as a decimal. On Base that's USDC (`--price 5` = 5 USDC = 5_000_000 base units); on chains without a configured quote token it's the wrapped native currency. The CLI scales by the payment token's decimals automatically. |
 | `--offerer` | No | Required without `--private-key`. |
 
-The approval emitted in `approvals` (keyless mode) is a wrapped-native `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). Use `submit-erc20-offer` for the follow-up.
+The approval emitted in `approvals` (keyless mode) is a payment-token `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). On Base that's a USDC approve; on a wrapped-native chain it's a WETH/wrapped-native approve. Use `submit-erc20-offer` for the follow-up.
 
 ## Submit ERC-20 Listing
 
@@ -504,7 +511,10 @@ netp bazaar submit-erc20-offer \
 
 ## Buy ERC-20 Listing
 
-Buy an ERC-20 listing by order hash (pays in the chain's native currency):
+Buy an ERC-20 listing by order hash. Payment shape depends on the chain's ERC-20 bazaar configuration:
+
+- **Chains with a configured ERC-20 payment token (Base USDC):** payment is ERC-20. The encode-only `approvals` array will include a USDC `approve` to Seaport if the buyer's allowance is insufficient; `fulfillment.value` is **`"0"`**.
+- **Chains without a configured quote token:** payment is native currency. `approvals` is empty and `fulfillment.value` is the listing's total price in native wei.
 
 **With private key:**
 ```bash
@@ -525,24 +535,31 @@ netp bazaar buy-erc20-listing \
   --encode-only
 ```
 
-**Encode-only output:**
+**Encode-only output (Base, USDC-paying):**
 ```json
 {
-  "approvals": [],
+  "approvals": [
+    {
+      "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "data": "0x095ea7b3...",
+      "chainId": 8453,
+      "value": "0"
+    }
+  ],
   "fulfillment": {
     "to": "0x...",
     "data": "0x...",
     "chainId": 8453,
-    "value": "50000000000000000"
+    "value": "0"
   }
 }
 ```
 
-The `value` field is the listing's total price in wei of the chain's native currency (ETH on Base, HYPE on HyperEVM). The agent must include this value when submitting the fulfillment transaction.
+The agent must submit each entry in `approvals` (in order, if any) and then the `fulfillment` transaction. On a chain without a configured quote token, `fulfillment.value` carries the native payment and must be sent with the tx.
 
 ## Accept ERC-20 Offer
 
-Accept an ERC-20 offer by selling your tokens (receive wrapped native currency — WETH on Base, wrapped HYPE on HyperEVM). The fulfillment transaction's `value` is **zero** — the buyer's wrapped currency was pre-approved and is pulled by Seaport on acceptance.
+Accept an ERC-20 offer by selling your tokens (receive the chain's ERC-20 payment token — USDC on Base, wrapped native elsewhere). The fulfillment transaction's `value` is **zero** — the buyer's payment token was pre-approved and is pulled by Seaport on acceptance.
 
 **With private key:**
 ```bash
@@ -711,7 +728,7 @@ netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json | j
 | "Listing not found" | Order hash doesn't match any active listing | Listing may have been fulfilled or cancelled |
 | "ERC-20 listing with order hash ... not found or no longer active" | Same, for ERC-20 listings | Re-query `list-erc20-listings` |
 | "ERC-20 offer with order hash ... not found or no longer active" | Same, for ERC-20 offers | Re-query `list-erc20-offers` |
-| "Insufficient funds" | Not enough native currency (NFT/ERC-20 listing buy) or wrapped native currency (ERC-20 offer accept) | Fund wallet with price + gas |
+| "Insufficient funds" | Not enough native currency for an NFT listing buy or for the gas component of any tx; not enough payment-token (USDC on Base, wrapped native elsewhere) for an ERC-20 listing buy or to honor a previously-made ERC-20 offer | Fund wallet with price + gas |
 | "--offerer is required" | Keyless mode needs offerer address | Add `--offerer 0x...` flag |
 | "--buyer is required" | Encode-only buy needs buyer address | Add `--buyer 0x...` flag |
 | "--seller is required" | Encode-only accept needs seller address | Add `--seller 0x...` flag |
@@ -722,7 +739,8 @@ netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json | j
 Gas estimates below are for Base; HyperEVM and Ethereum will differ.
 
 - **Creating listings/offers (NFT or ERC-20)**: Gas for approval tx + submit tx (~0.001-0.003 ETH on Base)
-- **Buying NFT listings / ERC-20 listings**: Listing price (in the chain's native currency) + gas (~0.0005-0.002 ETH on Base)
+- **Buying NFT listings**: Listing price (in the chain's native currency) + gas (~0.0005-0.002 ETH on Base)
+- **Buying ERC-20 listings**: Listing price in the chain's ERC-20 payment token (USDC on Base, native elsewhere) + gas. On Base, a USDC approve tx may also be needed (~0.0005-0.002 ETH gas)
 - **Accepting NFT offers**: Gas for NFT approval + fulfillment (~0.001-0.003 ETH on Base); payment received in WETH (no ETH transfer in the fulfillment tx)
-- **Accepting ERC-20 offers**: Gas for ERC-20 approval (if needed) + fulfillment; payment received in the wrapped native currency (WETH on Base, wrapped HYPE on HyperEVM); fulfillment tx `value` is zero
+- **Accepting ERC-20 offers**: Gas for ERC-20 approval (if needed) + fulfillment; payment received in the chain's ERC-20 payment token (USDC on Base, wrapped HYPE on HyperEVM); fulfillment tx `value` is zero
 - **Reading data**: Free (view calls)

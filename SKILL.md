@@ -582,8 +582,8 @@ The only legitimate reason to read allowance state yourself is a non-submitting 
 | **Upvoting (users)** | Price fetched from contract (currently 0.000025 ETH per upvote). Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. |
 | **Bazaar approvals** | The CLI handles all approval logic. The `approvals` array in every encode-only output is exhaustive — submit it verbatim, no pre-flight `allowance` / `isApprovedForAll` check needed. **Net Bazaar uses Seaport directly (no conduit).** Do NOT add `setApprovalForAll`/`approve` txs for any "conduit" or "bazaar contract"; an empty `approvals` array means none are needed. See "Bazaar Approvals" under Encode-Only Transaction Formats above. |
 | **Bazaar (NFT)** | NFT listings/offers are supported on Base (8453) and Ethereum (1). All write commands support `--encode-only`. |
-| **Bazaar (ERC-20)** | ERC-20 listings/offers are supported on Base (8453) and HyperEVM (999). ERC-20 commands use `--token-address` + `--token-amount` (raw bigint units). Listings pay in the chain's native currency (ETH or HYPE); offers pay in the wrapped native currency (WETH or wrapped HYPE), which the offerer pre-approves. |
-| **Bazaar JSON fields (ERC-20)** | `pricePerToken` is a **string** (not a number) for full-decimal precision; `pricePerTokenWei` is `priceWei / tokenAmount` (bigint integer division — often rounds to `"0"` for 18-decimal tokens). `currency` is the native-chain symbol (`"eth"`, `"hype"`), not the wrapped-token name. |
+| **Bazaar (ERC-20)** | ERC-20 listings/offers are supported on Base (8453) and HyperEVM (999). ERC-20 commands use `--token-address` + `--token-amount` (raw bigint units). Both listings and offers settle in the chain's **ERC-20 payment token**: USDC on Base (`--price 5` = 5 USDC), wrapped native (WHYPE) on HyperEVM. The CLI reads `getErc20PaymentToken(chainId)` from `@net-protocol/bazaar` and scales `--price` by that token's decimals — do not pre-scale. |
+| **Bazaar JSON fields (ERC-20)** | `pricePerToken` is a **string** (not a number) for full-decimal precision; `pricePerTokenWei` is `priceWei / tokenAmount` (bigint integer division — often rounds to `"0"` for 18-decimal tokens). `currency` is the payment-token symbol — `"usdc"` on Base, native chain symbol (`"hype"`, etc.) elsewhere. |
 | **Chain IDs** | Base = `8453`, Base Sepolia = `84532`. Mismatched chain IDs are the #1 cause of "data not found." |
 
 ---
@@ -686,11 +686,11 @@ When transactions are submitted externally (e.g., via Bankr after using `--encod
 - "Buy an NFT" → `netp bazaar buy-listing --order-hash 0x... --nft-address 0x... --buyer 0xMyAddr --chain-id 8453 --encode-only`
 - "What NFTs do I own?" → `netp bazaar owned-nfts --nft-address 0x... --owner 0xMyAddr --chain-id 8453 --json`
 - "Browse ERC-20 listings for a token" → `netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json`
-- "Sell my ERC-20 tokens" / "Create an ERC-20 listing" → `netp bazaar create-erc20-listing --token-address 0x... --token-amount 1000000000000000000 --price 0.05 --offerer 0xMyAddr --chain-id 8453` (keyless; sign then `submit-erc20-listing`)
-- "Make an offer on an ERC-20 token" → `netp bazaar create-erc20-offer --token-address 0x... --token-amount 1000000000000000000 --price 0.05 --offerer 0xMyAddr --chain-id 8453` (bid is paid in wrapped native currency; keyless; sign then `submit-erc20-offer`)
+- "Sell my ERC-20 tokens" / "Create an ERC-20 listing" → `netp bazaar create-erc20-listing --token-address 0x... --token-amount 1000000000000000000 --price 5 --offerer 0xMyAddr --chain-id 8453` (`--price` is in the chain's ERC-20 payment token: USDC on Base, native/wrapped-native elsewhere — `--price 5` on Base = 5 USDC; keyless flow, sign then `submit-erc20-listing`)
+- "Make an offer on an ERC-20 token" → `netp bazaar create-erc20-offer --token-address 0x... --token-amount 1000000000000000000 --price 5 --offerer 0xMyAddr --chain-id 8453` (bid paid in the chain's ERC-20 payment token: USDC on Base, wrapped native elsewhere; keyless, sign then `submit-erc20-offer`)
 - "Check ERC-20 offers for a token" → `netp bazaar list-erc20-offers --token-address 0x... --chain-id 8453 --json`
-- "Buy ERC-20 tokens from a listing" → `netp bazaar buy-erc20-listing --order-hash 0x... --token-address 0x... --buyer 0xMyAddr --chain-id 8453 --encode-only`
-- "Accept an ERC-20 offer (sell tokens for wrapped native currency)" → `netp bazaar accept-erc20-offer --order-hash 0x... --token-address 0x... --seller 0xMyAddr --chain-id 8453 --encode-only`
+- "Buy ERC-20 tokens from a listing" → `netp bazaar buy-erc20-listing --order-hash 0x... --token-address 0x... --buyer 0xMyAddr --chain-id 8453 --encode-only` (on Base, `approvals` may include a USDC approve and `fulfillment.value` is `"0"`; on chains without a configured quote token, `fulfillment.value` carries the native payment)
+- "Accept an ERC-20 offer (sell tokens for the chain's payment token)" → `netp bazaar accept-erc20-offer --order-hash 0x... --token-address 0x... --seller 0xMyAddr --chain-id 8453 --encode-only` (payout in USDC on Base, wrapped native elsewhere)
 
 ### Onchain Agents (use netp)
 - "Create an agent" → `netp agent create "My Agent" --system-prompt "You are helpful." --chain-id 8453`

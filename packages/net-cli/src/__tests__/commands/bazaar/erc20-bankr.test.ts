@@ -59,6 +59,14 @@ vi.mock("@net-protocol/bazaar", () => ({
     getErc20Listings: mockGetErc20Listings,
     getErc20Offers: mockGetErc20Offers,
   })),
+  // Base's quote token (USDC, 6 decimals). The CLI reads this to decide
+  // how to scale the `--price` arg into base units; mocking it keeps the
+  // test deterministic on TEST_CHAIN_ID = Base.
+  getErc20PaymentToken: vi.fn().mockReturnValue({
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    symbol: "USDC",
+    decimals: 6,
+  }),
 }));
 
 // Mock @net-protocol/core

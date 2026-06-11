@@ -501,7 +501,7 @@ netp storage upload --file ./data.json --key "my-key" --text "desc" --chain-id 8
 # Returns: {"storageKey": "my-key", "transactions": [{"to": "0x...", "data": "0x...", ...}]}
 ```
 
-`--encode-only` works with all netp write commands: `storage upload`, `token deploy`, `upvote token`, `upvote user`, `bazaar buy-listing`, `bazaar submit-listing`, `bazaar submit-offer`, `bazaar accept-offer`, `bazaar cancel-listing`, `bazaar cancel-offer`, `bazaar buy-erc20-listing`, `bazaar submit-erc20-listing`, `bazaar submit-erc20-offer`, `bazaar accept-erc20-offer`, `bazaar cancel-erc20-listing`, `bazaar cancel-erc20-offer`.
+`--encode-only` works with `storage upload`, `token deploy`, `upvote token`, `upvote user`, and every `netp bazaar` write command. For the bazaar specifically, see [bazaar.md § Command Modes & Address Flags](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md) — it lists each subcommand alongside the role-named address flag (`--offerer` / `--buyer` / `--seller` / `--maker`) you must pair with `--encode-only` when no `--private-key` is present.
 
 For feeds, messaging, and profiles, use `botchan --encode-only` instead (see Botchan section above).
 

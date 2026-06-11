@@ -19,8 +19,8 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
     process.env.PRIVATE_KEY
   );
 
-  if (!hasPrivateKey) {
-    await executeKeylessMode(options);
+  if (!hasPrivateKey || options.encodeOnly) {
+    await executeEncodeOnly(options);
     return;
   }
 
@@ -124,9 +124,9 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
   }
 }
 
-async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<void> {
+async function executeEncodeOnly(options: CreateErc20ListingOptions): Promise<void> {
   if (!options.offerer) {
-    exitWithError("--offerer is required when not providing --private-key");
+    exitWithError("--offerer is required when using --encode-only without --private-key");
   }
 
   const readOnlyOptions = parseReadOnlyOptions({

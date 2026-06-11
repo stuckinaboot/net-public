@@ -28,6 +28,7 @@ export interface CreateListingOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface CreateOfferOptions {
@@ -37,6 +38,7 @@ export interface CreateOfferOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface SubmitListingOptions {

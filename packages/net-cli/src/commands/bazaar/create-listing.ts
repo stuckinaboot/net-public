@@ -20,8 +20,8 @@ export async function executeCreateListing(options: CreateListingOptions): Promi
     process.env.PRIVATE_KEY
   );
 
-  if (!hasPrivateKey) {
-    await executeKeylessMode(options);
+  if (!hasPrivateKey || options.encodeOnly) {
+    await executeEncodeOnly(options);
     return;
   }
 
@@ -121,9 +121,9 @@ export async function executeCreateListing(options: CreateListingOptions): Promi
   }
 }
 
-async function executeKeylessMode(options: CreateListingOptions): Promise<void> {
+async function executeEncodeOnly(options: CreateListingOptions): Promise<void> {
   if (!options.offerer) {
-    exitWithError("--offerer is required when not providing --private-key");
+    exitWithError("--offerer is required when using --encode-only without --private-key");
   }
 
   const readOnlyOptions = parseReadOnlyOptions({

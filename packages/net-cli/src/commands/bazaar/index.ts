@@ -89,15 +89,16 @@ export function registerBazaarCommand(program: Command): void {
     });
 
   const createListingCommand = new Command("create-listing")
-    .description("Create an NFT listing (with --private-key: full flow; without: output EIP-712 data)")
+    .description("Create an NFT listing (with --private-key: full flow; without or with --encode-only: output EIP-712 data)")
     .requiredOption("--nft-address <address>", "NFT contract address")
     .requiredOption("--token-id <id>", "Token ID to list")
     .requiredOption("--price <eth>", "Price in ETH (e.g., 0.1)")
     .option("--target-fulfiller <address>", "Make a private listing for this address")
-    .option("--offerer <address>", "Offerer address (required without --private-key)")
+    .option("--offerer <address>", "Offerer address (required without --private-key or with --encode-only)")
     .option(...privateKeyOption)
     .option(...chainIdOption)
     .option(...rpcUrlOption)
+    .option("--encode-only", "Output EIP-712 data and approval calldata as JSON instead of executing")
     .action(async (options) => {
       await executeCreateListing({
         nftAddress: options.nftAddress,
@@ -108,17 +109,19 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
       });
     });
 
   const createOfferCommand = new Command("create-offer")
-    .description("Create a collection offer (with --private-key: full flow; without: output EIP-712 data)")
+    .description("Create a collection offer (with --private-key: full flow; without or with --encode-only: output EIP-712 data)")
     .requiredOption("--nft-address <address>", "NFT contract address")
     .requiredOption("--price <eth>", "Offer price in ETH (e.g., 0.1)")
-    .option("--offerer <address>", "Offerer address (required without --private-key)")
+    .option("--offerer <address>", "Offerer address (required without --private-key or with --encode-only)")
     .option(...privateKeyOption)
     .option(...chainIdOption)
     .option(...rpcUrlOption)
+    .option("--encode-only", "Output EIP-712 data and approval calldata as JSON instead of executing")
     .action(async (options) => {
       await executeCreateOffer({
         nftAddress: options.nftAddress,
@@ -127,6 +130,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
       });
     });
 

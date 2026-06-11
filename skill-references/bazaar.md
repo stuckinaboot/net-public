@@ -30,7 +30,7 @@ All commands support two modes:
 | Action | Commands | Required address flag in mode 2 | `--encode-only` accepted |
 |---|---|---|---|
 | Read | `list-listings`, `list-offers`, `list-sales`, `list-erc20-listings`, `list-erc20-offers`, `owned-nfts` | — | — |
-| Create | `create-listing`, `create-offer`, `create-erc20-listing`, `create-erc20-offer` | `--offerer` | ERC-20 variants only (NFT `create-*` uses implicit "omit `--private-key`") |
+| Create | `create-listing`, `create-offer`, `create-erc20-listing`, `create-erc20-offer` | `--offerer` | yes |
 | Submit signed order | `submit-listing`, `submit-offer`, `submit-erc20-listing`, `submit-erc20-offer` | — (offerer is in the signed order) | yes |
 | Buy listing | `buy-listing`, `buy-erc20-listing` | `--buyer` | yes |
 | Accept offer | `accept-offer`, `accept-erc20-offer` | `--seller` | yes |
@@ -241,7 +241,7 @@ netp bazaar create-offer \
 |-----------|----------|-------------|
 | `--nft-address` | Yes | NFT contract address. Offer applies to any token in this collection. |
 | `--price` | Yes | Bid amount in the chain's native currency unit (e.g. `0.1`). The actual currency moved on-chain is the **wrapped** native currency (WETH on Base/Ethereum) — the offerer pre-approves WETH to Seaport, and the fulfiller pulls it on accept. The offerer must hold enough WETH (or enough native currency for the CLI to wrap). |
-| `--offerer` | No | Required without `--private-key`. |
+| `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
 
 `--price` is the **total** WETH the offerer is bidding, expressed as a decimal. The approval emitted in `approvals` (keyless mode) is a WETH `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above).
 
@@ -456,7 +456,7 @@ netp bazaar create-erc20-listing \
 | `--token-amount` | Yes | Amount to sell in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token) |
 | `--price` | Yes | **Total** price in the chain's ERC-20 payment token (USDC on Base, native/wrapped-native on chains without a configured quote token), expressed as a decimal (e.g. `5` = 5 USDC on Base). The CLI scales by the payment token's decimals — `5` → `5_000_000` base units on Base USDC, `5` → `5e18` base units on a WETH chain. Do not pre-scale. |
 | `--target-fulfiller` | No | Make a private listing for this address |
-| `--offerer` | No | Required without `--private-key` |
+| `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
 
 Output format is the same as `create-listing` (EIP-712 data + approvals). Use `submit-erc20-listing` for the follow-up.
 
@@ -490,7 +490,7 @@ netp bazaar create-erc20-offer \
 | `--token-address` | Yes | ERC-20 token contract address (the token being bid on). |
 | `--token-amount` | Yes | Amount to buy in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). |
 | `--price` | Yes | **Total** amount of the chain's ERC-20 payment token bid for the whole `token-amount`, expressed as a decimal. On Base that's USDC (`--price 5` = 5 USDC = 5_000_000 base units); on chains without a configured quote token it's the wrapped native currency. The CLI scales by the payment token's decimals automatically. |
-| `--offerer` | No | Required without `--private-key`. |
+| `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
 
 The approval emitted in `approvals` (keyless mode) is a payment-token `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). On Base that's a USDC approve; on a wrapped-native chain it's a WETH/wrapped-native approve. Use `submit-erc20-offer` for the follow-up.
 

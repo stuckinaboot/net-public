@@ -111,6 +111,7 @@ export interface CreateErc20ListingOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface CreateErc20OfferOptions {
@@ -121,6 +122,7 @@ export interface CreateErc20OfferOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface SubmitErc20ListingOptions {

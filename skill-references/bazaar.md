@@ -20,8 +20,21 @@ ERC-20 listings and ERC-20 offers are paid in the chain's **configured ERC-20 pa
 The SDK exposes the per-chain mapping via `getErc20PaymentToken(chainId)` from `@net-protocol/bazaar`, which returns `{ address, symbol, decimals }`. The CLI uses this to scale `--price` correctly, so a `--price 5 --chain-id 8453` means **5 USDC** (parsed as `5_000_000` base units), not 5e18 of anything. When passing through the keyless flow to an external signer, the emitted `approvals` array contains an approve to **Seaport directly** for the right payment token (USDC on Base, wrapped native elsewhere).
 
 All commands support two modes:
-1. **With `--private-key`**: Full flow (approve, sign, submit) executed directly
-2. **Without `--private-key`**: Outputs transaction data / EIP-712 data for external signing (agents, hardware wallets)
+1. **With `--private-key`**: Full flow (approve, sign, submit) executed directly. The acting address is derived from the key.
+2. **Without `--private-key`** (or with `--encode-only`): Outputs transaction data / EIP-712 data for external signing (agents, hardware wallets). Because there's no key for the CLI to derive an address from, you must pass the acting address via a **role-named flag** specific to the command: `--offerer` when creating an order, `--buyer` / `--seller` when fulfilling one, `--maker` when cancelling. `submit-*` is the exception — the offerer is already inside the signed order data, so no address flag is needed.
+
+`--encode-only` is the explicit form for mode 2. Read-only commands (`list-*`, `owned-nfts`) don't sign anything and ignore both flags.
+
+### Command Flag Matrix
+
+| Action | Commands | Required address flag in mode 2 | `--encode-only` accepted |
+|---|---|---|---|
+| Read | `list-listings`, `list-offers`, `list-sales`, `list-erc20-listings`, `list-erc20-offers`, `owned-nfts` | — | — |
+| Create | `create-listing`, `create-offer`, `create-erc20-listing`, `create-erc20-offer` | `--offerer` | ERC-20 variants only (NFT `create-*` uses implicit "omit `--private-key`") |
+| Submit signed order | `submit-listing`, `submit-offer`, `submit-erc20-listing`, `submit-erc20-offer` | — (offerer is in the signed order) | yes |
+| Buy listing | `buy-listing`, `buy-erc20-listing` | `--buyer` | yes |
+| Accept offer | `accept-offer`, `accept-erc20-offer` | `--seller` | yes |
+| Cancel | `cancel-listing`, `cancel-offer`, `cancel-erc20-listing`, `cancel-erc20-offer` | `--maker` | yes |
 
 ## Approval Spender (Important)
 

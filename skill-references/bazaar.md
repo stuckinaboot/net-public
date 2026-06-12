@@ -208,8 +208,8 @@ netp bazaar create-listing \
 ```
 
 The agent should:
-1. Submit each approval transaction via `/agent/submit`
-2. Sign the `eip712` data via `/agent/sign` with `signatureType: "eth_signTypedData_v4"`
+1. Submit each approval transaction (e.g. via Bankr's `/wallet/submit`)
+2. Sign the `eip712` data (e.g. via Bankr's `/wallet/sign` with `signatureType: "eth_signTypedData_v4"`)
 3. Save the output to a file, then use `submit-listing` to build the final transaction
 
 ## Create Offer
@@ -389,7 +389,7 @@ netp bazaar list-erc20-listings \
     "priceWei": "1000000000000000000",
     "pricePerToken": "0.000000000000000001",
     "pricePerTokenWei": "1",
-    "currency": "eth",
+    "currency": "usdc",
     "expirationDate": 1770537792,
     "orderStatus": 2
   }
@@ -424,14 +424,14 @@ JSON output has the same field shapes and types as `list-erc20-listings` (`price
 
 ## Create ERC-20 Listing
 
-Create an ERC-20 listing (sell `tokenAmount` of a token for the chain's native currency). Dual mode:
+Create an ERC-20 listing (sell `tokenAmount` of a token for the chain's ERC-20 payment token — USDC on Base, wrapped native elsewhere). Dual mode:
 
 **With private key (full flow):**
 ```bash
 netp bazaar create-erc20-listing \
   --token-address <address> \
   --token-amount <raw-units> \
-  --price <native-amount> \
+  --price <payment-token-amount> \
   [--target-fulfiller <address>] \
   --chain-id 8453 \
   --private-key 0x...
@@ -444,7 +444,7 @@ Steps executed: approve Seaport (directly — no conduit) to spend the ERC-20 ->
 netp bazaar create-erc20-listing \
   --token-address <address> \
   --token-amount <raw-units> \
-  --price <native-amount> \
+  --price <payment-token-amount> \
   --offerer <address> \
   --chain-id 8453
 ```
@@ -637,7 +637,7 @@ netp bazaar buy-listing \
   --chain-id 8453 \
   --encode-only
 
-# 3. Submit via agent (e.g., Bankr /agent/submit)
+# 3. Submit via agent (e.g., Bankr /wallet/submit)
 # Include the fulfillment.value as the transaction value
 ```
 
@@ -702,7 +702,9 @@ netp bazaar buy-erc20-listing \
   --chain-id 8453 \
   --encode-only
 
-# 3. Submit via agent. Include fulfillment.value (total native-currency price in wei).
+# 3. Submit approvals[] in order (a USDC approve on Base), then the fulfillment tx.
+#    On Base, fulfillment.value is "0" — Seaport pulls USDC via the approve.
+#    On chains without a configured quote token, fulfillment.value carries the native price in wei.
 ```
 
 ## Accept an ERC-20 Offer (Encode-Only)

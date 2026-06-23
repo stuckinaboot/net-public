@@ -1,6 +1,7 @@
 import { NetClient } from "@net-protocol/core";
+import type { Abi } from "viem";
 import {
-  AGENT_REGISTRY_CONTRACT,
+  getAgentRegistryContract,
   AGENT_TOPIC,
 } from "../constants";
 import type {
@@ -29,6 +30,7 @@ export type GetRegisteredAgentsOptions = {
  */
 export class AgentRegistryClient {
   private netClient: NetClient;
+  private contract: { abi: Abi; address: `0x${string}` };
 
   /**
    * Creates a new AgentRegistryClient instance.
@@ -36,8 +38,11 @@ export class AgentRegistryClient {
    * @param params - Client configuration
    * @param params.chainId - Chain ID to interact with
    * @param params.overrides - Optional RPC URL overrides
+   * @throws If AgentRegistry is not deployed on the given chain
    */
   constructor(params: AgentRegistryClientOptions) {
+    // Throws early on chains where AgentRegistry isn't deployed (e.g. Base Sepolia)
+    this.contract = getAgentRegistryContract(params.chainId);
     this.netClient = new NetClient({
       chainId: params.chainId,
       overrides: params.overrides,
@@ -53,7 +58,7 @@ export class AgentRegistryClient {
   async isAgentRegistered(address: `0x${string}`): Promise<boolean> {
     const count = await this.netClient.getMessageCount({
       filter: {
-        appAddress: AGENT_REGISTRY_CONTRACT.address,
+        appAddress: this.contract.address,
         maker: address,
         topic: AGENT_TOPIC,
       },
@@ -77,7 +82,7 @@ export class AgentRegistryClient {
     // Get total count of registered agents
     const count = await this.netClient.getMessageCount({
       filter: {
-        appAddress: AGENT_REGISTRY_CONTRACT.address,
+        appAddress: this.contract.address,
         topic: AGENT_TOPIC,
       },
     });
@@ -92,7 +97,7 @@ export class AgentRegistryClient {
     // Get messages from the registry
     const messages = await this.netClient.getMessages({
       filter: {
-        appAddress: AGENT_REGISTRY_CONTRACT.address,
+        appAddress: this.contract.address,
         topic: AGENT_TOPIC,
       },
       startIndex,
@@ -114,7 +119,7 @@ export class AgentRegistryClient {
   async getRegisteredAgentCount(): Promise<number> {
     return this.netClient.getMessageCount({
       filter: {
-        appAddress: AGENT_REGISTRY_CONTRACT.address,
+        appAddress: this.contract.address,
         topic: AGENT_TOPIC,
       },
     });
@@ -128,8 +133,8 @@ export class AgentRegistryClient {
    */
   prepareRegisterAgent(): WriteTransactionConfig {
     return {
-      abi: AGENT_REGISTRY_CONTRACT.abi,
-      to: AGENT_REGISTRY_CONTRACT.address,
+      abi: this.contract.abi,
+      to: this.contract.address,
       functionName: "registerAgent",
       args: [],
     };
@@ -141,6 +146,6 @@ export class AgentRegistryClient {
    * @returns The contract address
    */
   getContractAddress(): `0x${string}` {
-    return AGENT_REGISTRY_CONTRACT.address;
+    return this.contract.address;
   }
 }

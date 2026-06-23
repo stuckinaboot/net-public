@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useReadContracts } from "wagmi";
+import { useNetReadContracts } from "@net-protocol/core/react";
 import { NULL_ADDRESS, getNetContract } from "@net-protocol/core";
 import { getCommentTopic, generatePostHash } from "../utils/commentUtils";
 import type { UseCommentCountBatchOptions, NetMessage } from "../types";
@@ -53,8 +53,11 @@ export function useCommentCountBatch({
     [posts]
   );
 
-  // Use wagmi's multicall to fetch all counts in one request
-  const { data, isLoading, error, refetch } = useReadContracts({
+  // Multicall to fetch all counts in one request. Reads via wagmi for
+  // configured chains and via the SDK's standalone client otherwise.
+  const { data, isLoading, error, refetch } = useNetReadContracts<
+    { status: "success" | "failure"; result?: unknown }[]
+  >({
     contracts,
     query: {
       enabled: enabled && posts.length > 0,

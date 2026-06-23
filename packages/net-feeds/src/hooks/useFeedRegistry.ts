@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useReadContract } from "wagmi";
+import { useNetReadContract } from "@net-protocol/core/react";
 import {
   FEED_REGISTRY_CONTRACT,
   MAX_FEED_NAME_LENGTH,
@@ -111,7 +111,7 @@ export function useIsFeedRegistered({
   feedName,
   enabled = true,
 }: UseIsFeedRegisteredOptions) {
-  const { data, isLoading, error, refetch } = useReadContract({
+  const { data, isLoading, error, refetch } = useNetReadContract({
     address: FEED_REGISTRY_CONTRACT.address,
     abi: FEED_REGISTRY_CONTRACT.abi,
     functionName: "isFeedRegistered",

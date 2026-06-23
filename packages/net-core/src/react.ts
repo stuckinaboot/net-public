@@ -2,6 +2,10 @@
 export { useNetMessages } from "./hooks/useNetMessages";
 export { useNetMessageCount } from "./hooks/useNetMessageCount";
 export { useNetMessagesBatchAsync } from "./hooks/useNetMessagesBatchAsync";
+export {
+  useNetReadContract,
+  useNetReadContracts,
+} from "./hooks/useNetReadContract";
 export { NetProvider } from "./hooks/NetProvider";
 
 // Re-export types used by hooks
@@ -10,3 +14,8 @@ export type {
   UseNetMessageCountOptions,
   UseNetMessagesBatchAsyncOptions,
 } from "./types";
+export type {
+  NetReadContractConfig,
+  NetContractCall,
+  NetReadContractResult,
+} from "./hooks/useNetReadContract";

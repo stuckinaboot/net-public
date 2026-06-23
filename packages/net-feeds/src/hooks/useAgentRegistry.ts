@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useReadContract } from "wagmi";
+import { useNetReadContract } from "@net-protocol/core/react";
 import { getAgentRegistryContract } from "../constants";
 import type {
   UseAgentRegistryOptions,
@@ -57,7 +57,7 @@ export function useIsAgentRegistered({
   // Throws on chains where AgentRegistry isn't deployed (e.g. Base Sepolia)
   const contract = getAgentRegistryContract(chainId);
 
-  const { data, isLoading, error, refetch } = useReadContract({
+  const { data, isLoading, error, refetch } = useNetReadContract({
     address: contract.address,
     abi: contract.abi,
     functionName: "isAgentRegistered",

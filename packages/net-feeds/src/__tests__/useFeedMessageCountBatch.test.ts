@@ -10,6 +10,8 @@ vi.mock("wagmi", async (importOriginal) => {
   return {
     ...actual,
     useReadContract: vi.fn(),
+    // A configured chain has a wagmi client → reads stay on the wagmi path.
+    usePublicClient: vi.fn(() => ({})),
   };
 });
 

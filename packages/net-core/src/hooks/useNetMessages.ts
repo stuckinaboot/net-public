@@ -1,30 +1,31 @@
-import { useReadContract } from "wagmi";
 import { useMemo } from "react";
 import { getNetMessagesReadConfig } from "../client/messages";
+import { useNetReadContract } from "./useNetReadContract";
 import { UseNetMessagesOptions, NetMessage } from "../types";
 
 export function useNetMessages(params: UseNetMessagesOptions) {
+  const { chainId, filter, startIndex, endIndex } = params;
+  const enabled = params.enabled ?? true;
+
   const readContractArgs = useMemo(
     () =>
       getNetMessagesReadConfig({
-        chainId: params.chainId,
-        filter: params.filter,
-        startIndex: params.startIndex,
-        endIndex: params.endIndex,
+        chainId,
+        filter,
+        startIndex,
+        endIndex,
       }),
-    [params.chainId, params.filter, params.startIndex, params.endIndex]
+    [chainId, filter, startIndex, endIndex]
   );
 
-  const { data, isLoading, error, refetch } = useReadContract({
+  // useNetReadContract reads via wagmi for configured chains and via the SDK's
+  // standalone client for SDK-supported chains absent from the wagmi config.
+  const { data, isLoading, error, refetch } = useNetReadContract({
     ...readContractArgs,
-    query: {
-      enabled: params.enabled,
-    },
+    query: { enabled },
   });
 
-  const messages = useMemo(() => {
-    return (data as NetMessage[]) ?? [];
-  }, [data]);
+  const messages = useMemo(() => (data as NetMessage[]) ?? [], [data]);
 
   return {
     messages,

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useReadContract } from "wagmi";
+import { useNetReadContract } from "@net-protocol/core/react";
 import { NULL_ADDRESS } from "@net-protocol/core";
 import { normalizeFeedTopic } from "../utils/feedUtils";
 import { TOPIC_COUNT_BULK_HELPER_CONTRACT } from "../constants";
@@ -45,7 +45,7 @@ export function useFeedMessageCountBatch({
   );
 
   // Use TopicCountBulkHelper to fetch all counts in a single RPC call
-  const { data, isLoading, error, refetch } = useReadContract({
+  const { data, isLoading, error, refetch } = useNetReadContract({
     abi: TOPIC_COUNT_BULK_HELPER_CONTRACT.abi,
     address: TOPIC_COUNT_BULK_HELPER_CONTRACT.address,
     functionName: "getMessageCountsForTopics",

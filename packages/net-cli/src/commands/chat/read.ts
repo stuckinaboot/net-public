@@ -4,6 +4,10 @@ import type { NetMessage } from "@net-protocol/chats";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createChatClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
+import {
+  chatUrl as buildChatUrl,
+  profileUrl as buildProfileUrl,
+} from "../../shared/urls";
 import { normalizeChatName } from "./types";
 
 interface ReadOptions {
@@ -20,12 +24,20 @@ function formatMessage(msg: NetMessage, index: number): string {
   return `  ${chalk.gray(`[${index + 1}]`)} ${chalk.cyan(sender)} ${chalk.gray(time)}\n  ${msg.text}`;
 }
 
-function messageToJson(msg: NetMessage, index: number) {
+function messageToJson(
+  msg: NetMessage,
+  index: number,
+  chainId: number,
+  chatName: string
+) {
   return {
     index,
     sender: msg.sender,
+    senderProfileUrl: buildProfileUrl(chainId, msg.sender),
     text: msg.text,
     timestamp: Number(msg.timestamp),
+    chat: chatName,
+    chatUrl: buildChatUrl(chainId, chatName),
     data: msg.data,
   };
 }
@@ -77,7 +89,9 @@ async function executeChatRead(chat: string, options: ReadOptions): Promise<void
 
     if (options.json) {
       printJson(
-        messages.map((msg: NetMessage, i: number) => messageToJson(msg, i))
+        messages.map((msg: NetMessage, i: number) =>
+          messageToJson(msg, i, readOnlyOptions.chainId, normalizedChat)
+        )
       );
     } else {
       if (messages.length === 0) {

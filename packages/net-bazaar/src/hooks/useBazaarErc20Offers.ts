@@ -13,10 +13,12 @@ import { getErc20OffersAddress, isBazaarSupportedOnChain } from "../chainConfig"
 export interface UseBazaarErc20OffersOptions {
   /** Chain ID to query */
   chainId: number;
-  /** ERC20 token address */
-  tokenAddress: `0x${string}`;
+  /** ERC20 token address (optional - if omitted, fetches recent offers across all tokens) */
+  tokenAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
   maxMessages?: number;
   /** Whether the query is enabled (default: true) */
@@ -37,7 +39,8 @@ export interface UseBazaarErc20OffersResult {
 /**
  * React hook for fetching valid ERC20 offers from Bazaar
  *
- * ERC20 offers are only available on Base (8453) and HyperEVM (999).
+ * ERC20 offers are only available on chains with an ERC20 offers contract
+ * deployed (see chainConfig.ts).
  *
  * Returns offers that are:
  * - OPEN status (not filled, cancelled, or expired)
@@ -71,6 +74,7 @@ export function useBazaarErc20Offers({
   chainId,
   tokenAddress,
   excludeMaker,
+  maker,
   maxMessages = 200,
   enabled = true,
 }: UseBazaarErc20OffersOptions): UseBazaarErc20OffersResult {
@@ -87,7 +91,7 @@ export function useBazaarErc20Offers({
     [chainId]
   );
 
-  // Get ERC20 offers address for the chain (only Base and HyperEVM)
+  // Get ERC20 offers address for the chain (undefined if not deployed there)
   const erc20OffersAddress = useMemo(
     () => (isSupported ? getErc20OffersAddress(chainId) : undefined),
     [chainId, isSupported]
@@ -100,9 +104,10 @@ export function useBazaarErc20Offers({
   const filter = useMemo(
     () => ({
       appAddress: erc20OffersAddress as `0x${string}`,
-      topic: tokenAddress.toLowerCase(),
+      topic: tokenAddress?.toLowerCase(),
+      maker,
     }),
-    [erc20OffersAddress, tokenAddress]
+    [erc20OffersAddress, tokenAddress, maker]
   );
 
   // Get message count
@@ -132,7 +137,7 @@ export function useBazaarErc20Offers({
     enabled: enabled && hasErc20Offers && totalCount > 0,
   });
 
-  const TAG = `[useBazaarErc20Offers chain=${chainId} token=${tokenAddress.slice(0, 10)}]`;
+  const TAG = `[useBazaarErc20Offers chain=${chainId} token=${tokenAddress?.slice(0, 10) ?? "all"}]`;
 
   // Log pipeline state changes
   useEffect(() => {
@@ -197,7 +202,7 @@ export function useBazaarErc20Offers({
     return () => {
       cancelled = true;
     };
-  }, [chainId, tokenAddress, excludeMaker, messages, hasErc20Offers, enabled, refetchTrigger]);
+  }, [chainId, tokenAddress, excludeMaker, maker, messages, hasErc20Offers, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

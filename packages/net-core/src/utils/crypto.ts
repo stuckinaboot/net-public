@@ -5,12 +5,12 @@ import { keccak256, pad, stringToHex, toBytes, toHex } from "viem";
  * @throws Error if string is longer than 32 bytes
  */
 export function toBytes32(myString: string): string {
-  if (myString.length > 32) {
-    throw new Error("String must be less than 32 bytes");
-  }
-
   // Convert the string to bytes
   const bytes = new TextEncoder().encode(myString);
+
+  if (bytes.length > 32) {
+    throw new Error("String must be less than 32 bytes");
+  }
 
   // Convert bytes to hex string
   const hexString = toHex(bytes);

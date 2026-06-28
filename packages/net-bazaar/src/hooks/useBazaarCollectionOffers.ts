@@ -17,6 +17,8 @@ export interface UseBazaarCollectionOffersOptions {
   nftAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
   maxMessages?: number;
   /** Whether the query is enabled (default: true) */
@@ -64,6 +66,7 @@ export function useBazaarCollectionOffers({
   chainId,
   nftAddress,
   excludeMaker,
+  maker,
   maxMessages = 100,
   enabled = true,
 }: UseBazaarCollectionOffersOptions): UseBazaarCollectionOffersResult {
@@ -91,8 +94,9 @@ export function useBazaarCollectionOffers({
     () => ({
       appAddress: collectionOffersAddress as `0x${string}`,
       topic: nftAddress?.toLowerCase(),
+      maker,
     }),
-    [collectionOffersAddress, nftAddress]
+    [collectionOffersAddress, nftAddress, maker]
   );
 
   // Get message count
@@ -187,7 +191,7 @@ export function useBazaarCollectionOffers({
     return () => {
       cancelled = true;
     };
-  }, [chainId, nftAddress, excludeMaker, messages, isSupported, enabled, refetchTrigger]);
+  }, [chainId, nftAddress, excludeMaker, maker, messages, isSupported, enabled, refetchTrigger]);
 
   const refetch = () => {
     refetchMessages();

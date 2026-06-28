@@ -222,6 +222,7 @@ All returned listings and offers are automatically validated:
 
 | Chain | Listings | Collection Offers | ERC20 Offers |
 |-------|----------|-------------------|--------------|
+| Ethereum Mainnet (1) | Yes | Yes | No |
 | Base (8453) | Yes | Yes | Yes |
 | Base Sepolia (84532) | Yes | Yes | No |
 | Degen (666666666) | Yes | Yes | No |

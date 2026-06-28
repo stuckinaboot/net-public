@@ -34,6 +34,22 @@ export type GetFeedPostsOptions = {
 };
 
 /**
+ * Result of getFeedPostsWithIndex / getCommentsWithIndex.
+ *
+ * Includes the absolute startIndex and totalCount in the underlying topic
+ * stream so callers can compute each message's absolute position
+ * (`startIndex + i`). Used by tooling (e.g. the `netp` / `botchan` CLI) that
+ * needs to build deep links into the topic-filtered index space.
+ */
+export type GetFeedPostsWithIndexResult = {
+  messages: NetMessage[];
+  /** Absolute index of `messages[0]` in the topic-filtered stream. */
+  startIndex: number;
+  /** Total number of messages in the topic-filtered stream at query time. */
+  totalCount: number;
+};
+
+/**
  * Options for preparing a feed post transaction
  */
 export type PrepareFeedPostOptions = {

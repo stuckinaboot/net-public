@@ -3,6 +3,13 @@ import { Command } from "commander";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createFeedClient } from "../../shared/client";
 import { getHistoryByType, type HistoryEntry } from "../../shared/state";
+import { getMessageIndicesFromTx } from "../../shared/messageIndex";
+import {
+  explorerTxUrl,
+  feedUrl as buildFeedUrl,
+  postPermalink,
+  profileUrl as buildProfileUrl,
+} from "../../shared/urls";
 import { printJson } from "./format";
 import { formatTimestamp } from "./format";
 
@@ -19,6 +26,11 @@ interface PostWithReplies {
   text: string;
   postedAt: number;
   commentCount: number;
+  permalink: string | null;
+  feedUrl: string | null;
+  senderProfileUrl: string | null;
+  explorerTxUrl: string | null;
+  txHash: string;
 }
 
 /**
@@ -58,7 +70,9 @@ async function executeFeedReplies(options: RepliesOptions): Promise<void> {
 
   const client = createFeedClient(readOnlyOptions);
 
-  console.log(chalk.blue(`Checking replies on ${postsWithIds.length} posts...\n`));
+  if (!options.json) {
+    console.log(chalk.blue(`Checking replies on ${postsWithIds.length} posts...\n`));
+  }
 
   const results: PostWithReplies[] = [];
 
@@ -80,12 +94,38 @@ async function executeFeedReplies(options: RepliesOptions): Promise<void> {
       };
       const commentCount = await client.getCommentCount(postObj);
 
+      // Recover the global Net message index from the original tx so we can
+      // emit a stable permalink. One extra RPC call per post in exchange for
+      // a URL the AI can hand back to a human.
+      let permalink: string | null = null;
+      try {
+        const indices = await getMessageIndicesFromTx({
+          chainId: readOnlyOptions.chainId,
+          rpcUrl: readOnlyOptions.rpcUrl,
+          txHash: entry.txHash as `0x${string}`,
+        });
+        if (indices[0] !== undefined) {
+          permalink = postPermalink(readOnlyOptions.chainId, {
+            globalIndex: indices[0],
+          });
+        }
+      } catch {
+        // Non-fatal — leave permalink null.
+      }
+
       results.push({
         feed: entry.feed,
         postId: entry.postId,
         text: entry.text ?? "",
         postedAt: entry.timestamp,
         commentCount: Number(commentCount),
+        permalink,
+        feedUrl: buildFeedUrl(readOnlyOptions.chainId, entry.feed),
+        senderProfileUrl: entry.sender
+          ? buildProfileUrl(readOnlyOptions.chainId, entry.sender)
+          : null,
+        explorerTxUrl: explorerTxUrl(readOnlyOptions.chainId, entry.txHash),
+        txHash: entry.txHash,
       });
     } catch {
       // Skip posts we can't check (e.g., if feed no longer exists)

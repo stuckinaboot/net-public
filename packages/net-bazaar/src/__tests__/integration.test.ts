@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { BazaarClient } from "../client/BazaarClient";
+import { getBazaarSupportedChainIds } from "../chainConfig";
 import { SeaportOrderStatus } from "../types";
 
 // Integration tests that hit real RPC endpoints
@@ -91,10 +92,10 @@ describe("BazaarClient Integration", () => {
     });
 
     it("works for all supported chains", () => {
-      const supportedChains = [8453, 84532, 666666666, 5112, 57073, 130, 999, 9745, 143];
-
-      for (const chain of supportedChains) {
-        expect(() => new BazaarClient({ chainId: chain })).not.toThrow();
+      // Uses dynamic list so new chains are automatically covered.
+      // Provide a dummy rpcUrl so the test validates chain config, not RPC availability.
+      for (const chain of getBazaarSupportedChainIds()) {
+        expect(() => new BazaarClient({ chainId: chain, rpcUrl: "https://localhost" })).not.toThrow();
       }
     });
   });

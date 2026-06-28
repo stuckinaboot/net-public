@@ -80,7 +80,8 @@ export function getStorageKeyBytes(
 
   // Explicit format override: raw - always convert
   if (keyFormat === "raw") {
-    return input.length > 32
+    const byteLength = new TextEncoder().encode(input).length;
+    return byteLength > 32
       ? keccak256HashString(input.toLowerCase())
       : toBytes32(input.toLowerCase());
   }
@@ -95,7 +96,8 @@ export function getStorageKeyBytes(
   }
 
   // Auto-detect: convert string to bytes32
-  return input.length > 32
+  const byteLength = new TextEncoder().encode(input).length;
+  return byteLength > 32
     ? keccak256HashString(input.toLowerCase())
     : toBytes32(input.toLowerCase());
 }

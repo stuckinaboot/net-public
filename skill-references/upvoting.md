@@ -136,6 +136,65 @@ netp upvote info --token-address 0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb --ch
 
 The `total` includes upvotes from all strategies plus any legacy upvotes. Individual strategy counts may not sum to the total if legacy upvotes exist.
 
+### Token Rankings
+
+List the top tokens ranked by upvote activity — the same leaderboard that powers the website's `/token/<chain>/trending` page. Reads are live from chain (no off-chain index); callers should cache via HTTP headers.
+
+```bash
+netp upvote rankings \
+  [--sort <trending|recent|top>] \
+  [--limit <n>] \
+  [--scan-window <n>] \
+  [--min-upvotes <n>] \
+  [--min-market-cap <n>] \
+  [--recency-hours <n>] \
+  [--chain-id <8453>] \
+  [--rpc-url <url>] \
+  [--json]
+```
+
+**Parameters:**
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `--sort` | No | `trending` | Ranking strategy: `trending` (time-decayed score), `recent` (latest upvote timestamp), `top` (aggregate upvote count) |
+| `--limit` | No | 50 | Number of tokens to return, 1-100 |
+| `--scan-window` | No | 150 | Messages to scan per contract (legacy + 3 strategies) |
+| `--min-upvotes` | No | 500 | Two-tier filter floor — tokens with at least this many aggregate upvotes get top slots |
+| `--min-market-cap` | No | 40000 | FDV floor in USDC for top slots |
+| `--recency-hours` | No | 48 | Drop below-floor tokens with no upvote within N hours |
+| `--chain-id` | No | 8453 | Chain ID (Base only) |
+| `--rpc-url` | No | — | Custom RPC endpoint |
+| `--json` | No | — | Output JSON |
+
+**Example:**
+```bash
+netp upvote rankings --sort top --limit 3 --chain-id 8453 --json
+```
+
+**JSON output:**
+```json
+{
+  "chainId": 8453,
+  "sort": "top",
+  "count": 3,
+  "tokens": [
+    {
+      "address": "0x3d01fe5a38ddbd307fdd635b4cb0e29681226d6f",
+      "name": "Alpha",
+      "symbol": "ALPHA",
+      "decimals": 18,
+      "fdv": 403068.41,
+      "priceInUsdc": 0.00000403,
+      "upvotes": 2238158,
+      "latestUpvoteTimestamp": 1756309047,
+      "url": "https://netprotocol.app/app/token/base/0x3d01fe5a38ddbd307fdd635b4cb0e29681226d6f"
+    }
+  ]
+}
+```
+
+Each call performs ~8 RPC reads. Production callers should cache via HTTP `Cache-Control` headers or an edge cache.
+
 ## Cost Considerations
 
 - **Each upvote costs 0.000025 ETH** (fixed, regardless of strategy)

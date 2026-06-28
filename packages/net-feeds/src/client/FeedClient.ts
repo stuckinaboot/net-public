@@ -13,6 +13,7 @@ import type {
   NetMessage,
   FeedClientOptions,
   GetFeedPostsOptions,
+  GetFeedPostsWithIndexResult,
   PrepareFeedPostOptions,
   GetCommentsOptions,
   PrepareCommentOptions,
@@ -59,33 +60,49 @@ export class FeedClient {
    * ```
    */
   async getFeedPosts(params: GetFeedPostsOptions): Promise<NetMessage[]> {
+    const result = await this.getFeedPostsWithIndex(params);
+    return result.messages;
+  }
+
+  /**
+   * Like {@link getFeedPosts}, but also returns `startIndex` (the absolute
+   * position of `messages[0]` in the topic-filtered stream) and `totalCount`.
+   *
+   * Use this when you need to build deep links to specific posts: the
+   * absolute topic-stream index of `messages[i]` is `startIndex + i`.
+   */
+  async getFeedPostsWithIndex(
+    params: GetFeedPostsOptions
+  ): Promise<GetFeedPostsWithIndexResult> {
     const normalizedTopic = normalizeFeedTopic(params.topic);
 
-    // Get total count
-    const count = await this.netClient.getMessageCount({
+    const totalCount = await this.netClient.getMessageCount({
       filter: {
         appAddress: NULL_ADDRESS as `0x${string}`,
         topic: normalizedTopic,
       },
     });
 
-    // Calculate pagination (get last maxPosts posts)
-    // Handle maxPosts = 0 specially (should return empty array)
+    // Calculate pagination (get last maxPosts posts).
+    // Handle maxPosts = 0 specially (should return empty array).
     const maxPosts = params.maxPosts ?? 50;
     const startIndex =
-      maxPosts === 0 ? count : count > maxPosts ? count - maxPosts : 0;
+      maxPosts === 0
+        ? totalCount
+        : totalCount > maxPosts
+        ? totalCount - maxPosts
+        : 0;
 
-    // Get messages
     const messages = await this.netClient.getMessages({
       filter: {
         appAddress: NULL_ADDRESS as `0x${string}`,
         topic: normalizedTopic,
       },
       startIndex,
-      endIndex: count,
+      endIndex: totalCount,
     });
 
-    return messages;
+    return { messages, startIndex, totalCount };
   }
 
   /**
@@ -162,32 +179,44 @@ export class FeedClient {
    * ```
    */
   async getComments(params: GetCommentsOptions): Promise<NetMessage[]> {
+    const result = await this.getCommentsWithIndex(params);
+    return result.messages;
+  }
+
+  /**
+   * Like {@link getComments}, but also returns `startIndex` (the absolute
+   * position of `messages[0]` in the comment-topic stream) and `totalCount`.
+   */
+  async getCommentsWithIndex(
+    params: GetCommentsOptions
+  ): Promise<GetFeedPostsWithIndexResult> {
     const commentTopic = getCommentTopic(params.post);
 
-    // Get total count
-    const count = await this.netClient.getMessageCount({
+    const totalCount = await this.netClient.getMessageCount({
       filter: {
         appAddress: NULL_ADDRESS as `0x${string}`,
         topic: commentTopic,
       },
     });
 
-    // Calculate pagination (get last maxComments comments)
     const maxComments = params.maxComments ?? 50;
     const startIndex =
-      maxComments === 0 ? count : count > maxComments ? count - maxComments : 0;
+      maxComments === 0
+        ? totalCount
+        : totalCount > maxComments
+        ? totalCount - maxComments
+        : 0;
 
-    // Get messages
     const messages = await this.netClient.getMessages({
       filter: {
         appAddress: NULL_ADDRESS as `0x${string}`,
         topic: commentTopic,
       },
       startIndex,
-      endIndex: count,
+      endIndex: totalCount,
     });
 
-    return messages;
+    return { messages, startIndex, totalCount };
   }
 
   /**

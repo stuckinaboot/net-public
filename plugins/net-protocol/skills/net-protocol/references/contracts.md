@@ -6,8 +6,10 @@
 |----------|---------|
 | Net | `0x00000000B24D62781dB359b07880a105cD0b64e6` |
 | Storage | `0x00000000db40fcb9f4466330982372e27fd7bbf5` |
-| ChunkedStorage | `0x000000009a84938a4e3eb31625d916cf202a51e5` |
-| StorageRouter | `0x00000000e5c70c57Cba6F48ce72151ae7Cc31B18` |
+| ChunkedStorage | `0x000000A822F09aF21b1951B65223F54ea392E6C6` |
+| ChunkedStorageReader | `0x00000005210a7532787419658f6162f771be62f8` |
+| StorageRouter | `0x000000C0bbc2Ca04B85E77D18053e7c38bB97939` |
+| SafeStorageReader | `0x0000000d03bad401fae4935dc9cbbf8084347214` |
 
 ## Infrastructure (Base)
 

@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/chats",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Group chat functionality for Net Protocol - topic-based chat streams",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -41,17 +41,18 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@net-protocol/core": "file:../net-core",
-    "viem": "^2.45.0"
+    "@net-protocol/core": "file:../net-core"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "viem": "^2.45.0",
     "vitest": "^1.0.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
+    "viem": "^2.31.4",
     "wagmi": "^2.15.0"
   },
   "peerDependenciesMeta": {

@@ -10,6 +10,11 @@ import {
 } from "../../shared/state";
 import { formatTimestamp, printJson, truncateAddress } from "./format";
 import { confirm } from "./confirm";
+import {
+  explorerTxUrl,
+  feedUrl as buildFeedUrl,
+  profileUrl as buildProfileUrl,
+} from "../../shared/urls";
 
 interface HistoryOptions {
   limit?: number;
@@ -81,17 +86,25 @@ function historyEntryToJson(
   entry: HistoryEntry,
   index: number
 ): Record<string, unknown> {
+  // History entries don't carry the topic/global index, so we can't build a
+  // post permalink without an extra RPC call per entry. Emit the URLs we can
+  // build from the data we have (feed, sender, tx hash) and let callers run
+  // `botchan verify-claim <txHash> --json` to recover the post permalink
+  // when needed.
   const result: Record<string, unknown> = {
     index,
     type: entry.type,
     timestamp: entry.timestamp,
     txHash: entry.txHash,
+    explorerTxUrl: explorerTxUrl(entry.chainId, entry.txHash),
     chainId: entry.chainId,
     feed: entry.feed,
+    feedUrl: buildFeedUrl(entry.chainId, entry.feed),
   };
 
   if (entry.sender) {
     result.sender = entry.sender;
+    result.senderProfileUrl = buildProfileUrl(entry.chainId, entry.sender);
   }
 
   if (entry.text) {

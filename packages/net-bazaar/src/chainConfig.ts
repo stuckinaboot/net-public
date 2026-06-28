@@ -10,12 +10,26 @@ export interface WrappedNativeCurrency {
   symbol: string;
 }
 
+/**
+ * Quote token for ERC20 bazaar trades.
+ *
+ * When set, ERC20 offers and listings on this chain use this token as the
+ * payment currency instead of the wrapped native currency / native currency.
+ * Offers pay in this token; listings receive payment in this token (ERC20
+ * consideration instead of NATIVE).
+ */
+export interface QuoteToken {
+  address: `0x${string}`;
+  symbol: string;
+  decimals: number;
+}
+
 export interface BazaarChainConfig {
   /** Main NFT listing contract */
   bazaarAddress: `0x${string}`;
   /** Collection offers contract */
   collectionOffersAddress: `0x${string}`;
-  /** ERC20 offers contract (only on Base and HyperEVM) */
+  /** ERC20 offers contract */
   erc20OffersAddress?: `0x${string}`;
   /** ERC20 listings contract */
   erc20BazaarAddress?: `0x${string}`;
@@ -25,8 +39,18 @@ export interface BazaarChainConfig {
   feeCollectorAddress: `0x${string}`;
   /** Fee in basis points for NFT trades */
   nftFeeBps: number;
+  /** Fee in basis points for ERC20 trades (defaults to DEFAULT_ERC20_FEE_BPS) */
+  erc20FeeBps?: number;
   /** Wrapped native currency (WETH, etc.) */
   wrappedNativeCurrency: WrappedNativeCurrency;
+  /**
+   * Optional quote token for ERC20 bazaar trades.
+   *
+   * If set, ERC20 offers/listings on this chain use this token (e.g. USDC)
+   * for pricing instead of the wrapped native currency / native currency.
+   * If unset, offers use wrappedNativeCurrency and listings use NATIVE.
+   */
+  erc20QuoteToken?: QuoteToken;
   /** Address with high ETH balance for Seaport checks */
   highEthAddress?: `0x${string}`;
   /** Native currency symbol (lowercase) */
@@ -40,6 +64,7 @@ const DEFAULT_COLLECTION_OFFERS_ADDRESS = "0x0000000D43423E0A12CecB307a74591999b
 const DEFAULT_FEE_COLLECTOR_ADDRESS = "0x32D16C15410248bef498D7aF50D10Db1a546b9E5" as const;
 const DEFAULT_ERC20_BAZAAR_ADDRESS = "0x00000000a2d173a4610c85c7471a25b6bc216a70" as const;
 const DEFAULT_NFT_FEE_BPS = 500; // 5%
+const DEFAULT_ERC20_FEE_BPS = 100; // 1%
 
 // Helper contract addresses (same on all chains)
 export const BULK_SEAPORT_ORDER_STATUS_FETCHER_ADDRESS = "0x0000009112ABCE652674b4fE3eD9C765B22d11A7" as const;
@@ -57,11 +82,14 @@ export const NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS = "0x000000bC63761cbb0530563
 const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
   // Ethereum Mainnet
   1: {
-    bazaarAddress: DEFAULT_BAZAAR_ADDRESS,
-    collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
+    bazaarAddress: "0x000000058f3ade587388daf827174d0e6fc97595",
+    collectionOffersAddress: "0x0000000f9c45efcff0f78d8b54aa6a40092d66dc",
+    erc20OffersAddress: "0x0000000e23a89aa06f317306aa1ae231d3503082",
+    erc20BazaarAddress: "0x00000006557e3629e2fc50bbad0c002b27cac492",
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
-    feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
-    nftFeeBps: DEFAULT_NFT_FEE_BPS,
+    feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
+    nftFeeBps: 0, // 0% on Ethereum Mainnet
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       name: "Wrapped Ether",
@@ -79,10 +107,17 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
     nftFeeBps: 0, // 0% on Base
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       address: "0x4200000000000000000000000000000000000006",
       name: "Wrapped Ether",
       symbol: "WETH",
+    },
+    // ERC20 bazaar trades on Base are priced in USDC, not WETH/ETH.
+    erc20QuoteToken: {
+      address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      symbol: "USDC",
+      decimals: 6,
     },
     currencySymbol: "eth",
   },
@@ -174,6 +209,7 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
     feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
     nftFeeBps: 0, // 0% on HyperEVM
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       address: "0x5555555555555555555555555555555555555555",
       name: "Wrapped Hype",
@@ -287,10 +323,48 @@ export function getNftFeeBps(chainId: number): number {
 }
 
 /**
+ * Get ERC20 trade fee in basis points for a chain
+ */
+export function getErc20FeeBps(chainId: number): number {
+  return BAZAAR_CHAIN_CONFIGS[chainId]?.erc20FeeBps ?? DEFAULT_ERC20_FEE_BPS;
+}
+
+/**
  * Get wrapped native currency for a chain
  */
 export function getWrappedNativeCurrency(chainId: number): WrappedNativeCurrency | undefined {
   return BAZAAR_CHAIN_CONFIGS[chainId]?.wrappedNativeCurrency;
+}
+
+/**
+ * Get the ERC20 bazaar quote token for a chain, if one is configured.
+ *
+ * When set, ERC20 offers and listings on this chain price/settle in this
+ * token (e.g. USDC on Base) instead of WETH/native ETH. When undefined,
+ * the chain uses the legacy WETH-for-offers / native-for-listings flow.
+ */
+export function getErc20QuoteToken(chainId: number): QuoteToken | undefined {
+  return BAZAAR_CHAIN_CONFIGS[chainId]?.erc20QuoteToken;
+}
+
+/**
+ * Resolve the ERC20 token used to pay for offers (and to receive payment in
+ * listings) on a chain.
+ *
+ * Returns the configured `erc20QuoteToken` if set (e.g. USDC on Base),
+ * otherwise the wrapped native currency synthesized as a 18-decimal quote
+ * token. Returns undefined when neither is configured.
+ *
+ * This is the single source of truth for "what token denominates ERC20
+ * bazaar trades?" — call sites that previously combined `getErc20QuoteToken`
+ * and `getWrappedNativeCurrency` should use this instead.
+ */
+export function getErc20PaymentToken(chainId: number): QuoteToken | undefined {
+  const quote = BAZAAR_CHAIN_CONFIGS[chainId]?.erc20QuoteToken;
+  if (quote) return quote;
+  const weth = BAZAAR_CHAIN_CONFIGS[chainId]?.wrappedNativeCurrency;
+  if (!weth) return undefined;
+  return { address: weth.address, symbol: weth.symbol, decimals: 18 };
 }
 
 /**
@@ -309,7 +383,7 @@ export function getHighEthAddress(chainId: number): `0x${string}` | undefined {
 
 /**
  * Get ERC20 offers contract address for a chain
- * Only deployed on Base (8453) and HyperEVM (999)
+ * Only available on chains that have the ERC20 offers contract deployed
  */
 export function getErc20OffersAddress(chainId: number): `0x${string}` | undefined {
   return BAZAAR_CHAIN_CONFIGS[chainId]?.erc20OffersAddress;

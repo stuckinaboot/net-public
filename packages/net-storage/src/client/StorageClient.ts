@@ -171,11 +171,13 @@ export class StorageClient {
     });
 
     try {
-      const results = await readContract(this.client, config);
-      return (results as any[]).map((r) => ({
-        text: r[0],
-        value: r[1],
-      })) as BulkStorageResult[];
+      // viem returns Solidity named-tuple outputs as `{text, value}` objects,
+      // not positional arrays. Reading via `r[0]`/`r[1]` returns undefined.
+      const results = (await readContract(
+        this.client,
+        config
+      )) as BulkStorageResult[];
+      return results.map((r) => ({ text: r.text, value: r.value }));
     } catch {
       return [];
     }

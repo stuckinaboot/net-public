@@ -1,0 +1,191 @@
+import chalk from "chalk";
+import { Command } from "commander";
+import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
+import { exitWithError } from "../../shared/output";
+import { tokenUrl as buildTokenUrl } from "../../shared/urls";
+import { getTokenRankings, type RankingSort } from "@net-protocol/score";
+import type { RankingsOptions } from "./types";
+
+const VALID_SORTS: RankingSort[] = ["trending", "recent", "top"];
+
+function formatNumber(n: number | undefined, digits = 2): string {
+  if (n == null || !Number.isFinite(n)) return "-";
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(digits)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(digits)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(digits)}K`;
+  return n.toFixed(digits);
+}
+
+function formatPrice(price: number | undefined): string {
+  if (price == null || !Number.isFinite(price)) return "-";
+  if (price < 0.000001) return price.toExponential(2);
+  if (price < 1) return `$${price.toFixed(6)}`;
+  return `$${price.toFixed(4)}`;
+}
+
+async function executeRankings(options: RankingsOptions): Promise<void> {
+  const sort = (options.sort ?? "trending").toLowerCase() as RankingSort;
+  if (!VALID_SORTS.includes(sort)) {
+    exitWithError(
+      `Invalid --sort "${options.sort}". Must be one of: ${VALID_SORTS.join(", ")}`
+    );
+    return;
+  }
+
+  const limit = options.limit ?? 10;
+  if (!Number.isFinite(limit) || limit < 1 || limit > 100) {
+    exitWithError("Invalid --limit. Must be an integer between 1 and 100.");
+    return;
+  }
+
+  // Reject NaN that survives parseInt for any numeric flag. Without this an
+  // input like `--scan-window foo` propagates NaN into the ranking algorithm
+  // and silently produces empty/junk output.
+  const optionalPositiveInt = (
+    value: number | undefined,
+    name: string,
+    { allowZero = false }: { allowZero?: boolean } = {}
+  ): number | undefined => {
+    if (value === undefined) return undefined;
+    if (!Number.isFinite(value) || (allowZero ? value < 0 : value < 1)) {
+      exitWithError(
+        `Invalid ${name}. Must be a ${allowZero ? "non-negative" : "positive"} integer.`
+      );
+    }
+    return value;
+  };
+  const scanWindow = optionalPositiveInt(options.scanWindow, "--scan-window");
+  const minUpvotes = optionalPositiveInt(options.minUpvotes, "--min-upvotes", {
+    allowZero: true,
+  });
+  const minMarketCap = optionalPositiveInt(
+    options.minMarketCap,
+    "--min-market-cap",
+    { allowZero: true }
+  );
+  const recencyHours = optionalPositiveInt(
+    options.recencyHours,
+    "--recency-hours",
+    { allowZero: true }
+  );
+  if (options.chainId !== undefined && !Number.isFinite(options.chainId)) {
+    exitWithError("Invalid --chain-id. Must be an integer.");
+    return;
+  }
+
+  const readOnlyOptions = parseReadOnlyOptionsWithDefault({
+    chainId: options.chainId,
+    rpcUrl: options.rpcUrl,
+  });
+
+  try {
+    const tokens = await getTokenRankings({
+      chainId: readOnlyOptions.chainId,
+      sort,
+      maxTokens: limit,
+      messageScanWindow: scanWindow,
+      thresholds:
+        minUpvotes != null || minMarketCap != null || recencyHours != null
+          ? {
+              minUpvotes,
+              minMarketCap,
+              recencyHours,
+            }
+          : undefined,
+      rpcUrl: readOnlyOptions.rpcUrl,
+    });
+
+    if (options.json) {
+      console.log(
+        JSON.stringify(
+          {
+            chainId: readOnlyOptions.chainId,
+            sort,
+            count: tokens.length,
+            tokens: tokens.map((t) => ({
+              ...t,
+              url: buildTokenUrl(readOnlyOptions.chainId, t.address),
+            })),
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+
+    if (tokens.length === 0) {
+      console.log(chalk.yellow("No tokens found."));
+      return;
+    }
+
+    console.log(
+      chalk.white(
+        `Top ${tokens.length} tokens by ${sort} on chain ${readOnlyOptions.chainId}:`
+      )
+    );
+    console.log();
+    tokens.forEach((t, i) => {
+      const rank = chalk.dim(`#${(i + 1).toString().padStart(2, " ")}`);
+      const symbol = chalk.cyan((t.symbol || "?").padEnd(10, " "));
+      const upvotes = chalk.white(`${t.upvotes} upvotes`.padEnd(18, " "));
+      const fdv = chalk.dim(`FDV ${formatNumber(t.fdv)}`.padEnd(14, " "));
+      const price = chalk.dim(`${formatPrice(t.priceInUsdc)}`.padEnd(14, " "));
+      console.log(`${rank}  ${symbol} ${upvotes} ${fdv} ${price} ${t.address}`);
+    });
+  } catch (error) {
+    exitWithError(
+      `Failed to fetch token rankings: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+export function registerRankingsCommand(
+  parent: Command,
+  commandName = "rankings"
+): void {
+  parent
+    .command(commandName)
+    .description(
+      "List tokens ranked by upvote activity (trending / recent / top)"
+    )
+    .option(
+      "--sort <sort>",
+      `Ranking strategy: ${VALID_SORTS.join(" | ")} (default: trending)`,
+      "trending"
+    )
+    .option(
+      "--limit <n>",
+      "Number of tokens to return (1-100, default: 50)",
+      (v) => parseInt(v, 10),
+      50
+    )
+    .option(
+      "--scan-window <n>",
+      "Messages to scan per contract (default: 150)",
+      (v) => parseInt(v, 10)
+    )
+    .option(
+      "--min-upvotes <n>",
+      "Floor for two-tier filter (default: 500)",
+      (v) => parseInt(v, 10)
+    )
+    .option(
+      "--min-market-cap <n>",
+      "FDV floor in USDC (default: 40000)",
+      (v) => parseInt(v, 10)
+    )
+    .option(
+      "--recency-hours <n>",
+      "Drop below-floor tokens with no upvote within N hours (default: 48)",
+      (v) => parseInt(v, 10)
+    )
+    .option("--chain-id <id>", "Chain ID (default: 8453 for Base)", (v) =>
+      parseInt(v, 10)
+    )
+    .option("--rpc-url <url>", "Custom RPC URL")
+    .option("--json", "Output in JSON format")
+    .action(async (options) => {
+      await executeRankings(options);
+    });
+}

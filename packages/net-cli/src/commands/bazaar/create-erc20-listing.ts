@@ -2,7 +2,6 @@ import chalk from "chalk";
 import {
   createWalletClient,
   http,
-  parseEther,
   encodeFunctionData,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -10,6 +9,7 @@ import { BazaarClient } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import { parseErc20Price } from "./format";
 import type { CreateErc20ListingOptions } from "./types";
 
 export async function executeCreateErc20Listing(options: CreateErc20ListingOptions): Promise<void> {
@@ -19,8 +19,8 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
     process.env.PRIVATE_KEY
   );
 
-  if (!hasPrivateKey) {
-    await executeKeylessMode(options);
+  if (!hasPrivateKey || options.encodeOnly) {
+    await executeEncodeOnly(options);
     return;
   }
 
@@ -37,7 +37,10 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
     rpcUrl: commonOptions.rpcUrl,
   });
 
-  const priceWei = parseEther(options.price);
+  const { priceWei, symbol: paymentSymbol } = parseErc20Price(
+    commonOptions.chainId,
+    options.price
+  );
   const tokenAmount = BigInt(options.tokenAmount);
 
   try {
@@ -48,6 +51,7 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
       tokenAmount,
       priceWei,
       offerer: account.address,
+      targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });
 
     const rpcUrls = getChainRpcUrls({
@@ -110,7 +114,7 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
 
     console.log(
       chalk.green(
-        `ERC-20 listing created successfully!\n  Transaction: ${hash}\n  Token: ${options.tokenAddress}\n  Amount: ${options.tokenAmount}\n  Price: ${options.price} ETH`
+        `ERC-20 listing created successfully!\n  Transaction: ${hash}\n  Token: ${options.tokenAddress}\n  Amount: ${options.tokenAmount}\n  Price: ${options.price} ${paymentSymbol}`
       )
     );
   } catch (error) {
@@ -120,9 +124,9 @@ export async function executeCreateErc20Listing(options: CreateErc20ListingOptio
   }
 }
 
-async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<void> {
+async function executeEncodeOnly(options: CreateErc20ListingOptions): Promise<void> {
   if (!options.offerer) {
-    exitWithError("--offerer is required when not providing --private-key");
+    exitWithError("--offerer is required when using --encode-only without --private-key");
   }
 
   const readOnlyOptions = parseReadOnlyOptions({
@@ -135,7 +139,7 @@ async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<v
     rpcUrl: readOnlyOptions.rpcUrl,
   });
 
-  const priceWei = parseEther(options.price);
+  const { priceWei } = parseErc20Price(readOnlyOptions.chainId, options.price);
   const tokenAmount = BigInt(options.tokenAmount);
 
   try {
@@ -144,6 +148,7 @@ async function executeKeylessMode(options: CreateErc20ListingOptions): Promise<v
       tokenAmount,
       priceWei,
       offerer: options.offerer as `0x${string}`,
+      targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });
 
     const output = {

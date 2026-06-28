@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/relay",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Net Relay SDK for submitting transactions via x402 payment relay service",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,15 +32,18 @@
   "dependencies": {
     "@net-protocol/core": "file:../net-core",
     "@x402/evm": "^2.1.0",
-    "@x402/fetch": "^2.1.0",
-    "viem": "^2.45.0"
+    "@x402/fetch": "^2.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@vitest/ui": "^1.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "viem": "^2.45.0",
     "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "viem": "^2.31.4"
   },
   "publishConfig": {
     "access": "public",

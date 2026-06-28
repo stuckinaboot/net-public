@@ -27,6 +27,8 @@ export {
   MAX_FEED_NAME_LENGTH,
   FEED_REGISTRY_CONTRACT,
   AGENT_REGISTRY_CONTRACT,
+  AGENT_REGISTRY_CHAIN_IDS,
+  getAgentRegistryContract,
   AGENT_TOPIC,
 } from "./constants";
 
@@ -35,6 +37,7 @@ export type {
   UseFeedPostsOptions,
   FeedClientOptions,
   GetFeedPostsOptions,
+  GetFeedPostsWithIndexResult,
   PrepareFeedPostOptions,
   NetMessage,
   WriteTransactionConfig,

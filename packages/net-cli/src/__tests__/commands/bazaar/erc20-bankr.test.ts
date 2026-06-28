@@ -59,6 +59,14 @@ vi.mock("@net-protocol/bazaar", () => ({
     getErc20Listings: mockGetErc20Listings,
     getErc20Offers: mockGetErc20Offers,
   })),
+  // Base's quote token (USDC, 6 decimals). The CLI reads this to decide
+  // how to scale the `--price` arg into base units; mocking it keeps the
+  // test deterministic on TEST_CHAIN_ID = Base.
+  getErc20PaymentToken: vi.fn().mockReturnValue({
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    symbol: "USDC",
+    decimals: 6,
+  }),
 }));
 
 // Mock @net-protocol/core
@@ -110,7 +118,7 @@ import { executeSubmitErc20Listing } from "../../../commands/bazaar/submit-erc20
 import { executeSubmitErc20Offer } from "../../../commands/bazaar/submit-erc20-offer";
 
 /**
- * Validate that an object conforms to the Bankr /agent/sign request format
+ * Validate that an object conforms to the Bankr /wallet/sign request format
  * for eth_signTypedData_v4.
  */
 function validateBankrSignRequest(
@@ -135,7 +143,7 @@ function validateBankrSignRequest(
 }
 
 /**
- * Validate that an encoded transaction object conforms to the Bankr /agent/submit
+ * Validate that an encoded transaction object conforms to the Bankr /wallet/submit
  * request format.
  */
 function validateBankrSubmitRequest(
@@ -167,7 +175,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
     consoleErrorSpy.mockClear();
   });
 
-  describe("create-erc20-listing keyless mode → Bankr /agent/sign", () => {
+  describe("create-erc20-listing keyless mode → Bankr /wallet/sign", () => {
     it("should output EIP-712 data compatible with Bankr sign API", async () => {
       const mockPrepared = createMockPreparedOrder();
       mockPrepareCreateErc20Listing.mockResolvedValue(mockPrepared);
@@ -298,7 +306,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
     });
   });
 
-  describe("create-erc20-offer keyless mode → Bankr /agent/sign", () => {
+  describe("create-erc20-offer keyless mode → Bankr /wallet/sign", () => {
     it("should output EIP-712 data compatible with Bankr sign API", async () => {
       const mockPrepared = createMockPreparedOrder();
       mockPrepareCreateErc20Offer.mockResolvedValue(mockPrepared);
@@ -339,7 +347,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
     });
   });
 
-  describe("buy-erc20-listing encode-only mode → Bankr /agent/submit", () => {
+  describe("buy-erc20-listing encode-only mode → Bankr /wallet/submit", () => {
     it("should output encoded transaction compatible with Bankr submit API", async () => {
       const mockListing = createMockErc20Listing();
       mockGetErc20Listings.mockResolvedValue([mockListing]);
@@ -442,7 +450,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
     });
   });
 
-  describe("accept-erc20-offer encode-only mode → Bankr /agent/submit", () => {
+  describe("accept-erc20-offer encode-only mode → Bankr /wallet/submit", () => {
     it("should output encoded transaction compatible with Bankr submit API", async () => {
       const mockOffer = createMockErc20Offer();
       mockGetErc20Offers.mockResolvedValue([mockOffer]);
@@ -486,7 +494,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
     });
   });
 
-  describe("submit-erc20-listing encode-only mode → Bankr /agent/submit", () => {
+  describe("submit-erc20-listing encode-only mode → Bankr /wallet/submit", () => {
     it("should output encoded transaction compatible with Bankr submit API", async () => {
       mockPrepareSubmitErc20Listing.mockReturnValue(
         createMockSubmitTxConfig()
@@ -526,7 +534,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
     });
   });
 
-  describe("submit-erc20-offer encode-only mode → Bankr /agent/submit", () => {
+  describe("submit-erc20-offer encode-only mode → Bankr /wallet/submit", () => {
     it("should output encoded transaction compatible with Bankr submit API", async () => {
       mockPrepareSubmitErc20Offer.mockReturnValue(createMockSubmitTxConfig());
 
@@ -587,7 +595,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
       expect(createCall).toBeDefined();
       const createOutput = JSON.parse(createCall![0]);
 
-      // Step 2: Format for Bankr /agent/sign
+      // Step 2: Format for Bankr /wallet/sign
       const signRequest = validateBankrSignRequest(createOutput.eip712);
       expect(signRequest.signatureType).toBe("eth_signTypedData_v4");
       expect(signRequest.typedData).toBeDefined();
@@ -628,7 +636,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
       expect(submitCall).toBeDefined();
       const submitOutput = JSON.parse(submitCall![0]);
 
-      // Step 4: Format for Bankr /agent/submit
+      // Step 4: Format for Bankr /wallet/submit
       const submitRequest = validateBankrSubmitRequest(
         submitOutput,
         "Submit ERC-20 listing on-chain"
@@ -668,7 +676,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
 
       const output = JSON.parse(jsonCall![0]);
 
-      // Step 2: Submit each approval via Bankr /agent/submit
+      // Step 2: Submit each approval via Bankr /wallet/submit
       for (const approval of output.approvals) {
         const approvalRequest: BankrSubmitRequest = {
           transaction: {
@@ -683,7 +691,7 @@ describe("ERC20 Bazaar commands + Bankr API compatibility", () => {
         expect(approvalRequest.transaction.to).toMatch(/^0x/);
       }
 
-      // Step 3: Submit the fulfillment via Bankr /agent/submit
+      // Step 3: Submit the fulfillment via Bankr /wallet/submit
       const fulfillRequest: BankrSubmitRequest = {
         transaction: {
           to: output.fulfillment.to,

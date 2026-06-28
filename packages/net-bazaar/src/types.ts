@@ -130,6 +130,8 @@ export interface Erc20Listing {
   messageData: `0x${string}`;
   /** Decoded Seaport order components */
   orderComponents?: SeaportOrderComponents;
+  /** Private order fulfiller zone hash (undefined = public order) */
+  targetFulfiller?: `0x${string}`;
 }
 
 /**
@@ -274,6 +276,8 @@ export interface GetCollectionOffersOptions {
   nftAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
   maxMessages?: number;
 }
@@ -282,10 +286,12 @@ export interface GetCollectionOffersOptions {
  * Options for fetching ERC20 offers
  */
 export interface GetErc20OffersOptions {
-  /** ERC20 token address to filter by */
-  tokenAddress: `0x${string}`;
+  /** ERC20 token address (optional - if omitted, fetches recent offers across all tokens) */
+  tokenAddress?: `0x${string}`;
   /** Exclude offers from this address */
   excludeMaker?: `0x${string}`;
+  /** Only include offers from this address */
+  maker?: `0x${string}`;
   /** Maximum number of messages to fetch (default: 200) */
   maxMessages?: number;
 }
@@ -294,8 +300,8 @@ export interface GetErc20OffersOptions {
  * Options for fetching ERC20 listings
  */
 export interface GetErc20ListingsOptions {
-  /** ERC20 token address to filter by */
-  tokenAddress: `0x${string}`;
+  /** ERC20 token address (optional - if omitted, fetches recent listings across all tokens) */
+  tokenAddress?: `0x${string}`;
   /** Exclude listings from this address */
   excludeMaker?: `0x${string}`;
   /** Only include listings from this address */
@@ -306,6 +312,8 @@ export interface GetErc20ListingsOptions {
   startIndex?: number;
   /** Override end index for message range */
   endIndex?: number;
+  /** Include expired listings in results (default: false) */
+  includeExpired?: boolean;
 }
 
 /**
@@ -337,11 +345,14 @@ export interface Sale {
 }
 
 /**
- * Options for fetching sales
+ * Options for fetching sales.
+ *
+ * Sales work for both NFT and ERC20 trades — zone storage is keyed by the
+ * traded token address regardless of token kind.
  */
 export interface GetSalesOptions {
-  /** NFT collection address */
-  nftAddress: `0x${string}`;
+  /** Token contract address (NFT or ERC20) */
+  tokenAddress: `0x${string}`;
   /** Maximum number of messages to fetch (default: 100) */
   maxMessages?: number;
 }

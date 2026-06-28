@@ -23,7 +23,10 @@ import {
   getSeaportAddress,
   getFeeCollectorAddress,
   getNftFeeBps,
+  getErc20FeeBps,
   getWrappedNativeCurrency,
+  getErc20QuoteToken,
+  getErc20PaymentToken,
   NET_SEAPORT_ZONE_ADDRESS,
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
   NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
@@ -266,22 +269,23 @@ export function buildCollectionOfferOrderComponents(
 }
 
 /**
- * Build order components for an ERC20 offer (buying ERC20 tokens with WETH).
+ * Build order components for an ERC20 offer (buying ERC20 tokens with the quote token).
  *
- * Offer: WETH payment
- * Consideration: ERC20 tokens to offerer + optional WETH fee to feeCollector
+ * Offer: quote token payment (USDC on Base, WETH elsewhere)
+ * Consideration: ERC20 tokens to offerer + optional quote-token fee to feeCollector
  */
 export function buildErc20OfferOrderComponents(
   params: CreateErc20OfferParams & { offerer: `0x${string}` },
   chainId: number,
   counter: bigint
 ): { orderParameters: SeaportOrderParameters; counter: bigint } {
-  const weth = getWrappedNativeCurrency(chainId);
-  if (!weth) {
-    throw new Error(`No wrapped native currency configured for chain ${chainId}`);
+  const paymentToken = getErc20PaymentToken(chainId);
+  if (!paymentToken) {
+    throw new Error(`No ERC20 payment token configured for chain ${chainId}`);
   }
+  const quoteTokenAddress = paymentToken.address;
 
-  const feeBps = getNftFeeBps(chainId);
+  const feeBps = getErc20FeeBps(chainId);
   const feeAmount = calculateFee(params.priceWei, feeBps, true); // Ceiling division for ERC20s
   const endTime = BigInt(params.expirationDate ?? getDefaultExpiration());
   const feeCollector = getFeeCollectorAddress(chainId);
@@ -300,7 +304,7 @@ export function buildErc20OfferOrderComponents(
   if (feeAmount > BigInt(0)) {
     consideration.push({
       itemType: ItemType.ERC20,
-      token: weth.address,
+      token: quoteTokenAddress,
       identifierOrCriteria: BigInt(0),
       startAmount: feeAmount,
       endAmount: feeAmount,
@@ -314,7 +318,7 @@ export function buildErc20OfferOrderComponents(
     offer: [
       {
         itemType: ItemType.ERC20,
-        token: weth.address,
+        token: quoteTokenAddress,
         identifierOrCriteria: BigInt(0),
         startAmount: params.priceWei,
         endAmount: params.priceWei,
@@ -334,26 +338,36 @@ export function buildErc20OfferOrderComponents(
 }
 
 /**
- * Build order components for an ERC20 listing (selling ERC20 tokens for native currency).
+ * Build order components for an ERC20 listing (selling ERC20 tokens for the quote token).
  *
- * Offer: ERC20 tokens
- * Consideration: native currency payment to offerer + optional fee to feeCollector
+ * Offer: ERC20 tokens being sold.
+ * Consideration:
+ *   - If the chain has an `erc20QuoteToken` configured (e.g. USDC on Base),
+ *     payment is in that ERC20 token. Buyers must approve the quote token
+ *     before fulfilling.
+ *   - Otherwise, payment is in native currency (legacy behavior).
  */
 export function buildErc20ListingOrderComponents(
   params: CreateErc20ListingParams & { offerer: `0x${string}`; targetFulfiller?: `0x${string}` },
   chainId: number,
   counter: bigint
 ): { orderParameters: SeaportOrderParameters; counter: bigint } {
-  const feeBps = getNftFeeBps(chainId);
+  const feeBps = getErc20FeeBps(chainId);
   const feeAmount = calculateFee(params.priceWei, feeBps, true); // Ceiling division for ERC20s
   const sellerAmount = params.priceWei - feeAmount;
   const endTime = BigInt(params.expirationDate ?? getDefaultExpiration());
   const feeCollector = getFeeCollectorAddress(chainId);
 
+  const quoteToken = getErc20QuoteToken(chainId);
+  const paymentItemType = quoteToken ? ItemType.ERC20 : ItemType.NATIVE;
+  const paymentTokenAddress = quoteToken
+    ? quoteToken.address
+    : (ZERO_ADDRESS as `0x${string}`);
+
   const consideration = [
     {
-      itemType: ItemType.NATIVE,
-      token: ZERO_ADDRESS as `0x${string}`,
+      itemType: paymentItemType,
+      token: paymentTokenAddress,
       identifierOrCriteria: BigInt(0),
       startAmount: sellerAmount,
       endAmount: sellerAmount,
@@ -363,8 +377,8 @@ export function buildErc20ListingOrderComponents(
 
   if (feeAmount > BigInt(0)) {
     consideration.push({
-      itemType: ItemType.NATIVE,
-      token: ZERO_ADDRESS as `0x${string}`,
+      itemType: paymentItemType,
+      token: paymentTokenAddress,
       identifierOrCriteria: BigInt(0),
       startAmount: feeAmount,
       endAmount: feeAmount,

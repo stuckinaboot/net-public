@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 /**
  * Test utilities for profile command tests
  */
@@ -10,6 +12,7 @@ export const TEST_PRIVATE_KEY =
 export const TEST_PROFILE_PICTURE = "https://example.com/image.jpg";
 export const TEST_X_USERNAME = "testuser";
 export const TEST_BIO = "Hello, I'm a developer!";
+export const TEST_DISPLAY_NAME = "Test User";
 export const TEST_CANVAS_CONTENT = "<html><body><h1>My Canvas</h1></body></html>";
 export const TEST_CANVAS_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
@@ -27,22 +30,43 @@ export function createMockProfilePictureData(url: string = TEST_PROFILE_PICTURE)
 /**
  * Create mock storage data for profile metadata
  */
-export function createMockProfileMetadataData(
-  username: string = TEST_X_USERNAME,
-  bio?: string
-) {
-  const metadata: { x_username?: string; bio?: string } = {};
+export function createMockProfileMetadataData(overrides?: {
+  username?: string;
+  bio?: string;
+  displayName?: string;
+}) {
+  const username = overrides?.username ?? TEST_X_USERNAME;
+  const metadata: { x_username?: string; bio?: string; display_name?: string } = {};
   if (username) {
     metadata.x_username = `@${username}`;
   }
-  if (bio) {
-    metadata.bio = bio;
+  if (overrides?.bio) {
+    metadata.bio = overrides.bio;
+  }
+  if (overrides?.displayName) {
+    metadata.display_name = overrides.displayName;
   }
   return {
     text: "profile-metadata",
     data: JSON.stringify(metadata),
     isXml: false,
   };
+}
+
+/**
+ * Extract parsed JSON output from console.log spy calls
+ */
+export function extractJsonOutput(consoleSpy: any) {
+  const call = consoleSpy.mock.calls.find((c: any) => {
+    try {
+      const parsed = JSON.parse(c[0]);
+      return parsed.address !== undefined;
+    } catch {
+      return false;
+    }
+  });
+  expect(call).toBeDefined();
+  return JSON.parse(call![0]);
 }
 
 /**

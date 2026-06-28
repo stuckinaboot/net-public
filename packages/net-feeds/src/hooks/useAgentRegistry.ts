@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useReadContract } from "wagmi";
-import { AGENT_REGISTRY_CONTRACT } from "../constants";
+import { getAgentRegistryContract } from "../constants";
 import type {
   UseAgentRegistryOptions,
   UseIsAgentRegisteredOptions,
@@ -16,24 +16,27 @@ import type {
  * @returns Object with prepareRegisterAgent and contractAddress
  */
 export function useAgentRegistry({ chainId }: UseAgentRegistryOptions) {
+  // Throws on chains where AgentRegistry isn't deployed (e.g. Base Sepolia)
+  const contract = getAgentRegistryContract(chainId);
+
   /**
    * Prepares a transaction configuration for registering as an agent.
    */
   const prepareRegisterAgent = useMemo(
     () => (): WriteTransactionConfig => {
       return {
-        abi: AGENT_REGISTRY_CONTRACT.abi,
-        to: AGENT_REGISTRY_CONTRACT.address,
+        abi: contract.abi,
+        to: contract.address,
         functionName: "registerAgent",
         args: [],
       };
     },
-    []
+    [contract]
   );
 
   return {
     prepareRegisterAgent,
-    contractAddress: AGENT_REGISTRY_CONTRACT.address,
+    contractAddress: contract.address,
   };
 }
 
@@ -51,9 +54,12 @@ export function useIsAgentRegistered({
   agentAddress,
   enabled = true,
 }: UseIsAgentRegisteredOptions) {
+  // Throws on chains where AgentRegistry isn't deployed (e.g. Base Sepolia)
+  const contract = getAgentRegistryContract(chainId);
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: AGENT_REGISTRY_CONTRACT.address,
-    abi: AGENT_REGISTRY_CONTRACT.abi,
+    address: contract.address,
+    abi: contract.abi,
     functionName: "isAgentRegistered",
     args: [agentAddress],
     chainId,

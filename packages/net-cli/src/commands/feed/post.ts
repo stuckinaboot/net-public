@@ -6,6 +6,13 @@ import { createWallet, executeTransaction } from "../../shared/wallet";
 import { encodeTransaction } from "../../shared/encode";
 import { exitWithError } from "../../shared/output";
 import { addHistoryEntry } from "../../shared/state";
+import { getMessageIndicesFromTx } from "../../shared/messageIndex";
+import {
+  explorerTxUrl,
+  feedUrl as buildFeedUrl,
+  postPermalink,
+  profileUrl as buildProfileUrl,
+} from "../../shared/urls";
 import { printJson } from "./format";
 import { normalizeFeedName } from "./types";
 
@@ -16,6 +23,7 @@ interface PostOptions {
   encodeOnly?: boolean;
   data?: string;
   body?: string;
+  json?: boolean;
 }
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -88,20 +96,33 @@ async function executeFeedPost(
     commonOptions.rpcUrl
   );
 
-  console.log(chalk.blue(`Posting to feed "${normalizedFeed}"...`));
+  if (!options.json) {
+    console.log(chalk.blue(`Posting to feed "${normalizedFeed}"...`));
+  }
 
   try {
     const hash = await executeTransaction(walletClient, txConfig);
     const senderAddress = walletClient.account.address;
 
-    // Try to fetch the post to get its actual post ID
+    // Recover the post ID and the global Net message index from the receipt.
+    // The MessageSent event gives us the most reliable index for permalinks.
     let postId: string | undefined;
+    let globalIndex: number | undefined;
+    try {
+      const indices = await getMessageIndicesFromTx({
+        chainId: commonOptions.chainId,
+        rpcUrl: commonOptions.rpcUrl,
+        txHash: hash,
+      });
+      globalIndex = indices[0];
+    } catch {
+      // Non-fatal: we'll still try the legacy fallback below.
+    }
     try {
       const posts = await client.getFeedPosts({
         topic: normalizedFeed,
         maxPosts: 10,
       });
-      // Find our post (most recent from our sender with matching text)
       const ourPost = posts.find(
         (p) =>
           p.sender.toLowerCase() === senderAddress.toLowerCase() &&
@@ -111,10 +132,9 @@ async function executeFeedPost(
         postId = `${ourPost.sender}:${ourPost.timestamp}`;
       }
     } catch {
-      // Non-fatal: we can still record history without the post ID
+      // Non-fatal.
     }
 
-    // Record in history with the actual post ID
     addHistoryEntry({
       type: "post",
       txHash: hash,
@@ -122,19 +142,44 @@ async function executeFeedPost(
       feed: normalizedFeed,
       sender: senderAddress,
       text: fullMessage,
-      postId, // Now we have the actual post ID for checking comments later
+      postId,
     });
+
+    const permalink = postPermalink(commonOptions.chainId, {
+      globalIndex,
+    });
+
+    if (options.json) {
+      printJson({
+        success: true,
+        txHash: hash,
+        explorerTxUrl: explorerTxUrl(commonOptions.chainId, hash),
+        postId,
+        globalIndex,
+        permalink,
+        feed: normalizedFeed,
+        feedUrl: buildFeedUrl(commonOptions.chainId, normalizedFeed),
+        sender: senderAddress,
+        senderProfileUrl: buildProfileUrl(commonOptions.chainId, senderAddress),
+        text: fullMessage,
+      });
+      return;
+    }
 
     const displayText = options.body
       ? `${message} (+ body)`
       : message;
 
-    const postIdInfo = postId ? `\n  Post ID: ${postId}` : "";
-    console.log(
-      chalk.green(
-        `Message posted successfully!\n  Transaction: ${hash}\n  Feed: ${normalizedFeed}${postIdInfo}\n  Text: ${displayText}`
-      )
-    );
+    const lines = [
+      `Message posted successfully!`,
+      `  Transaction: ${hash}`,
+      `  Feed: ${normalizedFeed}`,
+    ];
+    if (postId) lines.push(`  Post ID: ${postId}`);
+    if (permalink) lines.push(`  Permalink: ${permalink}`);
+    lines.push(`  Text: ${displayText}`);
+
+    console.log(chalk.green(lines.join("\n")));
   } catch (error) {
     exitWithError(
       `Failed to post message: ${error instanceof Error ? error.message : String(error)}`
@@ -162,6 +207,10 @@ export function registerFeedPostCommand(parent: Command): void {
     )
     .option("--data <data>", "Optional data to attach to the post")
     .option("--body <text>", "Post body (message becomes the title)")
+    .option(
+      "--json",
+      "Output structured JSON (includes permalink and other URLs) after submission"
+    )
     .action(async (feed, message, options) => {
       await executeFeedPost(feed, message, options);
     });

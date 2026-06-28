@@ -2,7 +2,6 @@ import chalk from "chalk";
 import {
   createWalletClient,
   http,
-  parseEther,
   encodeFunctionData,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -10,6 +9,7 @@ import { BazaarClient } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import { parseErc20Price } from "./format";
 import type { CreateErc20OfferOptions } from "./types";
 
 export async function executeCreateErc20Offer(options: CreateErc20OfferOptions): Promise<void> {
@@ -19,8 +19,8 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
     process.env.PRIVATE_KEY
   );
 
-  if (!hasPrivateKey) {
-    await executeKeylessMode(options);
+  if (!hasPrivateKey || options.encodeOnly) {
+    await executeEncodeOnly(options);
     return;
   }
 
@@ -37,7 +37,10 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
     rpcUrl: commonOptions.rpcUrl,
   });
 
-  const priceWei = parseEther(options.price);
+  const { priceWei, symbol: paymentSymbol } = parseErc20Price(
+    commonOptions.chainId,
+    options.price
+  );
   const tokenAmount = BigInt(options.tokenAmount);
 
   try {
@@ -61,7 +64,8 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
       dataSuffix: getBaseDataSuffix(commonOptions.chainId),
     });
 
-    // Send approval txs if needed (WETH approval)
+    // Send approval txs if needed (payment-token approval — USDC on Base,
+    // WETH elsewhere; the SDK emits the right token for the chain).
     for (const approval of prepared.approvals) {
       console.log(chalk.blue("Sending approval transaction..."));
       const calldata = encodeFunctionData({
@@ -110,7 +114,7 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
 
     console.log(
       chalk.green(
-        `ERC-20 offer created successfully!\n  Transaction: ${hash}\n  Token: ${options.tokenAddress}\n  Amount: ${options.tokenAmount}\n  Price: ${options.price} ETH`
+        `ERC-20 offer created successfully!\n  Transaction: ${hash}\n  Token: ${options.tokenAddress}\n  Amount: ${options.tokenAmount}\n  Price: ${options.price} ${paymentSymbol}`
       )
     );
   } catch (error) {
@@ -120,9 +124,9 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
   }
 }
 
-async function executeKeylessMode(options: CreateErc20OfferOptions): Promise<void> {
+async function executeEncodeOnly(options: CreateErc20OfferOptions): Promise<void> {
   if (!options.offerer) {
-    exitWithError("--offerer is required when not providing --private-key");
+    exitWithError("--offerer is required when using --encode-only without --private-key");
   }
 
   const readOnlyOptions = parseReadOnlyOptions({
@@ -135,7 +139,7 @@ async function executeKeylessMode(options: CreateErc20OfferOptions): Promise<voi
     rpcUrl: readOnlyOptions.rpcUrl,
   });
 
-  const priceWei = parseEther(options.price);
+  const { priceWei } = parseErc20Price(readOnlyOptions.chainId, options.price);
   const tokenAmount = BigInt(options.tokenAmount);
 
   try {

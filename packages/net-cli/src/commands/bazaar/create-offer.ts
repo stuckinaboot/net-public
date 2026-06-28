@@ -19,8 +19,8 @@ export async function executeCreateOffer(options: CreateOfferOptions): Promise<v
     process.env.PRIVATE_KEY
   );
 
-  if (!hasPrivateKey) {
-    await executeKeylessMode(options);
+  if (!hasPrivateKey || options.encodeOnly) {
+    await executeEncodeOnly(options);
     return;
   }
 
@@ -118,9 +118,9 @@ export async function executeCreateOffer(options: CreateOfferOptions): Promise<v
   }
 }
 
-async function executeKeylessMode(options: CreateOfferOptions): Promise<void> {
+async function executeEncodeOnly(options: CreateOfferOptions): Promise<void> {
   if (!options.offerer) {
-    exitWithError("--offerer is required when not providing --private-key");
+    exitWithError("--offerer is required when using --encode-only without --private-key");
   }
 
   const readOnlyOptions = parseReadOnlyOptions({

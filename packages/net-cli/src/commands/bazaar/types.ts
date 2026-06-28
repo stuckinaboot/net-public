@@ -28,6 +28,7 @@ export interface CreateListingOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface CreateOfferOptions {
@@ -37,6 +38,7 @@ export interface CreateOfferOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface SubmitListingOptions {
@@ -106,10 +108,12 @@ export interface CreateErc20ListingOptions {
   tokenAddress: string;
   tokenAmount: string;
   price: string;
+  targetFulfiller?: string;
   offerer?: string;
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface CreateErc20OfferOptions {
@@ -120,6 +124,7 @@ export interface CreateErc20OfferOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
+  encodeOnly?: boolean;
 }
 
 export interface SubmitErc20ListingOptions {
@@ -154,6 +159,46 @@ export interface AcceptErc20OfferOptions {
   orderHash: string;
   tokenAddress: string;
   seller?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelListingOptions {
+  orderHash: string;
+  nftAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelOfferOptions {
+  orderHash: string;
+  nftAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelErc20ListingOptions {
+  orderHash: string;
+  tokenAddress: string;
+  maker?: string;
+  privateKey?: string;
+  chainId?: number;
+  rpcUrl?: string;
+  encodeOnly?: boolean;
+}
+
+export interface CancelErc20OfferOptions {
+  orderHash: string;
+  tokenAddress: string;
+  maker?: string;
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;

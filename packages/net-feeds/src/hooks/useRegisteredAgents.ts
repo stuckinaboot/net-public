@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNetMessages, useNetMessageCount } from "@net-protocol/core/react";
-import { AGENT_REGISTRY_CONTRACT, AGENT_TOPIC } from "../constants";
+import { getAgentRegistryContract, AGENT_TOPIC } from "../constants";
 import type { UseRegisteredAgentsOptions, RegisteredAgent } from "../types";
 
 /**
@@ -22,13 +22,16 @@ export function useRegisteredAgents({
   isLoading: boolean;
   refetch: () => void;
 } {
+  // Throws on chains where AgentRegistry isn't deployed (e.g. Base Sepolia)
+  const contract = getAgentRegistryContract(chainId);
+
   // Build filter for AgentRegistry app messages
   const filter = useMemo(
     () => ({
-      appAddress: AGENT_REGISTRY_CONTRACT.address,
+      appAddress: contract.address,
       topic: AGENT_TOPIC,
     }),
-    []
+    [contract]
   );
 
   // Get total count of registered agents

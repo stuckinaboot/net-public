@@ -12,7 +12,34 @@ import {
   formatPrice,
   formatPricePerToken,
 } from "./seaport";
-import { getCurrencySymbol, NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS, NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS } from "../chainConfig";
+import {
+  getCurrencySymbol,
+  getErc20QuoteToken,
+  getWrappedNativeCurrency,
+  QuoteToken,
+  NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
+  NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS,
+} from "../chainConfig";
+
+/**
+ * Resolve display fields (decimals + lowercased symbol) for a parsed
+ * ERC20 trade's payment side.
+ *
+ * - If a `quoteToken` is provided (e.g. USDC on Base), use its decimals
+ *   and symbol so prices format in that token.
+ * - Otherwise fall back to 18 decimals and the chain's native currency
+ *   symbol — matches the legacy WETH-for-offers / NATIVE-for-listings
+ *   shape on chains without a configured quote token.
+ */
+function resolvePaymentDisplay(
+  quoteToken: QuoteToken | undefined,
+  chainId: number
+): { decimals: number; symbol: string } {
+  if (quoteToken) {
+    return { decimals: quoteToken.decimals, symbol: quoteToken.symbol.toLowerCase() };
+  }
+  return { decimals: 18, symbol: getCurrencySymbol(chainId) };
+}
 
 /**
  * Parse a Net message into an NFT listing
@@ -205,15 +232,28 @@ export function parseErc20OfferFromMessage(
       return null;
     }
 
-    // ERC20 offers have WETH in the offer array
+    // ERC20 offers have the quote token (WETH or USDC) in the offer array
     const offerItem = parameters.offer[0];
     if (!offerItem || offerItem.itemType !== ItemType.ERC20) {
       return null;
     }
 
-    // The ERC20 token being purchased is in the consideration array
+    // On chains with a configured ERC20 quote token, strictly require the
+    // offer item to be that token. This naturally hides legacy WETH orders
+    // on chains that have migrated to USDC.
+    const offerTokenLower = offerItem.token.toLowerCase();
+    const quoteToken = getErc20QuoteToken(chainId);
+    if (quoteToken && offerTokenLower !== quoteToken.address.toLowerCase()) {
+      return null;
+    }
+
+    // The ERC20 token being purchased is in the consideration array.
+    // It must be different from the quote token (otherwise the fee/payment
+    // items would shadow the actual traded token).
     const erc20Consideration = parameters.consideration.find(
-      (item) => item.itemType === ItemType.ERC20
+      (item) =>
+        item.itemType === ItemType.ERC20 &&
+        item.token.toLowerCase() !== offerTokenLower
     );
 
     if (!erc20Consideration) {
@@ -229,15 +269,18 @@ export function parseErc20OfferFromMessage(
     const priceWei = offerItem.startAmount;
     const pricePerTokenWei = priceWei / tokenAmount;
 
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
+
     return {
       maker: parameters.offerer,
       tokenAddress: erc20Consideration.token,
       tokenAmount,
       priceWei,
       pricePerTokenWei,
-      price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(priceWei, paymentDecimals),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals, paymentDecimals),
+      currency: paymentSymbol,
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
       orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
@@ -299,6 +342,22 @@ export function parseErc20ListingFromMessage(
       return null;
     }
 
+    // On chains with a configured ERC20 quote token, strictly require every
+    // consideration item to be that quote token. This hides legacy
+    // native-payment listings on chains that have migrated to USDC.
+    const quoteToken = getErc20QuoteToken(chainId);
+    if (quoteToken) {
+      const quoteAddrLower = quoteToken.address.toLowerCase();
+      const allMatch = parameters.consideration.every(
+        (item) =>
+          item.itemType === ItemType.ERC20 &&
+          item.token.toLowerCase() === quoteAddrLower
+      );
+      if (!allMatch) {
+        return null;
+      }
+    }
+
     const priceWei = getTotalConsiderationAmount(parameters);
     if (priceWei === BigInt(0)) {
       return null;
@@ -306,15 +365,24 @@ export function parseErc20ListingFromMessage(
 
     const pricePerTokenWei = priceWei / tokenAmount;
 
+    const targetFulfiller =
+      parameters.zone.toLowerCase() === NET_SEAPORT_PRIVATE_ORDER_ZONE_ADDRESS.toLowerCase() &&
+      parameters.zoneHash !== "0x0000000000000000000000000000000000000000000000000000000000000000"
+        ? parameters.zoneHash
+        : undefined;
+
+    const { decimals: paymentDecimals, symbol: paymentSymbol } =
+      resolvePaymentDisplay(quoteToken, chainId);
+
     return {
       maker: parameters.offerer,
       tokenAddress: offerItem.token,
       tokenAmount,
       priceWei,
       pricePerTokenWei,
-      price: formatPrice(priceWei),
-      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(priceWei, paymentDecimals),
+      pricePerToken: formatPricePerToken(priceWei, tokenAmount, tokenDecimals, paymentDecimals),
+      currency: paymentSymbol,
       expirationDate: Number(parameters.endTime),
       orderHash: "0x" as `0x${string}`, // Will be computed later
       orderStatus: SeaportOrderStatus.OPEN, // Will be validated later
@@ -323,6 +391,7 @@ export function parseErc20ListingFromMessage(
         ...parameters,
         counter: submission.counter,
       },
+      targetFulfiller,
     };
   } catch {
     return null;
@@ -419,6 +488,45 @@ export function parseSaleFromStoredData(
       BigInt(0)
     );
 
+    // The currency the seller received is the consideration's payment side.
+    // Match `consideration[0].token` against the chain's configured quote
+    // token by address — not just by itemType — so legacy ERC20-paying
+    // sales (e.g. WETH-denominated listings filled before a chain migrated
+    // to USDC) don't get force-formatted through the quote token's
+    // decimals/symbol.
+    //
+    // - NATIVE consideration → 18 decimals + native symbol (e.g. "eth").
+    // - ERC20 consideration whose token matches the chain's quote token
+    //   (USDC on Base) → quote-token decimals + symbol ("usdc", 6).
+    // - ERC20 consideration whose token is anything else (e.g. legacy WETH
+    //   sales on Base) → assume the wrapped native at 18 decimals and use
+    //   that symbol; don't reuse the quote-token decimals or we silently
+    //   inflate the price by `10^(18 - quoteDecimals)`.
+    const paymentItem = zoneParameters.consideration[0];
+    const paymentItemType = paymentItem?.itemType as ItemType | undefined;
+    const quoteToken = getErc20QuoteToken(chainId);
+    const wrappedNative = getWrappedNativeCurrency(chainId);
+
+    let paymentDecimals: number;
+    let paymentSymbol: string;
+    if (paymentItemType === ItemType.ERC20 && paymentItem) {
+      const paymentToken = paymentItem.token.toLowerCase();
+      if (quoteToken && paymentToken === quoteToken.address.toLowerCase()) {
+        paymentDecimals = quoteToken.decimals;
+        paymentSymbol = quoteToken.symbol.toLowerCase();
+      } else {
+        // Some other ERC20 — almost always WETH on chains that had ERC20
+        // listings/offers before the quote-token migration.
+        paymentDecimals = 18;
+        paymentSymbol = (
+          wrappedNative?.symbol ?? getCurrencySymbol(chainId)
+        ).toLowerCase();
+      }
+    } else {
+      paymentDecimals = 18;
+      paymentSymbol = getCurrencySymbol(chainId);
+    }
+
     return {
       seller: zoneParameters.offerer as `0x${string}`,
       buyer: zoneParameters.fulfiller as `0x${string}`,
@@ -427,8 +535,8 @@ export function parseSaleFromStoredData(
       amount: offerItem.amount,
       itemType: offerItem.itemType as ItemType,
       priceWei: totalConsideration,
-      price: formatPrice(totalConsideration),
-      currency: getCurrencySymbol(chainId),
+      price: formatPrice(totalConsideration, paymentDecimals),
+      currency: paymentSymbol,
       timestamp: Number(timestamp),
       orderHash: zoneParameters.orderHash,
     };

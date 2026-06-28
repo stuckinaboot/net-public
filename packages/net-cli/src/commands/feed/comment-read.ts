@@ -4,7 +4,8 @@ import type { NetMessage } from "@net-protocol/feeds";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
 import { createFeedClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
-import { parsePostId, findPostByParsedId } from "../../shared/postId";
+import { parsePostId } from "../../shared/postId";
+import { postPermalink } from "../../shared/urls";
 import { formatComment, commentToJson, printJson } from "./format";
 import { normalizeFeedName } from "./types";
 
@@ -51,18 +52,30 @@ async function executeFeedCommentRead(
       );
     }
 
-    // Fetch posts to find the target post
-    const posts = await client.getFeedPosts({
+    // Fetch posts to find the target post (with absolute topic indices so we
+    // can build a permalink to the parent post for comment deep-links).
+    const fetched = await client.getFeedPostsWithIndex({
       topic: normalizedFeed,
       maxPosts: 100, // Fetch enough to find the post
     });
 
-    const targetPost = findPostByParsedId(posts, parsedId);
+    const matchIndex = fetched.messages.findIndex(
+      (p: NetMessage) =>
+        p.sender.toLowerCase() === parsedId.sender.toLowerCase() &&
+        p.timestamp === parsedId.timestamp
+    );
+    const targetPost =
+      matchIndex >= 0 ? fetched.messages[matchIndex] : undefined;
     if (!targetPost) {
       exitWithError(
         `Post not found with ID ${postId} in feed "${normalizedFeed}". Make sure the sender and timestamp are correct.`
       );
     }
+    const parentTopicIndex = fetched.startIndex + matchIndex;
+    const parentPostUrl = postPermalink(readOnlyOptions.chainId, {
+      topic: normalizedFeed,
+      topicIndex: parentTopicIndex,
+    });
 
     // Check comment count first
     const commentCount = await client.getCommentCount(targetPost);
@@ -92,7 +105,11 @@ async function executeFeedCommentRead(
     if (options.json) {
       printJson(
         commentsWithDepth.map(({ comment, depth }) =>
-          commentToJson(comment, depth)
+          commentToJson(comment, {
+            chainId: readOnlyOptions.chainId,
+            depth,
+            parentPostUrl,
+          })
         )
       );
     } else {

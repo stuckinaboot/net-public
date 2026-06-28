@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/netr",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Netr Token SDK for deploying and interacting with memecoin-NFT pairs on Net Protocol",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -43,8 +43,7 @@
   },
   "dependencies": {
     "@net-protocol/core": "file:../net-core",
-    "@net-protocol/storage": "file:../net-storage",
-    "viem": "^2.45.0"
+    "@net-protocol/storage": "file:../net-storage"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.0.0",
@@ -54,11 +53,13 @@
     "react": "^18.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
+    "viem": "^2.45.0",
     "vitest": "^1.0.0",
     "wagmi": "^2.15.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
+    "viem": "^2.31.4",
     "wagmi": "^2.15.0"
   },
   "peerDependenciesMeta": {

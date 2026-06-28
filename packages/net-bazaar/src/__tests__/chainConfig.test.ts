@@ -7,7 +7,10 @@ import {
   getCollectionOffersAddress,
   getSeaportAddress,
   getWrappedNativeCurrency,
+  getErc20QuoteToken,
   getCurrencySymbol,
+  getNftFeeBps,
+  getErc20FeeBps,
 } from "../chainConfig";
 
 describe("chainConfig", () => {
@@ -25,6 +28,10 @@ describe("chainConfig", () => {
       expect(isBazaarSupportedOnChain(8453)).toBe(true);
     });
 
+    it("returns true for Ethereum Mainnet", () => {
+      expect(isBazaarSupportedOnChain(1)).toBe(true);
+    });
+
     it("returns false for unsupported chain", () => {
       expect(isBazaarSupportedOnChain(99999)).toBe(false);
     });
@@ -36,6 +43,22 @@ describe("chainConfig", () => {
       expect(config).toBeDefined();
       expect(config?.bazaarAddress).toBe("0x000000058f3ade587388daf827174d0e6fc97595");
       expect(config?.nftFeeBps).toBe(0); // 0% on Base
+    });
+
+    it("returns config for Ethereum Mainnet with 0% fee and correct addresses", () => {
+      const config = getBazaarChainConfig(1);
+      expect(config).toBeDefined();
+      expect(config?.nftFeeBps).toBe(0);
+      expect(config?.bazaarAddress).toBe("0x000000058f3ade587388daf827174d0e6fc97595");
+      expect(config?.collectionOffersAddress).toBe("0x0000000f9c45efcff0f78d8b54aa6a40092d66dc");
+      expect(config?.erc20OffersAddress).toBe("0x0000000e23a89aa06f317306aa1ae231d3503082");
+      expect(config?.erc20BazaarAddress).toBe("0x00000006557e3629e2fc50bbad0c002b27cac492");
+      expect(config?.feeCollectorAddress).toBe("0x66547ff4f7206e291F7BC157b54C026Fc6660961");
+      expect(config?.wrappedNativeCurrency?.symbol).toBe("WETH");
+      expect(config?.wrappedNativeCurrency?.address).toBe(
+        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+      );
+      expect(config?.currencySymbol).toBe("eth");
     });
 
     it("returns undefined for unsupported chain", () => {
@@ -82,6 +105,21 @@ describe("chainConfig", () => {
     });
   });
 
+  describe("getErc20QuoteToken", () => {
+    it("returns USDC for Base", () => {
+      const usdc = getErc20QuoteToken(8453);
+      expect(usdc?.symbol).toBe("USDC");
+      expect(usdc?.address).toBe("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913");
+      expect(usdc?.decimals).toBe(6);
+    });
+
+    it("returns undefined for chains without a configured quote token", () => {
+      expect(getErc20QuoteToken(1)).toBeUndefined();
+      expect(getErc20QuoteToken(84532)).toBeUndefined();
+      expect(getErc20QuoteToken(999)).toBeUndefined();
+    });
+  });
+
   describe("getCurrencySymbol", () => {
     it("returns eth for Base", () => {
       expect(getCurrencySymbol(8453)).toBe("eth");
@@ -93,6 +131,33 @@ describe("chainConfig", () => {
 
     it("returns degen for Degen", () => {
       expect(getCurrencySymbol(666666666)).toBe("degen");
+    });
+  });
+
+  describe("fee bps", () => {
+    it("Base: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(8453)).toBe(0);
+      expect(getErc20FeeBps(8453)).toBe(0);
+    });
+
+    it("Ethereum Mainnet: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(1)).toBe(0);
+      expect(getErc20FeeBps(1)).toBe(0);
+    });
+
+    it("HyperEVM: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(999)).toBe(0);
+      expect(getErc20FeeBps(999)).toBe(0);
+    });
+
+    it("default-fee chain (Degen): 5% NFT, 1% ERC20", () => {
+      expect(getNftFeeBps(666666666)).toBe(500);
+      expect(getErc20FeeBps(666666666)).toBe(100);
+    });
+
+    it("unknown chain falls back to defaults", () => {
+      expect(getNftFeeBps(99999)).toBe(500);
+      expect(getErc20FeeBps(99999)).toBe(100);
     });
   });
 });

@@ -43,8 +43,12 @@ function toJsonSafe(obj: unknown): unknown {
   );
 }
 
+// NOTE: The /agent/sign and /agent/submit endpoints were retired in favor of
+// the Wallet API (/wallet/sign, /wallet/submit). Both personal_sign and
+// eth_signTypedData_v4 are supported by /wallet/sign. The request/response
+// body shapes are unchanged from the old /agent/* endpoints.
 async function bankrSign(body: object) {
-  const res = await fetch(`${BANKR_BASE_URL}/agent/sign`, {
+  const res = await fetch(`${BANKR_BASE_URL}/wallet/sign`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -58,7 +62,7 @@ async function bankrSign(body: object) {
 }
 
 async function bankrSubmit(body: object) {
-  const res = await fetch(`${BANKR_BASE_URL}/agent/submit`, {
+  const res = await fetch(`${BANKR_BASE_URL}/wallet/submit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -154,16 +158,10 @@ async function submitOnChain(tx: TxConfig, description: string) {
 async function isBankrReachable(): Promise<boolean> {
   if (!BANKR_API_KEY) return false;
   try {
-    const res = await fetch(`${BANKR_BASE_URL}/agent/sign`, {
-      method: "POST",
+    const res = await fetch(`${BANKR_BASE_URL}/wallet/me`, {
       headers: {
-        "Content-Type": "application/json",
         "X-API-Key": BANKR_API_KEY,
       },
-      body: JSON.stringify({
-        signatureType: "personal_sign",
-        message: "ping",
-      }),
       signal: AbortSignal.timeout(10_000),
     });
     const data = await res.json();
@@ -191,11 +189,14 @@ describe.skipIf(!BANKR_API_KEY)(
     beforeAll(async ({ skip }) => {
       if (!canReachBankr) skip();
 
-      const result = await bankrSign({
-        signatureType: "personal_sign",
-        message: "get wallet address",
+      const res = await fetch(`${BANKR_BASE_URL}/wallet/me`, {
+        headers: { "X-API-Key": BANKR_API_KEY! },
       });
-      walletAddress = result.signer as `0x${string}`;
+      const data = await res.json();
+      const evmWallet = (data.wallets ?? []).find(
+        (w: { chain: string; address: string }) => w.chain === "evm"
+      );
+      walletAddress = evmWallet.address as `0x${string}`;
     }, 30_000);
 
     // ── 1. API connectivity ──────────────────────────────────────────

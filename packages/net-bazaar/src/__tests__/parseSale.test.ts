@@ -65,6 +65,8 @@ function createMockStoredSaleData({
   amount = BigInt(1),
   itemType = ItemType.ERC721 as number,
   considerationAmount = BigInt("1000000000000000000"), // 1 ETH
+  considerationItemType = 0 as number, // NATIVE by default
+  considerationToken = ZERO_ADDRESS as `0x${string}`,
 }: {
   timestamp?: bigint;
   orderHash?: `0x${string}`;
@@ -75,6 +77,8 @@ function createMockStoredSaleData({
   amount?: bigint;
   itemType?: number;
   considerationAmount?: bigint;
+  considerationItemType?: number;
+  considerationToken?: `0x${string}`;
 } = {}): `0x${string}` {
   return encodeAbiParameters(ZONE_STORED_SALE_ABI, [
     timestamp,
@@ -94,8 +98,8 @@ function createMockStoredSaleData({
       ],
       consideration: [
         {
-          itemType: 0, // NATIVE
-          token: ZERO_ADDRESS,
+          itemType: considerationItemType,
+          token: considerationToken,
           identifier: BigInt(0),
           amount: considerationAmount,
           recipient: offerer,
@@ -129,19 +133,58 @@ describe("parseSaleFromStoredData", () => {
     expect(sale!.orderHash).toBe(ORDER_HASH);
   });
 
-  it("parses an ERC20 sale with custom amount", () => {
+  it("parses an ERC20 sale with custom amount in USDC on Base", () => {
+    // Base's ERC20 bazaar pays sellers in USDC, so the on-chain
+    // consideration is an ERC20 item pointing at USDC (6 decimals).
+    // The parser should pick up the payment token from the consideration
+    // side and format price using USDC's decimals + symbol.
+    const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
     const data = createMockStoredSaleData({
       itemType: ItemType.ERC20,
       amount: BigInt("500000000000000000000"), // 500 tokens
-      considerationAmount: BigInt("2000000000000000000"), // 2 ETH
+      considerationItemType: ItemType.ERC20,
+      considerationToken: USDC,
+      considerationAmount: BigInt("2000000"), // 2 USDC
     });
     const sale = parseSaleFromStoredData(data, 8453);
 
     expect(sale).not.toBeNull();
     expect(sale!.itemType).toBe(ItemType.ERC20);
     expect(sale!.amount).toBe(BigInt("500000000000000000000"));
-    expect(sale!.priceWei).toBe(BigInt("2000000000000000000"));
+    expect(sale!.priceWei).toBe(BigInt("2000000"));
     expect(sale!.price).toBe(2);
+    expect(sale!.currency).toBe("usdc");
+  });
+
+  it("does NOT format a non-quote-token ERC20 consideration with the quote token's decimals", () => {
+    // Regression for a real bug observed on the live bazaar:
+    //
+    // Legacy ERC20 listings on Base (created before the USDC migration)
+    // had a WETH item in consideration[0]. When parsed by the previous
+    // implementation, the parser saw `consideration[0].itemType === ERC20`,
+    // assumed the trade was USDC-paying, and formatted the WETH base units
+    // (18 decimals) using USDC's 6 decimals — inflating a $0.0035 fair
+    // trade into a "$994,764 USDC" display, off by 10^12.
+    //
+    // Now: an ERC20 payment whose token is NOT the chain's configured
+    // quote token (USDC) should fall back to wrapped-native semantics
+    // (18 decimals, "WETH" symbol).
+    const WETH_BASE = "0x4200000000000000000000000000000000000006" as `0x${string}`;
+    const data = createMockStoredSaleData({
+      itemType: ItemType.ERC20,
+      amount: BigInt("1111000000000000000000"), // 1,111 ALPHA (18 decimals)
+      considerationItemType: ItemType.ERC20,
+      considerationToken: WETH_BASE,
+      // 9.94e11 WETH base units ≈ 9.94e-7 WETH ≈ $0.0035 at $3500/ETH
+      considerationAmount: BigInt("994764506934"),
+    });
+    const sale = parseSaleFromStoredData(data, 8453);
+
+    expect(sale).not.toBeNull();
+    expect(sale!.priceWei).toBe(BigInt("994764506934"));
+    // Formatted with WETH's 18 decimals, not USDC's 6 decimals.
+    expect(sale!.price).toBeCloseTo(9.94764506934e-7, 18);
+    expect(sale!.currency).toBe("weth");
   });
 
   it("uses correct currency symbol for chain", () => {

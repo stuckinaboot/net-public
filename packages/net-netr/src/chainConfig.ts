@@ -54,6 +54,17 @@ const NETR_CHAIN_CONFIG: Record<number, NetrChainConfig> = {
     initialTick: -177400,
     mintPrice: BigInt("50000000000000000"), // 0.05 HYPE
   },
+  // Robinhood Chain (ETH-native Arbitrum L2)
+  4663: {
+    name: "Robinhood",
+    bangerV4Address: "0x00000000CDaB5161815cD4005fAc11AC3a796F63",
+    // WETH on Robinhood Chain (non-standard address; not the OP predeploy)
+    wethAddress: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    storageAddress: "0x00000000db40fcb9f4466330982372e27fd7bbf5",
+    netAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
+    initialTick: -230400,
+    mintPrice: BigInt("500000000000000"), // 0.0005 ETH
+  },
 };
 
 export function getNetrContract(chainId: number): { address: `0x${string}`; abi: Abi } {

@@ -31,6 +31,10 @@ describe("chainConfig", () => {
       expect(isNetrSupportedChain(999)).toBe(true);
     });
 
+    it("should return true for Robinhood (4663)", () => {
+      expect(isNetrSupportedChain(4663)).toBe(true);
+    });
+
     it("should return false for Ethereum mainnet (1)", () => {
       expect(isNetrSupportedChain(1)).toBe(false);
     });
@@ -48,6 +52,7 @@ describe("chainConfig", () => {
       expect(chainIds).toContain(9745);
       expect(chainIds).toContain(143);
       expect(chainIds).toContain(999);
+      expect(chainIds).toContain(4663);
     });
 
     it("should return array of numbers", () => {
@@ -59,9 +64,9 @@ describe("chainConfig", () => {
       });
     });
 
-    it("should have 4 supported chains", () => {
+    it("should have 5 supported chains", () => {
       const chainIds = getNetrSupportedChainIds();
-      expect(chainIds.length).toBe(4);
+      expect(chainIds.length).toBe(5);
     });
   });
 
@@ -96,6 +101,20 @@ describe("chainConfig", () => {
 
       expect(config).toBeDefined();
       expect(config?.name).toBe("HyperEVM");
+    });
+
+    it("should return config for Robinhood", () => {
+      const config = getNetrChainConfig(4663);
+
+      expect(config).toBeDefined();
+      expect(config?.name).toBe("Robinhood");
+    });
+
+    it("should use the non-standard WETH address for Robinhood", () => {
+      const config = getNetrChainConfig(4663);
+      expect(config?.wethAddress.toLowerCase()).toBe(
+        "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73".toLowerCase()
+      );
     });
 
     it("should return undefined for unsupported chain", () => {
@@ -197,6 +216,10 @@ describe("chainConfig", () => {
       expect(getInitialTick(143)).toBe(-115000);
     });
 
+    it("should return initial tick for Robinhood (4663)", () => {
+      expect(getInitialTick(4663)).toBe(-230400);
+    });
+
     it("should return undefined for unsupported chain", () => {
       expect(getInitialTick(1)).toBeUndefined();
     });
@@ -226,6 +249,10 @@ describe("chainConfig", () => {
 
     it("should return mint price for Monad (143) - 1 MONAD", () => {
       expect(getMintPrice(143)).toBe(BigInt("1000000000000000000"));
+    });
+
+    it("should return mint price for Robinhood (4663) - 0.0005 ETH", () => {
+      expect(getMintPrice(4663)).toBe(BigInt("500000000000000"));
     });
 
     it("should return undefined for unsupported chain", () => {

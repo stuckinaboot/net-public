@@ -264,6 +264,22 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
     },
     currencySymbol: "eth",
   },
+
+  // Robinhood Chain (ETH-native Arbitrum L2)
+  4663: {
+    bazaarAddress: DEFAULT_BAZAAR_ADDRESS,
+    collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
+    seaportAddress: DEFAULT_SEAPORT_ADDRESS,
+    feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
+    nftFeeBps: DEFAULT_NFT_FEE_BPS,
+    wrappedNativeCurrency: {
+      // WETH on Robinhood Chain (non-standard address; not the OP predeploy)
+      address: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+      name: "Wrapped Ether",
+      symbol: "WETH",
+    },
+    currencySymbol: "eth",
+  },
 };
 
 /**

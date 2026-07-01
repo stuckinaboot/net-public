@@ -126,6 +126,7 @@ const CHAIN_RPC_URLS: Record<number, string[]> = {
   999: ["https://rpc.hyperliquid.xyz/evm"],
   9745: ["https://rpc.plasma.to"],
   143: ["https://rpc3.monad.xyz"],
+  4663: ["https://rpc.mainnet.chain.robinhood.com"],
 };
 
 // ERC20 decimals ABI for on-chain lookup

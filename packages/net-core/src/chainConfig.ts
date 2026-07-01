@@ -144,6 +144,19 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     blockExplorer: { name: "MegaETH Explorer", url: "https://mega.etherscan.com" },
   },
+  // Robinhood Chain (ETH-native Arbitrum L2)
+  4663: {
+    name: "Robinhood",
+    slug: "robinhood",
+    type: "mainnet",
+    rpcUrls: ["https://rpc.mainnet.chain.robinhood.com"],
+    netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    blockExplorer: {
+      name: "Robinhood Chain Explorer",
+      url: "https://robinhoodchain.blockscout.com",
+    },
+  },
   // Base Sepolia (testnet)
   84532: {
     name: "Base Sepolia",

@@ -64,9 +64,9 @@ All contracts use the same address across all supported EVM chains:
 
 ## Supported Chains
 
-**Messages & Storage:** Base (8453), Ethereum (1), Degen (666666666), Ham (5112), Ink (57073), Unichain (130), HyperEVM (999), Plasma (9745), Monad (143), Base Sepolia (84532), Sepolia (11155111)
+**Messages & Storage:** Base (8453), Ethereum (1), Degen (666666666), Ham (5112), Ink (57073), Unichain (130), HyperEVM (999), Plasma (9745), Monad (143), Robinhood (4663), Base Sepolia (84532), Sepolia (11155111)
 
-**Token Deployment (Netr):** Base (8453), Plasma (9745), Monad (143), HyperEVM (999)
+**Token Deployment (Netr):** Base (8453), Plasma (9745), Monad (143), HyperEVM (999), Robinhood Chain (4663)
 
 ## Code Patterns
 

@@ -1228,7 +1228,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/bazaar@npm:^0.2.3, @net-protocol/bazaar@workspace:packages/net-bazaar":
+"@net-protocol/bazaar@npm:^0.2.4, @net-protocol/bazaar@workspace:packages/net-bazaar":
   version: 0.0.0-use.local
   resolution: "@net-protocol/bazaar@workspace:packages/net-bazaar"
   dependencies:
@@ -1630,7 +1630,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@net-protocol/core@npm:*, @net-protocol/core@npm:^0.1.9, @net-protocol/core@workspace:packages/net-core":
+"@net-protocol/core@npm:*, @net-protocol/core@npm:^0.1.13, @net-protocol/core@npm:^0.1.9, @net-protocol/core@workspace:packages/net-core":
   version: 0.0.0-use.local
   resolution: "@net-protocol/core@workspace:packages/net-core"
   dependencies:
@@ -1701,7 +1701,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/netr@npm:*, @net-protocol/netr@npm:^0.1.3, @net-protocol/netr@workspace:packages/net-netr":
+"@net-protocol/netr@npm:*, @net-protocol/netr@npm:^0.1.6, @net-protocol/netr@workspace:packages/net-netr":
   version: 0.0.0-use.local
   resolution: "@net-protocol/netr@workspace:packages/net-netr"
   dependencies:

@@ -29,6 +29,7 @@
 | Plasma | 9745 | `0x00000000CDaB5161815cD4005fAc11AC3a796F63` |
 | Monad | 143 | `0x00000000CDaB5161815cD4005fAc11AC3a796F63` |
 | HyperEVM | 999 | `0x000000C91A20BE8342B6D4dfc0947f1Ec5333BF6` |
+| Robinhood | 4663 | `0x00000000CDaB5161815cD4005fAc11AC3a796F63` |
 
 ## Supported Chains
 
@@ -43,6 +44,7 @@
 | HyperEVM | 999 | Mainnet |
 | Plasma | 9745 | Mainnet |
 | Monad | 143 | Mainnet |
+| Robinhood | 4663 | Mainnet |
 | Base Sepolia | 84532 | Testnet |
 | Sepolia | 11155111 | Testnet |
 
@@ -182,6 +184,7 @@ function extraStringData() external view returns (string memory)
 | Chain | Initial Tick | Approx Market Cap |
 |-------|--------------|-------------------|
 | Base (8453) | -230400 | ~$35k |
+| Robinhood (4663) | -230400 | ~$35k |
 | HyperEVM (999) | -177400 | - |
 | Plasma (9745) | -147200 | - |
 | Monad (143) | -115000 | - |

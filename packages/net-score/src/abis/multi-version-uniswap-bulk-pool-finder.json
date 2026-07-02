@@ -81,6 +81,13 @@
             "name": "v4Hooks",
             "type": "address[]",
             "internalType": "address[]"
+          },
+          { "name": "v2Factory", "type": "address", "internalType": "address" },
+          { "name": "v3Factory", "type": "address", "internalType": "address" },
+          {
+            "name": "v4PoolManager",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       }

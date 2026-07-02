@@ -64,6 +64,12 @@ export const LEGACY_UPVOTE_V2_ADDRESS =
 export const SUPPORTED_SCORE_CHAINS = [8453] as const;
 
 // Pool discovery contracts
+// NOTE: the ABI below now takes per-chain factory addresses in PoolFinderParams
+// (v2Factory/v3Factory/v4PoolManager). That is a NEW function selector, so this
+// address MUST be updated to the redeployed generalized finder before shipping
+// — the old 0xbc237dac… deployment does not implement the new signature and
+// will revert. Deploy is deterministic (CREATE2), so the new address is the
+// same on every chain.
 export const MULTI_VERSION_UNISWAP_BULK_POOL_FINDER = {
   address: "0xbc237dac4c74c170780fc12f353a258bdd31a8cf" as Address,
   abi: multiVersionUniswapBulkPoolFinderAbi as Abi,
@@ -95,6 +101,48 @@ export function getWethAddress(chainId: number): Address {
 // Common addresses
 export const NULL_ADDRESS =
   "0x0000000000000000000000000000000000000000" as Address;
+
+// Uniswap factory / pool-manager addresses by chain, passed to the bulk pool
+// finder so a single deployment works on any chain. Use NULL_ADDRESS for a
+// Uniswap version not deployed on a chain — the finder skips it instead of
+// reverting.
+export type UniswapFactories = {
+  v2Factory: Address;
+  v3Factory: Address;
+  v4PoolManager: Address;
+};
+
+const UNISWAP_FACTORIES_BY_CHAIN: Record<number, UniswapFactories> = {
+  8453: {
+    // Base
+    v2Factory: "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6",
+    v3Factory: "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+    v4PoolManager: "0x498581fF718922c3f8e6A244956aF099B2652b2b",
+  },
+  1: {
+    // Ethereum mainnet
+    v2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    v3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    v4PoolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90",
+  },
+  4663: {
+    // Robinhood Chain — Uniswap V3 only, at a non-canonical factory address.
+    v2Factory: NULL_ADDRESS,
+    v3Factory: "0x1f7d7550B1b028f7571E69A784071F0205FD2EfA",
+    v4PoolManager: NULL_ADDRESS,
+  },
+};
+
+/**
+ * Get the Uniswap factory / pool-manager addresses for a given chain.
+ */
+export function getUniswapFactories(chainId: number): UniswapFactories {
+  const factories = UNISWAP_FACTORIES_BY_CHAIN[chainId];
+  if (!factories) {
+    throw new Error(`Score: No Uniswap factories for chain ${chainId}`);
+  }
+  return factories;
+}
 
 // Upvote pricing
 export const UPVOTE_PRICE_ETH = 0.000025;

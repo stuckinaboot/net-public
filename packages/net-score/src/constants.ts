@@ -78,6 +78,7 @@ export const MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER = {
 const WETH_BY_CHAIN: Record<number, Address> = {
   8453: "0x4200000000000000000000000000000000000006", // Base (L2 predeploy)
   1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // Ethereum mainnet
+  4663: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73", // Robinhood Chain (non-standard WETH; not the OP predeploy)
 };
 
 /**

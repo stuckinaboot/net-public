@@ -64,14 +64,11 @@ export const LEGACY_UPVOTE_V2_ADDRESS =
 export const SUPPORTED_SCORE_CHAINS = [8453] as const;
 
 // Pool discovery contracts
-// NOTE: the ABI below now takes per-chain factory addresses in PoolFinderParams
-// (v2Factory/v3Factory/v4PoolManager). That is a NEW function selector, so this
-// address MUST be updated to the redeployed generalized finder before shipping
-// — the old 0xbc237dac… deployment does not implement the new signature and
-// will revert. Deploy is deterministic (CREATE2), so the new address is the
-// same on every chain.
+// Generalized bulk pool finder: takes per-chain factory addresses in
+// PoolFinderParams (v2Factory/v3Factory/v4PoolManager). Deployed deterministically
+// via CREATE2 (salt 0x77edd319…), so the address is identical on every chain.
 export const MULTI_VERSION_UNISWAP_BULK_POOL_FINDER = {
-  address: "0xbc237dac4c74c170780fc12f353a258bdd31a8cf" as Address,
+  address: "0x88A51f8d3B1f222394075E086e33108BC9ceDfB6" as Address,
   abi: multiVersionUniswapBulkPoolFinderAbi as Abi,
 } as const;
 

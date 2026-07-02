@@ -294,7 +294,7 @@ netp token deploy \
   [--animation <url>] \
   [--fid <number>] \
   [--private-key <0x...>] \
-  [--chain-id <8453|9745|143|999>] \
+  [--chain-id <8453|9745|143|999|4663>] \
   [--encode-only]
 ```
 
@@ -307,7 +307,7 @@ netp token deploy \
 - `--fid` (optional): Farcaster ID
 - `--initial-buy` (optional): ETH amount to swap for tokens on deploy (e.g., "0.001")
 - `--private-key` (optional): Private key. Can also be set via `NET_PRIVATE_KEY` environment variable
-- `--chain-id` (optional): Chain ID. Supported: Base (8453), Plasma (9745), Monad (143), HyperEVM (999)
+- `--chain-id` (optional): Chain ID. Supported: Base (8453), Plasma (9745), Monad (143), HyperEVM (999), Robinhood Chain (4663)
 - `--encode-only` (optional): Output transaction data as JSON instead of executing
 
 **Example:**
@@ -352,7 +352,7 @@ Get information about an existing Netr token.
 ```bash
 netp token info \
   --address <token-address> \
-  [--chain-id <8453|9745|143|999>] \
+  [--chain-id <8453|9745|143|999|4663>] \
   [--json]
 ```
 

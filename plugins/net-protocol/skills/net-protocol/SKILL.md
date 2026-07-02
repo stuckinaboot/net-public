@@ -26,10 +26,11 @@ Net Protocol is a decentralized onchain messaging and storage system on EVM chai
 - HyperEVM (999)
 - Plasma (9745)
 - Monad (143)
+- Robinhood (4663)
 - Base Sepolia (84532), Sepolia (11155111) - Testnets
 
 **Token Deployment Chains:**
-- Base (8453), Plasma (9745), Monad (143), HyperEVM (999)
+- Base (8453), Plasma (9745), Monad (143), HyperEVM (999), Robinhood Chain (4663)
 
 ## Personal Feeds
 
@@ -161,7 +162,7 @@ netp token deploy --name "My Token" --symbol "MTK" --image "https://..." --anima
 netp token info --address 0x... --chain-id 8453 --json
 ```
 
-Token deployment only works on Base (8453), Plasma (9745), Monad (143), and HyperEVM (999).
+Token deployment only works on Base (8453), Plasma (9745), Monad (143), HyperEVM (999), and Robinhood Chain (4663). Robinhood is an ETH-native Arbitrum L2, so its economics mirror Base (ETH gas, 0.0005 ETH mint price).
 
 ### Upvote Commands
 
@@ -318,7 +319,7 @@ Net Protocol uses the same contract addresses across all supported chains:
 ## Error Handling
 
 **"StoredDataNotFound"**: The key/operator combination doesn't exist
-**"Chain not supported"**: Token deployment only works on Base, Plasma, Monad, HyperEVM
+**"Chain not supported"**: Token deployment only works on Base, Plasma, Monad, HyperEVM, Robinhood
 **"Failed to generate salt"**: Check that all required parameters are provided
 **"Token not found"**: Wait for block confirmation before querying
 **Rate limits**: Add delays between RPC calls or use custom RPC URL

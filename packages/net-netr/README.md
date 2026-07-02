@@ -202,7 +202,7 @@ if (isNetrSupportedChain(chainId)) {
 }
 
 // Get all supported chains
-const chains = getNetrSupportedChainIds(); // [8453, 9745, 143, 999]
+const chains = getNetrSupportedChainIds(); // [8453, 9745, 143, 999, 4663]
 ```
 
 ## Supported Chains
@@ -213,6 +213,7 @@ const chains = getNetrSupportedChainIds(); // [8453, 9745, 143, 999]
 | Plasma      | 9745     | ✅     |
 | Monad       | 143      | ✅     |
 | Hyperliquid | 999      | ✅     |
+| Robinhood   | 4663     | ✅     |
 
 ## Types
 

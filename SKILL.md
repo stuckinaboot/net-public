@@ -542,7 +542,7 @@ Submit each transaction in order. After uploading, data is accessible at:
 https://netprotocol.app/app/token/{chainSlug}/{lowercase(tokenAddress)}
 ```
 
-The token page renders for any ERC-20 (not just Netr-deployed) on any visible chain. Slugs: `base` (8453), `ethereum` (1), `unichain` (130), `monad` (143), `hyperliquid` (999), `megaeth` (4326), `ink` (57073), `plasma` (9745), `base_sepolia` (84532, testnet), `sepolia` (11155111, testnet). `degen` and `ham` are hidden — those URLs 404. Note that token *deploy* is still restricted to Base/Plasma/Monad/HyperEVM, and *upvoting* is Base-only — but viewing a token page works wherever the chain is visible.
+The token page renders for any ERC-20 (not just Netr-deployed) on any visible chain. Slugs: `base` (8453), `ethereum` (1), `unichain` (130), `monad` (143), `hyperliquid` (999), `megaeth` (4326), `ink` (57073), `plasma` (9745), `robinhood` (4663), `base_sepolia` (84532, testnet), `sepolia` (11155111, testnet). `degen` and `ham` are hidden — those URLs 404. Note that token *deploy* is still restricted to Base/Plasma/Monad/HyperEVM/Robinhood, and *upvoting* is Base-only — but viewing a token page works wherever the chain is visible.
 
 For a deploy via `--encode-only`, the address is the `predictedAddress` field — you can share the URL the moment you have it, no need to wait for confirmation. (Or, post-confirmation, `netp token info --json` and `netp upvote info --json` return the same URL as `tokenUrl`.)
 
@@ -576,7 +576,7 @@ The only legitimate reason to read allowance state yourself is a non-submitting 
 | Area | Constraint |
 |------|-----------|
 | **Storage** | Auto-chunked into ≤80KB transactions. Submit every transaction in the `transactions` array in order. Uploads are idempotent — safe to retry. |
-| **Token deploy** | `--name`, `--symbol`, and `--image` are all required. Token deployment only works on Base (8453), Plasma (9745), Monad (143), and HyperEVM (999). |
+| **Token deploy** | `--name`, `--symbol`, and `--image` are all required. Token deployment only works on Base (8453), Plasma (9745), Monad (143), HyperEVM (999), and Robinhood Chain (4663). Robinhood is an ETH-native Arbitrum L2, so its economics mirror Base (ETH gas, 0.0005 ETH mint price). |
 | **Token deploy with initial buy** | Output includes a non-zero `value` field (price in wei). You **must** include this value when submitting. |
 | **Upvoting (tokens)** | Each upvote costs 0.000025 ETH. Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. `--encode-only` still requires RPC access for pool discovery. |
 | **Upvoting (users)** | Price fetched from contract (currently 0.000025 ETH per upvote). Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. |
@@ -601,6 +601,7 @@ The only legitimate reason to read allowance state yourself is a non-submitting 
 | HyperEVM | 999 | Yes | Yes | Yes | Yes | No | Yes (ERC-20) | No |
 | Plasma | 9745 | Yes | Yes | Yes | Yes | No | No | No |
 | Monad | 143 | Yes | Yes | Yes | Yes | No | No | No |
+| Robinhood | 4663 | Yes | Yes | Yes | Yes | No | No | No |
 
 Testnets: Base Sepolia (84532), Sepolia (11155111)
 
@@ -664,6 +665,7 @@ When transactions are submitted externally (e.g., via Bankr after using `--encod
 
 ### Tokens (use netp)
 - "Deploy a memecoin" → `netp token deploy --name "Cool Token" --symbol "COOL" --image "https://..." --chain-id 8453 --encode-only`
+- "Launch a memecoin on Robinhood Chain" → `netp token deploy --name "Cool Token" --symbol "COOL" --image "https://..." --chain-id 4663 --encode-only` (Robinhood Chain = 4663; ETH-native, so `--initial-buy` amounts are in ETH just like Base)
 - "Deploy with initial buy" → `netp token deploy --name "Cool Token" --symbol "COOL" --image "https://..." --initial-buy 0.1 --chain-id 8453 --encode-only`
 - "Get token info" → `netp token info --address 0x... --chain-id 8453 --json` (returns `tokenUrl` — the Net page where humans can view/buy the token)
 - "Share a token's Net page with a human" → `netp token info --address 0x... --chain-id 8453 --json` and read the `tokenUrl` field

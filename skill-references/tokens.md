@@ -20,8 +20,11 @@ Token deployment is available on select chains:
 | Plasma | 9745 | ✅ Supported |
 | Monad | 143 | ✅ Supported |
 | HyperEVM | 999 | ✅ Supported |
+| Robinhood Chain | 4663 | ✅ Supported |
 
 Other chains (Ethereum, Degen, etc.) support storage and messaging but not token deployment.
+
+**Robinhood Chain (4663)** is an ETH-native Arbitrum L2, so its launch economics mirror Base: native gas is ETH, the mint price is `0.0005 ETH`, and `--initial-buy` amounts are denominated in ETH. Nothing special is needed — just pass `--chain-id 4663`.
 
 ## Commands
 
@@ -37,7 +40,7 @@ netp token deploy \
   [--animation <url>] \
   [--fid <number>] \
   [--private-key <0x...>] \
-  [--chain-id <8453|9745|143|999>] \
+  [--chain-id <8453|9745|143|999|4663>] \
   [--encode-only] \
   [--initial-buy <eth>] \
   [--mint-price <wei>] \
@@ -151,7 +154,7 @@ Retrieve information about a deployed token:
 ```bash
 netp token info \
   --address <token-address> \
-  [--chain-id <8453|9745|143|999>] \
+  [--chain-id <8453|9745|143|999|4663>] \
   [--json]
 ```
 
@@ -204,6 +207,19 @@ netp token deploy \
   --initial-buy 0.5 \
   --chain-id 8453
 ```
+
+### Launch a Memecoin on Robinhood Chain
+```bash
+netp token deploy \
+  --name "Robinhood Rocket" \
+  --symbol "RHR" \
+  --image "https://example.com/rhr.png" \
+  --initial-buy 0.01 \
+  --chain-id 4663
+```
+Robinhood Chain is ETH-native, so `--initial-buy` is in ETH and the returned
+`value` (for `--encode-only`) is in wei — identical to Base. Share the token
+page at `https://netprotocol.app/app/token/robinhood/<lowercase-address>`.
 
 ### Community Token
 ```bash
@@ -259,7 +275,7 @@ Token deployment costs include:
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| "Unsupported chain" | Chain doesn't support tokens | Use Base, Plasma, Monad, or HyperEVM |
+| "Unsupported chain" | Chain doesn't support tokens | Use Base, Plasma, Monad, HyperEVM, or Robinhood (4663) |
 | "Invalid image URL" | Malformed URL | Use valid HTTPS URL |
 | "Insufficient funds" | Not enough ETH | Add ETH for gas + initial buy |
 | "Symbol too long" | Symbol exceeds limit | Use shorter symbol |

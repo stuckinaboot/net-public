@@ -4,8 +4,10 @@ import {
   MULTI_VERSION_UNISWAP_BULK_POOL_FINDER,
   MULTI_VERSION_UNISWAP_POOL_INFO_RETRIEVER,
   getWethAddress,
+  getUniswapFactories,
   NULL_ADDRESS,
 } from "../constants";
+import type { UniswapFactories } from "../constants";
 import type { PoolKey, PoolDiscoveryResult, PoolDiscoveryPair } from "../types";
 
 // ============================================================================
@@ -129,7 +131,8 @@ export function normalizeTokenPairs(pairs: PairInput[], wethAddress: Address) {
 }
 
 function buildDiscoveryArgs(
-  normalizedPairs: ReturnType<typeof normalizeTokenPairs>
+  normalizedPairs: ReturnType<typeof normalizeTokenPairs>,
+  factories: UniswapFactories
 ) {
   return {
     tokenAs: normalizedPairs.map((p) => p.tokenA),
@@ -137,6 +140,9 @@ function buildDiscoveryArgs(
     fees: V3_V4_FEE_TIERS,
     v4TickSpacings: V4_TICK_SPACINGS,
     v4Hooks: V4_HOOKS,
+    v2Factory: factories.v2Factory,
+    v3Factory: factories.v3Factory,
+    v4PoolManager: factories.v4PoolManager,
   };
 }
 
@@ -459,8 +465,9 @@ export async function discoverPools({
   if (pairs.length === 0) return [];
 
   const wethAddress = getWethAddress(chainId);
+  const factories = getUniswapFactories(chainId);
   const normalizedPairs = normalizeTokenPairs(pairs, wethAddress);
-  const discoveryArgs = buildDiscoveryArgs(normalizedPairs);
+  const discoveryArgs = buildDiscoveryArgs(normalizedPairs, factories);
 
   // Step 1: Discover pools
   const poolResults = (await readContract(publicClient, {

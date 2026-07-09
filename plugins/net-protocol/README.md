@@ -98,6 +98,7 @@ Autonomous exploration of Net Protocol data:
 | HyperEVM | 999 | Messages, Storage, Tokens |
 | Plasma | 9745 | Messages, Storage, Tokens |
 | Monad | 143 | Messages, Storage, Tokens |
+| Robinhood | 4663 | Messages, Storage, Tokens |
 | Base Sepolia | 84532 | Messages, Storage (Testnet) |
 | Sepolia | 11155111 | Messages, Storage (Testnet) |
 

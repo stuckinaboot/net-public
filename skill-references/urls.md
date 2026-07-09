@@ -13,6 +13,7 @@ The web app lives at `https://netprotocol.app` (testnets at `https://testnets.ne
 | 143 | `monad` |
 | 999 | `hyperliquid` |
 | 4326 | `megaeth` |
+| 4663 | `robinhood` |
 | 5112 | `ham` |
 | 8453 | `base` |
 | 9745 | `plasma` |
@@ -31,6 +32,7 @@ Note: HyperEVM uses the slug `hyperliquid`, not `hyperevm`.
 | 130 | `https://uniscan.xyz` |
 | 143 | `https://monadscan.com` |
 | 999 | `https://hyperliquid.cloud.blockscout.com` |
+| 4663 | `https://robinhoodchain.blockscout.com` |
 | 5112 | `https://explorer.ham.fun` |
 | 8453 | `https://basescan.org` |
 | 9745 | `https://plasmascan.to` |

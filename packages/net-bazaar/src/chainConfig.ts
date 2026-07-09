@@ -266,17 +266,35 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
   },
 
   // Robinhood Chain (ETH-native Arbitrum L2)
+  //
+  // Mirrors Base's posture: the flexible-fee bazaar family with 0% fees, plus
+  // ERC20 trading denominated in a stablecoin (USDG — Robinhood has no USDC).
+  //
+  // NOTE: these contracts must be deployed on 4663 before trading works. Seaport
+  // is already live, but the Net bazaar apps + Seaport zones are deployed via the
+  // CREATE2 replay in protocol/deployment-scripts (deploy-to-chain.mjs). See the
+  // Robinhood bazaar deployment checklist before publishing/advertising this.
   4663: {
-    bazaarAddress: DEFAULT_BAZAAR_ADDRESS,
-    collectionOffersAddress: DEFAULT_COLLECTION_OFFERS_ADDRESS,
+    // Flexible-fee family (same addresses Base/Ethereum/HyperEVM/MegaETH use)
+    bazaarAddress: "0x000000058f3ade587388daf827174d0e6fc97595",
+    collectionOffersAddress: "0x0000000f9c45efcff0f78d8b54aa6a40092d66dc",
+    erc20OffersAddress: "0x0000000e23a89aa06f317306aa1ae231d3503082",
+    erc20BazaarAddress: "0x00000006557e3629e2fc50bbad0c002b27cac492",
     seaportAddress: DEFAULT_SEAPORT_ADDRESS,
-    feeCollectorAddress: DEFAULT_FEE_COLLECTOR_ADDRESS,
-    nftFeeBps: DEFAULT_NFT_FEE_BPS,
+    feeCollectorAddress: "0x66547ff4f7206e291F7BC157b54C026Fc6660961",
+    nftFeeBps: 0, // 0% on Robinhood (matches Base)
+    erc20FeeBps: 0,
     wrappedNativeCurrency: {
       // WETH on Robinhood Chain (non-standard address; not the OP predeploy)
       address: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
       name: "Wrapped Ether",
       symbol: "WETH",
+    },
+    // ERC20 bazaar trades on Robinhood are priced in USDG (no USDC on this chain).
+    erc20QuoteToken: {
+      address: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      symbol: "USDG",
+      decimals: 6,
     },
     currencySymbol: "eth",
   },

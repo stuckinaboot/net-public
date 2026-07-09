@@ -1228,7 +1228,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@net-protocol/bazaar@npm:^0.2.4, @net-protocol/bazaar@workspace:packages/net-bazaar":
+"@net-protocol/bazaar@npm:^0.2.5, @net-protocol/bazaar@workspace:packages/net-bazaar":
   version: 0.0.0-use.local
   resolution: "@net-protocol/bazaar@workspace:packages/net-bazaar"
   dependencies:

@@ -61,6 +61,23 @@ describe("chainConfig", () => {
       expect(config?.currencySymbol).toBe("eth");
     });
 
+    it("returns config for Robinhood with 0% fee, flexible-fee family, and USDG", () => {
+      const config = getBazaarChainConfig(4663);
+      expect(config).toBeDefined();
+      expect(config?.nftFeeBps).toBe(0);
+      expect(config?.erc20FeeBps).toBe(0);
+      expect(config?.bazaarAddress).toBe("0x000000058f3ade587388daf827174d0e6fc97595");
+      expect(config?.collectionOffersAddress).toBe("0x0000000f9c45efcff0f78d8b54aa6a40092d66dc");
+      expect(config?.erc20OffersAddress).toBe("0x0000000e23a89aa06f317306aa1ae231d3503082");
+      expect(config?.erc20BazaarAddress).toBe("0x00000006557e3629e2fc50bbad0c002b27cac492");
+      expect(config?.wrappedNativeCurrency?.symbol).toBe("WETH");
+      expect(config?.wrappedNativeCurrency?.address).toBe(
+        "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73"
+      );
+      expect(config?.erc20QuoteToken?.symbol).toBe("USDG");
+      expect(config?.currencySymbol).toBe("eth");
+    });
+
     it("returns undefined for unsupported chain", () => {
       expect(getBazaarChainConfig(99999)).toBeUndefined();
     });
@@ -113,6 +130,13 @@ describe("chainConfig", () => {
       expect(usdc?.decimals).toBe(6);
     });
 
+    it("returns USDG for Robinhood", () => {
+      const usdg = getErc20QuoteToken(4663);
+      expect(usdg?.symbol).toBe("USDG");
+      expect(usdg?.address).toBe("0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168");
+      expect(usdg?.decimals).toBe(6);
+    });
+
     it("returns undefined for chains without a configured quote token", () => {
       expect(getErc20QuoteToken(1)).toBeUndefined();
       expect(getErc20QuoteToken(84532)).toBeUndefined();
@@ -148,6 +172,11 @@ describe("chainConfig", () => {
     it("HyperEVM: 0% for NFT and ERC20", () => {
       expect(getNftFeeBps(999)).toBe(0);
       expect(getErc20FeeBps(999)).toBe(0);
+    });
+
+    it("Robinhood: 0% for NFT and ERC20", () => {
+      expect(getNftFeeBps(4663)).toBe(0);
+      expect(getErc20FeeBps(4663)).toBe(0);
     });
 
     it("default-fee chain (Degen): 5% NFT, 1% ERC20", () => {

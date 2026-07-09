@@ -120,6 +120,7 @@ const message = await client.getMessageAtIndex({
 - Plasma Chain (9745)
 - Monad Chain (143)
 - MegaETH (4326)
+- Robinhood Chain (4663)
 - Base Sepolia (84532) - testnet
 - Sepolia (11155111) - testnet
 

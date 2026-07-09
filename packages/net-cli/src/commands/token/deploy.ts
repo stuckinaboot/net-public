@@ -141,7 +141,7 @@ export async function executeTokenDeploy(
 
   if (!isNetrSupportedChain(commonOptions.chainId)) {
     exitWithError(
-      `Chain ${commonOptions.chainId} is not supported for token deployment. Supported: Base (8453), Plasma (9745), Monad (143), HyperEVM (999)`
+      `Chain ${commonOptions.chainId} is not supported for token deployment. Supported: Base (8453), Plasma (9745), Monad (143), HyperEVM (999), Robinhood (4663)`
     );
   }
 

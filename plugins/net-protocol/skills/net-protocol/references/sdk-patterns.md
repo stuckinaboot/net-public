@@ -202,7 +202,7 @@ if (isNetrSupportedChain(chainId)) {
 }
 
 // Get all supported chain IDs
-const chainIds = getNetrSupportedChainIds(); // [8453, 9745, 143, 999]
+const chainIds = getNetrSupportedChainIds(); // [8453, 9745, 143, 999, 4663]
 ```
 
 ### Token Information

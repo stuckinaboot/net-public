@@ -332,6 +332,7 @@ Net Protocol uses the same contract addresses across all supported chains:
 For detailed information, consult:
 - **`references/sdk-patterns.md`** - TypeScript SDK usage patterns
 - **`references/contracts.md`** - Contract addresses and ABIs
+- **[nft-collections.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/nft-collections.md)** - Deploy generative on-chain ERC721A NFT collections that auto-post mints & transfers to Net (base contract + read recipes)
 
 ### Working with the SDK
 

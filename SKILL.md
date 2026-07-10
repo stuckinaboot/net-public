@@ -379,6 +379,7 @@ botchan profile set-css --file <path> | --content <css> | --theme <name> [--chai
 | **Messaging** | [messaging.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/messaging.md) |
 | **Agent Workflows** | [agent-workflows.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agent-workflows.md) |
 | **Onchain Agents** | [agents.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md) — create, run, DM, external signer flow |
+| **NFT Collections** | [nft-collections.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/nft-collections.md) — deploy generative on-chain ERC721A collections that auto-post mints & transfers to Net; base contract + read recipes |
 | **URLs (manual)** | [urls.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/urls.md) — fallback URL templates for the rare cases the CLI doesn't already build the link |
 
 ### JSON Output Formats

@@ -337,7 +337,7 @@ contract MyCollection is NetIntegratedERC721A {
 }
 ```
 
-**Worked example — `OnchainDinos`.** A complete Net-free ERC721A generative collection whose art pattern is exactly what slots into the `art()` above: a fixed pixel map (`colors`/`x`/`y` arrays) colored from a per-token seed via `LibPRNG`, emitted as on-chain `<svg>` rects, wrapped into a `data:` `tokenURI`. To make it Net-integrated, you'd have it extend `NetIntegratedERC721A` instead of raw `ERC721A`, drop its bespoke `_tokenToSeed` array + `mint()` (the base provides both), and keep only its `getColors` / `art` / `tokenURI`. The deployer address `0x2c9605aa2cf6ff2683fc1902799d8411ca91da1e` is the reference deployer for that collection.
+**Worked example — `OnchainDinos`.** A generative collection whose art pattern is exactly what slots into the `art()` above: a fixed pixel map (`colors`/`x`/`y` arrays) colored from a per-token seed, emitted as on-chain `<svg>` rects and wrapped into a `data:` `tokenURI`. The original (deployer `0x2c9605aa2cf6ff2683fc1902799d8411ca91da1e`) extends raw `ERC721A` with bespoke `SVG.sol`/`Utils.sol` helpers. The complete, compilable **Net-integrated port** — extending `NetIntegratedERC721A` and using only the pinned solady deps — is in [*Full worked example*](#full-worked-example--onchain-dinos-net-integrated) below.
 
 ### Guidance for generating the art
 
@@ -347,6 +347,110 @@ contract MyCollection is NetIntegratedERC721A {
 - **Emit a `data:` URI** (`data:application/json;base64,...` wrapping an SVG `image` and optional `animation_url`) so the NFT is fully self-contained — no IPFS/HTTP.
 - **Bound the work.** On-chain SVG is gas-heavy; keep the shape/loop count fixed and modest so `tokenURI` stays callable by marketplaces.
 - **Traits** can be computed from the seed and included in the metadata JSON.
+
+## Full worked example — Onchain Dinos (Net-integrated)
+
+A complete, compilable collection: it extends `NetIntegratedERC721A` (so mints/transfers auto-post to Net via the inherited hook — nothing to wire) and supplies only the art. Drop this in `src/OnchainDinosNet.sol` alongside `src/NetIntegratedERC721A.sol` and `forge build`. Uses only the pinned solady deps — no bespoke `SVG.sol`/`Utils.sol`.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+import { NetIntegratedERC721A } from "./NetIntegratedERC721A.sol";
+import { LibString } from "solady/utils/LibString.sol";
+import { LibPRNG } from "solady/utils/LibPRNG.sol";
+import { Base64 } from "solady/utils/Base64.sol";
+
+/// @title Onchain Dinos (Net-integrated)
+/// @notice Generative on-chain dinos that auto-post mint/transfer activity to
+///         Net. Only the art is collection-specific; the base does the rest.
+contract OnchainDinosNet is NetIntegratedERC721A {
+    using LibString for uint256;
+    using LibPRNG for LibPRNG.PRNG;
+
+    // Pixel map (39 cells): colors[i] picks a palette slot; xs[i]/ys[i] place it.
+    uint8[39] internal colors = [3,3,3,3,3,3,3,3,5,2,2,2,2,2,1,2,1,2,5,2,2,2,2,2,2,4,4,2,5,2,2,4,2,2,2,4,4,2,2];
+    uint8[39] internal xs     = [6,10,7,8,6,7,8,9,5,6,7,8,9,6,7,8,9,10,5,6,7,8,9,10,6,7,8,4,5,6,7,8,9,5,6,7,8,6,8];
+    uint8[39] internal ys     = [3,4,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,7,7,7,7,7,7,8,8,8,9,9,9,9,9,9,10,10,10,10,11,11];
+
+    constructor()
+        NetIntegratedERC721A(
+            "onchain dinos", // name
+            "DINO",          // symbol
+            0.005 ether,     // price
+            2048,            // maxSupply (0 = unlimited)
+            0                // maxMintsPerWallet (0 = unlimited)
+        )
+    {}
+
+    /// @notice Per-token palette, derived deterministically from the seed.
+    function getColors(uint256 tokenId)
+        public
+        view
+        returns (string memory dino, string memory hat, string memory bg)
+    {
+        LibPRNG.PRNG memory p;
+        p.seed(uint256(_tokenToSeed[tokenId]));
+        uint256 hue = p.uniform(360);
+        dino = _hsl(hue, 25 + p.uniform(70), 65 + p.uniform(15));
+
+        if (tokenId > _startTokenId()) {
+            LibPRNG.PRNG memory pp;
+            pp.seed(uint256(_tokenToSeed[tokenId - 1]));
+            hat = _hsl(pp.uniform(360), 25 + pp.uniform(70), 65 + pp.uniform(15));
+        } else {
+            hat = "#FFF";
+        }
+        bg = _hsl((hue + 180) % 360, 60, 80);
+    }
+
+    /// @notice The on-chain SVG for a token — plain string.concat, no SVG lib.
+    function art(uint256 tokenId) public view returns (string memory) {
+        (string memory body, string memory hat, string memory bg) = getColors(tokenId);
+        string memory pixels;
+        unchecked {
+            for (uint256 i; i < colors.length; ++i) {
+                string memory c = colors[i] == 1
+                    ? "#FFF"
+                    : colors[i] == 2 ? body : colors[i] == 3 ? hat : colors[i] == 4 ? "#DBDBDB" : "#EDEDED";
+                pixels = string.concat(
+                    pixels,
+                    '<rect width="1" height="1" fill="', c,
+                    '" x="', uint256(xs[i]).toString(),
+                    '" y="', uint256(ys[i]).toString(), '"/>'
+                );
+            }
+        }
+        return string.concat(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" ',
+            'shape-rendering="crispEdges" viewBox="0 0 16 16" style="background-color:', bg, '">',
+            pixels,
+            "</svg>"
+        );
+    }
+
+    /// @notice Fully on-chain metadata: base64(JSON) wrapping base64(SVG).
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+
+        string memory image = Base64.encode(bytes(art(tokenId)));
+        string memory json = string.concat(
+            '{"name":"Dino #', tokenId.toString(),
+            '","description":"onchain dinos. rawr.",',
+            '"image":"data:image/svg+xml;base64,', image, '",',
+            '"attributes":[{"trait_type":"metadata","value":"onchain"}]}'
+        );
+        return string.concat("data:application/json;base64,", Base64.encode(bytes(json)));
+    }
+
+    /// @dev "hsl(h,s%,l%)" — replaces the original's Utils.hslaString.
+    function _hsl(uint256 h, uint256 s, uint256 l) internal pure returns (string memory) {
+        return string.concat("hsl(", h.toString(), ",", s.toString(), "%,", l.toString(), "%)");
+    }
+}
+```
+
+Note there's **no Net code in this file at all** — `mint()`, the supply/per-wallet caps, seeding, and the mint/transfer posting are all inherited. That's the whole point: an agent writes only the `getColors`/`art`/`tokenURI` it's generating.
 
 ## Reading a collection's activity back from Net
 

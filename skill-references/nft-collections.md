@@ -54,18 +54,19 @@ interface INet {
 
 These make a collection's activity cleanly filterable. Keep them consistent across collections so agents can query any Net NFT collection the same way.
 
-| Field | Mint | Transfer |
-|-------|------|----------|
-| `app` (automatic) | collection address | collection address |
-| `topic` | `"mint"` | `"transfer"` |
-| `sender` | the recipient (`to`) | the previous owner (`from`) |
-| `text` | `Minted #<start>–#<end> to <to>` | `Transferred #<start>–#<end> from <from> to <to>` |
-| `data` | empty | empty |
+| Field | Mint | Transfer | Burn |
+|-------|------|----------|------|
+| detected by | `from == address(0)` | neither is zero | `to == address(0)` |
+| `app` (automatic) | collection address | collection address | collection address |
+| `topic` | `"mint"` | `"transfer"` | `"burn"` |
+| `sender` | the recipient (`to`) | the previous owner (`from`) | the burner (`from`) |
+| `text` | `Minted #<start>–#<end> to <to>` | `Transferred #<start>–#<end> from <from> to <to>` | `Burned #<start>–#<end> by <from>` |
+| `data` | empty | empty | empty |
 
 Why these choices:
 
-- **Split topics (`mint` / `transfer`)** let you filter event type directly with `--topic`. The gas difference vs. a single topic is negligible (~tens of gas — see *Gas notes*).
-- **`sender = to` on mint / `from` on transfer** means `--sender 0xUser` surfaces *"tokens this user minted"* and *"tokens this user sent"* respectively.
+- **Split topics (`mint` / `transfer` / `burn`)** let you filter event type directly with `--topic`. The gas difference vs. a single topic is negligible (~tens of gas — see *Gas notes*). The hook checks `from == 0` first (mint), then `to == 0` (burn), else transfer — so a burn is its own event, never mislabeled as a transfer to the zero address.
+- **`sender = to` on mint / `from` on transfer & burn** means `--sender 0xUser` surfaces *"tokens this user minted"*, *"tokens this user sent"*, and *"tokens this user burned"* respectively.
 - **Keep `text` short and leave `data` empty.** Text/data length is the one part of the Net write whose gas scales with size. The start–end range plus addresses is enough; anything richer can be reconstructed by an indexer from the token IDs.
 
 ## Base contract: `NetIntegratedERC721A`
@@ -102,6 +103,7 @@ abstract contract NetIntegratedERC721A is ERC721A {
 
     string internal constant TOPIC_MINT = "mint";
     string internal constant TOPIC_TRANSFER = "transfer";
+    string internal constant TOPIC_BURN = "burn";
 
     /// @notice Mint price per token, in wei.
     uint256 public immutable price;
@@ -196,18 +198,15 @@ abstract contract NetIntegratedERC721A is ERC721A {
 
     // ------------------------------------------------------- Net integration
 
-    /// @dev Fires once per batch for mint (from == 0), transfer, and burn.
-    ///      All transfer paths (transferFrom + both safeTransferFrom) route
-    ///      through here — this is why we DON'T override transferFrom directly.
+    /// @dev Fires once per batch for mint (from == 0), transfer, and burn
+    ///      (to == 0). All transfer paths (transferFrom + both safeTransferFrom)
+    ///      route through here — this is why we DON'T override transferFrom.
     function _afterTokenTransfers(
         address from,
         address to,
         uint256 startTokenId,
         uint256 quantity
     ) internal virtual override {
-        // Nothing meaningful to announce on burn.
-        if (to == address(0)) return;
-
         uint256 endTokenId = startTokenId + quantity - 1;
 
         address msgSender;
@@ -217,13 +216,17 @@ abstract contract NetIntegratedERC721A is ERC721A {
             msgSender = to;
             topic = TOPIC_MINT;
             text = _mintText(to, startTokenId, endTokenId);
+        } else if (to == address(0)) {
+            msgSender = from;
+            topic = TOPIC_BURN;
+            text = _burnText(from, startTokenId, endTokenId);
         } else {
             msgSender = from;
             topic = TOPIC_TRANSFER;
             text = _transferText(from, to, startTokenId, endTokenId);
         }
 
-        // Best-effort: a Net revert or out-of-gas must NEVER brick a mint/transfer.
+        // Best-effort: a Net revert or out-of-gas must NEVER brick a mint/transfer/burn.
         try NET.sendMessageViaApp(msgSender, text, topic, "") {} catch {}
     }
 
@@ -249,6 +252,18 @@ abstract contract NetIntegratedERC721A is ERC721A {
         return string.concat(
             "Transferred #", startId.toString(), "-#", endId.toString(),
             " from ", from.toHexString(), " to ", to.toHexString()
+        );
+    }
+
+    function _burnText(address from, uint256 startId, uint256 endId)
+        internal
+        view
+        virtual
+        returns (string memory)
+    {
+        return string.concat(
+            "Burned #", startId.toString(), "-#", endId.toString(),
+            " by ", from.toHexString()
         );
     }
 }
@@ -465,6 +480,9 @@ netp message read --app 0xCollection --topic "mint" --chain-id 8453 --json
 # All transfers
 netp message read --app 0xCollection --topic "transfer" --chain-id 8453 --json
 
+# All burns
+netp message read --app 0xCollection --topic "burn" --chain-id 8453 --json
+
 # Everything a specific wallet minted from this collection
 netp message read --app 0xCollection --topic "mint" --sender 0xUser --chain-id 8453 --json
 
@@ -474,7 +492,7 @@ netp message read --app 0xCollection --topic "transfer" --sender 0xUser --chain-
 # How many mint messages exist (≈ number of mint batches, not tokens)
 netp message count --app 0xCollection --topic "mint" --chain-id 8453 --json
 
-# Total activity (mints + transfers)
+# Total activity (mints + transfers + burns)
 netp message count --app 0xCollection --chain-id 8453 --json
 ```
 

@@ -299,7 +299,7 @@ optimizer_runs = 200
 
 Put `NetIntegratedERC721A.sol` and your `MyCollection.sol` in `src/`, then `forge build`.
 
-**Hardhat equivalent:** `npm i erc721a solady` — the same `erc721a/contracts/...` and `solady/utils/...` import paths resolve via `node_modules`, no remappings needed.
+**Hardhat / npm:** `npm i erc721a solady`. `erc721a/contracts/...` resolves via `node_modules` as-is, but **solady publishes its sources under `src/`** — so with plain node resolution the imports are `solady/src/utils/LibString.sol` (etc.), not `solady/utils/...`. Either adjust the import paths to include `src/`, or add a remapping so `solady/` → `solady/src/`. (The Foundry `remappings.txt` above already does this, which is why the contract source uses the `solady/utils/...` form.)
 
 **Offline fallback only:** if the deploy environment has no network to `forge install`, vendor ERC721A + solady sources into `src/` and adjust imports. Prefer the package install otherwise — it stays on an audited, versioned release.
 
@@ -350,7 +350,7 @@ contract MyCollection is NetIntegratedERC721A {
 
 ## Full worked example — Onchain Dinos (Net-integrated)
 
-A complete, compilable collection: it extends `NetIntegratedERC721A` (so mints/transfers auto-post to Net via the inherited hook — nothing to wire) and supplies only the art. Drop this in `src/OnchainDinosNet.sol` alongside `src/NetIntegratedERC721A.sol` and `forge build`. Uses only the pinned solady deps — no bespoke `SVG.sol`/`Utils.sol`.
+A complete, compilable collection: it extends `NetIntegratedERC721A` (so mints/transfers auto-post to Net via the inherited hook — nothing to wire) and supplies only the art. Drop this in `src/OnchainDinosNet.sol` alongside `src/NetIntegratedERC721A.sol` and `forge build`. Uses only the pinned solady deps — no bespoke `SVG.sol`/`Utils.sol`. (Both files verified to compile clean under solc 0.8.24 with ERC721A v4.3.0 + solady.)
 
 ```solidity
 // SPDX-License-Identifier: MIT

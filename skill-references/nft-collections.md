@@ -12,7 +12,7 @@ This reference is written for an agent (Banker or otherwise) that wants to gener
 ## Mental model
 
 - The collection is an **ERC721A** contract (gas-cheap batch mints).
-- On every mint and transfer, the contract calls Net's `sendMessageViaApp(...)`. Because the collection is the *caller*, Net records the resulting message with **`app` = the collection address**.
+- On every mint, transfer, and burn, the contract calls Net's `sendMessageViaApp(...)`. Because the collection is the *caller*, Net records the resulting message with **`app` = the collection address**.
 - You (or Banker) write the **generative art** — the `art(tokenId)` / `tokenURI` logic — fresh for each collection. Everything below the art is standardized so the Net wiring, supply accounting, and per-wallet limits are always correct.
 
 ```
@@ -357,6 +357,7 @@ contract MyCollection is NetIntegratedERC721A {
 ### Guidance for generating the art
 
 - **Derive everything from `_tokenToSeed[tokenId]`** so tokens are deterministic and reproducible from chain state. Seed a PRNG from it — **solady `LibPRNG`** (`solady/utils/LibPRNG.sol`), already installed.
+- **Know the seed's limits.** The base seeds from `block.prevrandao`, which is predictable within a block and influenceable by the proposer. Fine for art where nobody profits from a specific outcome; if traits carry real value (rarity-sniping matters), override `_seed` with a commit-reveal scheme or a VRF (e.g. Chainlink) instead of trusting `prevrandao`.
 - **Build the SVG with plain `string.concat`** — no SVG library needed. (The dinos contract's `SVG.sol`/`Utils.sol` are just thin `string.concat` wrappers; you can inline them.)
 - **Base64-encode with solady `Base64`** (`solady/utils/Base64.sol`) — also already installed.
 - **Emit a `data:` URI** (`data:application/json;base64,...` wrapping an SVG `image` and optional `animation_url`) so the NFT is fully self-contained — no IPFS/HTTP.
@@ -467,6 +468,45 @@ contract OnchainDinosNet is NetIntegratedERC721A {
 
 Note there's **no Net code in this file at all** — `mint()`, the supply/per-wallet caps, seeding, and the mint/transfer posting are all inherited. That's the whole point: an agent writes only the `getColors`/`art`/`tokenURI` it's generating.
 
+## Deploying & interacting
+
+**Deploy on a Net-supported chain.** The collection posts to the Net contract at `0x00000000B24D62781dB359b07880a105cD0b64e6` — that address only has code on Net-supported chains (Base 8453 is the primary; full list in the SKILL overview). Because the post is wrapped in `try/catch`, deploying on a chain where Net *isn't* live doesn't error — mints/transfers still work, but **every message silently no-ops and nothing is recorded.** Test on **Base Sepolia (84532)** first, then ship to Base.
+
+Set env and deploy (append `--verify` to publish source to the explorer so holders can read the contract):
+
+```bash
+export RPC_URL=https://mainnet.base.org     # or a Base Sepolia / provider URL
+export PRIVATE_KEY=0x...                     # deployer key — becomes _deployer (withdraw + mintToCreator)
+
+forge create src/MyCollection.sol:MyCollection \
+  --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+  --verify --etherscan-api-key $BASESCAN_API_KEY   # optional, recommended
+```
+
+If your collection's constructor takes args, add `--constructor-args <...>`. The `MyCollection` / `OnchainDinosNet` examples take none.
+
+Interact with the deployed contract via `cast`:
+
+```bash
+export NFT=0xYourDeployedCollection
+
+# Creator premint (deployer only): 10 free tokens to the creator
+cast send $NFT "mintToCreator(uint256,address)" 10 $CREATOR \
+  --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+
+# Public mint: 3 tokens at 0.01 ETH each -> 0.03 ETH
+cast send $NFT "mint(uint256)" 3 --value 0.03ether \
+  --rpc-url $RPC_URL --private-key $BUYER_KEY
+
+# Withdraw collected ETH to the deployer
+cast send $NFT "withdraw()" --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+
+# Read a token's fully on-chain metadata
+cast call $NFT "tokenURI(uint256)(string)" 1 --rpc-url $RPC_URL
+```
+
+Each of those mints/transfers/burns auto-posts to Net — confirm with the read recipes below.
+
 ## Reading a collection's activity back from Net
 
 Once deployed, everything the collection did is on Net under `app = <collection address>`. No indexer or event log needed.
@@ -528,26 +568,24 @@ uint256 total = net.getTotalMessagesForAppTopicCount(collection, topic);
 INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, collection, topic);
 ```
 
+**Paginate large collections.** Fetching `(0, total)` pulls every message in one call, which blows past RPC response / gas limits once a collection is active. Read fixed-size windows instead — `getMessagesInRangeForAppTopic(i, i + 500, ...)` in Solidity, or `netp message read --start <i> --end <j>` on the CLI.
+
 ## Agent deploy workflow (e.g. Banker)
 
 1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator premint amount, and an art description.
 2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.
-3. **Compile & deploy** — scaffold per *Project setup* above (`forge install` + remappings), then `forge build` and deploy:
+3. **Compile & deploy** — scaffold per *Project setup*, `forge build`, then deploy on a Net-supported chain per *Deploying & interacting* (`forge create` + `cast send`).
+4. **Premint (optional)**: `cast send $NFT "mintToCreator(uint256,address)" <amount> <creator>`.
+5. **Announce**: the mint/transfer/burn messages post themselves; you can additionally post a launch note to the collection's own feed (topic is `feed-` + the collection address in **lowercase**):
    ```bash
-   forge create src/MyCollection.sol:MyCollection \
-     --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+   netp message send --text "Minting now: <name>" --topic "feed-0xcollectionaddresslowercased" --chain-id 8453
    ```
-4. **Premint (optional)**: call `mintToCreator(amount, creatorAddress)`.
-5. **Announce**: the mint/transfer messages post themselves; you can additionally post a launch note to the collection's feed:
-   ```bash
-   netp message send --text "Minting now: <name>" --topic "feed-0xCollection" --chain-id 8453
-   ```
-6. **Monitor**: poll the read recipes above to show live mint/transfer activity.
+6. **Monitor**: poll the read recipes above to show live mint/transfer/burn activity.
 
 ## Gas notes
 
-- **Split topics cost ~nothing extra.** The `from == address(0)` branch is a few stack ops (~10–20 gas); `"transfer"` vs `"mint"` differs by a handful of calldata/hash bytes (~60 gas). Both are rounding error.
-- **The real cost is posting to Net at all** — an external call plus storing the `Message` (several `SSTORE`s), on the order of tens of thousands of gas *per mint and per transfer*. Every transfer of the collection now carries that on top of the ERC721A transfer. Budget for it; it's the point of the integration.
+- **Split topics cost ~nothing extra.** The mint/burn/transfer branch is a few stack ops (~10–20 gas); the topic strings differ by a handful of calldata/hash bytes (~60 gas). Both are rounding error.
+- **The real cost is posting to Net at all** — an external call plus storing the `Message` (several `SSTORE`s), on the order of tens of thousands of gas *per mint, transfer, and burn*. Every transfer of the collection now carries that on top of the ERC721A transfer. Budget for it; it's the point of the integration.
 - **`try/catch` is mandatory**, not optional. Without it, any Net-side revert (or a tight gas limit on the transfer) would make the collection's tokens untransferable. Best-effort posting keeps the NFT safe.
 - **Keep `text` short, `data` empty.** That's the only size-dependent part of the write.
 
@@ -560,3 +598,5 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 - [ ] `tokenURI` reverts for nonexistent tokens.
 - [ ] `mintToCreator` is `onlyDeployer`.
 - [ ] Art work per `tokenURI` is bounded so marketplaces can render it.
+- [ ] Deployed on a **Net-supported chain** (else posts silently no-op).
+- [ ] Seed entropy suits the stakes (`block.prevrandao` is fine for art, not for valuable rarity).

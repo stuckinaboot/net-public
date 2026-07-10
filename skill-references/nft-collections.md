@@ -155,9 +155,7 @@ abstract contract NetIntegratedERC721A is ERC721A {
             _numberMinted(msg.sender) + amount > maxMintsPerWallet
         ) revert MaxMintsPerWalletReached();
 
-        _enforceSupply(amount);
-        _seed(_nextTokenId(), amount);
-        _mint(msg.sender, amount);
+        _mintSeeded(msg.sender, amount);
     }
 
     /// @notice Free premint controlled by the deployer. `amount` can be 0..N.
@@ -167,6 +165,12 @@ abstract contract NetIntegratedERC721A is ERC721A {
     ///      Preminted tokens consume the lowest IDs, so public mints number
     ///      after them.
     function mintToCreator(uint256 amount, address to) external onlyDeployer {
+        _mintSeeded(to, amount);
+    }
+
+    /// @dev Shared mint mechanic: supply check, seed, mint. Callers gate
+    ///      access/payment before calling.
+    function _mintSeeded(address to, uint256 amount) private {
         _enforceSupply(amount);
         _seed(_nextTokenId(), amount);
         _mint(to, amount);

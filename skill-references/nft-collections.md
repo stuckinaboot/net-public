@@ -265,6 +265,44 @@ abstract contract NetIntegratedERC721A is ERC721A {
 
 Creator premint isn't a constructor arg — it's the separate `mintToCreator(amount, to)` call, so the creator can premint whenever (or never) and optionally do it in its own transaction after deploy.
 
+### Inherited from ERC721A — do not redefine
+
+The base relies on these members that ERC721A already provides: `_mint`, `_numberMinted`, `_totalMinted`, `_nextTokenId`, `_startTokenId`, `_exists`, `_afterTokenTransfers`, and the `URIQueryForNonexistentToken` error. Your collection uses them directly; it does not declare them.
+
+## Project setup (build & compile)
+
+The base and your collection compile against two well-known libraries and nothing custom — no vendored `SVG.sol`/`Utils.sol`. Scaffold a Foundry project from scratch:
+
+```bash
+forge init my-collection && cd my-collection
+forge install chiru-labs/ERC721A@v4.3.0   # ERC721A v4 (has all the members above)
+forge install vectorized/solady             # LibString, LibPRNG, Base64
+```
+
+`remappings.txt` (this is what makes the imports resolve):
+
+```
+erc721a/=lib/ERC721A/
+solady/=lib/solady/src/
+```
+
+`foundry.toml`:
+
+```toml
+[profile.default]
+src = "src"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+```
+
+Put `NetIntegratedERC721A.sol` and your `MyCollection.sol` in `src/`, then `forge build`.
+
+**Hardhat equivalent:** `npm i erc721a solady` — the same `erc721a/contracts/...` and `solady/utils/...` import paths resolve via `node_modules`, no remappings needed.
+
+**Offline fallback only:** if the deploy environment has no network to `forge install`, vendor ERC721A + solady sources into `src/` and adjust imports. Prefer the package install otherwise — it stays on an audited, versioned release.
+
 ## The generative-art slot (AI-written per collection)
 
 Everything above is fixed. What you generate per collection is the art and metadata: `art(tokenId)` and `tokenURI(tokenId)`, driven by `_tokenToSeed[tokenId]`. Compose SVG on-chain (rects/paths/palette/PRNG), exactly like the reference collection below.
@@ -303,9 +341,11 @@ contract MyCollection is NetIntegratedERC721A {
 
 ### Guidance for generating the art
 
-- **Derive everything from `_tokenToSeed[tokenId]`** so tokens are deterministic and reproducible from chain state. Use a PRNG (e.g. Solady `LibPRNG`) seeded from it.
-- **Bound the work.** On-chain SVG is gas-heavy; keep the shape/loop count fixed and modest so `tokenURI` stays callable by marketplaces.
+- **Derive everything from `_tokenToSeed[tokenId]`** so tokens are deterministic and reproducible from chain state. Seed a PRNG from it — **solady `LibPRNG`** (`solady/utils/LibPRNG.sol`), already installed.
+- **Build the SVG with plain `string.concat`** — no SVG library needed. (The dinos contract's `SVG.sol`/`Utils.sol` are just thin `string.concat` wrappers; you can inline them.)
+- **Base64-encode with solady `Base64`** (`solady/utils/Base64.sol`) — also already installed.
 - **Emit a `data:` URI** (`data:application/json;base64,...` wrapping an SVG `image` and optional `animation_url`) so the NFT is fully self-contained — no IPFS/HTTP.
+- **Bound the work.** On-chain SVG is gas-heavy; keep the shape/loop count fixed and modest so `tokenURI` stays callable by marketplaces.
 - **Traits** can be computed from the seed and included in the metadata JSON.
 
 ## Reading a collection's activity back from Net
@@ -370,7 +410,11 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 
 1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator premint amount, and an art description.
 2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.
-3. **Compile & deploy** with your own Solidity toolchain (Foundry/Hardhat). Dependencies: `erc721a`, `solady` (or equivalent string/PRNG libs). Add a remapping for the ERC721A import.
+3. **Compile & deploy** — scaffold per *Project setup* above (`forge install` + remappings), then `forge build` and deploy:
+   ```bash
+   forge create src/MyCollection.sol:MyCollection \
+     --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+   ```
 4. **Premint (optional)**: call `mintToCreator(amount, creatorAddress)`.
 5. **Announce**: the mint/transfer messages post themselves; you can additionally post a launch note to the collection's feed:
    ```bash

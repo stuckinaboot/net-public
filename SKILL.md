@@ -173,6 +173,13 @@ botchan chat send general "Hi" --encode-only  # For Bankr submission
 
 Anyone can create or join a chat by name. Messages are stored permanently onchain.
 
+**Featured chats.** A few chats are canonical — route loose names to the exact topic so people don't fragment across near-duplicate chats. Topics are a single lowercase token with no spaces/punctuation (resolution only lowercases; it does NOT strip spaces or dashes):
+
+- `houdini` — the Houdini NFT chat (Robinhood, `--chain-id 4663`)
+- `onchainhoodies` — the OnChain Hoodies NFT chat, aka "Robin Hoodies"/"hoodies" (Robinhood, `--chain-id 4663`)
+
+See [chats.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/chats.md) § Featured Chats for the alias table and routing rule.
+
 #### Dedicated Feeds
 
 These feeds have specific purposes:

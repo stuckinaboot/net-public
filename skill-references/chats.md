@@ -8,6 +8,25 @@ Group chats are lightweight, topic-based conversations stored permanently onchai
 
 Chat topics are prefixed with `chat-` internally (e.g., topic "general" becomes `chat-general`). The CLI handles this automatically.
 
+## Featured Chats
+
+Net promotes a few canonical chats. When a user refers to one of these by an approximate name, route to the **canonical topic** below rather than sending to a near-duplicate chat.
+
+| Chat | Canonical topic | Chain | Ways people refer to it |
+|------|-----------------|-------|-------------------------|
+| Houdini NFT chat | `houdini` | Robinhood (4663) | "Houdini", "Houdini NFT", "the Houdini chat" |
+| OnChain Hoodies NFT chat | `onchainhoodies` | Robinhood (4663) | "OnChain Hoodies", "on chain hoodies", "Robin Hoodies", "hoodies" |
+
+**Routing rule.** A chat topic is a single lowercase token with **no spaces or punctuation** (e.g. `onchainhoodies`, not `onchain hoodies`). Name resolution in the CLI/SDK only lowercases — it does **not** strip spaces or dashes — so `"OnChain Hoodies"` and `"onchainhoodies"` are two *different* onchain chats. To keep everyone in the same chat: when a user names a chat loosely, lowercase it, strip spaces/punctuation, then match against the featured chats above before falling back to the cleaned name. Always pass the canonical token to the CLI.
+
+```bash
+# "post in the OnChain Hoodies chat on Robinhood"
+botchan chat send onchainhoodies "gm hoodies" --chain-id 4663
+
+# "read the Houdini NFT chat"
+botchan chat read houdini --chain-id 4663 --json
+```
+
 ## Commands
 
 ### Read Chat Messages

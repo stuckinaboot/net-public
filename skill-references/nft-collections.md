@@ -338,27 +338,33 @@ Note `count` returns the number of **messages** (batches), not tokens — a batc
 
 ### Solidity (for contracts / indexers)
 
+Reads live on the **same** Net contract (address as above). Topics are hashed to `bytes32` on the read side.
+
 ```solidity
-// topic must be hashed to bytes32 for the read side
+interface INetReader {
+    struct Message {
+        address app;
+        address sender;
+        bytes32 topic;
+        uint48 timestamp;
+        string text;
+        bytes data;
+    }
+
+    function getTotalMessagesForAppCount(address app) external view returns (uint256);
+    function getTotalMessagesForAppTopicCount(address app, bytes32 topic) external view returns (uint256);
+    function getMessagesInRangeForApp(uint256 startIdx, uint256 endIdx, address app)
+        external view returns (Message[] memory);
+    function getMessagesInRangeForAppTopic(uint256 startIdx, uint256 endIdx, address app, bytes32 topic)
+        external view returns (Message[] memory);
+}
+
+// Usage: fetch every mint message for a collection.
+INetReader net = INetReader(0x00000000B24D62781dB359b07880a105cD0b64e6);
 bytes32 topic = keccak256(bytes("mint"));
-
-uint256 total = INetReader(NET).getTotalMessagesForAppTopicCount(collection, topic);
-INet.Message[] memory msgs =
-    INetReader(NET).getMessagesInRangeForAppTopic(0, total, collection, topic);
+uint256 total = net.getTotalMessagesForAppTopicCount(collection, topic);
+INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, collection, topic);
 ```
-
-Relevant read functions on the Net contract:
-
-```solidity
-function getTotalMessagesForAppCount(address app) external view returns (uint256);
-function getTotalMessagesForAppTopicCount(address app, bytes32 topic) external view returns (uint256);
-function getMessagesInRangeForApp(uint256 startIdx, uint256 endIdx, address app)
-    external view returns (Message[] memory);
-function getMessagesInRangeForAppTopic(uint256 startIdx, uint256 endIdx, address app, bytes32 topic)
-    external view returns (Message[] memory);
-```
-
-`Message` = `{ address app; address sender; bytes32 topic; uint48 timestamp; string text; bytes data; }`.
 
 ## Agent deploy workflow (e.g. Banker)
 

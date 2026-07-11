@@ -2,7 +2,7 @@
 
 Deploy generative, fully on-chain NFT collections that **auto-post their mints and transfers to Net Protocol**. The collection contract *is* a Net app, so its entire activity history is queryable — permanently, by anyone — under the collection's own address.
 
-This reference is written for an agent (Banker or otherwise) that wants to generate, deploy, and then read back a collection. It gives you:
+This reference is written for you, or an AI like Bankr, that wants to generate, deploy, and then read back a collection. It gives you:
 
 1. A drop-in **base contract** (`NetIntegratedERC721A`) that wires ERC721A to Net.
 2. The **generative-art slot** you fill in per collection (AI-written).
@@ -13,7 +13,7 @@ This reference is written for an agent (Banker or otherwise) that wants to gener
 
 - The collection is an **ERC721A** contract (gas-cheap batch mints).
 - On every mint, transfer, and burn, the contract calls Net's `sendMessageViaApp(...)`. Because the collection is the *caller*, Net records the resulting message with **`app` = the collection address**.
-- You (or Banker) write the **generative art** — the `art(tokenId)` / `tokenURI` logic — fresh for each collection. Everything below the art is standardized so the Net wiring, supply accounting, and per-wallet limits are always correct.
+- You (or an AI like Bankr) write the **generative art** — the `art(tokenId)` / `tokenURI` logic — fresh for each collection. Everything below the art is standardized so the Net wiring, supply accounting, and per-wallet limits are always correct.
 
 ```
                        mint() / transferFrom() / mintToCreator()
@@ -574,7 +574,7 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 
 **Paginate large collections.** Fetching `(0, total)` pulls every message in one call, which blows past RPC response / gas limits once a collection is active. Read fixed-size windows instead — `getMessagesInRangeForAppTopic(i, i + 500, ...)` in Solidity, or `netp message read --start <i> --end <j>` on the CLI.
 
-## Agent deploy workflow (e.g. Banker)
+## Agent deploy workflow (e.g. you or an AI like Bankr)
 
 1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator premint amount, and an art description.
 2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.

@@ -15,7 +15,7 @@ and completes the claim on its own.
 
 ## Pricing & limits
 
-| | |
+| Setting | Value |
 |---|---|
 | **Price** | `$0.01 USDC / hour` (24h ≈ $0.24) |
 | **Payment rail** | x402 (USDC on Base, chain `8453`) |

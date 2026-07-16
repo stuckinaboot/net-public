@@ -145,12 +145,24 @@ POST https://netprotocol.app/api/subdomains/release
 
 ### Read — `GET /api/subdomains/<name>`
 
-Public, no auth, no payment. Returns the current registration (or 404 if unclaimed /
-expired):
+Public, no auth, no payment. Returns the registration plus a `status` telling you
+whether the lease is still live:
 
 ```bash
 curl https://netprotocol.app/api/subdomains/myapp
 ```
+
+```jsonc
+// 200 — the record exists (whether or not it's still active)
+{
+  "registration": { "name": "myapp", "owner": "0x…", "paidUntil": 1731000000, "epoch": 0, "target": { … }, "registeredAt": 1730913600 },
+  "status": "active"   // "active" while now < paidUntil, else "expired"
+}
+```
+
+A name that has **never been claimed** returns `404 {"error":"not_found"}`. A name
+whose lease has lapsed still returns `200` with `"status": "expired"` (the record
+lingers until it's swept), so check `status` — don't treat a `200` as "still live".
 
 ## Paying over x402 from code
 

@@ -262,6 +262,14 @@ netp storage upload --file contract.pdf --key "contract-2024" --text "Signed con
 netp storage upload --file metadata.json --key "nft-42" --text "NFT #42 metadata" --chain-id 8453
 ```
 
+### Character Personas
+Save a reusable persona (a "character") on-chain that AIs or Bankr can load and
+adopt as a role, then share it with others. See the
+[characters reference](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/characters.md).
+```bash
+netp storage upload --file character-ada.json --key "character-ada" --text "Ada — witty onchain historian" --chain-id 8453
+```
+
 ### Version History
 ```bash
 # Upload multiple versions (same key)

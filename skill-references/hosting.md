@@ -227,34 +227,16 @@ and POST it (no x402 client needed — those calls carry no payment).
 
 ## Common errors
 
-| Response | Likely cause | Fix |
+| Response | Cause | Fix |
 |---|---|---|
-| `400 {"error":"invalid_body","message":"Required"}` | **Any** required field is missing — `name`, `target`, `target.kind`, or the fields the chosen `kind` needs (`net`→`chainId`/`operator`/`key`; `redirect`/`proxy`→`url`; `hosted`→`platform`). A `net` target sent with a `url` is one common instance, not the only one. | Add the missing field. The message names the **first** missing field only, so a fresh `400` after your fix may point at a *different* one — re-read it each time. |
-| `400 {"error":"invalid_body", …}` (other messages) | A field is present but malformed — bad address, non-integer `chainId`, `url` that isn't `http(s)`, oversized value | Fix the named field; the message says which. |
-| `402 Payment Required` | Expected on `claim`/`renew` when the endpoint runs in **paid** mode — it's the x402 challenge, not an error, and it comes *before* body validation | Pay with an x402 client and retry (see above). Don't add auth fields to "fix" it. |
-| `401 {"error":"unauthorized"}` | The request authenticated as **nobody**: no verified x402 payer *and* no valid owner signature | Authenticate one way. In paid mode, pay over x402 (payer = owner). In free/signed mode (you never see a `402`), send `owner` + `issuedAt` + `signature`. |
-| `403 {"error":"not_owner"}` (renew/update/release) | The paying/signing wallet isn't the one that holds the lease | Use the wallet that claimed the name. |
-| `409 {"error":"name_taken"}` | The name has a live (or in-grace) lease | Pick another name or wait for it to lapse. |
-| `400 {"error":"reserved_name"}` / `{"error":"invalid_name"}` | The label is reserved, or breaks the charset/length rules | See [Name rules](#name-rules). |
+| `400 "Required"` | A required field is missing. Most often: a `net` target sent with a `url` (only `redirect`/`proxy` take a `url`; `net` takes `chainId`/`operator`/`key`). | Add the missing field. The message names one field at a time, so re-read it after each fix. |
+| `402 Payment Required` | Expected on `claim`/`renew` — this is the x402 challenge, not an error. | Pay it with an x402 client and retry. Don't add fields to "fix" it. |
+| `401 unauthorized` | The request proved no owner. | Pay over x402 (payer = owner). If the endpoint never returns a `402`, sign instead: send `owner` + `issuedAt` + `signature`. |
+| `403 not_owner` | The wallet isn't the one that holds the lease. | Use the wallet that claimed the name. |
+| `409 name_taken` | The name is currently leased. | Pick another name, or wait for it to lapse. |
 
-### Two auth paths — know which one you're on
-
-Whether you sign depends on how the endpoint is running, and the response tells you which:
-
-- **Paid mode** — an unpaid `claim`/`renew` returns **`402`** *before* the body is even
-  validated. Pay over x402 and the **payer becomes the owner** — omit
-  `owner`/`signature`/`issuedAt`. (You'll only see a body `400` *after* the payment
-  handshake.)
-- **Free / signed mode** — you get a `400`/`401` and **never a `402`**. There's no payer,
-  so you must authenticate with a signature: send `owner` + `issuedAt` +
-  `signature` over the canonical message (see the **Update** section above, with
-  `Action: claim`).
-
-So a bare `400 "Required"` with no `402` in sight means two separate things are needed:
-fix the missing body field **and** be ready to sign. Adding `owner` alone fixes
-neither the `400` (a missing body field is unrelated to the owner) nor the auth (a
-signature needs `issuedAt` + `signature` too) — it just turns the `400` into a `401`.
-`update` and `release` are always signed, regardless of mode.
+Adding an `owner` field does not fix a `400` — that's a missing *body* field, unrelated
+to the owner.
 
 ## Common flows
 

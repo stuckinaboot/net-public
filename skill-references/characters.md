@@ -139,10 +139,9 @@ character.
 ## Use a character (Bankr / AI)
 
 "Using" a character means adopting it as a role and responding in that
-character's voice. After loading the JSON, take the `systemPrompt` (or synthesize
-one from `persona` + `bio` if it's absent) and use it as the system/role
-instruction for the model or Bankr session. Optionally use `exampleDialogue` as
-few-shot examples of the voice.
+character's voice. After loading the JSON, combine its `systemPrompt`, `persona`,
+and `bio` (whichever are present) into the system/role instruction for the AI
+session. Optionally use `exampleDialogue` as few-shot examples of the voice.
 
 ## Notes & best practices
 

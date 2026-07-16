@@ -31,7 +31,6 @@ everything else is optional but recommended.
   "bio": "Ada has watched every block since genesis and remembers all of it.",
   "persona": "Dry, precise, and quietly funny. Speaks in short sentences. Loves a good footnote.",
   "systemPrompt": "You are Ada, a witty onchain historian. You explain crypto history plainly, cite specifics, and never hype. Keep replies short.",
-  "greeting": "Hey — I'm Ada. Ask me anything about how we got here.",
   "avatarUrl": "https://storedon.net/net/8453/storage/load/0xAuthor/character-ada-avatar",
   "tags": ["historian", "witty", "educational"],
   "exampleDialogue": [
@@ -50,7 +49,6 @@ everything else is optional but recommended.
 | `bio` | No | Longer background / description. |
 | `persona` | No | Voice, tone, and personality notes. |
 | `systemPrompt` | No | Ready-to-use role instruction. This is what you hand to an AI to "become" the character. |
-| `greeting` | No | Opening line the character uses. |
 | `avatarUrl` | No | Image URL. Can itself be a Net Storage URL. |
 | `tags` | No | Array of keywords for discovery. |
 | `exampleDialogue` | No | Array of `{ user, character }` turns that demonstrate the voice. |
@@ -83,8 +81,7 @@ cat > character-ada.json <<'JSON'
   "schema": "net-character/v1",
   "name": "Ada",
   "slug": "ada",
-  "systemPrompt": "You are Ada, a witty onchain historian...",
-  "greeting": "Hey — I'm Ada."
+  "systemPrompt": "You are Ada, a witty onchain historian..."
 }
 JSON
 
@@ -143,8 +140,8 @@ character.
 
 "Using" a character means adopting it as a role. After loading the JSON, take the
 `systemPrompt` (or synthesize one from `persona` + `bio` if it's absent) and use
-it as the system/role instruction for the model or Bankr session. Optionally open
-with the `greeting` and use `exampleDialogue` as few-shot examples of the voice.
+it as the system/role instruction for the model or Bankr session. Optionally use
+`exampleDialogue` as few-shot examples of the voice.
 
 ## Notes & best practices
 

@@ -290,7 +290,13 @@ The base relies on these members that ERC721A already provides: `_mint`, `_numbe
 
 ## Project setup (build & compile)
 
-The base and your collection compile against two well-known libraries and nothing custom — no vendored `SVG.sol`/`Utils.sol`. Scaffold a Foundry project from scratch:
+The base and your collection are **plain Solidity** compiled against two well-known libraries — no vendored `SVG.sol`/`Utils.sol`. **Any EVM toolchain works** (Foundry, Hardhat, Remix, thirdweb, or the `solc` compiler directly); the produced bytecode is identical. The only hard requirements are: solc ≥ 0.8.4 (pin **0.8.24**), the two deps (`erc721a`, `solady`) resolvable, and solady's `src/` layout handled in import resolution.
+
+Foundry is the worked path below; a **Foundry-free `solc` recipe** and other options follow it.
+
+### Foundry
+
+Scaffold a project from scratch:
 
 ```bash
 forge init my-collection && cd my-collection
@@ -318,9 +324,57 @@ optimizer_runs = 200
 
 Put `NetIntegratedERC721A.sol` and your `MyCollection.sol` in `src/`, then `forge build`.
 
-**Hardhat / npm:** `npm i erc721a solady`. `erc721a/contracts/...` resolves via `node_modules` as-is, but **solady publishes its sources under `src/`** — so with plain node resolution the imports are `solady/src/utils/LibString.sol` (etc.), not `solady/utils/...`. Either adjust the import paths to include `src/`, or add a remapping so `solady/` → `solady/src/`. (The Foundry `remappings.txt` above already does this, which is why the contract source uses the `solady/utils/...` form.)
+### Compiling without Foundry — `solc` directly
 
-**Offline fallback only:** if the deploy environment has no network to `forge install`, vendor ERC721A + solady sources into `src/` and adjust imports. Prefer the package install otherwise — it stays on an audited, versioned release.
+If `forge` isn't available (not installed, restricted network, a CI image without it), compile with **standalone `solc`**. It's the *same* compiler Foundry and Hardhat call, published as a pure-JS npm package — so it needs only Node + the npm registry, no GitHub and no Foundry. This is exactly how the example in this reference was verified.
+
+```bash
+mkdir mycol && cd mycol && npm init -y
+npm i solc@0.8.24 erc721a@4.3.0 solady
+# drop NetIntegratedERC721A.sol + MyCollection.sol in this dir
+```
+
+A tiny `compile.js` feeds solc Standard-JSON and resolves imports from `node_modules` (the callback emulates the remappings — note the solady `src/`, the one gotcha):
+
+```js
+// compile.js
+const fs = require("fs"), path = require("path"), solc = require("solc");
+const NM = path.join(__dirname, "node_modules");
+function resolve(p) {
+  if (p.startsWith("solady/")) return fs.readFileSync(path.join(NM, "solady/src", p.slice(7)), "utf8");
+  if (p.startsWith("erc721a/")) return fs.readFileSync(path.join(NM, p), "utf8");
+  return fs.readFileSync(path.join(__dirname, p), "utf8"); // ./relative
+}
+const input = {
+  language: "Solidity",
+  sources: {
+    "NetIntegratedERC721A.sol": { content: fs.readFileSync("NetIntegratedERC721A.sol", "utf8") },
+    "MyCollection.sol": { content: fs.readFileSync("MyCollection.sol", "utf8") },
+  },
+  settings: {
+    optimizer: { enabled: true, runs: 200 },
+    outputSelection: { "*": { "*": ["evm.bytecode.object", "abi"] } },
+  },
+};
+const out = JSON.parse(solc.compile(JSON.stringify(input), { import: (p) => ({ contents: resolve(p) }) }));
+for (const e of out.errors || []) if (e.severity === "error") console.log(e.formattedMessage);
+const c = out.contracts["MyCollection.sol"].MyCollection;
+console.log(c.evm.bytecode.object ? `OK — ${c.evm.bytecode.object.length / 2} bytes` : "FAILED");
+// deploy c.evm.bytecode.object + c.abi with viem/ethers, or submit the deploy tx via Bankr /wallet/submit
+```
+
+```bash
+node compile.js   # -> OK — ~9.9K bytes
+```
+
+### Other toolchains
+
+- **Hardhat** — `npm i erc721a solady`. `erc721a/contracts/...` resolves via `node_modules` as-is, but **solady publishes under `src/`**, so its imports are `solady/src/utils/LibString.sol`, not `solady/utils/...`. Either use the `src/` paths or add a remapping `solady/` → `solady/src/` (the Foundry `remappings.txt` above does exactly this, which is why the contract source uses the `solady/utils/...` form).
+- **Remix** — paste the two files into [remix.ethereum.org](https://remix.ethereum.org), set the compiler to 0.8.x; it fetches the npm imports automatically. Zero local setup — handy for a one-off deploy via an injected wallet.
+- **thirdweb** — `npx thirdweb deploy` compiles and hands you a deploy UI.
+- **Ape / Truffle** — standard Solidity; both work with the same two deps.
+
+**Offline fallback:** if the environment has no network at all, vendor the ERC721A + solady sources into the project and adjust imports. Prefer a package install otherwise — it stays on an audited, versioned release.
 
 ## The generative-art slot (AI-written per collection)
 
@@ -475,6 +529,8 @@ Note there's **no Net code in this file at all** — `mint()`, the supply/per-wa
 ## Deploying & interacting
 
 **Deploy on a Net-supported chain.** The collection posts to the Net contract at `0x00000000B24D62781dB359b07880a105cD0b64e6` — that address only has code on Net-supported chains (Base 8453 is the primary; full list in the SKILL overview). Because the post is wrapped in `try/catch`, deploying on a chain where Net *isn't* live doesn't error — mints/transfers still work, but **every message silently no-ops and nothing is recorded.** Test on **Base Sepolia (84532)** first, then ship to Base.
+
+The commands below use Foundry's `forge create` / `cast`, but **deploy is toolchain-agnostic** — you're just sending the compiled bytecode. Any of these work equally: a Hardhat deploy script, a viem/ethers `deployContract` call, Remix with an injected wallet, `npx thirdweb deploy`, or submitting the raw deploy tx via **Bankr's `/wallet/submit`** (the most natural path for an autonomous agent that doesn't shell out to `forge`).
 
 Set env and deploy (append `--verify` to publish source to the explorer so holders can read the contract):
 

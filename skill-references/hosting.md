@@ -48,11 +48,38 @@ A lease's `target` is a discriminated union keyed by `kind`. Pick one:
 | `proxy` | a URL **reverse-proxied** server-side and served under your subdomain (forwards asset paths, so SPAs render in place — not a redirect that bounces away) | `{ "kind": "proxy", "url": "https://my-app.example.com" }` |
 
 Notes:
+- Only `redirect` and `proxy` take a `url`. **`net` does NOT take a `url`** — it takes
+  three separate fields (`chainId`, `operator`, `key`). Putting a `url` on a `net`
+  target is the most common mistake and produces a `400 "Required"` (the required
+  `chainId`/`operator`/`key` are missing). See the mapping below.
 - `redirect` and `proxy` URLs must be well-formed `http(s)` URLs. `proxy` is fetched
   **server-side**, so private/internal hosts are blocked.
-- `net` content is what [`storedon.net`](https://netprotocol.app) renders from Net
-  Storage — upload with `netp storage upload` first, then point a `net` target at the
-  resulting `operator` + `key` (see [storage.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/storage.md)).
+
+### Pointing a `net` target at already-uploaded content
+
+`net` content is what `storedon.net` serves from Net Storage. If you already have a
+storedon.net load URL, **don't paste it as a `url`** — split it into the three fields.
+The URL format is:
+
+```
+https://storedon.net/net/<chainId>/storage/load/<operator>/<key>
+```
+
+so a URL like
+`https://storedon.net/net/8453/storage/load/0x4cc5…efeb/snake-game-v1` maps to:
+
+```jsonc
+"target": {
+  "kind": "net",
+  "chainId": 8453,                                  // the /net/<chainId> segment
+  "operator": "0x4cc5c5cb393cfe5f17f226056d4875965e41efeb", // the /load/<operator> segment
+  "key": "snake-game-v1"                            // the trailing /<key> segment
+}
+```
+
+If you're uploading fresh, `netp storage upload --file ./page.html --key "my-key"
+--chain-id 8453` prints the `operator` (your wallet) and `key` to use (see
+[storage.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/storage.md)).
 
 ## Endpoints
 
@@ -197,6 +224,21 @@ console.log(res.status, await res.json()); // → 200 + { hostname, registration
 
 For `update`/`release`, sign the canonical message shown above with the owner wallet
 and POST it (no x402 client needed — those calls carry no payment).
+
+## Common errors
+
+| Response | Likely cause | Fix |
+|---|---|---|
+| `400 {"error":"invalid_body","message":"Required"}` | A required field is missing — most often a `net` target sent with a `url` instead of `chainId`/`operator`/`key` | Use the three `net` fields (see the mapping above). `url` belongs only to `redirect`/`proxy`. |
+| `402 Payment Required` | This is expected on `claim`/`renew` — it's the x402 challenge, not an error | Pay it with an x402 client and retry (see above). Don't add auth fields to "fix" it. |
+| `401 {"error":"unauthorized"}` | You sent `owner` (signed path) but no valid `signature`/`issuedAt`, or the signature didn't verify | On the **paid** path, omit `owner`/`signature`/`issuedAt` entirely — the x402 payer is the owner. Only `update`/`release` require a signature. |
+| `403 not_owner` (renew/update) | The paying/signing wallet isn't the one that claimed the name | Use the owner wallet from the original claim. |
+| `409 name_taken` | The name has a live (or in-grace) lease | Pick another name or wait for it to lapse. |
+
+**Do not add an `owner` field to make a `400` go away.** The `400 "Required"` is about
+the missing `net` target fields, not a missing owner. Adding `owner` switches you to the
+signed path, which then demands `signature` + `issuedAt` and gives a `401` instead — it
+does not fix the target.
 
 ## Common flows
 

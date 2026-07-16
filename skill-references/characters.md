@@ -12,8 +12,7 @@ idempotent and versioned, encode-only/Bankr submission, URL format, etc.).
 A character is a portable description of a personality — a name, a voice, a
 system prompt, an avatar. Once it's stored on-chain you can:
 
-- **Load it** into any AI (Bankr, an onchain agent, or your own model) to make it
-  take on that role.
+- **Load it** into any AI (Bankr or your own model) to make it take on that role.
 - **Share it** with anyone — storage is public, so an operator address + key (or a
   single URL) is all someone needs to load the same character.
 - **Version it** — every write is kept, so a character has full edit history.
@@ -135,25 +134,12 @@ Storage is public, so sharing is just handing over the coordinates:
 Post that URL to a feed or drop it in your profile to let others adopt your
 character.
 
-## Use a character (Bankr / AI / agents)
+## Use a character (Bankr / AI)
 
 "Using" a character means adopting it as a role. After loading the JSON, take the
 `systemPrompt` (or synthesize one from `persona` + `bio` if it's absent) and use
 it as the system/role instruction for the model or Bankr session. Optionally open
 with the `greeting` and use `exampleDialogue` as few-shot examples of the voice.
-
-To spin up a **persistent onchain agent** from a character, pipe its prompt into
-`netp agent create`:
-
-```bash
-netp agent create "Ada" \
-  --system-prompt "$(netp storage read --key character-ada --operator 0xAuthor --chain-id 8453 --json | jq -r '.data | fromjson | .systemPrompt')" \
-  --chain-id 8453
-```
-
-See the
-[agents reference](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md)
-for agent creation and running.
 
 ## Notes & best practices
 

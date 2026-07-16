@@ -131,6 +131,11 @@ Storage is public, so sharing is just handing over the coordinates:
   https://storedon.net/net/8453/storage/load/0xAuthor/character-ada
   ```
 
+  The URL serves the character JSON directly (MIME-typed `application/json`),
+  so a consumer can `fetch(url).then(r => r.json())` — no `netp` needed just to
+  read a shared character. The latest version is cached ~5 minutes, so a
+  freshly-updated character can take a moment to reflect.
+
 Post that URL to a feed or drop it in your profile to let others adopt your
 character.
 

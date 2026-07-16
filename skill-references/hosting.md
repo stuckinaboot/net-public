@@ -229,16 +229,32 @@ and POST it (no x402 client needed — those calls carry no payment).
 
 | Response | Likely cause | Fix |
 |---|---|---|
-| `400 {"error":"invalid_body","message":"Required"}` | A required field is missing — most often a `net` target sent with a `url` instead of `chainId`/`operator`/`key` | Use the three `net` fields (see the mapping above). `url` belongs only to `redirect`/`proxy`. |
-| `402 Payment Required` | This is expected on `claim`/`renew` — it's the x402 challenge, not an error | Pay it with an x402 client and retry (see above). Don't add auth fields to "fix" it. |
-| `401 {"error":"unauthorized"}` | You sent `owner` (signed path) but no valid `signature`/`issuedAt`, or the signature didn't verify | On the **paid** path, omit `owner`/`signature`/`issuedAt` entirely — the x402 payer is the owner. Only `update`/`release` require a signature. |
-| `403 not_owner` (renew/update) | The paying/signing wallet isn't the one that claimed the name | Use the owner wallet from the original claim. |
-| `409 name_taken` | The name has a live (or in-grace) lease | Pick another name or wait for it to lapse. |
+| `400 {"error":"invalid_body","message":"Required"}` | **Any** required field is missing — `name`, `target`, `target.kind`, or the fields the chosen `kind` needs (`net`→`chainId`/`operator`/`key`; `redirect`/`proxy`→`url`; `hosted`→`platform`). A `net` target sent with a `url` is one common instance, not the only one. | Add the missing field. The message names the **first** missing field only, so a fresh `400` after your fix may point at a *different* one — re-read it each time. |
+| `400 {"error":"invalid_body", …}` (other messages) | A field is present but malformed — bad address, non-integer `chainId`, `url` that isn't `http(s)`, oversized value | Fix the named field; the message says which. |
+| `402 Payment Required` | Expected on `claim`/`renew` when the endpoint runs in **paid** mode — it's the x402 challenge, not an error, and it comes *before* body validation | Pay with an x402 client and retry (see above). Don't add auth fields to "fix" it. |
+| `401 {"error":"unauthorized"}` | The request authenticated as **nobody**: no verified x402 payer *and* no valid owner signature | Authenticate one way. In paid mode, pay over x402 (payer = owner). In free/signed mode (you never see a `402`), send `owner` + `issuedAt` + `signature`. |
+| `403 {"error":"not_owner"}` (renew/update/release) | The paying/signing wallet isn't the one that holds the lease | Use the wallet that claimed the name. |
+| `409 {"error":"name_taken"}` | The name has a live (or in-grace) lease | Pick another name or wait for it to lapse. |
+| `400 {"error":"reserved_name"}` / `{"error":"invalid_name"}` | The label is reserved, or breaks the charset/length rules | See [Name rules](#name-rules). |
 
-**Do not add an `owner` field to make a `400` go away.** The `400 "Required"` is about
-the missing `net` target fields, not a missing owner. Adding `owner` switches you to the
-signed path, which then demands `signature` + `issuedAt` and gives a `401` instead — it
-does not fix the target.
+### Two auth paths — know which one you're on
+
+Whether you sign depends on how the endpoint is running, and the response tells you which:
+
+- **Paid mode** — an unpaid `claim`/`renew` returns **`402`** *before* the body is even
+  validated. Pay over x402 and the **payer becomes the owner** — omit
+  `owner`/`signature`/`issuedAt`. (You'll only see a body `400` *after* the payment
+  handshake.)
+- **Free / signed mode** — you get a `400`/`401` and **never a `402`**. There's no payer,
+  so you must authenticate with a signature: send `owner` + `issuedAt` +
+  `signature` over the canonical message (see the **Update** section above, with
+  `Action: claim`).
+
+So a bare `400 "Required"` with no `402` in sight means two separate things are needed:
+fix the missing body field **and** be ready to sign. Adding `owner` alone fixes
+neither the `400` (a missing body field is unrelated to the owner) nor the auth (a
+signature needs `issuedAt` + `signature` too) — it just turns the `400` into a `401`.
+`update` and `release` are always signed, regardless of mode.
 
 ## Common flows
 

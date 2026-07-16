@@ -4,7 +4,8 @@ Save reusable **characters** (personas) on-chain with Net Storage, load them bac
 anywhere, and share them with others. A character is just a JSON persona blob —
 there's no new contract or CLI. It's a convention layered on top of
 [Net Storage](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/storage.md),
-so read that reference for the underlying `netp storage` commands.
+so read that reference for the underlying `netp storage` commands (uploads are
+idempotent and versioned, encode-only/Bankr submission, URL format, etc.).
 
 ## What is a character?
 
@@ -16,9 +17,6 @@ system prompt, an avatar. Once it's stored on-chain you can:
 - **Share it** with anyone — storage is public, so an operator address + key (or a
   single URL) is all someone needs to load the same character.
 - **Version it** — every write is kept, so a character has full edit history.
-
-Because a character lives in Net Storage, it's permanent, censorship-resistant,
-and not tied to any one app or database.
 
 ## Character schema
 
@@ -67,9 +65,9 @@ Store each character under a key of the form:
 character-<slug>
 ```
 
-For example, `character-ada`. Using a predictable prefix means anyone who knows an
-operator's address can guess or share a character key directly, and one wallet can
-hold many characters (`character-ada`, `character-max`, …).
+For example, `character-ada`. Using a predictable key means anyone who knows an
+operator's address can share a character key directly, and one wallet can hold
+many characters (`character-ada`, `character-max`, …).
 
 > Net Storage has no "list by prefix" read — discovery is by known slug or by
 > sharing a URL. If you want a character to be discoverable, publish its URL (post
@@ -99,20 +97,10 @@ netp storage upload \
   --chain-id 8453
 ```
 
-Uploads are idempotent, so re-saving the same content is a no-op. Editing the
-character (any change to the file) writes a new version while keeping the old
-ones.
-
-**For agents / Bankr** (no private key), add `--encode-only` to get the
-transaction JSON to submit:
-
-```bash
-netp storage upload --file character-ada.json --key "character-ada" \
-  --text "Ada" --chain-id 8453 --encode-only
-# → {"storageKey":"character-ada","transactions":[{"to":"0x...","data":"0x...","chainId":8453,"value":"0"}]}
-```
-
-Submit via Bankr: `@bankr submit transaction to <to> with data <data> on chain <chainId>`.
+Editing the character and re-uploading writes a new version while keeping the old
+ones. **For agents / Bankr** (no private key), append `--encode-only` to get
+transaction JSON to submit instead of broadcasting — see
+[storage.md § Encode-Only Mode](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/storage.md).
 
 ## Load a character
 
@@ -123,67 +111,49 @@ netp storage read \
   --key "character-ada" \
   --operator 0xAuthorAddress \
   --chain-id 8453 \
-  --json --raw
+  --json
 ```
 
-Use `--raw` so long JSON isn't truncated. To load a specific historical version,
-add `--index <n>` (`0` = first save, omit for latest).
+Add `--index <n>` to load an older version (`0` = first save, omit for latest).
+The stored JSON comes back as a string in the response's `data` field — see
+[storage.md § Read](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/storage.md)
+for the full read output and flags.
 
 ## Share a character
 
 Storage is public, so sharing is just handing over the coordinates:
 
 - **Address + key** — tell someone the operator address and `character-<slug>` key.
-- **URL** — anyone can load it in a browser or fetch it:
+- **URL** — anyone can load it in a browser or fetch it. It's the standard
+  [Net Storage URL](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/storage.md)
+  with the key filled in:
 
   ```
-  https://storedon.net/net/<chainId>/storage/load/<operatorAddress>/character-<slug>
+  https://storedon.net/net/8453/storage/load/0xAuthor/character-ada
   ```
-
-  Example: `https://storedon.net/net/8453/storage/load/0xAuthor/character-ada`
 
 Post that URL to a feed or drop it in your profile to let others adopt your
 character.
 
 ## Use a character (Bankr / AI / agents)
 
-"Using" a character means adopting it as a role. After loading the JSON:
+"Using" a character means adopting it as a role. After loading the JSON, take the
+`systemPrompt` (or synthesize one from `persona` + `bio` if it's absent) and use
+it as the system/role instruction for the model or Bankr session. Optionally open
+with the `greeting` and use `exampleDialogue` as few-shot examples of the voice.
 
-1. Take the `systemPrompt` (or synthesize one from `persona` + `bio` if
-   `systemPrompt` is absent) and use it as the system/role instruction for the
-   model or Bankr session.
-2. Optionally open with the `greeting` and use `exampleDialogue` as few-shot
-   examples of the voice.
-
-To spin up a **persistent onchain agent** from a character, feed its prompt into
+To spin up a **persistent onchain agent** from a character, pipe its prompt into
 `netp agent create`:
 
 ```bash
 netp agent create "Ada" \
-  --system-prompt "$(netp storage read --key character-ada --operator 0xAuthor --chain-id 8453 --json --raw | jq -r '.systemPrompt')" \
+  --system-prompt "$(netp storage read --key character-ada --operator 0xAuthor --chain-id 8453 --json | jq -r '.data | fromjson | .systemPrompt')" \
   --chain-id 8453
 ```
 
 See the
 [agents reference](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/agents.md)
 for agent creation and running.
-
-## End-to-end example
-
-```bash
-# Save
-netp storage upload --file character-ada.json --key "character-ada" \
-  --text "Ada" --chain-id 8453
-
-# Share this URL with a friend:
-#   https://storedon.net/net/8453/storage/load/<yourAddress>/character-ada
-
-# They load it:
-netp storage read --key "character-ada" --operator <yourAddress> \
-  --chain-id 8453 --json --raw
-
-# ...and hand the systemPrompt to their AI / Bankr to become Ada.
-```
 
 ## Notes & best practices
 
@@ -195,6 +165,5 @@ netp storage read --key "character-ada" --operator <yourAddress> \
   referenced by URL in `avatarUrl`, keeping the character JSON small.
 - **Characters are public.** Don't put secrets, private keys, or anything
   sensitive in them.
-- This is a **v1 convention**, not an SDK. If characters become widely used, a
-  typed `net-characters` package (with a `Character` type and a
-  `characterToSystemPrompt` helper) is the natural next step.
+- This is a **v1 convention**, not an SDK — if characters see wide use, a typed
+  `net-characters` package is the natural next step.

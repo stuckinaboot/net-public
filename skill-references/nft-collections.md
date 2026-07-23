@@ -330,7 +330,7 @@ const out = JSON.parse(solc.compile(JSON.stringify(input), { import: (p) => ({ c
 for (const e of out.errors || []) if (e.severity === "error") console.log(e.formattedMessage);
 const c = out.contracts["MyCollection.sol"].MyCollection;
 console.log(c.evm.bytecode.object ? `OK — ${c.evm.bytecode.object.length / 2} bytes` : "FAILED");
-// deploy c.evm.bytecode.object + c.abi with viem/ethers, or submit the deploy tx via Bankr /wallet/submit
+// deploy c.evm.bytecode.object + c.abi with viem/ethers, or however your agent submits transactions
 ```
 
 ```bash
@@ -530,7 +530,7 @@ Note there's **no Net code in this file at all** — `mint()`, the supply/per-wa
 
 **Deploy on a Net-supported chain.** The collection posts to the Net contract at `0x00000000B24D62781dB359b07880a105cD0b64e6` — that address only has code on Net-supported chains (Base 8453 is the primary; full list in the SKILL overview). Because the post is wrapped in `try/catch`, deploying on a chain where Net *isn't* live doesn't error — mints/transfers still work, but **every message silently no-ops and nothing is recorded.** Test on **Base Sepolia (84532)** first, then ship to Base.
 
-The commands below use Foundry's `forge create` / `cast`, but **deploy is toolchain-agnostic** — you're just sending the compiled bytecode. Any of these work equally: a Hardhat deploy script, a viem/ethers `deployContract` call, Remix with an injected wallet, `npx thirdweb deploy`, or submitting the raw deploy tx via **Bankr's `/wallet/submit`** (the most natural path for an autonomous agent that doesn't shell out to `forge`).
+The commands below use Foundry's `forge create` / `cast`, but **deploy is toolchain-agnostic** — you're just sending the compiled bytecode. Any of these work equally: a Hardhat deploy script, a viem/ethers `deployContract` call, Remix with an injected wallet, `npx thirdweb deploy`, or submitting the raw deploy tx however an autonomous agent signs transactions (the natural path when it doesn't shell out to `forge`).
 
 Set env and deploy (append `--verify` to publish source to the explorer so holders can read the contract):
 

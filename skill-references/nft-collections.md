@@ -290,43 +290,13 @@ The base relies on these members that ERC721A already provides: `_mint`, `_numbe
 
 ## Project setup (build & compile)
 
-The base and your collection are **plain Solidity** compiled against two well-known libraries — no vendored `SVG.sol`/`Utils.sol`. **Any EVM toolchain works** (Foundry, Hardhat, Remix, thirdweb, or the `solc` compiler directly); the produced bytecode is identical. The only hard requirements are: solc ≥ 0.8.4 (pin **0.8.24**), the two deps (`erc721a`, `solady`) resolvable, and solady's `src/` layout handled in import resolution.
+The base and your collection are **plain Solidity** compiled against two well-known libraries — no vendored `SVG.sol`/`Utils.sol`. **Any EVM toolchain works** (the `solc` compiler directly, Foundry, Hardhat, Remix, or thirdweb); the produced bytecode is identical. The only hard requirements are: solc ≥ 0.8.4 (pin **0.8.24**), the two deps (`erc721a`, `solady`) resolvable, and solady's `src/` layout handled in import resolution.
 
-Foundry is the worked path below; a **Foundry-free `solc` recipe** and other options follow it.
+**Prefer standalone `solc` (npm) — it's the recommended path.** solc ships as a pure-JS npm package, so it needs only Node + the npm registry: no GitHub, no Foundry binary, no native toolchain. That makes it the most portable, reliable default — especially in restricted networks, CI images, and autonomous agent environments, where installing Foundry (a downloaded binary) or running `forge install` (which clones deps from GitHub) may not be possible. It's the *same* compiler Foundry and Hardhat invoke under the hood — identical bytecode — and it's exactly how the example in this reference was verified. Foundry and the other toolchains below are perfectly good alternatives when you already have them set up.
 
-### Foundry
+### `solc` directly (npm — recommended)
 
-Scaffold a project from scratch:
-
-```bash
-forge init my-collection && cd my-collection
-forge install chiru-labs/ERC721A@v4.3.0   # ERC721A v4 (has all the members above)
-forge install vectorized/solady             # LibString, LibPRNG, Base64
-```
-
-`remappings.txt` (this is what makes the imports resolve):
-
-```
-erc721a/=lib/ERC721A/
-solady/=lib/solady/src/
-```
-
-`foundry.toml`:
-
-```toml
-[profile.default]
-src = "src"
-libs = ["lib"]
-solc = "0.8.24"
-optimizer = true
-optimizer_runs = 200
-```
-
-Put `NetIntegratedERC721A.sol` and your `MyCollection.sol` in `src/`, then `forge build`.
-
-### Compiling without Foundry — `solc` directly
-
-If `forge` isn't available (not installed, restricted network, a CI image without it), compile with **standalone `solc`**. It's the *same* compiler Foundry and Hardhat call, published as a pure-JS npm package — so it needs only Node + the npm registry, no GitHub and no Foundry. This is exactly how the example in this reference was verified.
+Set up a bare npm project with the compiler and the two deps:
 
 ```bash
 mkdir mycol && cd mycol && npm init -y
@@ -360,12 +330,42 @@ const out = JSON.parse(solc.compile(JSON.stringify(input), { import: (p) => ({ c
 for (const e of out.errors || []) if (e.severity === "error") console.log(e.formattedMessage);
 const c = out.contracts["MyCollection.sol"].MyCollection;
 console.log(c.evm.bytecode.object ? `OK — ${c.evm.bytecode.object.length / 2} bytes` : "FAILED");
-// deploy c.evm.bytecode.object + c.abi with viem/ethers, or submit the deploy tx via Bankr /wallet/submit
+// deploy c.evm.bytecode.object + c.abi with viem/ethers, or however your agent submits transactions
 ```
 
 ```bash
 node compile.js   # -> OK — ~9.9K bytes
 ```
+
+### Foundry
+
+If you already have Foundry installed, it's a fully worked path too. Scaffold a project from scratch:
+
+```bash
+forge init my-collection && cd my-collection
+forge install chiru-labs/ERC721A@v4.3.0   # ERC721A v4 (has all the members above)
+forge install vectorized/solady             # LibString, LibPRNG, Base64
+```
+
+`remappings.txt` (this is what makes the imports resolve):
+
+```
+erc721a/=lib/ERC721A/
+solady/=lib/solady/src/
+```
+
+`foundry.toml`:
+
+```toml
+[profile.default]
+src = "src"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+```
+
+Put `NetIntegratedERC721A.sol` and your `MyCollection.sol` in `src/`, then `forge build`.
 
 ### Other toolchains
 
@@ -424,7 +424,7 @@ contract MyCollection is NetIntegratedERC721A {
 
 ## Full worked example — Onchain Dinos (Net-integrated)
 
-A complete, compilable collection: it extends `NetIntegratedERC721A` (so mints/transfers auto-post to Net via the inherited hook — nothing to wire) and supplies only the art. Drop this in `src/OnchainDinosNet.sol` alongside `src/NetIntegratedERC721A.sol` and `forge build`. Uses only the pinned solady deps — no bespoke `SVG.sol`/`Utils.sol`. (Both files verified to compile clean under solc 0.8.24 with ERC721A v4.3.0 + solady.)
+A complete, compilable collection: it extends `NetIntegratedERC721A` (so mints/transfers auto-post to Net via the inherited hook — nothing to wire) and supplies only the art. Drop this alongside `NetIntegratedERC721A.sol` and compile per *Project setup* (`node compile.js`, or `forge build` if you're on Foundry). Uses only the pinned solady deps — no bespoke `SVG.sol`/`Utils.sol`. (Both files verified to compile clean under solc 0.8.24 with ERC721A v4.3.0 + solady.)
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -530,7 +530,7 @@ Note there's **no Net code in this file at all** — `mint()`, the supply/per-wa
 
 **Deploy on a Net-supported chain.** The collection posts to the Net contract at `0x00000000B24D62781dB359b07880a105cD0b64e6` — that address only has code on Net-supported chains (Base 8453 is the primary; full list in the SKILL overview). Because the post is wrapped in `try/catch`, deploying on a chain where Net *isn't* live doesn't error — mints/transfers still work, but **every message silently no-ops and nothing is recorded.** Test on **Base Sepolia (84532)** first, then ship to Base.
 
-The commands below use Foundry's `forge create` / `cast`, but **deploy is toolchain-agnostic** — you're just sending the compiled bytecode. Any of these work equally: a Hardhat deploy script, a viem/ethers `deployContract` call, Remix with an injected wallet, `npx thirdweb deploy`, or submitting the raw deploy tx via **Bankr's `/wallet/submit`** (the most natural path for an autonomous agent that doesn't shell out to `forge`).
+The commands below use Foundry's `forge create` / `cast`, but **deploy is toolchain-agnostic** — you're just sending the compiled bytecode. Any of these work equally: a Hardhat deploy script, a viem/ethers `deployContract` call, Remix with an injected wallet, `npx thirdweb deploy`, or submitting the raw deploy tx however an autonomous agent signs transactions (the natural path when it doesn't shell out to `forge`).
 
 Set env and deploy (append `--verify` to publish source to the explorer so holders can read the contract):
 
@@ -634,7 +634,7 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 
 1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator premint amount, and an art description.
 2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.
-3. **Compile & deploy** — scaffold per *Project setup*, `forge build`, then deploy on a Net-supported chain per *Deploying & interacting* (`forge create` + `cast send`).
+3. **Compile & deploy** — scaffold per *Project setup* (standalone `solc` via npm is the recommended, most portable path; Foundry works too), then deploy on a Net-supported chain per *Deploying & interacting* (submit the raw deploy tx however your agent signs transactions, or `forge create` + `cast send` on Foundry).
 4. **Premint (optional)**: `cast send $NFT "mintToCreator(uint256,address)" <amount> <creator>`.
 5. **Announce**: the mint/transfer/burn messages post themselves; you can additionally post a launch note to the collection's own feed (topic is `feed-` + the collection address in **lowercase**):
    ```bash

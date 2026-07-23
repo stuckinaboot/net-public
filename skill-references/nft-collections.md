@@ -634,7 +634,7 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 
 1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator premint amount, and an art description.
 2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.
-3. **Compile & deploy** — scaffold per *Project setup* (standalone `solc` via npm is the recommended, most portable path; Foundry works too), then deploy on a Net-supported chain per *Deploying & interacting* (submit the raw deploy tx via Bankr `/wallet/submit` or viem/ethers, or `forge create` + `cast send` on Foundry).
+3. **Compile & deploy** — scaffold per *Project setup* (standalone `solc` via npm is the recommended, most portable path; Foundry works too), then deploy on a Net-supported chain per *Deploying & interacting* (submit the raw deploy tx however your agent signs transactions, or `forge create` + `cast send` on Foundry).
 4. **Premint (optional)**: `cast send $NFT "mintToCreator(uint256,address)" <amount> <creator>`.
 5. **Announce**: the mint/transfer/burn messages post themselves; you can additionally post a launch note to the collection's own feed (topic is `feed-` + the collection address in **lowercase**):
    ```bash

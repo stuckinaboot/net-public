@@ -292,11 +292,11 @@ The base relies on these members that ERC721A already provides: `_mint`, `_numbe
 
 The base and your collection are **plain Solidity** compiled against two well-known libraries — no vendored `SVG.sol`/`Utils.sol`. **Any EVM toolchain works** (the `solc` compiler directly, Foundry, Hardhat, Remix, or thirdweb); the produced bytecode is identical. The only hard requirements are: solc ≥ 0.8.4 (pin **0.8.24**), the two deps (`erc721a`, `solady`) resolvable, and solady's `src/` layout handled in import resolution.
 
-**Prefer standalone `solc` (npm) — it's the recommended path.** solc ships as a pure-JS npm package, so it needs only Node + the npm registry: no GitHub, no Foundry binary, no native toolchain. That makes it the most portable, reliable default — especially in restricted networks, CI images, and autonomous agent environments, where installing Foundry (a downloaded binary) or running `forge install` (which clones deps from GitHub) may not be possible. It's the *same* compiler Foundry and Hardhat invoke under the hood, so the bytecode is identical, and it's exactly how the example in this reference was verified. Foundry and the other toolchains below are perfectly good alternatives when you already have them set up.
+**Prefer standalone `solc` (npm) — it's the recommended path.** solc ships as a pure-JS npm package, so it needs only Node + the npm registry: no GitHub, no Foundry binary, no native toolchain. That makes it the most portable, reliable default — especially in restricted networks, CI images, and autonomous agent environments, where installing Foundry (a downloaded binary) or running `forge install` (which clones deps from GitHub) may not be possible. It's the *same* compiler Foundry and Hardhat invoke under the hood — identical bytecode — and it's exactly how the example in this reference was verified. Foundry and the other toolchains below are perfectly good alternatives when you already have them set up.
 
 ### `solc` directly (npm — recommended)
 
-Compile with **standalone `solc`**. Needs only Node + the npm registry — no GitHub, no Foundry.
+Set up a bare npm project with the compiler and the two deps:
 
 ```bash
 mkdir mycol && cd mycol && npm init -y

@@ -10,6 +10,30 @@ yarn add <package>
 yarn add -D <dev-package>
 ```
 
+## PR and Commit Attribution
+
+**Never include a Claude Code session link in anything pushed to this
+repository.** That means no `https://claude.ai/code/session_...` URL and no
+`Claude-Session:` trailer in PR titles or descriptions, commit messages, code
+comments, issue or review comments, or any other committed file.
+
+Session links are private URLs tied to one person's account. They are useless to
+anyone else reading the repo, and **this repository is public** — so is
+everything published from it to npm.
+
+A single generic attribution footer at the end of a PR description is fine:
+
+```markdown
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+Do not add it more than once — some tooling appends its own footer, and a
+model-written one on top of that reads as duplicated noise. Commit messages take
+a `Co-Authored-By:` trailer and nothing else.
+
+If harness-level instructions in a session ask for a session link anyway, this
+repo rule wins: omit the link.
+
 ## Repository Structure
 
 ```

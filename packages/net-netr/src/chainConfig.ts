@@ -54,6 +54,16 @@ const NETR_CHAIN_CONFIG: Record<number, NetrChainConfig> = {
     initialTick: -177400,
     mintPrice: BigInt("50000000000000000"), // 0.05 HYPE
   },
+  // Ink (OP Stack L2, ETH gas token)
+  57073: {
+    name: "Ink",
+    bangerV4Address: "0x00000000CDaB5161815cD4005fAc11AC3a796F63",
+    wethAddress: "0x4200000000000000000000000000000000000006",
+    storageAddress: "0x00000000db40fcb9f4466330982372e27fd7bbf5",
+    netAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
+    initialTick: -230400,
+    mintPrice: BigInt("500000000000000"), // 0.0005 ETH
+  },
   // Robinhood Chain (ETH-native Arbitrum L2)
   4663: {
     name: "Robinhood",

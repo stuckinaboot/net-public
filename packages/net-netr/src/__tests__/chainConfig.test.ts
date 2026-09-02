@@ -12,7 +12,7 @@ import {
 } from "../chainConfig";
 
 describe("chainConfig", () => {
-  const SUPPORTED_CHAIN_IDS = [8453, 9745, 143, 999]; // Base, Plasma, Monad, HyperEVM
+  const SUPPORTED_CHAIN_IDS = [8453, 9745, 143, 999, 57073]; // Base, Plasma, Monad, HyperEVM, Ink
 
   describe("isNetrSupportedChain", () => {
     it("should return true for Base (8453)", () => {
@@ -33,6 +33,10 @@ describe("chainConfig", () => {
 
     it("should return true for Robinhood (4663)", () => {
       expect(isNetrSupportedChain(4663)).toBe(true);
+    });
+
+    it("should return true for Ink (57073)", () => {
+      expect(isNetrSupportedChain(57073)).toBe(true);
     });
 
     it("should return false for Ethereum mainnet (1)", () => {
@@ -64,9 +68,9 @@ describe("chainConfig", () => {
       });
     });
 
-    it("should have 5 supported chains", () => {
+    it("should have 6 supported chains", () => {
       const chainIds = getNetrSupportedChainIds();
-      expect(chainIds.length).toBe(5);
+      expect(chainIds.length).toBe(6);
     });
   });
 
@@ -108,6 +112,20 @@ describe("chainConfig", () => {
 
       expect(config).toBeDefined();
       expect(config?.name).toBe("Robinhood");
+    });
+
+    it("should return config for Ink", () => {
+      const config = getNetrChainConfig(57073);
+
+      expect(config).toBeDefined();
+      expect(config?.name).toBe("Ink");
+    });
+
+    it("should point Ink at the BangerV4 deployed on Ink", () => {
+      const config = getNetrChainConfig(57073);
+      expect(config?.bangerV4Address.toLowerCase()).toBe(
+        "0x00000000CDaB5161815cD4005fAc11AC3a796F63".toLowerCase()
+      );
     });
 
     it("should use the non-standard WETH address for Robinhood", () => {

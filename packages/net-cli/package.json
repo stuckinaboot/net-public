@@ -1,6 +1,6 @@
 {
   "name": "@net-protocol/cli",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "CLI tool for Net Protocol",
   "type": "module",
   "bin": {
@@ -52,7 +52,7 @@
     "@net-protocol/bazaar": "^0.2.5",
     "@net-protocol/chats": "^0.1.0",
     "@net-protocol/core": "^0.1.13",
-    "@net-protocol/feeds": "^0.1.18",
+    "@net-protocol/feeds": "^0.1.19",
     "@net-protocol/netr": "^0.1.6",
     "@net-protocol/profiles": "^0.1.5",
     "@net-protocol/relay": "^0.1.3",

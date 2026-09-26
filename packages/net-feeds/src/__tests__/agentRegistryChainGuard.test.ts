@@ -9,6 +9,7 @@ import { NetClient } from "@net-protocol/core";
 import { BASE_CHAIN_ID } from "./test-utils";
 
 const BASE_SEPOLIA_CHAIN_ID = 84532;
+const ROBINHOOD_CHAIN_ID = 4663;
 
 // Mock NetClient so AgentRegistryClient construction doesn't touch the network
 vi.mock("@net-protocol/core", async () => {
@@ -30,6 +31,12 @@ describe("AgentRegistry chain guard", () => {
   describe("getAgentRegistryContract", () => {
     it("returns the contract on Base mainnet", () => {
       expect(getAgentRegistryContract(BASE_CHAIN_ID)).toBe(
+        AGENT_REGISTRY_CONTRACT
+      );
+    });
+
+    it("returns the contract on Robinhood Chain", () => {
+      expect(getAgentRegistryContract(ROBINHOOD_CHAIN_ID)).toBe(
         AGENT_REGISTRY_CONTRACT
       );
     });

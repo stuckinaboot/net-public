@@ -24,15 +24,15 @@ export const FEED_REGISTRY_CONTRACT = {
 } as const;
 
 // TopicCountBulkHelper contract - for batching comment count queries.
-// Deterministic CREATE2 address, deployed on Base mainnet (8453) and Base
-// Sepolia (84532). Same address/bytecode on each.
+// Deterministic CREATE2 address, deployed on Base mainnet (8453), Base
+// Sepolia (84532) and Robinhood Chain (4663). Same address/bytecode on each.
 export const TOPIC_COUNT_BULK_HELPER_CONTRACT = {
   abi: topicCountBulkHelperAbi as Abi,
   address: "0x00000007221A01A02CEa1130d688325cA553566e" as `0x${string}`,
 } as const;
 
-// AgentRegistry contract - currently deployed on Base mainnet (8453) only.
-// Not yet deployed on Base Sepolia. Resolve via getAgentRegistryContract() to
+// AgentRegistry contract - deterministic CREATE2 address, deployed on Base
+// mainnet (8453) and Robinhood Chain (4663). Not yet deployed on Base Sepolia. Resolve via getAgentRegistryContract() to
 // get a clear error on unsupported chains instead of a low-level revert.
 export const AGENT_REGISTRY_CONTRACT = {
   abi: agentRegistryAbi as Abi,
@@ -42,7 +42,7 @@ export const AGENT_REGISTRY_CONTRACT = {
 // Chains where the AgentRegistry contract is deployed. FeedRegistry and
 // TopicCountBulkHelper are not allowlisted here because their deterministic
 // CREATE2 deployments live on additional chains beyond Base + Base Sepolia.
-export const AGENT_REGISTRY_CHAIN_IDS: number[] = [8453];
+export const AGENT_REGISTRY_CHAIN_IDS: number[] = [8453, 4663];
 
 /**
  * Resolve the AgentRegistry contract for a chain, throwing a clear error when

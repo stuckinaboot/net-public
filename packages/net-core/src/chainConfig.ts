@@ -157,6 +157,20 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
       url: "https://robinhoodchain.blockscout.com",
     },
   },
+  // Aurora (NEAR's EVM; ETH gas). Core Net + storage only — no Seaport or
+  // Uniswap V3 here, so bazaar/netr/score are intentionally not wired up.
+  1313161554: {
+    name: "Aurora",
+    slug: "aurora",
+    type: "mainnet",
+    rpcUrls: ["https://mainnet.aurora.dev"],
+    netContractAddress: "0x00000000B24D62781dB359b07880a105cD0b64e6",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    blockExplorer: {
+      name: "Aurora Explorer",
+      url: "https://explorer.mainnet.aurora.dev",
+    },
+  },
   // Base Sepolia (testnet)
   84532: {
     name: "Base Sepolia",

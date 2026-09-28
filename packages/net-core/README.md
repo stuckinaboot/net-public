@@ -121,6 +121,7 @@ const message = await client.getMessageAtIndex({
 - Monad Chain (143)
 - MegaETH (4326)
 - Robinhood Chain (4663)
+- Aurora (1313161554) - NEAR's EVM
 - Base Sepolia (84532) - testnet
 - Sepolia (11155111) - testnet
 

@@ -434,7 +434,36 @@ contract MyCollection is NetIntegratedERC721A {
 - **Base64-encode with solady `Base64`** (`solady/utils/Base64.sol`) — also already installed.
 - **Emit a `data:` URI** (`data:application/json;base64,...` wrapping an SVG `image` and optional `animation_url`) so the NFT is fully self-contained — no IPFS/HTTP.
 - **Bound the work.** On-chain SVG is gas-heavy; keep the shape/loop count fixed and modest so `tokenURI` stays callable by marketplaces.
-- **Traits** can be computed from the seed and included in the metadata JSON.
+- **Traits must describe the art** — see below.
+
+### Traits that match the art
+
+Marketplaces show the `attributes` array in the metadata as the token's traits, and collectors filter and price by them. They are only meaningful if they describe what the image actually shows, so **never compute traits separately from the art.** Instead:
+
+1. **Make every random choice in one function.** Write an internal `_traits(tokenId)` that seeds a PRNG from `_tokenToSeed[tokenId]`, draws every random value the art uses (palette, shape choices, rarity rolls), and returns them in a `Traits` struct.
+2. **Have `art()` and `tokenURI()` both read that struct.** `art()` renders from it; `tokenURI()` turns the same fields into `attributes`. Neither draws from the PRNG itself, so the image and the traits can't drift apart.
+3. **Weight rarities on purpose.** A roll like `p.uniform(100) < 5` gives a 5% trait. Decide the odds as part of the design, and mention them in the collection description if they matter.
+4. **Use readable values.** Map raw numbers to names a collector would filter by (hue `212` → `"Blue"`, saturation → `"Muted"` / `"Vivid"`). Keep the number of distinct values per trait small; a trait where every token is unique filters nothing.
+5. **Only append new draws.** PRNG draws are consumed in order, so adding a draw in the middle of `_traits` changes every later value, and with it the art and traits of tokens that already exist. Add new draws at the end.
+
+```solidity
+struct Traits {
+    uint256 hue;
+    bool rare;
+}
+
+function _traits(uint256 tokenId) internal view returns (Traits memory t) {
+    LibPRNG.PRNG memory p;
+    p.seed(uint256(_tokenToSeed[tokenId]));
+    t.hue = p.uniform(360);
+    t.rare = p.uniform(100) < 5; // 5% of tokens
+}
+
+// art():      Traits memory t = _traits(tokenId);  ...render from t...
+// tokenURI(): Traits memory t = _traits(tokenId);  ...attributes from t...
+```
+
+The worked example below follows this pattern.
 
 ## Full worked example — Onchain Dinos (Net-integrated)
 
@@ -456,6 +485,15 @@ contract OnchainDinosNet is NetIntegratedERC721A {
     using LibString for uint256;
     using LibPRNG for LibPRNG.PRNG;
 
+    /// @dev Every random choice for a token. art() and tokenURI() both read
+    ///      this, so the traits always describe the image.
+    struct Traits {
+        uint256 hue;
+        uint256 saturation;
+        uint256 lightness;
+        bool goldHat;
+    }
+
     // Pixel map (39 cells): colors[i] picks a palette slot; xs[i]/ys[i] place it.
     uint8[39] internal colors = [3,3,3,3,3,3,3,3,5,2,2,2,2,2,1,2,1,2,5,2,2,2,2,2,2,4,4,2,5,2,2,4,2,2,2,4,4,2,2];
     uint8[39] internal xs     = [6,10,7,8,6,7,8,9,5,6,7,8,9,6,7,8,9,10,5,6,7,8,9,10,6,7,8,4,5,6,7,8,9,5,6,7,8,6,8];
@@ -472,25 +510,35 @@ contract OnchainDinosNet is NetIntegratedERC721A {
         )
     {}
 
-    /// @notice Per-token palette, derived deterministically from the seed.
+    /// @dev The only place the PRNG is drawn from. Append new draws at the
+    ///      end so existing tokens keep their art and traits.
+    function _traits(uint256 tokenId) internal view returns (Traits memory t) {
+        LibPRNG.PRNG memory p;
+        p.seed(uint256(_tokenToSeed[tokenId]));
+        t.hue = p.uniform(360);
+        t.saturation = 25 + p.uniform(70);
+        t.lightness = 65 + p.uniform(15);
+        t.goldHat = p.uniform(100) < 5; // 5% of dinos
+    }
+
+    /// @notice Per-token palette. The hat is gold for rare dinos, otherwise
+    ///         the previous dino's body color (white for the first dino).
     function getColors(uint256 tokenId)
         public
         view
         returns (string memory dino, string memory hat, string memory bg)
     {
-        LibPRNG.PRNG memory p;
-        p.seed(uint256(_tokenToSeed[tokenId]));
-        uint256 hue = p.uniform(360);
-        dino = _hsl(hue, 25 + p.uniform(70), 65 + p.uniform(15));
-
-        if (tokenId > _startTokenId()) {
-            LibPRNG.PRNG memory pp;
-            pp.seed(uint256(_tokenToSeed[tokenId - 1]));
-            hat = _hsl(pp.uniform(360), 25 + pp.uniform(70), 65 + pp.uniform(15));
+        Traits memory t = _traits(tokenId);
+        dino = _hsl(t.hue, t.saturation, t.lightness);
+        if (t.goldHat) {
+            hat = "#FFD700";
+        } else if (tokenId > _startTokenId()) {
+            Traits memory prev = _traits(tokenId - 1);
+            hat = _hsl(prev.hue, prev.saturation, prev.lightness);
         } else {
             hat = "#FFF";
         }
-        bg = _hsl((hue + 180) % 360, 60, 80);
+        bg = _hsl((t.hue + 180) % 360, 60, 80);
     }
 
     /// @notice The on-chain SVG for a token — plain string.concat, no SVG lib.
@@ -527,9 +575,37 @@ contract OnchainDinosNet is NetIntegratedERC721A {
             '{"name":"Dino #', tokenId.toString(),
             '","description":"onchain dinos. rawr.",',
             '"image":"data:image/svg+xml;base64,', image, '",',
-            '"attributes":[{"trait_type":"metadata","value":"onchain"}]}'
+            '"attributes":', _attributes(tokenId), "}"
         );
         return string.concat("data:application/json;base64,", Base64.encode(bytes(json)));
+    }
+
+    /// @dev Built from the same Traits that art() renders.
+    function _attributes(uint256 tokenId) internal view returns (string memory) {
+        Traits memory t = _traits(tokenId);
+        string memory hat = t.goldHat
+            ? "Gold"
+            : tokenId > _startTokenId() ? "Inherited" : "White";
+        return string.concat(
+            '[{"trait_type":"Body","value":"', _hueName(t.hue),
+            '"},{"trait_type":"Tone","value":"', t.saturation >= 60 ? "Vivid" : "Muted",
+            '"},{"trait_type":"Hat","value":"', hat,
+            '"},{"trait_type":"Background","value":"', _hueName((t.hue + 180) % 360),
+            '"}]'
+        );
+    }
+
+    /// @dev Hue in degrees -> a color name collectors can filter by.
+    function _hueName(uint256 h) internal pure returns (string memory) {
+        if (h < 15) return "Red";
+        if (h < 45) return "Orange";
+        if (h < 70) return "Yellow";
+        if (h < 160) return "Green";
+        if (h < 200) return "Teal";
+        if (h < 260) return "Blue";
+        if (h < 290) return "Purple";
+        if (h < 335) return "Pink";
+        return "Red";
     }
 
     /// @dev "hsl(h,s%,l%)" — replaces the original's Utils.hslaString.
@@ -539,7 +615,7 @@ contract OnchainDinosNet is NetIntegratedERC721A {
 }
 ```
 
-Note there's **no Net code in this file at all** — `mint()`, the supply/per-wallet/creator caps, seeding, and the mint/transfer posting are all inherited. That's the whole point: an agent writes only the `getColors`/`art`/`tokenURI` it's generating.
+Note there's **no Net code in this file at all** — `mint()`, the supply/per-wallet/creator caps, seeding, and the mint/transfer posting are all inherited. That's the whole point: an agent writes only the `_traits`/`getColors`/`art`/`tokenURI` it's generating.
 
 ## Deploying & interacting
 
@@ -648,7 +724,7 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 ## Agent deploy workflow (e.g. you or an AI like Bankr)
 
 1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator reserve (the most they'll ever premint), and an art description.
-2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.
+2. **Generate the art** — write `_traits()`, `art()` and `tokenURI()` on top of `NetIntegratedERC721A`. Every random choice comes from `_traits()`, so the metadata traits match the image (see *Traits that match the art*).
 3. **Compile & deploy** — scaffold per *Project setup*, `forge build`, then deploy on a Net-supported chain per *Deploying & interacting* (`forge create` + `cast send`).
 4. **Premint (optional)**: `cast send $NFT "mintToCreator(uint256,address)" <amount> <creator>` (total across calls ≤ `creatorReserve`).
 5. **Announce**: the mint/transfer/burn messages post themselves; you can additionally post a launch note to the collection's own feed (topic is `feed-` + the collection address in **lowercase**):
@@ -673,5 +749,6 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 - [ ] `tokenURI` reverts for nonexistent tokens.
 - [ ] `mintToCreator` is `onlyDeployer` and capped by the immutable `creatorReserve`.
 - [ ] Art work per `tokenURI` is bounded so marketplaces can render it.
+- [ ] `art()` and the metadata `attributes` both read the same `_traits()` result.
 - [ ] Deployed on a **Net-supported chain** (else posts silently no-op).
 - [ ] Seed entropy suits the stakes (`block.prevrandao` is fine for art, not for valuable rarity).

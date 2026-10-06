@@ -71,7 +71,7 @@ Why these choices:
 
 ## Base contract: `NetIntegratedERC721A`
 
-Extend this and add your art. It handles Net posting, supply cap, per-wallet cap, the creator premint, and per-token seeding.
+Extend this and add your art. It handles Net posting, supply cap, per-wallet cap, the capped creator premint, and per-token seeding.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -111,6 +111,10 @@ abstract contract NetIntegratedERC721A is ERC721A {
     uint256 public immutable maxSupply;
     /// @notice Max tokens a single wallet may mint via public mint(). 0 = unlimited.
     uint256 public immutable maxMintsPerWallet;
+    /// @notice Max tokens the deployer may ever mint via mintToCreator(). 0 = none.
+    uint256 public immutable creatorReserve;
+    /// @notice Tokens minted so far via mintToCreator().
+    uint256 public creatorMinted;
 
     address internal immutable _deployer;
 
@@ -120,6 +124,7 @@ abstract contract NetIntegratedERC721A is ERC721A {
     error IncorrectPayment();
     error MaxSupplyReached();
     error MaxMintsPerWalletReached();
+    error CreatorReserveExceeded();
     error NotDeployer();
 
     modifier onlyDeployer() {
@@ -132,12 +137,14 @@ abstract contract NetIntegratedERC721A is ERC721A {
         string memory symbol_,
         uint256 price_,
         uint256 maxSupply_,
-        uint256 maxMintsPerWallet_
+        uint256 maxMintsPerWallet_,
+        uint256 creatorReserve_
     ) ERC721A(name_, symbol_) {
         _deployer = msg.sender;
         price = price_;
         maxSupply = maxSupply_;
         maxMintsPerWallet = maxMintsPerWallet_;
+        creatorReserve = creatorReserve_;
     }
 
     /// @dev Token IDs start at 1.
@@ -158,13 +165,16 @@ abstract contract NetIntegratedERC721A is ERC721A {
         _mintSeeded(msg.sender, amount);
     }
 
-    /// @notice Free premint controlled by the deployer. `amount` can be 0..N.
+    /// @notice Free premint controlled by the deployer, capped at creatorReserve
+    ///         over the contract's lifetime (across all calls).
     /// @dev Not payment-gated and not subject to maxMintsPerWallet, but still
-    ///      respects maxSupply. Routes through _afterTokenTransfers, so the
-    ///      premint is posted to Net like any other mint (fully transparent).
-    ///      Preminted tokens consume the lowest IDs, so public mints number
-    ///      after them.
+    ///      respects maxSupply. The reserve is immutable, so buyers can read
+    ///      exactly how many free tokens the deployer can ever mint. Routes
+    ///      through _afterTokenTransfers, so the premint is posted to Net like
+    ///      any other mint (fully transparent).
     function mintToCreator(uint256 amount, address to) external onlyDeployer {
+        if (creatorMinted + amount > creatorReserve) revert CreatorReserveExceeded();
+        creatorMinted += amount;
         _mintSeeded(to, amount);
     }
 
@@ -281,8 +291,11 @@ abstract contract NetIntegratedERC721A is ERC721A {
 | `price_` | wei per token in public `mint()` | free public mint |
 | `maxSupply_` | hard supply cap | unlimited |
 | `maxMintsPerWallet_` | per-wallet cap on public `mint()` | unlimited |
+| `creatorReserve_` | lifetime cap on free `mintToCreator()` tokens | no creator mints |
 
-Creator premint isn't a constructor arg — it's the separate `mintToCreator(amount, to)` call, so the creator can premint whenever (or never) and optionally do it in its own transaction after deploy.
+The premint itself is the separate `mintToCreator(amount, to)` call, so the creator can premint whenever (or never), across as many calls as they like, until `creatorMinted` reaches `creatorReserve`. The reserve is a **cap, not a guarantee**: public mints can still sell out the supply first, so premint right after deploy if the creator must get their tokens.
+
+Why a cap at all: without one, the deployer could mint the entire remaining supply for free at any time, even mid-sale, and buyers couldn't rule it out from the contract. Set it to what the creator actually intends to keep. Pass `type(uint256).max` only if you deliberately want unlimited creator mints (still bounded by `maxSupply`); that choice is then visible onchain.
 
 ### Inherited from ERC721A — do not redefine
 
@@ -388,7 +401,8 @@ contract MyCollection is NetIntegratedERC721A {
             "MYC",             // symbol
             0.01 ether,        // price
             5000,              // maxSupply (0 = unlimited)
-            10                 // maxMintsPerWallet (0 = unlimited)
+            10,                // maxMintsPerWallet (0 = unlimited)
+            50                 // creatorReserve (0 = no creator mints)
         )
     {}
 
@@ -453,7 +467,8 @@ contract OnchainDinosNet is NetIntegratedERC721A {
             "DINO",          // symbol
             0.005 ether,     // price
             2048,            // maxSupply (0 = unlimited)
-            0                // maxMintsPerWallet (0 = unlimited)
+            0,               // maxMintsPerWallet (0 = unlimited)
+            48               // creatorReserve (0 = no creator mints)
         )
     {}
 
@@ -524,7 +539,7 @@ contract OnchainDinosNet is NetIntegratedERC721A {
 }
 ```
 
-Note there's **no Net code in this file at all** — `mint()`, the supply/per-wallet caps, seeding, and the mint/transfer posting are all inherited. That's the whole point: an agent writes only the `getColors`/`art`/`tokenURI` it's generating.
+Note there's **no Net code in this file at all** — `mint()`, the supply/per-wallet/creator caps, seeding, and the mint/transfer posting are all inherited. That's the whole point: an agent writes only the `getColors`/`art`/`tokenURI` it's generating.
 
 ## Deploying & interacting
 
@@ -550,7 +565,7 @@ Interact with the deployed contract via `cast`:
 ```bash
 export NFT=0xYourDeployedCollection
 
-# Creator premint (deployer only): 10 free tokens to the creator
+# Creator premint (deployer only): 10 free tokens to the creator, counted against creatorReserve
 cast send $NFT "mintToCreator(uint256,address)" 10 $CREATOR \
   --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
@@ -632,10 +647,10 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 
 ## Agent deploy workflow (e.g. you or an AI like Bankr)
 
-1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator premint amount, and an art description.
+1. **Gather config** from the user: name, symbol, price, max supply, per-wallet cap, creator reserve (the most they'll ever premint), and an art description.
 2. **Generate the art** — write `art()` + `tokenURI()` on top of `NetIntegratedERC721A`, deriving visuals from `_tokenToSeed`.
 3. **Compile & deploy** — scaffold per *Project setup*, `forge build`, then deploy on a Net-supported chain per *Deploying & interacting* (`forge create` + `cast send`).
-4. **Premint (optional)**: `cast send $NFT "mintToCreator(uint256,address)" <amount> <creator>`.
+4. **Premint (optional)**: `cast send $NFT "mintToCreator(uint256,address)" <amount> <creator>` (total across calls ≤ `creatorReserve`).
 5. **Announce**: the mint/transfer/burn messages post themselves; you can additionally post a launch note to the collection's own feed (topic is `feed-` + the collection address in **lowercase**):
    ```bash
    netp message send --text "Minting now: <name>" --topic "feed-0xcollectionaddresslowercased" --chain-id 8453
@@ -656,7 +671,7 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 - [ ] `maxMintsPerWallet` checked via `_numberMinted(msg.sender)` (0 = unlimited).
 - [ ] Preminted tokens are seeded (so their art renders).
 - [ ] `tokenURI` reverts for nonexistent tokens.
-- [ ] `mintToCreator` is `onlyDeployer`.
+- [ ] `mintToCreator` is `onlyDeployer` and capped by the immutable `creatorReserve`.
 - [ ] Art work per `tokenURI` is bounded so marketplaces can render it.
 - [ ] Deployed on a **Net-supported chain** (else posts silently no-op).
 - [ ] Seed entropy suits the stakes (`block.prevrandao` is fine for art, not for valuable rarity).

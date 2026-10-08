@@ -47,6 +47,7 @@ export async function executeCreateListing(options: CreateListingOptions): Promi
       nftAddress: options.nftAddress as `0x${string}`,
       tokenId: options.tokenId,
       priceWei,
+      expirationDate: options.expirationDate,
       offerer: account.address,
       targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });
@@ -143,6 +144,7 @@ async function executeEncodeOnly(options: CreateListingOptions): Promise<void> {
       nftAddress: options.nftAddress as `0x${string}`,
       tokenId: options.tokenId,
       priceWei,
+      expirationDate: options.expirationDate,
       offerer: options.offerer as `0x${string}`,
       targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });

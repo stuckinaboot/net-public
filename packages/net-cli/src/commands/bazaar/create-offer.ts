@@ -45,6 +45,7 @@ export async function executeCreateOffer(options: CreateOfferOptions): Promise<v
     const prepared = await bazaarClient.prepareCreateCollectionOffer({
       nftAddress: options.nftAddress as `0x${string}`,
       priceWei,
+      expirationDate: options.expirationDate,
       offerer: account.address,
     });
 
@@ -139,6 +140,7 @@ async function executeEncodeOnly(options: CreateOfferOptions): Promise<void> {
     const prepared = await bazaarClient.prepareCreateCollectionOffer({
       nftAddress: options.nftAddress as `0x${string}`,
       priceWei,
+      expirationDate: options.expirationDate,
       offerer: options.offerer as `0x${string}`,
     });
 

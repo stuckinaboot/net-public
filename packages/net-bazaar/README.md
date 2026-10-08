@@ -11,7 +11,7 @@ Net Bazaar is a decentralized bazaar built on Net Protocol. All orders are store
 **Key features:**
 - **NFT Listings**: Buy and sell NFTs with native currency
 - **Collection Offers**: Make offers on any NFT in a collection
-- **ERC20 Offers**: Make offers to buy ERC20 tokens (Base and HyperEVM only)
+- **ERC20 Offers**: Make offers to buy ERC20 tokens (Base, HyperEVM, and Robinhood Chain)
 
 ## What can you do with this package?
 
@@ -77,7 +77,7 @@ function CollectionOffersComponent() {
   return <div>Best offer: {bestOffer?.price} {bestOffer?.currency}</div>;
 }
 
-// Get ERC20 offers (Base and HyperEVM only)
+// Get ERC20 offers (Base, HyperEVM, and Robinhood Chain)
 function Erc20OffersComponent() {
   const { offers, isLoading } = useBazaarErc20Offers({
     chainId: 8453,
@@ -110,7 +110,7 @@ const collectionOffers = await client.getCollectionOffers({
   nftAddress: "0x...",
 });
 
-// Get ERC20 offers (Base and HyperEVM only)
+// Get ERC20 offers (Base, HyperEVM, and Robinhood Chain)
 const erc20Offers = await client.getErc20Offers({
   tokenAddress: "0x...",
 });
@@ -232,6 +232,7 @@ All returned listings and offers are automatically validated:
 | HyperEVM (999) | Yes | Yes | Yes |
 | Plasma (9745) | Yes | Yes | No |
 | Monad (143) | Yes | Yes | No |
+| Robinhood Chain (4663) | Yes | Yes | Yes |
 
 ## License
 

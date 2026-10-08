@@ -10,11 +10,12 @@ Net Bazaar is built on Seaport (v1.6). It supports:
 - Private listings (targeted to a specific buyer)
 - EIP-712 signed orders (gasless order creation)
 
-NFT listings and NFT collection offers are paid in the chain's native currency / its wrapped form (ETH/WETH on Base/Ethereum, HYPE/wrapped HYPE on HyperEVM).
+NFT listings and NFT collection offers are paid in the chain's native currency / its wrapped form (ETH/WETH on Base/Ethereum/Robinhood, HYPE/wrapped HYPE on HyperEVM).
 
 ERC-20 listings and ERC-20 offers are paid in the chain's **configured ERC-20 payment token**, which varies by chain:
 
 - **Base (8453)**: USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, 6 decimals) — both offers and listings settle in USDC
+- **Robinhood Chain (4663)**: USDG (`0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168`, 6 decimals) — Robinhood has no USDC, so both offers and listings settle in USDG
 - **HyperEVM (999)** and other ERC-20-supporting chains without a configured quote token: wrapped native currency (e.g. WHYPE, 18 decimals)
 
 The SDK exposes the per-chain mapping via `getErc20PaymentToken(chainId)` from `@net-protocol/bazaar`, which returns `{ address, symbol, decimals }`. The CLI uses this to scale `--price` correctly, so a `--price 5 --chain-id 8453` means **5 USDC** (parsed as `5_000_000` base units), not 5e18 of anything. When passing through the keyless flow to an external signer, the emitted `approvals` array contains an approve to **Seaport directly** for the right payment token (USDC on Base, wrapped native elsewhere).
@@ -74,8 +75,12 @@ Recap: the `approvals` array in keyless-mode output is **empty when the maker ha
 |---------|-------|----------|
 | NFT bazaar | Base | 8453 |
 | NFT bazaar | Ethereum | 1 |
+| NFT bazaar | Robinhood Chain | 4663 |
 | ERC-20 bazaar | Base | 8453 |
 | ERC-20 bazaar | HyperEVM | 999 |
+| ERC-20 bazaar | Robinhood Chain | 4663 |
+
+NFT trades on Base, Ethereum, and Robinhood Chain have 0% marketplace fees; NFT listings there are priced in native ETH.
 
 # NFT Commands
 
@@ -174,6 +179,7 @@ netp bazaar create-listing \
   --token-id <id> \
   --price <eth> \
   [--target-fulfiller <address>] \
+  [--expiration <duration|timestamp>] \
   --chain-id 8453 \
   --private-key 0x...
 ```
@@ -187,8 +193,19 @@ netp bazaar create-listing \
   --token-id <id> \
   --price <eth> \
   --offerer <address> \
+  [--expiration <duration|timestamp>] \
   --chain-id 8453
 ```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--nft-address` | Yes | NFT contract address |
+| `--token-id` | Yes | Token ID to list (one token per listing — see "List Many NFTs" below) |
+| `--price` | Yes | Price in the chain's native currency (ETH on Base/Ethereum/Robinhood), e.g. `1` |
+| `--target-fulfiller` | No | Make a private listing for this address |
+| `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
+| `--expiration` | No | When the order expires: a duration (`12h`, `30d`, `4w`) or a unix timestamp in seconds. **Defaults to 24 hours.** For "expires in a month", pass `--expiration 30d`. |
 
 **Output:**
 ```json
@@ -242,6 +259,7 @@ netp bazaar create-offer \
 | `--nft-address` | Yes | NFT contract address. Offer applies to any token in this collection. |
 | `--price` | Yes | Bid amount in the chain's native currency unit (e.g. `0.1`). The actual currency moved on-chain is the **wrapped** native currency (WETH on Base/Ethereum) — the offerer pre-approves WETH to Seaport, and the fulfiller pulls it on accept. The offerer must hold enough WETH (or enough native currency for the CLI to wrap). |
 | `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
+| `--expiration` | No | When the order expires: a duration (`12h`, `30d`, `4w`) or a unix timestamp in seconds. **Defaults to 24 hours.** For "expires in a month", pass `--expiration 30d`. |
 
 `--price` is the **total** WETH the offerer is bidding, expressed as a decimal. The approval emitted in `approvals` (keyless mode) is a WETH `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above).
 
@@ -356,7 +374,7 @@ netp bazaar accept-offer \
 
 # ERC-20 Commands
 
-ERC-20 bazaar lets you list a specific quantity of an ERC-20 token, or offer to buy a specific quantity, with payment in the chain's configured ERC-20 payment token — **USDC on Base (8453)**, wrapped native currency (e.g. WHYPE) on **HyperEVM (999)**. The command shape mirrors the NFT commands, with `--token-address` in place of `--nft-address` and an explicit `--token-amount` (raw units, bigint string). The CLI reads the chain's payment token via `getErc20PaymentToken(chainId)` and scales `--price` by that token's decimals automatically.
+ERC-20 bazaar lets you list a specific quantity of an ERC-20 token, or offer to buy a specific quantity, with payment in the chain's configured ERC-20 payment token — **USDC on Base (8453)**, **USDG on Robinhood Chain (4663)**, wrapped native currency (e.g. WHYPE) on **HyperEVM (999)**. The command shape mirrors the NFT commands, with `--token-address` in place of `--nft-address` and an explicit `--token-amount` (raw units, bigint string). The CLI reads the chain's payment token via `getErc20PaymentToken(chainId)` and scales `--price` by that token's decimals automatically.
 
 ## List ERC-20 Listings
 
@@ -365,7 +383,7 @@ View active ERC-20 listings for a token:
 ```bash
 netp bazaar list-erc20-listings \
   --token-address <address> \
-  [--chain-id <8453|999>] \
+  [--chain-id <8453|999|4663>] \
   [--rpc-url <url>] \
   [--json]
 ```
@@ -415,7 +433,7 @@ View active ERC-20 offers for a token:
 ```bash
 netp bazaar list-erc20-offers \
   --token-address <address> \
-  [--chain-id <8453|999>] \
+  [--chain-id <8453|999|4663>] \
   [--rpc-url <url>] \
   [--json]
 ```
@@ -457,6 +475,7 @@ netp bazaar create-erc20-listing \
 | `--price` | Yes | **Total** price in the chain's ERC-20 payment token (USDC on Base, native/wrapped-native on chains without a configured quote token), expressed as a decimal (e.g. `5` = 5 USDC on Base). The CLI scales by the payment token's decimals — `5` → `5_000_000` base units on Base USDC, `5` → `5e18` base units on a WETH chain. Do not pre-scale. |
 | `--target-fulfiller` | No | Make a private listing for this address |
 | `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
+| `--expiration` | No | When the order expires: a duration (`12h`, `30d`, `4w`) or a unix timestamp in seconds. **Defaults to 24 hours.** For "expires in a month", pass `--expiration 30d`. |
 
 Output format is the same as `create-listing` (EIP-712 data + approvals). Use `submit-erc20-listing` for the follow-up.
 
@@ -491,6 +510,7 @@ netp bazaar create-erc20-offer \
 | `--token-amount` | Yes | Amount to buy in **raw units** (bigint string, e.g. `1000000000000000000` for 1.0 of an 18-decimal token). |
 | `--price` | Yes | **Total** amount of the chain's ERC-20 payment token bid for the whole `token-amount`, expressed as a decimal. On Base that's USDC (`--price 5` = 5 USDC = 5_000_000 base units); on chains without a configured quote token it's the wrapped native currency. The CLI scales by the payment token's decimals automatically. |
 | `--offerer` | No | Required without `--private-key` or with `--encode-only` (see Modes & Address Flags above). |
+| `--expiration` | No | When the order expires: a duration (`12h`, `30d`, `4w`) or a unix timestamp in seconds. **Defaults to 24 hours.** For "expires in a month", pass `--expiration 30d`. |
 
 The approval emitted in `approvals` (keyless mode) is a payment-token `approve` to **Seaport directly** (not a conduit — see "Approval Spender" above). On Base that's a USDC approve; on a wrapped-native chain it's a WETH/wrapped-native approve. Use `submit-erc20-offer` for the follow-up.
 
@@ -670,6 +690,30 @@ netp bazaar submit-listing \
 # 6. Submit the encoded transaction via agent
 ```
 
+## List Many NFTs (Keyless + Agent Signing)
+
+Each Net Bazaar listing is one Seaport order for one token ID. To list N tokens from the same collection:
+
+1. Run `create-listing` for the first token. Its `approvals` array holds the one-time `setApprovalForAll` to Seaport for the collection — submit it once. Later `create-listing` calls for the same collection return an empty `approvals` array.
+2. For **each** token ID: run `create-listing` (same `--price` / `--expiration` as needed), sign that token's `eip712`, then `submit-listing --encode-only` and send the resulting transaction.
+
+So N tokens = 1 approval tx + N signatures + N submit transactions. The submit step can't be batched into one transaction: the bazaar contract requires the seller to be `msg.sender`, so each `submit` must come from the seller's own wallet. This is expected — don't refuse a multi-token listing request because of it; just loop.
+
+```bash
+# Example: list Hood Turtles #1-#20 on Robinhood Chain for 1 ETH each, expiring in 30 days
+for id in $(seq 1 20); do
+  netp bazaar create-listing \
+    --nft-address 0xca28587b61eac19a87dfcfd9420870867a916675 \
+    --token-id $id \
+    --price 1 \
+    --expiration 30d \
+    --offerer 0xAgentWallet \
+    --chain-id 4663 > listing-$id.json
+  # submit approvals from listing-1.json once, sign listing-$id.json's eip712,
+  # then: netp bazaar submit-listing --order-data listing-$id.json --signature 0x... --chain-id 4663 --encode-only
+done
+```
+
 ## Accept a Collection Offer (Encode-Only)
 
 ```bash
@@ -751,7 +795,7 @@ netp bazaar list-erc20-listings --token-address 0x... --chain-id 8453 --json | j
 
 ## Cost Considerations
 
-Gas estimates below are for Base; HyperEVM and Ethereum will differ.
+Gas estimates below are for Base; Robinhood Chain is similar, HyperEVM and Ethereum will differ.
 
 - **Creating listings/offers (NFT or ERC-20)**: Gas for approval tx + submit tx (~0.001-0.003 ETH on Base)
 - **Buying NFT listings**: Listing price (in the chain's native currency) + gas (~0.0005-0.002 ETH on Base)

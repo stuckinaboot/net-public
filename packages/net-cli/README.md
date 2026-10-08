@@ -1130,7 +1130,7 @@ netp relay balance --chain-id 8453 --json
 
 #### Bazaar Command
 
-Bazaar operations — list, buy, sell, and trade NFTs and ERC-20 tokens via Seaport. NFT bazaar is supported on Base (8453) and Ethereum (1); ERC-20 bazaar is supported on Base (8453) and HyperEVM (999).
+Bazaar operations — list, buy, sell, and trade NFTs and ERC-20 tokens via Seaport. NFT bazaar is supported on Base (8453), Ethereum (1), and Robinhood Chain (4663); ERC-20 bazaar is supported on Base (8453), HyperEVM (999), and Robinhood Chain (4663). Listings and offers expire after 24 hours unless you pass `--expiration` (e.g. `30d`, `12h`, `4w`, or a unix timestamp).
 
 **Available Subcommands:**
 
@@ -1196,6 +1196,12 @@ netp bazaar create-listing \
 netp bazaar create-listing \
   --nft-address <address> --token-id <id> --price <eth> \
   --offerer <address> --chain-id 8453
+
+# Listings and offers expire in 24h by default; --expiration takes a duration
+# (12h, 30d, 4w) or a unix timestamp, on every create-* command
+netp bazaar create-listing \
+  --nft-address <address> --token-id <id> --price <eth> \
+  --expiration 30d --offerer <address> --chain-id 4663
 
 # Same pattern for offers
 netp bazaar create-offer \

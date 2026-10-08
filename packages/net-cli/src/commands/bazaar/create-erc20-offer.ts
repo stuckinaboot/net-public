@@ -50,6 +50,7 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
       tokenAddress: options.tokenAddress as `0x${string}`,
       tokenAmount,
       priceWei,
+      expirationDate: options.expirationDate,
       offerer: account.address,
     });
 
@@ -147,6 +148,7 @@ async function executeEncodeOnly(options: CreateErc20OfferOptions): Promise<void
       tokenAddress: options.tokenAddress as `0x${string}`,
       tokenAmount,
       priceWei,
+      expirationDate: options.expirationDate,
       offerer: options.offerer as `0x${string}`,
     });
 

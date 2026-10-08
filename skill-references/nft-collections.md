@@ -75,7 +75,7 @@ Extend this and add your art. It handles Net posting, supply cap, per-wallet cap
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 import { LibString } from "solady/utils/LibString.sol";
@@ -241,7 +241,12 @@ abstract contract NetIntegratedERC721A is ERC721A {
         }
 
         // Best-effort: a Net revert or out-of-gas must NEVER brick a mint/transfer/burn.
-        try NET.sendMessageViaApp(msgSender, text, topic, "") {} catch {}
+        // The code-length guard is required: Solidity checks that NET has code
+        // BEFORE entering the try, and that failure is not caught. Without the
+        // guard, every mint/transfer/burn reverts on a chain where Net isn't deployed.
+        if (address(NET).code.length != 0) {
+            try NET.sendMessageViaApp(msgSender, text, topic, "") {} catch {}
+        }
     }
 
     /// @dev Keep short — text length is the gas-scaling part of the Net write.
@@ -303,7 +308,7 @@ The base relies on these members that ERC721A already provides: `_mint`, `_numbe
 
 ## Project setup (build & compile)
 
-The base and your collection are **plain Solidity** compiled against two well-known libraries — no vendored `SVG.sol`/`Utils.sol`. **Any EVM toolchain works** (Foundry, Hardhat, Remix, thirdweb, or the `solc` compiler directly); the produced bytecode is identical. The only hard requirements are: solc ≥ 0.8.4 (pin **0.8.24**), the two deps (`erc721a`, `solady`) resolvable, and solady's `src/` layout handled in import resolution.
+The base and your collection are **plain Solidity** compiled against two well-known libraries — no vendored `SVG.sol`/`Utils.sol`. **Any EVM toolchain works** (Foundry, Hardhat, Remix, thirdweb, or the `solc` compiler directly); the produced bytecode is identical. The only hard requirements are: solc ≥ 0.8.18 (`block.prevrandao`; pin **0.8.24**), the two deps (`erc721a`, `solady`) resolvable, and solady's `src/` layout handled in import resolution.
 
 Foundry is the worked path below; a **Foundry-free `solc` recipe** and other options follow it.
 
@@ -471,7 +476,7 @@ A complete, compilable collection: it extends `NetIntegratedERC721A` (so mints/t
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import { NetIntegratedERC721A } from "./NetIntegratedERC721A.sol";
 import { LibString } from "solady/utils/LibString.sol";
@@ -619,7 +624,7 @@ Note there's **no Net code in this file at all** — `mint()`, the supply/per-wa
 
 ## Deploying & interacting
 
-**Deploy on a Net-supported chain.** The collection posts to the Net contract at `0x00000000B24D62781dB359b07880a105cD0b64e6` — that address only has code on Net-supported chains (Base 8453 is the primary; full list in the SKILL overview). Because the post is wrapped in `try/catch`, deploying on a chain where Net *isn't* live doesn't error — mints/transfers still work, but **every message silently no-ops and nothing is recorded.** Test on **Base Sepolia (84532)** first, then ship to Base.
+**Deploy on a Net-supported chain.** The collection posts to the Net contract at `0x00000000B24D62781dB359b07880a105cD0b64e6` — that address only has code on Net-supported chains (Base 8453 is the primary; full list in the SKILL overview). Because the post is guarded by a code-length check and wrapped in `try/catch`, deploying on a chain where Net *isn't* live doesn't error — mints/transfers still work, but **every message silently no-ops and nothing is recorded.** Test on **Base Sepolia (84532)** first, then ship to Base.
 
 The commands below use Foundry's `forge create` / `cast`, but **deploy is toolchain-agnostic** — you're just sending the compiled bytecode. Any of these work equally: a Hardhat deploy script, a viem/ethers `deployContract` call, Remix with an injected wallet, `npx thirdweb deploy`, or submitting the raw deploy tx via **Bankr's `/wallet/submit`** (the most natural path for an autonomous agent that doesn't shell out to `forge`).
 
@@ -738,11 +743,13 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 - **Split topics cost ~nothing extra.** The mint/burn/transfer branch is a few stack ops (~10–20 gas); the topic strings differ by a handful of calldata/hash bytes (~60 gas). Both are rounding error.
 - **The real cost is posting to Net at all** — an external call plus storing the `Message` (several `SSTORE`s), on the order of tens of thousands of gas *per mint, transfer, and burn*. Every transfer of the collection now carries that on top of the ERC721A transfer. Budget for it; it's the point of the integration.
 - **`try/catch` is mandatory**, not optional. Without it, any Net-side revert (or a tight gas limit on the transfer) would make the collection's tokens untransferable. Best-effort posting keeps the NFT safe.
+- **So is the `code.length` guard.** `try/catch` does not catch the call to an address with no code: Solidity's pre-call code check reverts outside the `try`. Without the guard the collection can't mint at all on a chain without Net.
+- **Net is a best-effort log, not the source of truth.** A transaction sent with just enough gas for the NFT logic succeeds with the Net post silently dropped (the inner call runs out of gas and is caught). Wallet estimates normally leave enough headroom, but indexers that need every event should read the ERC-721 `Transfer` logs.
 - **Keep `text` short, `data` empty.** That's the only size-dependent part of the write.
 
 ## Safety checklist
 
-- [ ] Net call is wrapped in `try/catch`.
+- [ ] Net call is wrapped in `try/catch` and guarded by `address(NET).code.length != 0`.
 - [ ] `maxSupply` enforced in *both* `mint()` and `mintToCreator()`.
 - [ ] `maxMintsPerWallet` checked via `_numberMinted(msg.sender)` (0 = unlimited).
 - [ ] Preminted tokens are seeded (so their art renders).

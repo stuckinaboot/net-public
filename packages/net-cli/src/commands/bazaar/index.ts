@@ -38,6 +38,11 @@ const privateKeyOption = [
   "Private key (0x-prefixed hex). Can also be set via NET_PRIVATE_KEY env var",
 ] as const;
 
+const expirationOption = [
+  "--expiration <time>",
+  "When the order expires: a duration (e.g. 12h, 30d, 4w) or a unix timestamp in seconds. Defaults to 24h",
+] as const;
+
 export function registerBazaarCommand(program: Command): void {
   const bazaarCommand = program
     .command("bazaar")
@@ -95,6 +100,7 @@ export function registerBazaarCommand(program: Command): void {
     .requiredOption("--price <eth>", "Price in ETH (e.g., 0.1)")
     .option("--target-fulfiller <address>", "Make a private listing for this address")
     .option("--offerer <address>", "Offerer address (required without --private-key or with --encode-only)")
+    .option(...expirationOption)
     .option(...privateKeyOption)
     .option(...chainIdOption)
     .option(...rpcUrlOption)
@@ -109,6 +115,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
+        expiration: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });
@@ -118,6 +125,7 @@ export function registerBazaarCommand(program: Command): void {
     .requiredOption("--nft-address <address>", "NFT contract address")
     .requiredOption("--price <eth>", "Offer price in ETH (e.g., 0.1)")
     .option("--offerer <address>", "Offerer address (required without --private-key or with --encode-only)")
+    .option(...expirationOption)
     .option(...privateKeyOption)
     .option(...chainIdOption)
     .option(...rpcUrlOption)
@@ -130,6 +138,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
+        expiration: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });
@@ -276,6 +285,7 @@ export function registerBazaarCommand(program: Command): void {
     .requiredOption("--price <amount>", "Total price in payment-token units (USDC on Base, WETH elsewhere)")
     .option("--target-fulfiller <address>", "Make a private listing for this address")
     .option("--offerer <address>", "Offerer address (required without --private-key or with --encode-only)")
+    .option(...expirationOption)
     .option(...privateKeyOption)
     .option(...chainIdOption)
     .option(...rpcUrlOption)
@@ -290,6 +300,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
+        expiration: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });
@@ -300,6 +311,7 @@ export function registerBazaarCommand(program: Command): void {
     .requiredOption("--token-amount <amount>", "Token amount in raw units (bigint string)")
     .requiredOption("--price <amount>", "Total price in payment-token units (USDC on Base, WETH elsewhere)")
     .option("--offerer <address>", "Offerer address (required without --private-key or with --encode-only)")
+    .option(...expirationOption)
     .option(...privateKeyOption)
     .option(...chainIdOption)
     .option(...rpcUrlOption)
@@ -313,6 +325,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
+        expiration: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });

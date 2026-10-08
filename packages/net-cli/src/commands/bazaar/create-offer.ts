@@ -10,6 +10,7 @@ import { BazaarClient } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import { resolveExpiration } from "../../shared/expiration";
 import type { CreateOfferOptions } from "./types";
 
 export async function executeCreateOffer(options: CreateOfferOptions): Promise<void> {
@@ -39,12 +40,15 @@ export async function executeCreateOffer(options: CreateOfferOptions): Promise<v
 
   const priceWei = parseEther(options.price);
 
+  const expirationDate = resolveExpiration(options.expiration);
+
   try {
     console.log(chalk.blue("Preparing collection offer..."));
 
     const prepared = await bazaarClient.prepareCreateCollectionOffer({
       nftAddress: options.nftAddress as `0x${string}`,
       priceWei,
+      expirationDate,
       offerer: account.address,
     });
 
@@ -135,10 +139,13 @@ async function executeEncodeOnly(options: CreateOfferOptions): Promise<void> {
 
   const priceWei = parseEther(options.price);
 
+  const expirationDate = resolveExpiration(options.expiration);
+
   try {
     const prepared = await bazaarClient.prepareCreateCollectionOffer({
       nftAddress: options.nftAddress as `0x${string}`,
       priceWei,
+      expirationDate,
       offerer: options.offerer as `0x${string}`,
     });
 

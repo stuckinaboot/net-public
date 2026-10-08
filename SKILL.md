@@ -479,7 +479,7 @@ npm install -g @net-protocol/cli
 | **Characters** | A storage convention: save/load a reusable persona (JSON) on-chain that AIs/Bankr adopt as a role, then share it | `netp storage upload --file character-ada.json --key "character-ada" --text "Ada" --chain-id 8453` (load with `netp storage read --key "character-ada" --operator 0xAddr --chain-id 8453 --json`) | [characters.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/characters.md) |
 | **Tokens** | Deploy ERC-20 tokens with Uniswap V3 liquidity | `netp token deploy --name "My Token" --symbol "MTK" --image "https://example.com/logo.png" --chain-id 8453` | [tokens.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/tokens.md) |
 | **Token Info** | Query deployed token details | `netp token info --address 0x... --chain-id 8453 --json` | [tokens.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/tokens.md) |
-| **Bazaar** | List, buy, sell, and make offers on NFTs and ERC-20 tokens (Seaport-based). NFT bazaar: Base & Ethereum. ERC-20 bazaar: Base & HyperEVM. | `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json` | [bazaar.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md) |
+| **Bazaar** | List, buy, sell, and make offers on NFTs and ERC-20 tokens (Seaport-based). NFT bazaar: Base, Ethereum & Robinhood. ERC-20 bazaar: Base, HyperEVM & Robinhood. | `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json` | [bazaar.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md) |
 | **Upvote Tokens** | Upvote tokens on-chain (auto-discovers Uniswap pool & strategy) | `netp upvote token --token-address 0x... --count 1 --chain-id 8453 --encode-only` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 | **Upvote Info** | Check upvote counts for a token | `netp upvote info --token-address 0x... --chain-id 8453 --json` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
 | **Upvote Users** | Upvote a user's profile on-chain | `netp upvote user --address 0x... --count 1 --chain-id 8453 --encode-only` | [upvoting.md](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/upvoting.md) |
@@ -585,8 +585,10 @@ The only legitimate reason to read allowance state yourself is a non-submitting 
 | **Upvoting (tokens)** | Each upvote costs 0.000025 ETH. Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. `--encode-only` still requires RPC access for pool discovery. |
 | **Upvoting (users)** | Price fetched from contract (currently 0.000025 ETH per upvote). Output includes a non-zero `value` field — you **must** include it. Only Base (8453) is supported. |
 | **Bazaar approvals** | The CLI handles all approval logic. The `approvals` array in every encode-only output is exhaustive — submit it verbatim, no pre-flight `allowance` / `isApprovedForAll` check needed. **Net Bazaar uses Seaport directly (no conduit).** Do NOT add `setApprovalForAll`/`approve` txs for any "conduit" or "bazaar contract"; an empty `approvals` array means none are needed. See "Bazaar Approvals" under Encode-Only Transaction Formats above. |
-| **Bazaar (NFT)** | NFT listings/offers are supported on Base (8453) and Ethereum (1). All write commands support `--encode-only`. |
-| **Bazaar (ERC-20)** | ERC-20 listings/offers are supported on Base (8453) and HyperEVM (999). ERC-20 commands use `--token-address` + `--token-amount` (raw bigint units). Both listings and offers settle in the chain's **ERC-20 payment token**: USDC on Base (`--price 5` = 5 USDC), wrapped native (WHYPE) on HyperEVM. The CLI reads `getErc20PaymentToken(chainId)` from `@net-protocol/bazaar` and scales `--price` by that token's decimals — do not pre-scale. |
+| **Bazaar (NFT)** | NFT listings/offers are supported on Base (8453), Ethereum (1), and Robinhood Chain (4663), priced in native ETH with 0% marketplace fees. All write commands support `--encode-only`. |
+| **Bazaar expiration** | Listings and offers expire after 24 hours unless you pass `--expiration` on `create-listing`, `create-offer`, `create-erc20-listing`, or `create-erc20-offer`: a duration (`12h`, `30d`, `4w`) or a unix timestamp in seconds. "Expires in a month" → `--expiration 30d`. |
+| **Bazaar (many NFTs)** | One listing = one token ID. Listing N tokens is 1 collection approval + N signatures + N submit txs (the contract requires the seller as `msg.sender`, so submits can't be batched). That's expected — loop over the token IDs rather than refusing. See [bazaar.md § List Many NFTs](https://raw.githubusercontent.com/stuckinaboot/net-public/main/skill-references/bazaar.md). |
+| **Bazaar (ERC-20)** | ERC-20 listings/offers are supported on Base (8453), HyperEVM (999), and Robinhood Chain (4663). ERC-20 commands use `--token-address` + `--token-amount` (raw bigint units). Both listings and offers settle in the chain's **ERC-20 payment token**: USDC on Base (`--price 5` = 5 USDC), USDG on Robinhood, wrapped native (WHYPE) on HyperEVM. The CLI reads `getErc20PaymentToken(chainId)` from `@net-protocol/bazaar` and scales `--price` by that token's decimals — do not pre-scale. |
 | **Bazaar JSON fields (ERC-20)** | `pricePerToken` is a **string** (not a number) for full-decimal precision; `pricePerTokenWei` is `priceWei / tokenAmount` (bigint integer division — often rounds to `"0"` for 18-decimal tokens). `currency` is the payment-token symbol — `"usdc"` on Base, native chain symbol (`"hype"`, etc.) elsewhere. |
 | **Chain IDs** | Base = `8453`, Base Sepolia = `84532`. Mismatched chain IDs are the #1 cause of "data not found." |
 
@@ -605,7 +607,7 @@ The only legitimate reason to read allowance state yourself is a non-submitting 
 | HyperEVM | 999 | Yes | Yes | Yes | Yes | No | Yes (ERC-20) | No |
 | Plasma | 9745 | Yes | Yes | Yes | Yes | No | No | No |
 | Monad | 143 | Yes | Yes | Yes | Yes | No | No | No |
-| Robinhood | 4663 | Yes | Yes | Yes | Yes | No | No | No |
+| Robinhood | 4663 | Yes | Yes | Yes | Yes | No | Yes (NFT + ERC-20) | No |
 
 Testnets: Base Sepolia (84532), Sepolia (11155111)
 
@@ -687,7 +689,8 @@ When transactions are submitted externally (e.g., via Bankr after using `--encod
 
 ### Bazaar — NFTs and ERC-20s (use netp)
 - "Browse NFT listings for a collection" → `netp bazaar list-listings --nft-address 0x... --chain-id 8453 --json`
-- "List my NFT for sale" / "Create an NFT listing" → `netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --offerer 0xMyAddr --chain-id 8453` (keyless; sign the returned EIP-712 then `submit-listing`)
+- "List my NFT for sale" / "Create an NFT listing" → `netp bazaar create-listing --nft-address 0x... --token-id 42 --price 0.1 --offerer 0xMyAddr --chain-id 8453` (keyless; sign the returned EIP-712 then `submit-listing`; listings expire in 24h unless you add `--expiration 30d` etc.)
+- "List my NFTs 1-20 on Robinhood for 1 ETH each, expiring in a month" → for each token ID: `netp bazaar create-listing --nft-address 0x... --token-id <id> --price 1 --expiration 30d --offerer 0xMyAddr --chain-id 4663`, sign, then `submit-listing` (approval only needed once per collection)
 - "Make an offer on an NFT collection" → `netp bazaar create-offer --nft-address 0x... --price 0.1 --offerer 0xMyAddr --chain-id 8453` (bid is paid in WETH; keyless; sign then `submit-offer`)
 - "Buy an NFT" → `netp bazaar buy-listing --order-hash 0x... --nft-address 0x... --buyer 0xMyAddr --chain-id 8453 --encode-only`
 - "What NFTs do I own?" → `netp bazaar owned-nfts --nft-address 0x... --owner 0xMyAddr --chain-id 8453 --json`

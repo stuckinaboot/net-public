@@ -9,6 +9,7 @@ import { BazaarClient } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
+import { resolveExpiration } from "../../shared/expiration";
 import { parseErc20Price } from "./format";
 import type { CreateErc20OfferOptions } from "./types";
 
@@ -43,6 +44,8 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
   );
   const tokenAmount = BigInt(options.tokenAmount);
 
+  const expirationDate = resolveExpiration(options.expiration);
+
   try {
     console.log(chalk.blue("Preparing ERC-20 offer..."));
 
@@ -50,6 +53,7 @@ export async function executeCreateErc20Offer(options: CreateErc20OfferOptions):
       tokenAddress: options.tokenAddress as `0x${string}`,
       tokenAmount,
       priceWei,
+      expirationDate,
       offerer: account.address,
     });
 
@@ -142,11 +146,14 @@ async function executeEncodeOnly(options: CreateErc20OfferOptions): Promise<void
   const { priceWei } = parseErc20Price(readOnlyOptions.chainId, options.price);
   const tokenAmount = BigInt(options.tokenAmount);
 
+  const expirationDate = resolveExpiration(options.expiration);
+
   try {
     const prepared = await bazaarClient.prepareCreateErc20Offer({
       tokenAddress: options.tokenAddress as `0x${string}`,
       tokenAmount,
       priceWei,
+      expirationDate,
       offerer: options.offerer as `0x${string}`,
     });
 

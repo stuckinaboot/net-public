@@ -269,7 +269,6 @@ const BAZAAR_CHAIN_CONFIGS: Record<number, BazaarChainConfig> = {
   //
   // Mirrors Base's posture: the flexible-fee bazaar family with 0% fees, plus
   // ERC20 trading denominated in a stablecoin (USDG — Robinhood has no USDC).
-  //
   4663: {
     // Flexible-fee family (same addresses Base/Ethereum/HyperEVM/MegaETH use)
     bazaarAddress: "0x000000058f3ade587388daf827174d0e6fc97595",

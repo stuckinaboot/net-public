@@ -38,11 +38,17 @@ vi.mock("../../../cli/shared", () => ({
 
 vi.spyOn(console, "log").mockImplementation(() => {});
 
-import { executeCreateListing } from "../../../commands/bazaar/create-listing";
-import { executeCreateOffer } from "../../../commands/bazaar/create-offer";
+import { Command } from "commander";
+import { registerBazaarCommand } from "../../../commands/bazaar";
 
 const NFT_ADDRESS = "0xca28587b61eac19a87dfcfd9420870867a916675";
 const DAY = 24 * 60 * 60;
+
+async function runBazaar(args: string[]): Promise<void> {
+  const program = new Command();
+  registerBazaarCommand(program);
+  await program.parseAsync(["node", "netp", "bazaar", ...args]);
+}
 
 describe("bazaar --expiration", () => {
   beforeEach(() => {
@@ -55,14 +61,10 @@ describe("bazaar --expiration", () => {
 
   it("passes a 30d listing expiration through to the SDK", async () => {
     const before = Math.floor(Date.now() / 1000);
-    await executeCreateListing({
-      nftAddress: NFT_ADDRESS,
-      tokenId: "1",
-      price: "1",
-      offerer: TEST_ACCOUNT_ADDRESS,
-      chainId: 4663,
-      expiration: "30d",
-    });
+    await runBazaar([
+      "create-listing", "--nft-address", NFT_ADDRESS, "--token-id", "1", "--price", "1",
+      "--offerer", TEST_ACCOUNT_ADDRESS, "--chain-id", "4663", "--expiration", "30d",
+    ]);
 
     const { expirationDate } = mockPrepareCreateListing.mock.calls[0][0];
     expect(expirationDate).toBeGreaterThanOrEqual(before + 30 * DAY);
@@ -70,27 +72,37 @@ describe("bazaar --expiration", () => {
   });
 
   it("leaves expirationDate unset without the flag so the 24h default applies", async () => {
-    await executeCreateListing({
-      nftAddress: NFT_ADDRESS,
-      tokenId: "1",
-      price: "1",
-      offerer: TEST_ACCOUNT_ADDRESS,
-      chainId: 4663,
-    });
+    await runBazaar([
+      "create-listing", "--nft-address", NFT_ADDRESS, "--token-id", "1", "--price", "1",
+      "--offerer", TEST_ACCOUNT_ADDRESS, "--chain-id", "4663",
+    ]);
 
     expect(mockPrepareCreateListing.mock.calls[0][0].expirationDate).toBeUndefined();
   });
 
   it("passes an absolute timestamp through for collection offers", async () => {
     const timestamp = Math.floor(Date.now() / 1000) + 7 * DAY;
-    await executeCreateOffer({
-      nftAddress: NFT_ADDRESS,
-      price: "0.1",
-      offerer: TEST_ACCOUNT_ADDRESS,
-      chainId: TEST_CHAIN_ID,
-      expiration: String(timestamp),
-    });
+    await runBazaar([
+      "create-offer", "--nft-address", NFT_ADDRESS, "--price", "0.1",
+      "--offerer", TEST_ACCOUNT_ADDRESS, "--chain-id", String(TEST_CHAIN_ID),
+      "--expiration", String(timestamp),
+    ]);
 
     expect(mockPrepareCreateCollectionOffer.mock.calls[0][0].expirationDate).toBe(timestamp);
+  });
+
+  it("rejects an unparseable expiration as a usage error before preparing the order", async () => {
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    vi.spyOn(process, "exit").mockImplementation(() => {
+      throw new Error("process.exit");
+    });
+    await expect(
+      runBazaar([
+        "create-listing", "--nft-address", NFT_ADDRESS, "--token-id", "1", "--price", "1",
+        "--offerer", TEST_ACCOUNT_ADDRESS, "--expiration", "1 month",
+      ])
+    ).rejects.toThrow("process.exit");
+    expect(String(stderr.mock.calls[0][0])).toMatch(/duration like 12h, 30d or 4w/);
+    expect(mockPrepareCreateListing).not.toHaveBeenCalled();
   });
 });

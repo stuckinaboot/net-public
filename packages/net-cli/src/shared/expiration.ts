@@ -1,4 +1,4 @@
-import { exitWithError } from "./output";
+import { InvalidArgumentError } from "commander";
 
 const DURATION_UNIT_SECONDS: Record<string, number> = {
   m: 60,
@@ -47,12 +47,12 @@ export function parseExpiration(
 }
 
 /**
- * Same as parseExpiration, but exits the CLI with a readable error on bad input.
+ * Commander argument parser for `--expiration`: reports bad input as a usage error.
  */
-export function resolveExpiration(value: string | undefined): number | undefined {
+export function parseExpirationOption(value: string): number | undefined {
   try {
     return parseExpiration(value);
   } catch (error) {
-    exitWithError(error instanceof Error ? error.message : String(error));
+    throw new InvalidArgumentError(error instanceof Error ? error.message : String(error));
   }
 }

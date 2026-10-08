@@ -10,7 +10,6 @@ import { BazaarClient } from "@net-protocol/bazaar";
 import { getChainRpcUrls, getBaseDataSuffix } from "@net-protocol/core";
 import { parseCommonOptions, parseReadOnlyOptions } from "../../cli/shared";
 import { exitWithError } from "../../shared/output";
-import { resolveExpiration } from "../../shared/expiration";
 import type { CreateListingOptions } from "./types";
 
 export async function executeCreateListing(options: CreateListingOptions): Promise<void> {
@@ -41,8 +40,6 @@ export async function executeCreateListing(options: CreateListingOptions): Promi
 
   const priceWei = parseEther(options.price);
 
-  const expirationDate = resolveExpiration(options.expiration);
-
   try {
     console.log(chalk.blue("Preparing listing..."));
 
@@ -50,7 +47,7 @@ export async function executeCreateListing(options: CreateListingOptions): Promi
       nftAddress: options.nftAddress as `0x${string}`,
       tokenId: options.tokenId,
       priceWei,
-      expirationDate,
+      expirationDate: options.expirationDate,
       offerer: account.address,
       targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });
@@ -142,14 +139,12 @@ async function executeEncodeOnly(options: CreateListingOptions): Promise<void> {
 
   const priceWei = parseEther(options.price);
 
-  const expirationDate = resolveExpiration(options.expiration);
-
   try {
     const prepared = await bazaarClient.prepareCreateListing({
       nftAddress: options.nftAddress as `0x${string}`,
       tokenId: options.tokenId,
       priceWei,
-      expirationDate,
+      expirationDate: options.expirationDate,
       offerer: options.offerer as `0x${string}`,
       targetFulfiller: options.targetFulfiller as `0x${string}` | undefined,
     });

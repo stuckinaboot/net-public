@@ -28,7 +28,8 @@ export interface CreateListingOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
-  expiration?: string;
+  /** Order expiration as a unix timestamp in seconds (SDK defaults to 24h) */
+  expirationDate?: number;
   encodeOnly?: boolean;
 }
 
@@ -39,7 +40,8 @@ export interface CreateOfferOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
-  expiration?: string;
+  /** Order expiration as a unix timestamp in seconds (SDK defaults to 24h) */
+  expirationDate?: number;
   encodeOnly?: boolean;
 }
 
@@ -115,7 +117,8 @@ export interface CreateErc20ListingOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
-  expiration?: string;
+  /** Order expiration as a unix timestamp in seconds (SDK defaults to 24h) */
+  expirationDate?: number;
   encodeOnly?: boolean;
 }
 
@@ -127,7 +130,8 @@ export interface CreateErc20OfferOptions {
   privateKey?: string;
   chainId?: number;
   rpcUrl?: string;
-  expiration?: string;
+  /** Order expiration as a unix timestamp in seconds (SDK defaults to 24h) */
+  expirationDate?: number;
   encodeOnly?: boolean;
 }
 

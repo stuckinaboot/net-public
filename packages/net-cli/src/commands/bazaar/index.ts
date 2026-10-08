@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { parseExpirationOption } from "../../shared/expiration";
 import { executeListListings } from "./list-listings";
 import { executeListOffers } from "./list-offers";
 import { executeListSales } from "./list-sales";
@@ -41,6 +42,7 @@ const privateKeyOption = [
 const expirationOption = [
   "--expiration <time>",
   "When the order expires: a duration (e.g. 12h, 30d, 4w) or a unix timestamp in seconds. Defaults to 24h",
+  parseExpirationOption,
 ] as const;
 
 export function registerBazaarCommand(program: Command): void {
@@ -115,7 +117,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
-        expiration: options.expiration,
+        expirationDate: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });
@@ -138,7 +140,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
-        expiration: options.expiration,
+        expirationDate: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });
@@ -300,7 +302,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
-        expiration: options.expiration,
+        expirationDate: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });
@@ -325,7 +327,7 @@ export function registerBazaarCommand(program: Command): void {
         privateKey: options.privateKey,
         chainId: options.chainId,
         rpcUrl: options.rpcUrl,
-        expiration: options.expiration,
+        expirationDate: options.expiration,
         encodeOnly: options.encodeOnly,
       });
     });

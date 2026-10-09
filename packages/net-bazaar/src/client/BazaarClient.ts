@@ -78,6 +78,7 @@ import {
 } from "../utils/validation";
 import { STORAGE_CONTRACT } from "@net-protocol/storage";
 import { checkErc721Approval, checkErc20Approval } from "../utils/approvals";
+import { filterOrdersWithValidSignatures, SignedOrder } from "../utils/signature";
 import {
   buildFulfillListingTx,
   buildFulfillCollectionOfferTx,
@@ -361,6 +362,8 @@ export class BazaarClient {
 
     console.log(tag, `after status filter: ${listings.length} (OPEN${includeExpired ? ' + EXPIRED' : ''})`);
 
+    listings = await this.dropInvalidSignatures(listings, tag);
+
     if (listings.length === 0) {
       return [];
     }
@@ -557,6 +560,8 @@ export class BazaarClient {
 
     console.log(tag, `after status filter: ${offers.length} OPEN & not expired`);
 
+    offers = await this.dropInvalidSignatures(offers, tag);
+
     if (offers.length === 0) {
       return [];
     }
@@ -732,6 +737,8 @@ export class BazaarClient {
 
     console.log(tag, `after status filter: ${offers.length} OPEN & not expired`);
 
+    offers = await this.dropInvalidSignatures(offers, tag);
+
     if (offers.length === 0) {
       return [];
     }
@@ -898,6 +905,8 @@ export class BazaarClient {
     );
 
     console.log(tag, `after status filter: ${listings.length} (OPEN${includeExpired ? ' + EXPIRED' : ''})`);
+
+    listings = await this.dropInvalidSignatures(listings, tag);
 
     if (listings.length === 0) {
       return [];
@@ -1326,6 +1335,22 @@ export class BazaarClient {
   }
 
   // ─── Order Creation Methods (Step 1: Build EIP-712 data) ──────────
+
+  /**
+   * Drops orders whose signature Seaport would reject (see
+   * `filterOrdersWithValidSignatures`). Runs before per-token deduplication so
+   * a junk-signed copy of an order can never displace a genuine one.
+   */
+  private async dropInvalidSignatures<T extends SignedOrder>(
+    orders: T[],
+    tag: string
+  ): Promise<T[]> {
+    const valid = await filterOrdersWithValidSignatures(this.client, this.chainId, orders);
+    if (valid.length < orders.length) {
+      console.log(tag, `after signature filter: ${valid.length}/${orders.length} (${orders.length - valid.length} dropped)`);
+    }
+    return valid;
+  }
 
   /**
    * Fetch the Seaport counter for an address

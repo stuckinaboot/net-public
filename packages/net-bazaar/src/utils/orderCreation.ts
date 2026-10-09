@@ -36,6 +36,22 @@ import {
 const SEAPORT_EIP712_DOMAIN_NAME = "Seaport";
 const SEAPORT_EIP712_DOMAIN_VERSION = "1.6";
 
+/**
+ * Seaport's EIP-712 domain on a chain: what orders are signed against, and
+ * what their signatures are checked against.
+ */
+export function getSeaportEip712Domain(
+  chainId: number,
+  seaportAddress: `0x${string}`
+) {
+  return {
+    name: SEAPORT_EIP712_DOMAIN_NAME,
+    version: SEAPORT_EIP712_DOMAIN_VERSION,
+    chainId,
+    verifyingContract: seaportAddress,
+  };
+}
+
 const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as const;
 
@@ -465,12 +481,7 @@ export function buildEIP712OrderData(
   };
 
   return {
-    domain: {
-      name: SEAPORT_EIP712_DOMAIN_NAME,
-      version: SEAPORT_EIP712_DOMAIN_VERSION,
-      chainId,
-      verifyingContract: seaportAddress,
-    },
+    domain: getSeaportEip712Domain(chainId, seaportAddress),
     types: SEAPORT_ORDER_EIP712_TYPES as unknown as Record<string, Array<{ name: string; type: string }>>,
     primaryType: "OrderComponents",
     message,

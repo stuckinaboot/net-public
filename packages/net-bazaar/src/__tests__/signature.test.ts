@@ -5,6 +5,9 @@ import {
   custom,
   encodeAbiParameters,
   keccak256,
+  parseSignature,
+  serializeCompactSignature,
+  signatureToCompactSignature,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { BAZAAR_SUBMISSION_ABI } from "../abis";
@@ -40,7 +43,11 @@ function encodeSubmission(signature: `0x${string}`): `0x${string}` {
   ]);
 }
 
-async function signedOrder(signerKey: `0x${string}`, maker?: `0x${string}`) {
+async function signedOrder(
+  signerKey: `0x${string}`,
+  maker?: `0x${string}`,
+  compact = false
+) {
   const signer = privateKeyToAccount(signerKey);
   const signature = await signer.sign({
     hash: getSeaportOrderDigest(ROBINHOOD, ORDER_HASH),
@@ -48,7 +55,13 @@ async function signedOrder(signerKey: `0x${string}`, maker?: `0x${string}`) {
   return {
     maker: maker ?? signer.address,
     orderHash: ORDER_HASH,
-    messageData: encodeSubmission(signature),
+    messageData: encodeSubmission(
+      compact
+        ? serializeCompactSignature(
+            signatureToCompactSignature(parseSignature(signature))
+          )
+        : signature
+    ),
   };
 }
 
@@ -74,6 +87,14 @@ describe("isOrderSignatureValid", () => {
   it("accepts a signature from the maker without an RPC call", async () => {
     const { client, calls } = clientForEthCall("revert");
     const order = await signedOrder(generatePrivateKey());
+
+    expect(await isOrderSignatureValid(client, ROBINHOOD, order)).toBe(true);
+    expect(calls()).toBe(0);
+  });
+
+  it("accepts a compact (EIP-2098) signature from the maker", async () => {
+    const { client, calls } = clientForEthCall("revert");
+    const order = await signedOrder(generatePrivateKey(), undefined, true);
 
     expect(await isOrderSignatureValid(client, ROBINHOOD, order)).toBe(true);
     expect(calls()).toBe(0);

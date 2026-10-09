@@ -12,8 +12,12 @@ import {
   isAddressEqual,
   keccak256,
   parseAbi,
+  compactSignatureToSignature,
+  parseCompactSignature,
   recoverAddress,
+  size,
   type PublicClient,
+  type Signature,
 } from "viem";
 import { readContract } from "viem/actions";
 import { getSeaportAddress } from "../chainConfig";
@@ -46,6 +50,18 @@ export function getSeaportOrderDigest(
 }
 
 /**
+ * Seaport accepts EIP-2098 compact (64-byte) signatures as well as the usual
+ * 65-byte ones, and Net's own listing flow produces compact ones. viem's
+ * `recoverAddress` only takes the 65-byte form, so expand compact ones first.
+ */
+function expandCompactSignature(
+  signature: `0x${string}`
+): `0x${string}` | Signature {
+  if (size(signature) !== 64) return signature;
+  return compactSignatureToSignature(parseCompactSignature(signature));
+}
+
+/**
  * Whether Seaport would accept an order's signature. Mirrors Seaport's own
  * check: the signature recovers to the maker, or the maker's contract code
  * accepts it through ERC-1271. The ecrecover path is local, so only a
@@ -60,10 +76,13 @@ export async function isOrderSignatureValid(
   const digest = getSeaportOrderDigest(chainId, order.orderHash as `0x${string}`);
 
   try {
-    const signer = await recoverAddress({ hash: digest, signature });
+    const signer = await recoverAddress({
+      hash: digest,
+      signature: expandCompactSignature(signature),
+    });
     if (isAddressEqual(signer, order.maker)) return true;
   } catch {
-    // Not a plain 64/65-byte ECDSA signature; only ERC-1271 can accept it.
+    // Not an ECDSA signature at all; only ERC-1271 can accept it.
   }
 
   try {

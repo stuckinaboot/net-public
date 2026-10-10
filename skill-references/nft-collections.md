@@ -35,10 +35,18 @@ Same address on every supported chain:
 |----------|---------|
 | Net | `0x00000000B24D62781dB359b07880a105cD0b64e6` |
 
-The only function the collection needs:
+The two functions the collection needs:
 
 ```solidity
 interface INet {
+    // Once, from the constructor: registers the collection (see *Collection registry*).
+    function sendMessage(
+        string calldata text,
+        string calldata topic,
+        bytes calldata data
+    ) external;
+
+    // On every mint, transfer and burn.
     function sendMessageViaApp(
         address sender,
         string calldata text,
@@ -48,7 +56,7 @@ interface INet {
 }
 ```
 
-`app` is **not** a parameter — Net derives it from `msg.sender` (the collection). `sender` is whatever address you pass; the conventions below define what to put there.
+`app` is **not** a parameter of `sendMessageViaApp` — Net derives it from `msg.sender` (the collection). `sender` is whatever address you pass; the conventions below define what to put there.
 
 ## Message conventions
 
@@ -69,6 +77,21 @@ Why these choices:
 - **`sender = to` on mint / `from` on transfer & burn** means `--sender 0xUser` surfaces *"tokens this user minted"*, *"tokens this user sent"*, and *"tokens this user burned"* respectively.
 - **Keep `text` short and leave `data` empty.** Text/data length is the one part of the Net write whose gas scales with size. The start–end range plus addresses is enough; anything richer can be reconstructed by an indexer from the token IDs.
 
+### Collection registry
+
+Net indexes topics per app, so there is no way to ask for "every `mint` message on the chain". To make collections discoverable without an indexer, the constructor posts one registration message:
+
+| Field | Value |
+|-------|-------|
+| sent with | `NET.sendMessage(...)` from the constructor |
+| `app` (automatic) | `address(0)` |
+| `sender` (automatic) | the collection address |
+| `topic` | `"nft-collection"` |
+| `text` | the collection name |
+| `data` | the creator, `abi.encodePacked(tx.origin)` (20 bytes) |
+
+Every collection on a chain is then one index away: `getTotalMessagesForAppTopicCount(address(0), "nft-collection")` and a windowed range read. Anyone can post to that topic, so treat it as an open list of candidates: read each `sender`'s own `name()`, `totalSupply()` and `mint` messages, and filter what you show on your side.
+
 ## Base contract: `NetIntegratedERC721A`
 
 Extend this and add your art. It handles Net posting, supply cap, per-wallet cap, the capped creator premint, and per-token seeding.
@@ -81,6 +104,12 @@ import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 import { LibString } from "solady/utils/LibString.sol";
 
 interface INet {
+    function sendMessage(
+        string calldata text,
+        string calldata topic,
+        bytes calldata data
+    ) external;
+
     function sendMessageViaApp(
         address sender,
         string calldata text,
@@ -104,6 +133,8 @@ abstract contract NetIntegratedERC721A is ERC721A {
     string internal constant TOPIC_MINT = "mint";
     string internal constant TOPIC_TRANSFER = "transfer";
     string internal constant TOPIC_BURN = "burn";
+    /// @dev Chain-wide registry topic: one message per collection, posted at deploy.
+    string internal constant TOPIC_COLLECTION = "nft-collection";
 
     /// @notice Mint price per token, in wei.
     uint256 public immutable price;
@@ -145,6 +176,11 @@ abstract contract NetIntegratedERC721A is ERC721A {
         maxSupply = maxSupply_;
         maxMintsPerWallet = maxMintsPerWallet_;
         creatorReserve = creatorReserve_;
+
+        // Chain-wide registry (see "Collection registry"). tx.origin, not
+        // msg.sender, so a CREATE2 factory deploy still records the creator.
+        // Best-effort like every Net write here: never block the deploy.
+        try NET.sendMessage(name_, TOPIC_COLLECTION, abi.encodePacked(tx.origin)) {} catch {}
     }
 
     /// @dev Token IDs start at 1.
@@ -689,34 +725,45 @@ netp message count --app 0xCollection --chain-id 8453 --json
 
 Note `count` returns the number of **messages** (batches), not tokens — a batch mint of 5 is one `mint` message spanning `#start–#end`. Parse the range out of the text (or the token IDs) if you need per-token counts.
 
+### Every Net collection on a chain
+
+Collections deployed from this base contract register themselves (see *Collection registry*):
+
+```bash
+# How many collections have registered
+netp message count --app 0x0000000000000000000000000000000000000000 --topic "nft-collection" --chain-id 8453 --json
+
+# Read them in windows (the topic only grows)
+netp message read --app 0x0000000000000000000000000000000000000000 --topic "nft-collection" --start 0 --end 500 --chain-id 8453 --json
+```
+
 ### Solidity (for contracts / indexers)
 
-Reads live on the **same** Net contract (address as above). Topics are hashed to `bytes32` on the read side.
+Reads live on the **same** Net contract (address as above). Topics are plain strings on the read side too.
 
 ```solidity
 interface INetReader {
     struct Message {
         address app;
         address sender;
-        bytes32 topic;
-        uint48 timestamp;
-        string text;
+        uint256 timestamp;
         bytes data;
+        string text;
+        string topic;
     }
 
     function getTotalMessagesForAppCount(address app) external view returns (uint256);
-    function getTotalMessagesForAppTopicCount(address app, bytes32 topic) external view returns (uint256);
+    function getTotalMessagesForAppTopicCount(address app, string calldata topic) external view returns (uint256);
     function getMessagesInRangeForApp(uint256 startIdx, uint256 endIdx, address app)
         external view returns (Message[] memory);
-    function getMessagesInRangeForAppTopic(uint256 startIdx, uint256 endIdx, address app, bytes32 topic)
+    function getMessagesInRangeForAppTopic(uint256 startIdx, uint256 endIdx, address app, string calldata topic)
         external view returns (Message[] memory);
 }
 
 // Usage: fetch every mint message for a collection.
 INetReader net = INetReader(0x00000000B24D62781dB359b07880a105cD0b64e6);
-bytes32 topic = keccak256(bytes("mint"));
-uint256 total = net.getTotalMessagesForAppTopicCount(collection, topic);
-INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, collection, topic);
+uint256 total = net.getTotalMessagesForAppTopicCount(collection, "mint");
+INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, collection, "mint");
 ```
 
 **Paginate large collections.** Fetching `(0, total)` pulls every message in one call, which blows past RPC response / gas limits once a collection is active. Read fixed-size windows instead — `getMessagesInRangeForAppTopic(i, i + 500, ...)` in Solidity, or `netp message read --start <i> --end <j>` on the CLI.
@@ -742,7 +789,7 @@ INetReader.Message[] memory msgs = net.getMessagesInRangeForAppTopic(0, total, c
 
 ## Safety checklist
 
-- [ ] Net call is wrapped in `try/catch`.
+- [ ] Net calls are wrapped in `try/catch`, and the constructor registration is kept.
 - [ ] `maxSupply` enforced in *both* `mint()` and `mintToCreator()`.
 - [ ] `maxMintsPerWallet` checked via `_numberMinted(msg.sender)` (0 = unlimited).
 - [ ] Preminted tokens are seeded (so their art renders).

@@ -62,27 +62,27 @@ function getMessagesInRange(uint256 startIdx, uint256 endIdx) external view retu
 // Get messages with filter
 function getMessagesInRangeForApp(uint256 startIdx, uint256 endIdx, address app) external view returns (Message[] memory)
 function getMessagesInRangeForAppUser(uint256 startIdx, uint256 endIdx, address app, address user) external view returns (Message[] memory)
-function getMessagesInRangeForAppTopic(uint256 startIdx, uint256 endIdx, address app, bytes32 topic) external view returns (Message[] memory)
-function getMessagesInRangeForAppUserTopic(uint256 startIdx, uint256 endIdx, address app, address user, bytes32 topic) external view returns (Message[] memory)
+function getMessagesInRangeForAppTopic(uint256 startIdx, uint256 endIdx, address app, string calldata topic) external view returns (Message[] memory)
+function getMessagesInRangeForAppUserTopic(uint256 startIdx, uint256 endIdx, address app, address user, string calldata topic) external view returns (Message[] memory)
 
 // Get counts
 function getTotalMessagesCount() external view returns (uint256)
 function getTotalMessagesForAppCount(address app) external view returns (uint256)
 function getTotalMessagesForAppUserCount(address app, address user) external view returns (uint256)
-function getTotalMessagesForAppTopicCount(address app, bytes32 topic) external view returns (uint256)
-function getTotalMessagesForAppUserTopicCount(address app, address user, bytes32 topic) external view returns (uint256)
+function getTotalMessagesForAppTopicCount(address app, string calldata topic) external view returns (uint256)
+function getTotalMessagesForAppUserTopicCount(address app, address user, string calldata topic) external view returns (uint256)
 ```
 
 ### Message Structure
 
 ```solidity
 struct Message {
-    address app;      // App contract address
-    address sender;   // Message sender
-    bytes32 topic;    // Topic (bytes32)
-    uint48 timestamp; // Block timestamp
-    string text;      // Message text
-    bytes data;       // Additional data
+    address app;        // App contract address
+    address sender;     // Message sender
+    uint256 timestamp;  // Block timestamp
+    bytes data;         // Additional data
+    string text;        // Message text
+    string topic;       // Topic
 }
 ```
 

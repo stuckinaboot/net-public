@@ -85,6 +85,12 @@ describe("parseListingFromMessage", () => {
     expect(listing!.targetFulfiller).toBeUndefined();
   });
 
+  it("drops a 0 ETH listing, since Seaport rejects its zero-amount payment item", () => {
+    const message = createMockListingMessage({ price: BigInt(0) });
+
+    expect(parseListingFromMessage(message as any, 8453)).toBeNull();
+  });
+
   it("sets targetFulfiller for private orders using the private order zone", () => {
     const privateZoneHash = "0x00000000000000000000000000000000000000000000000000000000deadbeef" as `0x${string}`;
     const message = createMockListingMessage({

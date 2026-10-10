@@ -159,6 +159,17 @@ export function getOrderStatusFromInfo(
 }
 
 /**
+ * Whether the order has an offer or consideration item with no amount. Seaport
+ * rejects any fill of such an order with `MissingItemAmount`, so it can never
+ * be filled — e.g. a "0 ETH" listing whose only payment item is zero.
+ */
+export function hasZeroAmountItem(parameters: SeaportOrderParameters): boolean {
+  return [...parameters.offer, ...parameters.consideration].some(
+    (item) => item.startAmount === BigInt(0) && item.endAmount === BigInt(0)
+  );
+}
+
+/**
  * Calculate total consideration amount (price) from order
  */
 export function getTotalConsiderationAmount(parameters: SeaportOrderParameters): bigint {

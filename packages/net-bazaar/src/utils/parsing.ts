@@ -9,6 +9,7 @@ import {
   decodeSeaportSubmission,
   getSeaportOrderFromMessageData,
   getTotalConsiderationAmount,
+  hasZeroAmountItem,
   formatPrice,
   formatPricePerToken,
 } from "./seaport";
@@ -51,6 +52,10 @@ export function parseListingFromMessage(
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
     const { parameters } = submission;
+
+    if (hasZeroAmountItem(parameters)) {
+      return null;
+    }
 
     // NFT listings have the NFT in the offer array
     const offerItem = parameters.offer[0];
@@ -104,6 +109,10 @@ export function parseCollectionOfferFromMessage(
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
     const { parameters } = submission;
+
+    if (hasZeroAmountItem(parameters)) {
+      return null;
+    }
 
     // Collection offers must use the collection offer zone
     if (
@@ -224,6 +233,10 @@ export function parseErc20OfferFromMessage(
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
     const { parameters } = submission;
 
+    if (hasZeroAmountItem(parameters)) {
+      return null;
+    }
+
     // ERC20 offers must use the collection offer zone
     if (
       parameters.zone.toLowerCase() !==
@@ -322,6 +335,10 @@ export function parseErc20ListingFromMessage(
   try {
     const submission = decodeSeaportSubmission(message.data as `0x${string}`);
     const { parameters } = submission;
+
+    if (hasZeroAmountItem(parameters)) {
+      return null;
+    }
 
     // ERC20 listings must NOT use the collection offer zone (that would be an offer)
     if (

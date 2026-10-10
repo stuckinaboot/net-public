@@ -154,7 +154,7 @@ const CHAIN_CONFIG: Record<number, ChainConfig> = {
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     blockExplorer: {
       name: "Robinhood Chain Explorer",
-      url: "https://robinhoodchain.blockscout.com",
+      url: "https://robin.etherscan.io",
     },
   },
   // Aurora (NEAR's EVM; ETH gas). Core Net + storage only — no Seaport or

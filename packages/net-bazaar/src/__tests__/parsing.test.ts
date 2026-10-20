@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { encodeAbiParameters } from "viem";
-import { parseListingFromMessage, parseErc20ListingFromMessage, parseErc20OfferFromMessage } from "../utils/parsing";
+import {
+  parseListingFromMessage,
+  parseErc20ListingFromMessage,
+  parseErc20OfferFromMessage,
+  sortErc20ListingsByPricePerToken,
+  sortErc20OffersByPricePerToken,
+} from "../utils/parsing";
+import type { Erc20Listing, Erc20Offer } from "../types";
 import { BAZAAR_SUBMISSION_ABI } from "../abis";
 import {
   NET_SEAPORT_COLLECTION_OFFER_ZONE_ADDRESS,
@@ -483,5 +490,41 @@ describe("parseErc20OfferFromMessage with USDC quote token (Base)", () => {
     const message = createMockErc20OfferMessage({ quoteToken: wethAddress });
     const offer = parseErc20OfferFromMessage(message as any, 84532, 18);
     expect(offer).not.toBeNull();
+  });
+});
+
+describe("sorting ERC20 orders by price per token", () => {
+  // Three USDC-priced listings of one 18-decimal token, as read from Base.
+  // In base units every price is far below the token amount, so
+  // pricePerTokenWei (priceWei / tokenAmount) is 0 for all of them.
+  const order = (id: string, priceWei: string, tokenAmount: string) => ({
+    id,
+    priceWei: BigInt(priceWei),
+    tokenAmount: BigInt(tokenAmount),
+    pricePerTokenWei: BigInt(priceWei) / BigInt(tokenAmount),
+  });
+  const a = order("a", "764912", "200254800649662070000000"); // ~3.820e-6 USDC per token
+  const b = order("b", "4774", "1241139580000000000000"); // ~3.847e-6 USDC per token
+  const c = order("c", "713252", "200254800649662070000000"); // ~3.562e-6 USDC per token
+
+  it("truncates pricePerTokenWei to 0 for these orders", () => {
+    expect([a, b, c].map((o) => o.pricePerTokenWei)).toEqual([0n, 0n, 0n]);
+  });
+
+  it("puts the cheapest listing first", () => {
+    const sorted = sortErc20ListingsByPricePerToken([a, b, c] as unknown as Erc20Listing[]);
+    expect(sorted.map((o) => (o as unknown as { id: string }).id)).toEqual(["c", "a", "b"]);
+  });
+
+  it("puts the highest offer first", () => {
+    const sorted = sortErc20OffersByPricePerToken([a, b, c] as unknown as Erc20Offer[]);
+    expect(sorted.map((o) => (o as unknown as { id: string }).id)).toEqual(["b", "a", "c"]);
+  });
+
+  it("keeps the order of equally priced orders", () => {
+    const d = order("d", "1000", "2000");
+    const e = order("e", "2000", "4000");
+    const sorted = sortErc20ListingsByPricePerToken([d, e] as unknown as Erc20Listing[]);
+    expect(sorted.map((o) => (o as unknown as { id: string }).id)).toEqual(["d", "e"]);
   });
 });

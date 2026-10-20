@@ -309,15 +309,31 @@ export function parseErc20OfferFromMessage(
 }
 
 /**
+ * Compare two ERC20 orders by price per token (ascending).
+ *
+ * `pricePerTokenWei` is an integer division of base units and truncates to 0
+ * whenever priceWei < tokenAmount: for an 18-decimal token priced in WETH,
+ * any token worth less than 1 WETH; priced in 6-decimal USDC, practically
+ * every token. It cannot order offers or listings.
+ * Cross-multiplying compares the exact ratios instead:
+ * a.priceWei / a.tokenAmount vs b.priceWei / b.tokenAmount.
+ */
+function comparePricePerToken(
+  a: { priceWei: bigint; tokenAmount: bigint },
+  b: { priceWei: bigint; tokenAmount: bigint }
+): number {
+  const left = a.priceWei * b.tokenAmount;
+  const right = b.priceWei * a.tokenAmount;
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
+}
+
+/**
  * Sort ERC20 offers by price per token (highest first)
  */
 export function sortErc20OffersByPricePerToken(offers: Erc20Offer[]): Erc20Offer[] {
-  return [...offers].sort((a, b) => {
-    const diff = b.pricePerTokenWei - a.pricePerTokenWei;
-    if (diff < BigInt(0)) return -1;
-    if (diff > BigInt(0)) return 1;
-    return 0;
-  });
+  return [...offers].sort((a, b) => comparePricePerToken(b, a));
 }
 
 /**
@@ -419,12 +435,7 @@ export function parseErc20ListingFromMessage(
  * Sort ERC20 listings by price per token (lowest first)
  */
 export function sortErc20ListingsByPricePerToken(listings: Erc20Listing[]): Erc20Listing[] {
-  return [...listings].sort((a, b) => {
-    const diff = a.pricePerTokenWei - b.pricePerTokenWei;
-    if (diff < BigInt(0)) return -1;
-    if (diff > BigInt(0)) return 1;
-    return 0;
-  });
+  return [...listings].sort((a, b) => comparePricePerToken(a, b));
 }
 
 /**

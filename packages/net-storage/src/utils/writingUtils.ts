@@ -5,15 +5,28 @@ const MAX_CHUNKS = 255;
 export const OPTIMAL_CHUNK_SIZE = 80 * 1000;
 
 /**
- * Split data into chunks of specified size
+ * Split data into chunks of specified size.
+ *
+ * A chunk never ends between the two halves of a UTF-16 surrogate pair
+ * (e.g. an emoji): each chunk is UTF-8 encoded on its own, and a lone half
+ * would be stored as U+FFFD.
  */
 export function chunkData(
   data: string,
   chunkSize: number = OPTIMAL_CHUNK_SIZE
 ): string[] {
   const chunks: string[] = [];
-  for (let i = 0; i < data.length; i += chunkSize) {
-    chunks.push(data.slice(i, i + chunkSize));
+  let i = 0;
+  while (i < data.length) {
+    let end = Math.min(i + chunkSize, data.length);
+    if (end < data.length && end - i > 1) {
+      const last = data.charCodeAt(end - 1);
+      if (last >= 0xd800 && last <= 0xdbff) {
+        end -= 1; // keep the high surrogate with its low surrogate
+      }
+    }
+    chunks.push(data.slice(i, end));
+    i = end;
   }
   return chunks;
 }

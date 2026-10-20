@@ -185,18 +185,32 @@ export async function* processFileStreaming(
   // to avoid padding (=) in the middle of the concatenated result
   const effectiveChunkSize = binary ? BINARY_CHUNK_SIZE : chunkSize;
 
+  // Text slices are cut at byte offsets, which can fall inside a multi-byte
+  // UTF-8 character. A streaming decoder carries the incomplete bytes over to
+  // the next slice instead of turning each half into U+FFFD.
+  const decoder = binary ? undefined : new TextDecoder("utf-8");
+
   let offset = 0;
   let chunkIndex = 0;
 
   while (offset < file.size) {
     // Read slice from file
-    const chunkString = await readFileSlice(
-      file,
-      offset,
-      effectiveChunkSize,
-      binary,
-      chunkIndex === 0
-    );
+    let chunkString: string;
+    if (decoder) {
+      const bytes = new Uint8Array(
+        await file.slice(offset, offset + effectiveChunkSize).arrayBuffer()
+      );
+      const isLastSlice = offset + effectiveChunkSize >= file.size;
+      chunkString = decoder.decode(bytes, { stream: !isLastSlice });
+    } else {
+      chunkString = await readFileSlice(
+        file,
+        offset,
+        effectiveChunkSize,
+        binary,
+        chunkIndex === 0
+      );
+    }
 
     // Hash the chunk content (small: 66 chars)
     const hash = keccak256HashString(chunkString);

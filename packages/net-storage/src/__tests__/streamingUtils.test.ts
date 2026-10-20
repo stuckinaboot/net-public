@@ -6,6 +6,7 @@ import {
   readFileSlice,
   estimateChunkCount,
 } from "../utils/streamingUtils";
+import { assembleChunks } from "../utils/chunkUtils";
 
 // Mock File class for Node.js environment
 class MockFile extends Blob {
@@ -241,6 +242,23 @@ describe("streamingUtils", () => {
       }
 
       expect(results1[0]).not.toEqual(results2[0]);
+    });
+
+    it("should not split a multi-byte character across text chunks", async () => {
+      // "é" is 2 bytes in UTF-8 and straddles the 80,000-byte slice boundary;
+      // "€" (3 bytes) repeated makes later boundaries fall mid-character too.
+      const content = "a".repeat(80 * 1000 - 1) + "é" + "€".repeat(60 * 1000);
+      const file = new MockFile([content], "notes.txt", {
+        type: "text/plain",
+      }) as File;
+
+      const parts: string[] = [];
+      for await (const result of processFileStreaming(file)) {
+        parts.push(assembleChunks(result.compressedChunks)!);
+      }
+
+      expect(parts.length).toBe(4);
+      expect(parts.join("")).toBe(content);
     });
 
     it("should handle empty file", async () => {

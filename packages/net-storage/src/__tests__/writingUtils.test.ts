@@ -39,6 +39,18 @@ describe("writingUtils", () => {
       expect(chunks.length).toBe(1);
       expect(chunks[0]).toBe(data);
     });
+
+    it("should not split a surrogate pair across chunks", () => {
+      // The emoji's two UTF-16 halves sit at index 79,999 and 80,000.
+      const data = "a".repeat(80 * 1000 - 1) + "\u{1F600}" + "tail";
+      const chunks = chunkData(data, 80 * 1000);
+
+      expect(chunks.join("")).toBe(data);
+      for (const chunk of chunks) {
+        // Each chunk is UTF-8 encoded on its own: no lone surrogate allowed
+        expect(new TextDecoder().decode(new TextEncoder().encode(chunk))).toBe(chunk);
+      }
+    });
   });
 
   describe("generateXmlMetadata", () => {

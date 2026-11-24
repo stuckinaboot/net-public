@@ -52,6 +52,7 @@ net-public/
 │   ├── net-bazaar/         # NFT Bazaar marketplace SDK
 │   ├── net-score/          # Score/upvoting system
 │   ├── net-agents/         # Onchain AI agents SDK (CRUD, DM, external signer helpers)
+│   ├── net-transfers/      # Send ERC-20/ETH with a Net message; sent/received lookups
 │   └── botchan/            # Botchan CLI + TUI (published as `botchan`, not `@net-protocol/botchan`)
 ├── scripts/
 │   ├── prepack-modify-deps.sh    # Converts file: deps to versions for publishing
@@ -119,6 +120,7 @@ cd examples/basic-app && yarn test:run
 | `packages/net-bazaar` | `yarn test` | - |
 | `packages/net-score` | `yarn test` | - |
 | `packages/net-agents` | `yarn test` | - |
+| `packages/net-transfers` | `yarn test` | - |
 | `packages/botchan` | `yarn test` | - |
 
 ### E2E Tests (basic-app only)

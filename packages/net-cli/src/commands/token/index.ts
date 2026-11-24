@@ -1,6 +1,8 @@
 import { Command } from "commander";
 import { executeTokenDeploy } from "./deploy";
 import { executeTokenInfo } from "./info";
+import { executeTokenSend } from "./send";
+import { executeTokenTransfers } from "./transfers";
 
 /**
  * Register the token command with the commander program
@@ -8,7 +10,7 @@ import { executeTokenInfo } from "./info";
 export function registerTokenCommand(program: Command): void {
   const tokenCommand = program
     .command("token")
-    .description("Token operations (Netr/Banger)");
+    .description("Token operations: deploy (Netr/Banger), info, and send with a message");
 
   // Deploy subcommand
   const deployCommand = new Command("deploy")
@@ -84,6 +86,73 @@ export function registerTokenCommand(program: Command): void {
       });
     });
 
+  // Send subcommand
+  const sendCommand = new Command("send")
+    .description("Send an ERC-20 or ETH to an address with an optional message recorded on Net")
+    .requiredOption("--token <address|ETH>", "Token address, or ETH for native ETH")
+    .requiredOption("--to <address>", "Recipient address")
+    .requiredOption("--amount <amount>", "Amount in token units (e.g. 5 for 5 USDC, 0.001 for 0.001 ETH)")
+    .option("--message <text>", "Message to attach (max 1024 bytes)")
+    .option(
+      "--private-key <key>",
+      "Private key (0x-prefixed hex). Can also be set via NET_PRIVATE_KEY env var"
+    )
+    .option("--sender <address>", "Sender address (required with --encode-only to check allowance)")
+    .option(
+      "--chain-id <id>",
+      "Chain ID (default: 8453). Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option("--rpc-url <url>", "Custom RPC URL. Can also be set via NET_RPC_URL env var")
+    .option("--encode-only", "Output approvals + transaction as JSON instead of executing")
+    .action(async (options) => {
+      await executeTokenSend({
+        token: options.token,
+        to: options.to,
+        amount: options.amount,
+        message: options.message,
+        privateKey: options.privateKey,
+        sender: options.sender,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        encodeOnly: options.encodeOnly,
+      });
+    });
+
+  // Transfers subcommand
+  const transfersCommand = new Command("transfers")
+    .description("List token transfers sent with a message: by sender, recipient, sender to recipient, or token")
+    .option("--sent-by <address>", "Transfers sent by this address")
+    .option("--received-by <address>", "Transfers received by this address")
+    .option("--from <address>", "With --to: transfers from this address")
+    .option("--to <address>", "With --from: transfers to this address")
+    .option("--token <address|ETH>", "All transfers of this token")
+    .option("--limit <n>", "Max transfers to return (default 20)")
+    .option("--offset <n>", "Skip this many of the newest transfers (default 0)")
+    .option(
+      "--chain-id <id>",
+      "Chain ID (default: 8453). Can also be set via NET_CHAIN_ID env var",
+      (value) => parseInt(value, 10)
+    )
+    .option("--rpc-url <url>", "Custom RPC URL. Can also be set via NET_RPC_URL env var")
+    .option("--json", "Output in JSON format")
+    .action(async (options) => {
+      await executeTokenTransfers({
+        sentBy: options.sentBy,
+        receivedBy: options.receivedBy,
+        from: options.from,
+        to: options.to,
+        token: options.token,
+        limit: options.limit,
+        offset: options.offset,
+        chainId: options.chainId,
+        rpcUrl: options.rpcUrl,
+        json: options.json,
+      });
+    });
+
   tokenCommand.addCommand(deployCommand);
   tokenCommand.addCommand(infoCommand);
+  tokenCommand.addCommand(sendCommand);
+  tokenCommand.addCommand(transfersCommand);
 }

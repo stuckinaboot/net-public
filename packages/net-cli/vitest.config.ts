@@ -12,6 +12,7 @@ export default defineConfig({
       "@net-protocol/feeds": path.resolve(__dirname, "../net-feeds/src"),
       "@net-protocol/bazaar": path.resolve(__dirname, "../net-bazaar/src"),
       "@net-protocol/score": path.resolve(__dirname, "../net-score/src"),
+      "@net-protocol/transfers": path.resolve(__dirname, "../net-transfers/src"),
     },
   },
   test: {

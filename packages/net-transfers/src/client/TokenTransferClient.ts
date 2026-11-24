@@ -1,4 +1,4 @@
-import type { Address, PublicClient } from "viem";
+import { erc20Abi, type Address, type PublicClient } from "viem";
 import { readContract } from "viem/actions";
 import {
   NetClient,
@@ -6,15 +6,15 @@ import {
   type NetMessage,
   type NetMessageFilter,
 } from "@net-protocol/core";
-import { ERC20_ABI, TOKEN_TRANSFER_CONTRACT } from "../constants";
+import { TOKEN_TRANSFER_CONTRACT } from "../constants";
 import { getTransferTopic, isNativeToken, parseTransferMessage, validateSendParams } from "../utils";
 import type {
   GetTransfersOptions,
   PreparedSend,
   PrepareSendParams,
-  TokenTransfer,
   TokenTransferClientOptions,
   TransferQuery,
+  TransfersPage,
 } from "../types";
 
 /**
@@ -53,14 +53,14 @@ export class TokenTransferClient {
     return this.netClient.getMessageCount({ filter: this.getNetFilter(query) });
   }
 
-  /** Transfers matching the query, newest first */
+  /** A page of transfers matching the query (newest first) and the total count */
   async getTransfers(
     query: TransferQuery,
     { limit = 20, offset = 0 }: GetTransfersOptions = {}
-  ): Promise<TokenTransfer[]> {
-    const count = await this.getTransferCount(query);
-    const endIndex = count - offset;
-    if (endIndex <= 0 || limit <= 0) return [];
+  ): Promise<TransfersPage> {
+    const total = await this.getTransferCount(query);
+    const endIndex = total - offset;
+    if (endIndex <= 0 || limit <= 0) return { total, transfers: [] };
     const startIndex = Math.max(0, endIndex - limit);
 
     let messages: NetMessage[];
@@ -78,7 +78,7 @@ export class TokenTransferClient {
         endIndex,
       });
     }
-    return messages.map(parseTransferMessage).reverse();
+    return { total, transfers: messages.map(parseTransferMessage).reverse() };
   }
 
   /**
@@ -106,7 +106,7 @@ export class TokenTransferClient {
 
     const allowance = await readContract(this.client, {
       address: params.token,
-      abi: ERC20_ABI,
+      abi: erc20Abi,
       functionName: "allowance",
       args: [params.sender, this.contractAddress],
     });
@@ -118,7 +118,7 @@ export class TokenTransferClient {
           : [
               {
                 to: params.token,
-                abi: ERC20_ABI,
+                abi: erc20Abi,
                 functionName: "approve",
                 args: [this.contractAddress, params.amount],
               },
@@ -136,8 +136,8 @@ export class TokenTransferClient {
   async getTokenInfo(token: Address): Promise<{ decimals: number; symbol: string }> {
     if (isNativeToken(token)) return { decimals: 18, symbol: "ETH" };
     const [decimals, symbol] = await Promise.all([
-      readContract(this.client, { address: token, abi: ERC20_ABI, functionName: "decimals" }),
-      readContract(this.client, { address: token, abi: ERC20_ABI, functionName: "symbol" }),
+      readContract(this.client, { address: token, abi: erc20Abi, functionName: "decimals" }),
+      readContract(this.client, { address: token, abi: erc20Abi, functionName: "symbol" }),
     ]);
     return { decimals: Number(decimals), symbol };
   }

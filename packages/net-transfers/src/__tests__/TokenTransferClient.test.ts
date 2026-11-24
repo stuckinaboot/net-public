@@ -87,7 +87,8 @@ describe("TokenTransferClient", () => {
       getMessageCount.mockResolvedValue(5);
       getMessages.mockResolvedValue([msg("third", 3n), msg("fourth", 4n), msg("fifth", 5n)]);
 
-      const rows = await client.getTransfers({ sentBy: ALICE }, { limit: 3 });
+      const { total, transfers: rows } = await client.getTransfers({ sentBy: ALICE }, { limit: 3 });
+      expect(total).toBe(5);
 
       expect(getMessages).toHaveBeenCalledWith(
         expect.objectContaining({ startIndex: 2, endIndex: 5 })
@@ -107,7 +108,7 @@ describe("TokenTransferClient", () => {
 
     it("returns [] without reading when there is nothing in range", async () => {
       getMessageCount.mockResolvedValue(2);
-      expect(await client.getTransfers({ sentBy: ALICE }, { offset: 2 })).toEqual([]);
+      expect(await client.getTransfers({ sentBy: ALICE }, { offset: 2 })).toEqual({ total: 2, transfers: [] });
       expect(getMessages).not.toHaveBeenCalled();
     });
 
@@ -115,7 +116,7 @@ describe("TokenTransferClient", () => {
       vi.mocked(readContract)
         .mockResolvedValueOnce(1n)
         .mockResolvedValueOnce([msg("eth", 10n, NATIVE_TOKEN_ADDRESS)]);
-      const rows = await client.getTransfers({ token: NATIVE_TOKEN_ADDRESS });
+      const { transfers: rows } = await client.getTransfers({ token: NATIVE_TOKEN_ADDRESS });
       expect(readContract).toHaveBeenLastCalledWith(
         expect.anything(),
         expect.objectContaining({

@@ -23,7 +23,7 @@ import { TokenTransferClient, NATIVE_TOKEN_ADDRESS } from "@net-protocol/transfe
 
 const client = new TokenTransferClient({ chainId: 8453 });
 
-// Newest first, 20 per page
+// Newest first, 20 per page: { total, transfers }
 await client.getTransfers({ sentBy: alice });
 await client.getTransfers({ receivedBy: bob }, { limit: 50, offset: 20 });
 await client.getTransfers({ sentBy: alice, receivedBy: bob });

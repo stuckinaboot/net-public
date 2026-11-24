@@ -1,11 +1,12 @@
 import chalk from "chalk";
 import { isAddress, parseUnits, type Address } from "viem";
 import { getPublicClient } from "@net-protocol/core";
-import { TokenTransferClient, NATIVE_TOKEN_ADDRESS } from "@net-protocol/transfers";
+import { resolveTokenAddress } from "@net-protocol/transfers";
 import {
   parseCommonOptionsWithDefault,
   parseReadOnlyOptionsWithDefault,
 } from "../../cli/shared";
+import { createTokenTransferClient } from "../../shared/client";
 import { createWallet, executeTransaction } from "../../shared/wallet";
 import { encodeTransaction } from "../../shared/encode";
 import { exitWithError } from "../../shared/output";
@@ -14,9 +15,9 @@ import type { TokenSendOptions } from "./types";
 
 /** "ETH" (any case) or an address → token address (zero address for ETH) */
 export function resolveTokenArg(token: string): Address {
-  if (token.toUpperCase() === "ETH") return NATIVE_TOKEN_ADDRESS;
-  if (!isAddress(token)) exitWithError(`Invalid --token: ${token} (use a token address or ETH)`);
-  return token as Address;
+  const address = resolveTokenAddress(token);
+  if (!address) exitWithError(`Invalid --token: ${token} (use a token address or ETH)`);
+  return address;
 }
 
 /** Parse a human amount ("5", "0.01") into base units, rejecting zero and junk */
@@ -41,10 +42,7 @@ export async function executeTokenSend(options: TokenSendOptions): Promise<void>
     chainId: options.chainId,
     rpcUrl: options.rpcUrl,
   });
-  const client = new TokenTransferClient({
-    chainId: readOnly.chainId,
-    overrides: readOnly.rpcUrl ? { rpcUrls: [readOnly.rpcUrl] } : undefined,
-  });
+  const client = createTokenTransferClient(readOnly);
 
   let tokenInfo: { decimals: number; symbol: string };
   try {

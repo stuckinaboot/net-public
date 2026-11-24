@@ -7,6 +7,7 @@ import {
   type TransferQuery,
 } from "@net-protocol/transfers";
 import { parseReadOnlyOptionsWithDefault } from "../../cli/shared";
+import { createTokenTransferClient } from "../../shared/client";
 import { exitWithError } from "../../shared/output";
 import { profileUrl, tokenUrl } from "../../shared/urls";
 import { resolveTokenArg } from "./send";
@@ -65,16 +66,10 @@ export async function executeTokenTransfers(options: TokenTransfersOptions): Pro
     chainId: options.chainId,
     rpcUrl: options.rpcUrl,
   });
-  const client = new TokenTransferClient({
-    chainId: readOnly.chainId,
-    overrides: readOnly.rpcUrl ? { rpcUrls: [readOnly.rpcUrl] } : undefined,
-  });
+  const client = createTokenTransferClient(readOnly);
 
   try {
-    const [total, transfers] = await Promise.all([
-      client.getTransferCount(query),
-      client.getTransfers(query, { limit, offset }),
-    ]);
+    const { total, transfers } = await client.getTransfers(query, { limit, offset });
     const tokenInfo = await loadTokenInfo(client, transfers);
 
     const rows = transfers.map((t) => {

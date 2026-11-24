@@ -26,6 +26,9 @@ export type TransferQuery =
   | { sentBy?: Address; receivedBy: Address; token?: never }
   | { token: Address; sentBy?: never; receivedBy?: never };
 
+/** A page of transfers plus the total matching the query */
+export type TransfersPage = { total: number; transfers: TokenTransfer[] };
+
 export type GetTransfersOptions = {
   /** Max rows to return (default 20) */
   limit?: number;

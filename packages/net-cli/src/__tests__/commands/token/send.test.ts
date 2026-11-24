@@ -10,7 +10,8 @@ const TX_HASH = ("0x" + "b".repeat(64)) as `0x${string}`;
 
 const mockGetTokenInfo = vi.fn();
 const mockPrepareSend = vi.fn();
-vi.mock("@net-protocol/transfers", () => ({
+vi.mock("@net-protocol/transfers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@net-protocol/transfers")>()),
   TokenTransferClient: vi.fn().mockImplementation(() => ({
     getTokenInfo: mockGetTokenInfo,
     prepareSend: mockPrepareSend,

@@ -1,4 +1,4 @@
-import { decodeAbiParameters, type Address } from "viem";
+import { decodeAbiParameters, isAddress, type Address } from "viem";
 import type { NetMessage } from "@net-protocol/core";
 import {
   MAX_TRANSFER_MESSAGE_LENGTH,
@@ -14,6 +14,12 @@ export function getTransferTopic(to: Address): string {
 
 export function isNativeToken(token: Address): boolean {
   return token.toLowerCase() === NATIVE_TOKEN_ADDRESS;
+}
+
+/** "ETH" (any case) or a token address → token address (NATIVE_TOKEN_ADDRESS for ETH); undefined if neither */
+export function resolveTokenAddress(token: string): Address | undefined {
+  if (token.trim().toUpperCase() === "ETH") return NATIVE_TOKEN_ADDRESS;
+  return isAddress(token, { strict: false }) ? (token as Address) : undefined;
 }
 
 /** Decode a NetTokenTransfer message into a transfer */
@@ -38,7 +44,7 @@ export function validateSendParams(params: {
   amount: bigint;
   message?: string;
 }): string | undefined {
-  if (!/^0x[0-9a-fA-F]{40}$/.test(params.to)) return "Invalid recipient address";
+  if (!isAddress(params.to, { strict: false })) return "Invalid recipient address";
   if (params.to.toLowerCase() === NATIVE_TOKEN_ADDRESS) return "Recipient cannot be the zero address";
   if (params.amount <= 0n) return "Amount must be greater than zero";
   const bytes = new TextEncoder().encode(params.message ?? "").length;

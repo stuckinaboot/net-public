@@ -5,6 +5,7 @@ import {
   isNativeToken,
   parseTransferMessage,
   validateSendParams,
+  resolveTokenAddress,
 } from "../utils";
 import { NATIVE_TOKEN_ADDRESS } from "../constants";
 
@@ -64,5 +65,20 @@ describe("validateSendParams", () => {
     // 512 two-byte characters = 1024 bytes (ok); one more = 1026 (too long)
     expect(validateSendParams({ to: BOB, amount: 1n, message: "é".repeat(512) })).toBeUndefined();
     expect(validateSendParams({ to: BOB, amount: 1n, message: "é".repeat(513) })).toMatch(/1026 bytes/);
+  });
+});
+
+describe("resolveTokenAddress", () => {
+  it("maps ETH (any case) to the native token address and passes addresses through", () => {
+    expect(resolveTokenAddress("eth")).toBe(NATIVE_TOKEN_ADDRESS);
+    expect(resolveTokenAddress(" ETH ")).toBe(NATIVE_TOKEN_ADDRESS);
+    expect(resolveTokenAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")).toBe(
+      "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    );
+  });
+
+  it("returns undefined for anything else", () => {
+    expect(resolveTokenAddress("usdc")).toBeUndefined();
+    expect(resolveTokenAddress("")).toBeUndefined();
   });
 });

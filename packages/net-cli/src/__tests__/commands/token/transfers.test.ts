@@ -6,12 +6,11 @@ const BOB = "0x1b884fFf942a0fa9B6429679b768486Cb4a571C9";
 const ZERO = "0x0000000000000000000000000000000000000000";
 
 const mockGetTransfers = vi.fn();
-const mockGetTransferCount = vi.fn();
 const mockGetTokenInfo = vi.fn();
-vi.mock("@net-protocol/transfers", () => ({
+vi.mock("@net-protocol/transfers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@net-protocol/transfers")>()),
   TokenTransferClient: vi.fn().mockImplementation(() => ({
     getTransfers: mockGetTransfers,
-    getTransferCount: mockGetTransferCount,
     getTokenInfo: mockGetTokenInfo,
   })),
   NATIVE_TOKEN_ADDRESS: "0x0000000000000000000000000000000000000000",
@@ -62,11 +61,13 @@ describe("token transfers", () => {
   });
 
   it("--json prints formatted amounts, symbols and links", async () => {
-    mockGetTransferCount.mockResolvedValue(2);
-    mockGetTransfers.mockResolvedValue([
+    mockGetTransfers.mockResolvedValue({
+      total: 2,
+      transfers: [
       { from: ALICE, to: BOB, token: USDC, amount: 5_000_000n, message: "thanks", timestamp: 1_700_000_000 },
       { from: ALICE, to: BOB, token: ZERO, amount: 10n ** 15n, message: "", timestamp: 1_699_999_000 },
-    ]);
+      ],
+    });
     mockGetTokenInfo.mockImplementation(async (t: string) =>
       t.toLowerCase() === ZERO ? { decimals: 18, symbol: "ETH" } : { decimals: 6, symbol: "USDC" }
     );
@@ -89,10 +90,10 @@ describe("token transfers", () => {
   });
 
   it("still lists transfers when a token's metadata can't be read", async () => {
-    mockGetTransferCount.mockResolvedValue(1);
-    mockGetTransfers.mockResolvedValue([
-      { from: ALICE, to: BOB, token: USDC, amount: 7n, message: "", timestamp: 1 },
-    ]);
+    mockGetTransfers.mockResolvedValue({
+      total: 1,
+      transfers: [{ from: ALICE, to: BOB, token: USDC, amount: 7n, message: "", timestamp: 1 }],
+    });
     mockGetTokenInfo.mockRejectedValue(new Error("no decimals"));
     await executeTokenTransfers({ receivedBy: BOB, json: true });
     const out = JSON.parse(logSpy.mock.calls[0][0] as string);

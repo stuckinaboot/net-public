@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { TokenTransferClient } from "../client/TokenTransferClient";
-import type { TokenTransfer, TransferQuery } from "../types";
+import type { TransferQuery, TransfersPage } from "../types";
 
 export type UseTokenTransfersOptions = {
   chainId: number;
@@ -22,26 +23,28 @@ export function useTokenTransfers({
   rpcUrls,
   enabled = true,
 }: UseTokenTransfersOptions) {
+  const rpcKey = rpcUrls?.join(",");
+  const client = useMemo(
+    () => new TokenTransferClient({ chainId, overrides: rpcUrls ? { rpcUrls } : undefined }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rpcKey stands in for rpcUrls
+    [chainId, rpcKey]
+  );
+
   const result = useInfiniteQuery({
-    queryKey: ["net-token-transfers", chainId, query, pageSize],
+    queryKey: ["net-token-transfers", chainId, rpcKey, query, pageSize],
     enabled: enabled && !!query,
     initialPageParam: 0,
-    queryFn: async ({ pageParam }): Promise<TokenTransfer[]> => {
-      const client = new TokenTransferClient({
-        chainId,
-        overrides: rpcUrls ? { rpcUrls } : undefined,
-      });
-      return client.getTransfers(query as TransferQuery, {
-        limit: pageSize,
-        offset: pageParam,
-      });
+    queryFn: ({ pageParam }): Promise<TransfersPage> =>
+      client.getTransfers(query as TransferQuery, { limit: pageSize, offset: pageParam }),
+    getNextPageParam: (lastPage, _pages, lastOffset) => {
+      const nextOffset = lastOffset + pageSize;
+      return nextOffset < lastPage.total ? nextOffset : undefined;
     },
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length < pageSize ? undefined : allPages.length * pageSize,
   });
 
   return {
-    transfers: result.data?.pages.flat() ?? [],
+    transfers: result.data?.pages.flatMap((page) => page.transfers) ?? [],
+    total: result.data?.pages[0]?.total,
     isLoading: result.isLoading,
     error: result.error,
     hasNextPage: result.hasNextPage,

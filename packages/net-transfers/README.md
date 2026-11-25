@@ -4,7 +4,7 @@ Send an ERC-20 or ETH to someone with an attached note, recorded on [Net](https:
 
 ## How it works
 
-`NetTokenTransfer` (`0x000000a169fE01175bb91d35A70A852ebDC9D869`, Base) moves the tokens straight from the sender to the recipient and writes one Net message in the same transaction:
+`NetTokenTransfer` (`0x000000DcBE3d8A4db2dD046D500483857dEf83Fb`, Base) moves the tokens straight from the sender to the recipient and writes one Net message in the same transaction:
 
 | Field | Value |
 | --- | --- |

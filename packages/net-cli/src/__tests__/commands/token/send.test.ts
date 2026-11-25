@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const TEST_CHAIN_ID = 8453;
-const APP = "0x000000a169fE01175bb91d35A70A852ebDC9D869";
+const APP = "0x000000DcBE3d8A4db2dD046D500483857dEf83Fb";
 const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const BOB = "0x1b884fFf942a0fa9B6429679b768486Cb4a571C9";
 const SENDER = "0x825646f2107e8D3e64746Cad2F0aEAB186f0e94a";

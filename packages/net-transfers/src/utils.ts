@@ -45,7 +45,6 @@ export function validateSendParams(params: {
   message?: string;
 }): string | undefined {
   if (!isAddress(params.to, { strict: false })) return "Invalid recipient address";
-  if (params.to.toLowerCase() === NATIVE_TOKEN_ADDRESS) return "Recipient cannot be the zero address";
   if (params.amount <= 0n) return "Amount must be greater than zero";
   const bytes = new TextEncoder().encode(params.message ?? "").length;
   if (bytes > MAX_TRANSFER_MESSAGE_LENGTH) {

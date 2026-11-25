@@ -33,7 +33,7 @@ describe("parseTransferMessage", () => {
       [USDC, BOB, 5_000_000n]
     );
     const transfer = parseTransferMessage({
-      app: "0x000000a169fE01175bb91d35A70A852ebDC9D869",
+      app: "0x000000DcBE3d8A4db2dD046D500483857dEf83Fb",
       sender: ALICE,
       timestamp: 1_700_000_000n,
       data,
@@ -55,10 +55,9 @@ describe("validateSendParams", () => {
   it("accepts a valid send", () => {
     expect(validateSendParams({ to: BOB, amount: 1n, message: "hi" })).toBeUndefined();
   });
-  it("rejects zero amount, bad or zero recipient, and long notes", () => {
+  it("rejects zero amount, bad recipient, and long notes", () => {
     expect(validateSendParams({ to: BOB, amount: 0n })).toMatch(/greater than zero/);
     expect(validateSendParams({ to: "0x123" as Address, amount: 1n })).toMatch(/Invalid recipient/);
-    expect(validateSendParams({ to: NATIVE_TOKEN_ADDRESS, amount: 1n })).toMatch(/zero address/);
     expect(validateSendParams({ to: BOB, amount: 1n, message: "a".repeat(1025) })).toMatch(/1025 bytes/);
   });
   it("counts bytes, not characters", () => {

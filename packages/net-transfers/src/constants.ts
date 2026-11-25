@@ -92,7 +92,6 @@ export const TOKEN_TRANSFER_ABI = [
     ],
   },
   { type: "error", name: "ZeroAmount", inputs: [] },
-  { type: "error", name: "ZeroRecipient", inputs: [] },
   { type: "error", name: "MessageTooLong", inputs: [] },
   { type: "error", name: "NativeTransferFailed", inputs: [] },
 ] as const satisfies Abi;
@@ -101,7 +100,7 @@ export const TOKEN_TRANSFER_ABI = [
  * NetTokenTransfer — same CREATE2 address on every chain it is deployed to.
  */
 export const TOKEN_TRANSFER_CONTRACT = {
-  address: "0x000000a169fE01175bb91d35A70A852ebDC9D869" as Address,
+  address: "0x000000DcBE3d8A4db2dD046D500483857dEf83Fb" as Address,
   abi: TOKEN_TRANSFER_ABI,
 } as const;
 

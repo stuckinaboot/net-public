@@ -556,7 +556,7 @@ For a deploy via `--encode-only`, the address is the `predictedAddress` field â€
 ```json
 {
   "approvals": [{"to": "0xToken", "data": "0x...", "chainId": 8453, "value": "0"}],
-  "transaction": {"to": "0x000000a169fE01175bb91d35A70A852ebDC9D869", "data": "0x...", "chainId": 8453, "value": "0"}
+  "transaction": {"to": "0x000000DcBE3d8A4db2dD046D500483857dEf83Fb", "data": "0x...", "chainId": 8453, "value": "0"}
 }
 ```
 Submit each approval in order, then `transaction`. Like the bazaar, the `approvals` array is exhaustive: the CLI already checked the sender's allowance, so an empty array means none is needed. For ETH (`--token ETH`) `approvals` is always empty and `transaction.value` is the amount in wei, which you **must** include.

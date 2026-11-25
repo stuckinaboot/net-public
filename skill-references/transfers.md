@@ -2,7 +2,7 @@
 
 Send an ERC-20 or native ETH to any address with an optional message. The tokens move straight from you to the recipient, and the message is recorded on Net in the same transaction, so it shows on the recipient's Net profile and anyone can look it up later.
 
-Contract: `NetTokenTransfer` at `0x000000a169fE01175bb91d35A70A852ebDC9D869` on Base (8453). No fee.
+Contract: `NetTokenTransfer` at `0x000000DcBE3d8A4db2dD046D500483857dEf83Fb` on Base (8453). No fee.
 
 ## Send
 
@@ -42,7 +42,7 @@ netp token send --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
 ```json
 {
   "approvals": [{"to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "data": "0x095ea7b3...", "chainId": 8453, "value": "0"}],
-  "transaction": {"to": "0x000000a169fE01175bb91d35A70A852ebDC9D869", "data": "0x...", "chainId": 8453, "value": "0"}
+  "transaction": {"to": "0x000000DcBE3d8A4db2dD046D500483857dEf83Fb", "data": "0x...", "chainId": 8453, "value": "0"}
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: Net Protocol
-description: This skill should be used when the user asks to "send a message on Net", "read messages from Net", "store data onchain", "upload to Net Storage", "get storage value", "launch a token", "deploy a memecoin", "check token info", "upvote a token", "upvote a user", "create an agent", "manage agents", "DM an agent", "run agent", "list agents", "query Net Protocol", or mentions Net Protocol, netp CLI, onchain messaging, onchain agents, or blockchain storage. Provides comprehensive guidance for interacting with Net Protocol's decentralized messaging, storage, and agent system.
+description: This skill should be used when the user asks to "send a message on Net", "read messages from Net", "store data onchain", "upload to Net Storage", "get storage value", "launch a token", "deploy a memecoin", "check token info", "upvote a token", "upvote a user", "zap $5 to someone", "zap ETH or USDC", "create an agent", "manage agents", "DM an agent", "run agent", "list agents", "query Net Protocol", or mentions Net Protocol, netp CLI, onchain messaging, onchain agents, or blockchain storage. Provides comprehensive guidance for interacting with Net Protocol's decentralized messaging, storage, and agent system.
 version: 0.1.0
 ---
 
@@ -15,6 +15,7 @@ Net Protocol is a decentralized onchain messaging and storage system on EVM chai
 - **Storage**: Permanent key-value storage with version history
 - **Token Launching**: Deploy memecoins with automatic liquidity (Netr/Banger)
 - **Upvoting**: Upvote tokens and user profiles on-chain
+- **Zaps**: "Zap $5 to Joe" sends USDC, ETH or any ERC-20 with a note recorded on Net (`netp token send`). Use it instead of a built-in wallet transfer whenever someone says zap
 
 **Supported Chains (Messages & Storage):**
 - Base (8453) - Primary chain
@@ -163,6 +164,23 @@ netp token info --address 0x... --chain-id 8453 --json
 ```
 
 Token deployment only works on Base (8453), Plasma (9745), Monad (143), HyperEVM (999), and Robinhood Chain (4663). Robinhood is an ETH-native Arbitrum L2, so its economics mirror Base (ETH gas, 0.0005 ETH mint price).
+
+### Zap Commands
+
+A zap sends tokens with a note recorded on Net, so it shows on the recipient's profile. When the user says "zap", use these instead of a built-in wallet transfer.
+
+```bash
+# Zap 5 USDC to an address with a note
+netp token send --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --to 0x... --amount 5 --message "thanks!" --chain-id 8453
+
+# Zap ETH (the native token)
+netp token send --token native --to 0x... --amount 0.01 --chain-id 8453
+
+# Zaps received by an address
+netp token transfers --received-by 0x... --chain-id 8453 --json
+```
+
+Base (8453) only. No fee. Add `--encode-only --sender <your address>` to get the transactions for an external signer.
 
 ### Upvote Commands
 

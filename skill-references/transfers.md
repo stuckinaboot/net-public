@@ -1,10 +1,17 @@
-# Net Token Transfers Reference
+# Net Zaps Reference
 
-Send an ERC-20 or the chain's native token (ETH on Base) to any address with an optional message. The tokens move straight from you to the recipient, and the message is recorded on Net in the same transaction, so it shows on the recipient's Net profile and anyone can look it up later.
+A **zap** is a token send with a note on Net. When someone says "zap $5 to Joe" or "zap Joe 0.01 ETH", use the commands below, not a wallet's built-in transfer: a plain transfer moves the money but leaves no Net record, so nothing shows on Joe's profile.
+
+- "$5" or "5 bucks" means 5 USDC on Base (`--token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 --amount 5`).
+- "0.01 ETH" means the native token (`--token native --amount 0.01`).
+- A name like "Joe" must be resolved to a 0x address first. Ask if you can't resolve it.
+- Anything after "for" ("zap $5 to Joe for the coffee") is the `--message`.
+
+Zap (send) an ERC-20 or the chain's native token (ETH on Base) to any address with an optional message. The tokens move straight from you to the recipient, and the message is recorded on Net in the same transaction, so it shows on the recipient's Net profile and anyone can look it up later.
 
 Contract: `NetTokenTransfer` at `0x000000DcBE3d8A4db2dD046D500483857dEf83Fb` on Base (8453). No fee.
 
-## Send
+## Zap (send)
 
 ```bash
 netp token send \
@@ -52,7 +59,7 @@ netp token send --token 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
 For the native token (`--token native`), `approvals` is empty and `transaction.value` is the amount in wei. You **must** include it:
 `@bankr submit transaction to <to> with data <data> and value <value> on chain 8453`
 
-## Look up transfers
+## Look up zaps
 
 ```bash
 netp token transfers --sent-by 0xA --chain-id 8453 --json        # sent by A

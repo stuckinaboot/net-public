@@ -68,7 +68,9 @@ describe("validateSendParams", () => {
 });
 
 describe("resolveTokenAddress", () => {
-  it("maps ETH (any case) to the native token address and passes addresses through", () => {
+  it("maps native / ETH (any case) to the native token address and passes addresses through", () => {
+    expect(resolveTokenAddress("native")).toBe(NATIVE_TOKEN_ADDRESS);
+    expect(resolveTokenAddress("NATIVE")).toBe(NATIVE_TOKEN_ADDRESS);
     expect(resolveTokenAddress("eth")).toBe(NATIVE_TOKEN_ADDRESS);
     expect(resolveTokenAddress(" ETH ")).toBe(NATIVE_TOKEN_ADDRESS);
     expect(resolveTokenAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")).toBe(

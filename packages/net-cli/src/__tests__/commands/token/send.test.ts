@@ -67,7 +67,8 @@ describe("token send", () => {
   afterEach(() => logSpy.mockRestore());
 
   describe("argument parsing", () => {
-    it("ETH maps to the zero address, case-insensitively", () => {
+    it("native / ETH map to the zero address, case-insensitively", () => {
+      expect(resolveTokenArg("native")).toBe(ZERO);
       expect(resolveTokenArg("eth")).toBe(ZERO);
       expect(resolveTokenArg(USDC)).toBe(USDC);
       expect(() => resolveTokenArg("usdc")).toThrow(/Invalid --token/);

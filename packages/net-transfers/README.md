@@ -1,6 +1,6 @@
 # @net-protocol/transfers
 
-Send an ERC-20 or ETH to someone with an attached note, recorded on [Net](https://netprotocol.app), and look transfers up by sender, recipient, sender → recipient, or token.
+Send an ERC-20 or the chain's native token (ETH on Base) to someone with an attached note, recorded on [Net](https://netprotocol.app), and look transfers up by sender, recipient, sender → recipient, or token.
 
 ## How it works
 
@@ -12,7 +12,7 @@ Send an ERC-20 or ETH to someone with an attached note, recorded on [Net](https:
 | sender | the person sending |
 | topic | `to-<lowercase recipient>` |
 | text | the note (may be empty) |
-| data | `abi.encode(address token, address to, uint256 amount)`; token is the zero address for ETH |
+| data | `abi.encode(address token, address to, uint256 amount)`; token is the zero address for the native token |
 
 Because only the contract can write under its own app address, every message proves a real transfer. Lookups reuse Net's indexes (sent = app + user, received = app + topic, A → B = app + user + topic); the contract also keeps a per-token index.
 
@@ -32,7 +32,7 @@ await client.getTransferCount({ receivedBy: bob });
 
 // Build the transactions for a send: approvals still needed (if any), then the send
 const { approvals, transaction } = await client.prepareSend({
-  token: usdc, // or NATIVE_TOKEN_ADDRESS for ETH (no approvals, value set)
+  token: usdc, // or NATIVE_TOKEN_ADDRESS for the native token (no approvals, value set)
   to: bob,
   amount: 5_000_000n, // base units
   message: "thanks for the help",
@@ -40,7 +40,7 @@ const { approvals, transaction } = await client.prepareSend({
 });
 ```
 
-Each `WriteTransactionConfig` has `to`, `abi`, `functionName`, `args` and optional `value`; pass them to `writeContract`, and include `value` for ETH sends.
+Each `WriteTransactionConfig` has `to`, `abi`, `functionName`, `args` and optional `value`; pass them to `writeContract`, and include `value` for native-token sends.
 
 ### React
 

@@ -13,10 +13,10 @@ import { exitWithError } from "../../shared/output";
 import { profileUrl } from "../../shared/urls";
 import type { TokenSendOptions } from "./types";
 
-/** "ETH" (any case) or an address → token address (zero address for ETH) */
+/** "native" / "ETH" (any case) or an address → token address (zero address for the native token) */
 export function resolveTokenArg(token: string): Address {
   const address = resolveTokenAddress(token);
-  if (!address) exitWithError(`Invalid --token: ${token} (use a token address or ETH)`);
+  if (!address) exitWithError(`Invalid --token: ${token} (use a token address, or "native" for the chain's native token)`);
   return address;
 }
 

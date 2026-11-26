@@ -88,8 +88,8 @@ export function registerTokenCommand(program: Command): void {
 
   // Send subcommand
   const sendCommand = new Command("send")
-    .description("Send an ERC-20 or ETH to an address with an optional message recorded on Net")
-    .requiredOption("--token <address|ETH>", "Token address, or ETH for native ETH")
+    .description("Send an ERC-20 or the native token (ETH on Base) to an address with an optional message recorded on Net")
+    .requiredOption("--token <address|native>", "Token address, or \"native\" for the chain's native token (ETH on Base; \"ETH\" also works)")
     .requiredOption("--to <address>", "Recipient address")
     .requiredOption("--amount <amount>", "Amount in token units (e.g. 5 for 5 USDC, 0.001 for 0.001 ETH)")
     .option("--message <text>", "Message to attach (max 1024 bytes)")
@@ -126,7 +126,7 @@ export function registerTokenCommand(program: Command): void {
     .option("--received-by <address>", "Transfers received by this address")
     .option("--from <address>", "With --to: transfers from this address")
     .option("--to <address>", "With --from: transfers to this address")
-    .option("--token <address|ETH>", "All transfers of this token")
+    .option("--token <address|native>", "All transfers of this token (\"native\" for the native token)")
     .option("--limit <n>", "Max transfers to return (default 20)")
     .option("--offset <n>", "Skip this many of the newest transfers (default 0)")
     .option(

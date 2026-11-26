@@ -1,6 +1,6 @@
 import type { Abi, Address } from "viem";
 
-/** Token address recorded for native ETH sends */
+/** Token address recorded for native-token sends (ETH on Base, HYPE on HyperEVM, ...) */
 export const NATIVE_TOKEN_ADDRESS =
   "0x0000000000000000000000000000000000000000" as Address;
 

@@ -132,9 +132,12 @@ export class TokenTransferClient {
     };
   }
 
-  /** Token decimals and symbol (18 / "ETH" for native) */
+  /** Token decimals and symbol; for the native token, the chain's own (ETH on Base, HYPE on HyperEVM) */
   async getTokenInfo(token: Address): Promise<{ decimals: number; symbol: string }> {
-    if (isNativeToken(token)) return { decimals: 18, symbol: "ETH" };
+    if (isNativeToken(token)) {
+      const native = this.client.chain?.nativeCurrency;
+      return { decimals: native?.decimals ?? 18, symbol: native?.symbol ?? "ETH" };
+    }
     const [decimals, symbol] = await Promise.all([
       readContract(this.client, { address: token, abi: erc20Abi, functionName: "decimals" }),
       readContract(this.client, { address: token, abi: erc20Abi, functionName: "symbol" }),

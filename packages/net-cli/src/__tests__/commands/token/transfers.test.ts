@@ -86,7 +86,7 @@ describe("token transfers", () => {
       toProfileUrl: `https://netprotocol.app/app/profile/base/${BOB.toLowerCase()}`,
       tokenUrl: `https://netprotocol.app/app/token/base/${USDC.toLowerCase()}`,
     });
-    expect(out.transfers[1]).toMatchObject({ token: "ETH", symbol: "ETH", amount: "0.001", tokenUrl: null });
+    expect(out.transfers[1]).toMatchObject({ token: "native", symbol: "ETH", amount: "0.001", tokenUrl: null });
   });
 
   it("still lists transfers when a token's metadata can't be read", async () => {

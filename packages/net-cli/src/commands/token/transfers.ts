@@ -77,7 +77,7 @@ export async function executeTokenTransfers(options: TokenTransfersOptions): Pro
       return {
         from: t.from,
         to: t.to,
-        token: isNativeToken(t.token) ? "ETH" : t.token,
+        token: isNativeToken(t.token) ? "native" : t.token,
         symbol: info?.symbol ?? null,
         amount: info ? formatUnits(t.amount, info.decimals) : null,
         amountRaw: t.amount.toString(),

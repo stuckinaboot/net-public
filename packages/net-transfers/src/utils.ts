@@ -16,9 +16,15 @@ export function isNativeToken(token: Address): boolean {
   return token.toLowerCase() === NATIVE_TOKEN_ADDRESS;
 }
 
-/** "ETH" (any case) or a token address → token address (NATIVE_TOKEN_ADDRESS for ETH); undefined if neither */
+/** Names accepted for the chain's native token (ETH on Base, HYPE on HyperEVM, ...) */
+const NATIVE_TOKEN_NAMES = new Set(["NATIVE", "ETH"]);
+
+/**
+ * "native" (or "ETH", kept as an alias; any case) or a token address → token address
+ * (NATIVE_TOKEN_ADDRESS for the native token); undefined if neither
+ */
 export function resolveTokenAddress(token: string): Address | undefined {
-  if (token.trim().toUpperCase() === "ETH") return NATIVE_TOKEN_ADDRESS;
+  if (NATIVE_TOKEN_NAMES.has(token.trim().toUpperCase())) return NATIVE_TOKEN_ADDRESS;
   return isAddress(token, { strict: false }) ? (token as Address) : undefined;
 }
 

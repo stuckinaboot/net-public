@@ -6,7 +6,10 @@ vi.mock("viem/actions", () => ({ readContract: vi.fn() }));
 const getMessages = vi.fn();
 const getMessageCount = vi.fn();
 vi.mock("@net-protocol/core", () => ({
-  getPublicClient: vi.fn(() => ({})),
+  // HyperEVM's client carries its native currency, as net-core's chain config defines it
+  getPublicClient: vi.fn(({ chainId }: { chainId: number }) =>
+    chainId === 999 ? { chain: { nativeCurrency: { name: "Hype", symbol: "HYPE", decimals: 18 } } } : {}
+  ),
   NetClient: vi.fn().mockImplementation(() => ({ getMessages, getMessageCount })),
 }));
 
@@ -188,6 +191,12 @@ describe("TokenTransferClient", () => {
 
   it("getTokenInfo short-circuits for ETH", async () => {
     expect(await client.getTokenInfo(NATIVE_TOKEN_ADDRESS)).toEqual({ decimals: 18, symbol: "ETH" });
+    expect(readContract).not.toHaveBeenCalled();
+  });
+
+  it("getTokenInfo uses the chain's native currency (HYPE on HyperEVM)", async () => {
+    const hyper = new TokenTransferClient({ chainId: 999 });
+    expect(await hyper.getTokenInfo(NATIVE_TOKEN_ADDRESS)).toEqual({ decimals: 18, symbol: "HYPE" });
     expect(readContract).not.toHaveBeenCalled();
   });
 });

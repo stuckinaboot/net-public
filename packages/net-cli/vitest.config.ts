@@ -10,8 +10,10 @@ export default defineConfig({
       "@net-protocol/netr": path.resolve(__dirname, "../net-netr/src"),
       "@net-protocol/profiles": path.resolve(__dirname, "../net-profiles/src"),
       "@net-protocol/feeds": path.resolve(__dirname, "../net-feeds/src"),
+      "@net-protocol/chats": path.resolve(__dirname, "../net-chats/src"),
       "@net-protocol/bazaar": path.resolve(__dirname, "../net-bazaar/src"),
       "@net-protocol/score": path.resolve(__dirname, "../net-score/src"),
+      "@net-protocol/transfers": path.resolve(__dirname, "../net-transfers/src"),
     },
   },
   test: {

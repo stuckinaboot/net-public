@@ -18,7 +18,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ["viem", "dotenv", "@net-protocol/core", "@net-protocol/score", "@net-protocol/storage", "@net-protocol/relay", "@net-protocol/netr", "@net-protocol/feeds", "@net-protocol/chats", "@net-protocol/profiles", "@net-protocol/bazaar"],
+  external: ["viem", "dotenv", "@net-protocol/core", "@net-protocol/score", "@net-protocol/storage", "@net-protocol/relay", "@net-protocol/netr", "@net-protocol/feeds", "@net-protocol/chats", "@net-protocol/profiles", "@net-protocol/bazaar", "@net-protocol/transfers"],
   treeshake: true,
   outExtension: () => ({ js: ".mjs" }),
 });

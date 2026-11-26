@@ -2,6 +2,7 @@ import { FeedClient, FeedRegistryClient, AgentRegistryClient } from "@net-protoc
 import { ChatClient } from "@net-protocol/chats";
 import { NetClient } from "@net-protocol/core";
 import { StorageClient } from "@net-protocol/storage";
+import { TokenTransferClient } from "@net-protocol/transfers";
 import type { ReadOnlyOptions } from "./types";
 
 /**
@@ -63,6 +64,18 @@ export function createAgentRegistryClient(
  */
 export function createStorageClient(options: ReadOnlyOptions): StorageClient {
   return new StorageClient({
+    chainId: options.chainId,
+    overrides: options.rpcUrl ? { rpcUrls: [options.rpcUrl] } : undefined,
+  });
+}
+
+/**
+ * Create a TokenTransferClient from read-only options
+ */
+export function createTokenTransferClient(
+  options: ReadOnlyOptions
+): TokenTransferClient {
+  return new TokenTransferClient({
     chainId: options.chainId,
     overrides: options.rpcUrl ? { rpcUrls: [options.rpcUrl] } : undefined,
   });

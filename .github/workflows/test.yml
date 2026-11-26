@@ -29,7 +29,7 @@ jobs:
         run: yarn test:all
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.58 cannot install Chromium on ubuntu-latest (26.04)
     needs: unit-tests
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +64,7 @@ jobs:
           retention-days: 30
 
   screenshot-preview:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # see e2e-tests
     if: github.event_name == 'pull_request'
     permissions:
       contents: write
